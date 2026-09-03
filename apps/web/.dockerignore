@@ -1,0 +1,13 @@
+# Dependencias y resultados generados: se crean nuevamente dentro de la imagen.
+node_modules
+dist
+.vite
+.eslintcache
+npm-debug.log*
+# Archivos que no necesita el contexto de construcción.
+Dockerfile*
+README.md
+# Nunca se copian configuraciones locales ni secretos a una imagen.
+.env
+.env.*
+!.env.example

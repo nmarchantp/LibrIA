@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Node
+node_modules/
+dist/
+.vite/
+*.local
+*.tsbuildinfo
+npm-debug.log*
+
+# Docker
+.env
+.docker/
+**/.DS_Store
+
+# Editores y sistema operativo
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Registros y archivos temporales
+*.log
+tmp/
+temp/

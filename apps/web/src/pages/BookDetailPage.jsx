@@ -1,0 +1,5 @@
+import { Navigate, Link, useParams } from 'react-router-dom'
+import BookCover from '../components/BookCover'
+import { useLibrary } from '../context/LibraryContext'
+
+export default function BookDetailPage(){const{id}=useParams();const{getBook,updateStatus}=useLibrary();const book=getBook(id);if(!book)return <Navigate to="/books" replace/>;return <section className="page-width page"><div className="modal detail-page"><BookCover book={book} large/><div className="modal-copy"><span className="kicker">{book.status}</span><h1 className="page-title">{book.title}</h1><p className="author">{book.author} · {book.year}</p><p>Consulta la información de la obra y administra su lugar en tu biblioteca personal.</p><label>Estado<select value={book.status} onChange={e=>updateStatus(book.id,e.target.value)}><option>Leyendo</option><option>Pendiente</option><option>Terminado</option><option>Abandonado</option></select></label><Link className="button primary" to={`/reading/${book.id}`}>Registrar experiencia</Link></div></div></section>}

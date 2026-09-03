@@ -1,0 +1,15 @@
+# Configuración independiente para comprobar la versión optimizada de producción.
+name: libria-prod
+
+services:
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      # Esta etapa compila React y copia el resultado final a Nginx.
+      target: production
+    ports:
+      # Publica Nginx en 8080, o en WEB_PROD_PORT si se define en .env.
+      - "${WEB_PROD_PORT:-8080}:80"
+    # Vuelve a iniciar el servicio después de un fallo o reinicio del computador.
+    restart: unless-stopped

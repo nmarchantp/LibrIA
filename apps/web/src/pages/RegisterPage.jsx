@@ -1,0 +1,5 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+export default function RegisterPage(){const{register}=useAuth();const navigate=useNavigate();const[error,setError]=useState('');const submit=async(e)=>{e.preventDefault();setError('');const form=new FormData(e.currentTarget);try{await register({display_name:form.get('name'),email:form.get('email'),password:form.get('password')});navigate('/')}catch{setError('No fue posible crear la cuenta. El correo podría estar registrado.')}};return <main className="auth-page"><form className="auth-card" onSubmit={submit}><h1>Crea tu cuenta</h1><label>Nombre<input name="name" required minLength="2"/></label><label>Correo<input name="email" type="email" required/></label><label>Contraseña<input name="password" type="password" minLength="8" required/></label>{error&&<p className="form-error" role="alert">{error}</p>}<button className="button primary">Crear cuenta</button><p>¿Ya tienes cuenta? <Link to="/login">Ingresa</Link></p></form></main>}
