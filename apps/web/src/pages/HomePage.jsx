@@ -1,6 +1,40 @@
-import { ChevronRight, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowUpRight, BookOpen, MessageCircle, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import BookCover from '../components/BookCover'
+import { feedPosts } from '../feedData'
 import { useLibrary } from '../context/LibraryContext'
+import { useAuth } from '../context/AuthContext'
+import BookCover from '../components/BookCover'
 
-export default function HomePage(){const{books}=useLibrary();const reading=books.filter(b=>b.status==='Leyendo');return <><section className="hero page-width"><div className="hero-copy"><span className="eyebrow"><Sparkles size={15}/> TU ESPACIO DE LECTURA</span><h1>Cada libro deja<br/>una <em>huella.</em></h1><p>Registra lo que lees, cómo te hace sentir y descubre los patrones que construyen tu identidad lectora.</p><div className="hero-actions"><Link className="button primary" to="/books">Descubrir libros <ChevronRight size={18}/></Link><Link className="button text" to="/insights">Ver mis patrones</Link></div></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><BookCover book={books[0]} large/></div></section><section className="page-width section"><div className="section-heading"><div><span className="kicker">CONTINÚA TU HISTORIA</span><h2>Estás leyendo</h2></div></div><div className="reading-grid">{reading.map(book=><Link className="reading-card" to={`/books/${book.id}`} key={book.id}><BookCover book={book}/><div className="reading-info"><span className="status-dot">En lectura</span><h3>{book.title}</h3><p>{book.author}</p><div className="progress-label"><span>Progreso</span><strong>{book.progress}%</strong></div><div className="progress"><span style={{width:`${book.progress}%`}}/></div></div></Link>)}</div></section></>}
+const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
+
+function FeedCard({ post }) {
+  const { getBook } = useLibrary()
+  const book = post.bookId ? getBook(post.bookId) : null
+  return <article className="feed-card">
+    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div><strong>{post.author}</strong><small>{post.role} · {post.time}</small></div><span className="post-kind">{post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación'}</span></header>
+    {post.title && <h2>{post.title}</h2>}
+    {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill={i < post.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}<span>{post.rating}/5</span></div>}
+    <p className="post-text">{post.text}</p>
+    {post.quote && <blockquote className="post-quote">“{post.quote}”<span>Desde el cuaderno de la autora</span></blockquote>}
+    {book && <Link className="post-book" to={'/books/' + book.id}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'CONTINÚA LEYENDO' : 'EN ESTA RESEÑA'}</small><h3>{book.title}</h3><p>{book.author}</p>{post.page && <><div className="progress-label"><span>Página {post.page} de {post.total}</span><strong>{Math.round(post.page / post.total * 100)} %</strong></div><div className="progress"><span style={{ width: post.page / post.total * 100 + '%' }} /></div></>}</div><ArrowUpRight size={18} /></Link>}
+  </article>
+}
+
+export default function HomePage() {
+  const [filter, setFilter] = useState('all')
+  const { books } = useLibrary()
+  const { user } = useAuth()
+  return <div className="mural-layout">
+    <section className="mural-feed" aria-labelledby="mural-title"><header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
+      <div className="demo-label">Vista previa · Publicaciones y lecturas de ejemplo</div>
+      <nav className="feed-filters" aria-label="Filtrar mural">{filters.map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</nav>
+      <div className="feed-posts">{feedPosts.filter(post => filter === 'all' || post.type === filter).map(post => <FeedCard key={post.id} post={post} />)}</div>
+      <p className="feed-end">Estás al día con las publicaciones de ejemplo.</p>
+    </section>
+    <aside className="mural-aside"><section className="reader-summary"><span className="kicker">TU RINCÓN</span><h2>Hola, {user.display_name.split(' ')[0]}</h2><p>Tu próxima página también tiene una historia.</p><Link to="/profile">Visitar mi perfil <ArrowUpRight size={16} /></Link></section>
+      <section className="aside-reading"><h2><BookOpen size={18} /> Sigue leyendo</h2>{books.filter(book => book.status === 'Leyendo').map(book => <Link to={'/books/' + book.id} className="aside-book" key={book.id}><BookCover book={book} /><div><strong>{book.title}</strong><small>{book.progress}% leído · ejemplo</small></div></Link>)}<Link className="aside-link" to="/profile?tab=library">Ver mi biblioteca →</Link></section>
+      <div className="community-note"><MessageCircle size={22} /><p>Un lugar para conversar sobre las historias que nos acompañan.</p><small>LibrIA · Comunidad lectora</small></div>
+    </aside>
+  </div>
+}
