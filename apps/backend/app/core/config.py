@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     jwt_secret: str = "development-only-change-this-secret"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    google_books_api_key: str = ""
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    google_oauth_scope: str = "https://www.googleapis.com/auth/books"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
