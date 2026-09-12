@@ -124,6 +124,8 @@ Estas exclusiones están definidas en `.gitignore`.
 
 ## Estructura
 
+Documentación: [arquitectura](docs/architecture.md), [modelo de datos](docs/data-model.md) y [base de datos y pgAdmin](docs/database.md), con las tablas actuales, cómo visualizarlas y el diseño propuesto para las siguientes etapas.
+
 ```text
 LibrIA/
 ├── apps/

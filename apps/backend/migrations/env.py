@@ -7,6 +7,8 @@ from app.core.config import get_settings
 from app.core.database import Base
 from app.modules.auth.models import AuthAccount  # noqa: F401
 from app.modules.users.models import User  # noqa: F401
+from app.modules.books import models as book_models  # noqa: F401
+from app.modules.library import models as library_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

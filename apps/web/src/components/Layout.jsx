@@ -1,17 +1,21 @@
-import { useState } from 'react'
-import { BookOpen, BrainCircuit, Compass, Home, Library, Menu, Search, X } from 'lucide-react'
+import { BookOpen, Compass, Home, LogOut, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-// Estructura compartida por todas las páginas privadas del prototipo.
 export default function Layout() {
-  const [open, setOpen] = useState(false)
-  const links = [{to:'/',label:'Inicio',icon:Home,end:true},{to:'/books',label:'Explorar',icon:Compass},{to:'/library',label:'Mi biblioteca',icon:Library},{to:'/insights',label:'Mis patrones',icon:BrainCircuit}]
-  return <div className="app-shell">
-    <header className="topbar"><NavLink className="brand" to="/"><span className="brand-icon"><BookOpen size={21}/></span><span>Libr<span>IA</span></span></NavLink>
-      <nav className={open ? 'nav nav--open' : 'nav'}>{links.map(({to,label,icon:Icon,end}) => <NavLink key={to} to={to} end={end} onClick={()=>setOpen(false)}><Icon size={17}/>{label}</NavLink>)}</nav>
-      <div className="header-actions"><NavLink className="search-trigger" to="/books"><Search size={19}/></NavLink><NavLink className="avatar" to="/profile">NM</NavLink><button className="menu-button" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></div>
-    </header>
-    <main><Outlet /></main>
-    <footer><span className="brand footer-brand">Libr<span>IA</span></span><p>Lee, registra y descubre tu historia como lector.</p><small>Prototipo MVP · Datos demostrativos</small></footer>
+  const { user, logout } = useAuth()
+  const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
+  return <div className="social-shell">
+    <aside className="social-sidebar">
+      <NavLink className="brand" to="/" aria-label="LibrIA, mural"><span className="brand-icon"><BookOpen size={21} /></span><span>Libr<span>IA</span></span></NavLink>
+      <p className="sidebar-caption">Historias que nos conectan</p>
+      <nav className="social-nav" aria-label="Navegación principal">
+        <NavLink to="/" end><Home size={22} /><span>Mural</span></NavLink>
+        <NavLink to="/books"><Compass size={22} /><span>Explorar libros</span></NavLink>
+        <NavLink to="/profile"><UserRound size={22} /><span>Mi perfil</span></NavLink>
+      </nav>
+      <div className="sidebar-account"><NavLink to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>Mi espacio lector</small></span></NavLink><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
+    </aside>
+    <main className="social-main"><Outlet /></main>
   </div>
 }

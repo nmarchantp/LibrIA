@@ -29,13 +29,15 @@ router -> service -> repository -> PostgreSQL
 - Model: persistencia.
 - Schema: validación con Pydantic.
 
-Los módulos son `auth`, `users`, `books`, `library`, `reading_experience`, `analytics` y `ai_insights`. Las integraciones externas dependen de interfaces propias, no de un proveedor concreto.
+Los módulos previstos son `auth`, `users`, `books`, `library`, `reading_experience`, `social`, `analytics` y `ai_insights`. Actualmente existen `auth` y `users`, además de los modelos de `books` y `library`; los servicios y endpoints de estos dos últimos están pendientes. El módulo `social` agrupará perfiles administrados, seguimientos, reseñas públicas, publicaciones y comentarios. Las integraciones externas dependen de interfaces propias, no de un proveedor concreto.
 
 ## Datos
 
 - `app`: información operacional.
 - `analytics`: indicadores generados por ETL.
-- `ai`: trazabilidad mínima de solicitudes y resultados de IA.
+- `ai`: historial de solicitudes, resultados de análisis y recomendaciones de IA.
+
+El [modelo de datos completo](data-model.md) detalla entidades, campos, relaciones y reglas, distinguiendo las tablas existentes de las propuestas. Separa obras de ediciones y cada relectura de sus experiencias; el progreso se calcula usando las páginas de la edición seleccionada. Los perfiles son públicos; la visibilidad de experiencias y biblioteca está documentada como una decisión pendiente.
 
 El ETL solamente lee `app` y escribe `analytics`; nunca modifica los datos operacionales.
 
