@@ -6,9 +6,17 @@ const LibraryContext = createContext(null)
 // Centraliza temporalmente la biblioteca; luego sus acciones llamarán a FastAPI.
 export function LibraryProvider({ children }) {
   const [books, setBooks] = useState(initialBooks)
-  const updateStatus = (id, status) => setBooks(current => current.map(book => book.id === Number(id) ? { ...book, status } : book))
-  const getBook = (id) => books.find(book => book.id === Number(id))
-  return <LibraryContext.Provider value={{ books, updateStatus, getBook }}>{children}</LibraryContext.Provider>
+  const updateStatus = (id, status) => setBooks(current => current.map(book => String(book.id) === String(id) ? { ...book, status } : book))
+  const addBook = (book) => setBooks(current => {
+    if (!book) return current
+    const existing = current.some(item => String(item.id) === String(book.id))
+    if (existing) {
+      return current.map(item => String(item.id) === String(book.id) ? { ...item, ...book } : item)
+    }
+    return [book, ...current]
+  })
+  const getBook = (id) => books.find(book => String(book.id) === String(id))
+  return <LibraryContext.Provider value={{ books, updateStatus, addBook, getBook }}>{children}</LibraryContext.Provider>
 }
 
 // Este archivo exporta deliberadamente el proveedor y su hook de acceso.
