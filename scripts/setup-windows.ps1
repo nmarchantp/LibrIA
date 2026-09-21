@@ -73,6 +73,7 @@ try {
 
 Write-Step 'Creando configuración local segura'
 $jwtSecret = New-RandomSecret 64
+$demoPassword = New-RandomSecret 32
 $environment = @"
 APP_NAME=LibrIA API
 APP_ENV=development
@@ -80,6 +81,7 @@ API_PREFIX=/api
 DATABASE_URL=postgresql+psycopg://libria:$appPassword@localhost:5432/libria
 FRONTEND_ORIGINS=http://localhost:5173
 JWT_SECRET=$jwtSecret
+LIBRIA_DEMO_PASSWORD=$demoPassword
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 "@

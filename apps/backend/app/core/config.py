@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
     google_oauth_scope: str = "https://www.googleapis.com/auth/books"
+    libria_demo_password: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

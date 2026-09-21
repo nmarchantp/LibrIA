@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowUpRight, BookOpen, MessageCircle, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { feedPosts } from '../feedData'
+import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import { useAuth } from '../context/AuthContext'
 import BookCover from '../components/BookCover'
@@ -23,14 +23,32 @@ function FeedCard({ post }) {
 
 export default function HomePage() {
   const [filter, setFilter] = useState('all')
+  const [posts, setPosts] = useState([])
+  const [feedError, setFeedError] = useState(false)
   const { books } = useLibrary()
   const { user } = useAuth()
+  useEffect(() => {
+    let active = true
+    const refresh = () => apiRequest('/posts').then(data => {
+      if (!active) return
+      setFeedError(false)
+      setPosts(data.map(post => ({
+        id: post.id, type: post.kind, author: post.author,
+        initials: post.author.split(' ').slice(0, 2).map(part => part[0]).join('').toUpperCase(),
+        role: { community: 'Comunidad', reading: 'Lectura', review: 'Reseña', event: 'Evento' }[post.source], time: new Date(post.created_at).toLocaleString('es-CL'),
+        title: post.title, text: post.body, color: '#e8d6ce',
+      })))
+    }).catch(() => { if (active) setFeedError(true) })
+    refresh()
+    const timer = window.setInterval(refresh, 30000)
+    return () => { active = false; window.clearInterval(timer) }
+  }, [])
   return <div className="mural-layout">
     <section className="mural-feed" aria-labelledby="mural-title"><header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
-      <div className="demo-label">Vista previa · Publicaciones y lecturas de ejemplo</div>
+      {feedError && <div className="demo-label">No se pudieron cargar las publicaciones.</div>}
       <nav className="feed-filters" aria-label="Filtrar mural">{filters.map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</nav>
-      <div className="feed-posts">{feedPosts.filter(post => filter === 'all' || post.type === filter).map(post => <FeedCard key={post.id} post={post} />)}</div>
-      <p className="feed-end">Estás al día con las publicaciones de ejemplo.</p>
+      <div className="feed-posts">{posts.filter(post => filter === 'all' || post.type === filter).map(post => <FeedCard key={post.id} post={post} />)}</div>
+      <p className="feed-end">{posts.length ? 'Estás al día con las publicaciones.' : 'Aún no hay publicaciones.'}</p>
     </section>
     <aside className="mural-aside"><section className="reader-summary"><span className="kicker">TU RINCÓN</span><h2>Hola, {user.display_name.split(' ')[0]}</h2><p>Tu próxima página también tiene una historia.</p><Link to="/profile">Visitar mi perfil <ArrowUpRight size={16} /></Link></section>
       <section className="aside-reading"><h2><BookOpen size={18} /> Sigue leyendo</h2>{books.filter(book => book.status === 'Leyendo').map(book => <Link to={'/books/' + book.id} className="aside-book" key={book.id}><BookCover book={book} /><div><strong>{book.title}</strong><small>{book.progress}% leído · ejemplo</small></div></Link>)}<Link className="aside-link" to="/profile?tab=library">Ver mi biblioteca →</Link></section>
