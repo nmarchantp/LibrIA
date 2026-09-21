@@ -1,5 +1,7 @@
 # Modelo de datos de LibrIA
 
+> **Decisión posterior:** el [modelo social acordado](social-model.md) reemplaza las propuestas de este documento sobre identidad pública, reseñas por lectura, publicaciones, comentarios y feed. Las secciones siguientes conservan el diseño histórico hasta que se migre el esquema.
+
 Documento de diseño basado en los requisitos acordados. La primera etapa ya está implementada hasta la migración `0003_catalogo_lecturas`: `app.usuarios`, `app.cuentas_autenticacion`, `app.autores`, `app.obras`, `app.obras_autores`, `app.ediciones`, `app.fuentes_catalogo`, `app.entradas_biblioteca`, `app.lecturas` y `app.progreso_lectura`. Las tablas originales `app.users` y `app.auth_accounts` fueron renombradas mediante la migración 0002. Las demás tablas siguen propuestas. Los vínculos de autores y ediciones a perfiles públicos se agregarán en la etapa social. Consultar la [guía de PostgreSQL y pgAdmin](database.md) para visualizar la base y conocer el alcance implementado.
 
 ## Requisitos confirmados

@@ -1,5 +1,7 @@
 # Arquitectura de LibrIA
 
+El [modelo social acordado](social-model.md) define la separación de cuenta y perfil actor, reseñas por perfil y obra, y feed compuesto por publicaciones, reseñas y avances. El módulo social actual todavía es un prototipo y requiere migración para cumplirlo.
+
 ## Decisión
 
 LibrIA se implementa como un **monolito modular**: un frontend React independiente, una sola aplicación FastAPI y una sola instancia PostgreSQL. No se crearán microservicios durante el MVP.

@@ -14,6 +14,8 @@ if (-not (Test-Path -LiteralPath $python) -or -not (Test-Path -LiteralPath (Join
 # Cada servidor queda en una ventana visible para poder leer logs y detenerlo con Ctrl+C.
 Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m uvicorn app.main:app --reload"
 Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
+Start-Process -FilePath $python -WorkingDirectory $backendPath -ArgumentList '-m', 'scripts.generate_posts' -WindowStyle Hidden
 
 Write-Host 'Backend:  http://localhost:8000/docs' -ForegroundColor Green
 Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
+Write-Host 'Generador: una publicación cada 30 segundos' -ForegroundColor Green

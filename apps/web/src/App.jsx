@@ -8,6 +8,10 @@ import ProfilePage from './pages/ProfilePage'
 import ReadingPage from './pages/ReadingPage'
 import RegisterPage from './pages/RegisterPage'
 import SessionGate from './components/SessionGate'
+import EventsPage from './pages/EventsPage'
+import MessagesPage from './pages/MessagesPage'
+import NotificationsPage from './pages/NotificationsPage'
+import RecommendationsPage from './pages/RecommendationsPage'
 
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
@@ -25,6 +29,10 @@ export default function App() {
       <Route path="/library" element={<Navigate to="/profile?tab=library" replace />} />
       <Route path="/reading/:id" element={<ReadingPage />} />
       <Route path="/insights" element={<Navigate to="/profile?tab=analysis" replace />} />
+      <Route path="/events" element={<EventsPage />} />
+      <Route path="/messages" element={<MessagesPage />} />
+      <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/recommendations" element={<RecommendationsPage />} />
     </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />
