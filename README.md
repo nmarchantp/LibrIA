@@ -66,6 +66,16 @@ El archivo `.env` es local y está excluido de Git. Nunca debe enviarse por corr
 .\run.cmd
 ```
 
+Antes de abrir los servidores, `run.cmd` comprueba las dependencias de Python y Node.js y aplica las migraciones pendientes de la base de datos. Si una comprobación falla, detiene el inicio y muestra el error. El archivo local `.env` debe existir; este comando no lo reemplaza.
+
+Después de actualizar el repositorio desde GitHub, puedes preparar el entorno sin iniciar los servidores:
+
+```powershell
+.\update.cmd
+```
+
+Este comando ejecuta `git pull --ff-only` y las mismas comprobaciones de `run.cmd`. Si usas `git pull` por tu cuenta, `run.cmd` detecta los cambios al siguiente inicio.
+
 También puede ejecutarse directamente `.\scripts\run-local.ps1`.
 
 Se abrirán dos terminales:
