@@ -52,13 +52,13 @@ El script solicitará de forma oculta la contraseña de `postgres` y realizará 
 1. Validación de Python, Node.js y PostgreSQL.
 2. Creación o actualización del usuario local `libria` con contraseña aleatoria.
 3. Creación de la base `libria` si todavía no existe.
-4. Creación de `apps/backend/.env` con JWT y credenciales aleatorias.
+4. Creación de `apps/backend/.env` con la conexión local, JWT y contraseña de demostración propias de ese equipo.
 5. Creación del entorno virtual Python `.venv`.
 6. Instalación de versiones Python fijadas en `requirements.txt`.
 7. Ejecución de las migraciones de Alembic.
-8. Instalación exacta del frontend mediante `npm ci` y `package-lock.json`.
+8. Creación de `apps/web/.env` desde su ejemplo, si todavía no existe, e instalación exacta del frontend mediante `npm ci` y `package-lock.json`.
 
-El archivo `.env` es local y está excluido de Git. Nunca debe enviarse por correo, chat ni subirse al repositorio.
+Los archivos [apps/backend/.env.example](apps/backend/.env.example) y [apps/web/.env.example](apps/web/.env.example) documentan todas las variables que usa cada aplicación. `setup.cmd` genera las contraseñas locales y deja listos ambos `.env`. Para habilitar Google OAuth o Google Books, cada integrante debe completar las variables `GOOGLE_*` y `VITE_GOOGLE_BOOKS_API_KEY` en sus archivos locales con las credenciales que tenga autorizadas. Los `.env` reales contienen secretos y siguen excluidos de Git.
 
 ### 4. Levantar LibrIA
 

@@ -84,8 +84,17 @@ JWT_SECRET=$jwtSecret
 LIBRIA_DEMO_PASSWORD=$demoPassword
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+GOOGLE_BOOKS_API_KEY=
+GOOGLE_OAUTH_SCOPE=https://www.googleapis.com/auth/books
 "@
 Set-Content -LiteralPath (Join-Path $backendPath '.env') -Value $environment -Encoding utf8
+$webEnv = Join-Path $webPath '.env'
+if (-not (Test-Path -LiteralPath $webEnv)) {
+    Copy-Item -LiteralPath (Join-Path $webPath '.env.example') -Destination $webEnv
+}
 
 Write-Step 'Instalando backend Python'
 $venvPython = Join-Path $backendPath '.venv\Scripts\python.exe'
