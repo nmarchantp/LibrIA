@@ -1,0 +1,11 @@
+.role-panel { border-top: 1px solid var(--line); padding: 32px 20px 50px; max-width: 680px; }
+.role-panel h2 { font: 26px 'DM Serif Display', serif; margin-bottom: 10px; }
+.role-panel h3 { font-size: 16px; margin: 28px 0 12px; }
+.role-panel p { color: var(--muted); line-height: 1.6; }
+.role-form { display: grid; gap: 14px; margin-top: 20px; }
+.role-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.role-form input, .role-form textarea, .role-form select { width: 100%; padding: 11px; border: 1px solid var(--line); border-radius: 5px; background: white; font: inherit; }
+.role-form .button { justify-self: start; }
+.role-request { padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.role-request p { margin: 8px 0 14px; }
+.role-panel > .button { margin-top: 18px; }

@@ -9,6 +9,7 @@ export default function BookDetailPage() {
   const { getBook, updateStatus, addBook } = useLibrary()
   const [loading, setLoading] = useState(true)
   const [detailBook, setDetailBook] = useState(null)
+  const [statusError, setStatusError] = useState('')
 
   useEffect(() => {
     const existingBook = getBook(id)
@@ -40,7 +41,12 @@ export default function BookDetailPage() {
     return () => { active = false }
   }, [id, getBook, addBook])
 
-  const book = detailBook ?? getBook(id)
+  const book = getBook(id) ?? detailBook
+  const changeStatus = async status => {
+    setStatusError('')
+    try { await updateStatus(book.id, status) }
+    catch (cause) { setStatusError(cause.message || 'No se pudo registrar el cambio de lectura.') }
+  }
 
   if (loading) {
     return <section className="page-width page"><div className="modal detail-page"><p>Cargando información del libro…</p></div></section>
@@ -101,16 +107,17 @@ export default function BookDetailPage() {
 
           <label>
             Estado
-            <select value={book.status ?? ''} onChange={e => updateStatus(book.id, e.target.value)}>
+            <select value={book.status ?? ''} onChange={e => changeStatus(e.target.value)}>
               <option value="">Sin estado</option>
               <option>Leyendo</option>
               <option>Pendiente</option>
               <option>Terminado</option>
-              <option>Abandonado</option>
+              <option disabled>Abandonado</option>
             </select>
           </label>
+          {statusError && <p className="notice" role="alert">{statusError}</p>}
 
-          <Link className="button primary" to={`/reading/${book.id}`}>Registrar experiencia</Link>
+          <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>
         </div>
       </div>
     </section>

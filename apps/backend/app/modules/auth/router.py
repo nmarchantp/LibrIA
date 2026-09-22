@@ -64,7 +64,7 @@ def login(data: LoginRequest, service: Annotated[AuthService, Depends(get_auth_s
 
 @router.get("/me", response_model=UserResponse)
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
-    return UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
+    return UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
 
 
 @router.get("/google/login")

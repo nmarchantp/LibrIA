@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.modules.auth.router import router as auth_router
 from app.modules.social.router import router as social_router
+from app.modules.users.roles_router import router as roles_router
+from app.modules.library.router import router as readings_router
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name, version="0.1.0")
@@ -22,6 +24,8 @@ app.add_middleware(
 # Todos los módulos se incorporan al mismo servidor bajo el prefijo /api.
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(social_router, prefix=settings.api_prefix)
+app.include_router(roles_router, prefix=settings.api_prefix)
+app.include_router(readings_router, prefix=settings.api_prefix)
 
 
 @app.get("/health", tags=["system"])
