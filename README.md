@@ -68,6 +68,8 @@ El archivo `.env` es local y está excluido de Git. Nunca debe enviarse por corr
 
 Antes de abrir los servidores, `run.cmd` comprueba las dependencias de Python y Node.js y aplica las migraciones pendientes de la base de datos. Si una comprobación falla, detiene el inicio y muestra el error. El archivo local `.env` debe existir; este comando no lo reemplaza.
 
+Si el backend o el frontend de LibrIA ya están abiertos en sus puertos habituales, `run.cmd` los reutiliza y evita iniciar una segunda instancia.
+
 Después de actualizar el repositorio desde GitHub, puedes preparar el entorno sin iniciar los servidores:
 
 ```powershell
