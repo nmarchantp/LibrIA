@@ -10,8 +10,16 @@ import './HomePage.css'
 const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Admin' }
 const roleColors = { lector: '#e8d6ce', influencer: '#dce5d8', autor: '#e7dfed', libreria: '#eedebc', admin: '#d5e3e8' }
+const composerCopy = {
+  influencer: { heading: 'Comparte con tu comunidad', hint: 'Publica recomendaciones, lecturas conjuntas o conversaciones sobre libros.', placeholder: '¿Qué recomendarías hoy?' },
+  autor: { heading: 'Comparte tu trabajo', hint: 'Publica novedades de tus obras o anuncia un encuentro con lectores.', placeholder: '¿Qué hay de nuevo en tu escritura?' },
+  libreria: { heading: 'Publica desde tu librería', hint: 'Comparte promociones, novedades o un evento de tu librería.', placeholder: 'Cuéntale a la comunidad sobre tus libros o actividades.' },
+  admin: { heading: 'Publica como administrador', hint: 'Comparte anuncios y eventos para la comunidad.', placeholder: 'Escribe un anuncio para la comunidad.' },
+}
 
 function PostComposer({ role, onCreated }) {
+  const { retry } = useAuth()
+  const copy = composerCopy[role]
   const [source, setSource] = useState('community')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -28,17 +36,18 @@ function PostComposer({ role, onCreated }) {
       setTitle('')
       setBody('')
       onCreated()
-    } catch {
-      setError('No se pudo publicar. Inténtalo de nuevo.')
+    } catch (cause) {
+      if (cause.status === 403) retry()
+      setError(cause.status === 403 ? 'Tu perfil ya no tiene permiso para este tipo de publicación.' : 'No se pudo publicar. Inténtalo de nuevo.')
     } finally {
       setBusy(false)
     }
   }
   return <form className="post-composer" onSubmit={submit}>
-    <h2>Compartir con la comunidad</h2>
-    {(role === 'autor' || role === 'libreria' || role === 'admin') && <label>Tipo<select value={source} onChange={event => setSource(event.target.value)}><option value="community">Publicación</option><option value="event">Evento</option></select></label>}
+    <h2>{copy.heading}</h2><p className="composer-hint">{copy.hint}</p>
+    {(role === 'autor' || role === 'libreria' || role === 'admin') && <label>Tipo<select value={source} onChange={event => setSource(event.target.value)}><option value="community">{role === 'libreria' ? 'Publicación o promoción' : 'Publicación'}</option><option value="event">Evento</option></select></label>}
     <label>Título<input value={title} onChange={event => setTitle(event.target.value)} maxLength="200" placeholder="Título opcional" /></label>
-    <label>Contenido<textarea value={body} onChange={event => setBody(event.target.value)} maxLength="3000" rows="3" required placeholder="¿Qué quieres compartir?" /></label>
+    <label>Contenido<textarea value={body} onChange={event => setBody(event.target.value)} maxLength="3000" rows="3" required placeholder={copy.placeholder} /></label>
     {error && <p className="comment-error" role="alert">{error}</p>}
     <button className="button primary" disabled={busy || !body.trim()}>{busy ? 'Publicando...' : 'Publicar'}</button>
   </form>

@@ -120,7 +120,7 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
         percent = round(reading.current_page * 100 / reading.total_pages)
         body = f'Abandonó "{work.title}".'
 
-    post = Post(user_id=user.id, source="reading", kind="progress", body=body,
+    post = Post(user_id=user.id, author_role=user.role, source="reading", kind="progress", body=body,
                 book_ref=data.book_ref, book_title=work.title,
                 progress_percent=percent, reading_event=data.event)
     db.add(post)

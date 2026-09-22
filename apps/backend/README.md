@@ -27,11 +27,16 @@ API: `http://localhost:8000`; documentación interactiva: `http://localhost:8000
 - `GET /api/roles/requests/me`: consulta el historial de solicitudes propias.
 - `GET /api/roles/requests/pending` y `POST /api/roles/requests/{id}/approve|reject`: revisión administrativa.
 - `POST /api/roles/bookstores`: creación de cuentas de librería exclusiva de administradores.
+- `GET /api/roles/profiles`: listado paginado para administradores, con búsqueda por nombre o correo y filtro de rol.
+- `PATCH /api/roles/profiles/{id}`: edita nombre visible y biografía sin cambiar permisos.
+- `POST /api/roles/profiles/{id}/revoke`: revoca el permiso de autor o influencer y guarda el motivo.
+- `GET /api/roles/profiles/{id}/requests|history`: consulta solicitudes y revocaciones de un perfil.
 - `GET /api/posts/{post_id}/comments`: lista los últimos 100 comentarios de una publicación, reseña o avance.
 - `POST /api/posts/{post_id}/comments`: crea un comentario de hasta 1000 caracteres con el token Bearer del usuario.
 
 El registro público no acepta `role`. Un lector puede comentar cualquier publicación, reseñar libros y generar avances de lectura, pero no escribir publicaciones libres. La aprobación de autor e influencer y el alta de librerías pasan por una cuenta administradora. El mural devuelve `author_role`, `book_title`, `rating` y los datos del avance para mostrar el tipo de contenido.
 Las publicaciones de ejemplo antiguas que incumplen estas reglas permanecen en la base, pero no se incluyen en `GET /api/posts`.
+El administrador accede al mantenedor desde **Gestionar perfiles** en el menú o en `/admin/profiles`. Desde allí busca cuentas, revisa solicitudes, edita datos públicos, revoca permisos de autor o influencer y crea librerías. El influencer puede publicar en la comunidad; el autor y la librería también pueden publicar eventos. La librería usa publicaciones normales para promociones. Los lectores siguen publicando solo reseñas y avances de lectura. Las publicaciones nuevas guardan el tipo de perfil del autor al publicarse, de modo que una revocación posterior no las cambia ni las oculta. Las publicaciones anteriores a esta migración toman el rol vigente al momento de aplicar la migración.
 
 Para habilitar el primer administrador, registra su cuenta normal y ejecuta desde el servidor:
 

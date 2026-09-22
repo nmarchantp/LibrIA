@@ -70,6 +70,7 @@
 .comment-error { margin: 0; color: #a52f26; font-size: 12px; }
 .post-composer { display: grid; gap: 12px; padding: 20px; margin: 0 0 26px; border: 1px solid var(--line); border-radius: 10px; background: #fdfbf7; }
 .post-composer h2 { margin: 0; font: 23px 'DM Serif Display', serif; }
+.post-composer .composer-hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .post-composer label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
 .post-composer input, .post-composer textarea, .post-composer select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: white; font: inherit; }
 .post-composer textarea { resize: vertical; }

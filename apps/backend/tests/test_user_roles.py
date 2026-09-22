@@ -59,7 +59,7 @@ class UserRolesTest(unittest.TestCase):
         self.assertEqual(review.status_code, 201, review.text)
         self.assertEqual(review.json()["author_role"], "lector")
         self.assertEqual(review.json()["rating"], 4)
-        legacy = Post(user_id=uuid.UUID(reader["user"]["id"]), source="community", kind="community", body="Ejemplo antiguo")
+        legacy = Post(user_id=uuid.UUID(reader["user"]["id"]), author_role="lector", source="community", kind="community", body="Ejemplo antiguo")
         self.db.add(legacy)
         self.db.flush()
         listed = [item["id"] for item in self.client.get("/api/posts").json()]
@@ -94,6 +94,13 @@ class UserRolesTest(unittest.TestCase):
             "email": f"{uuid.uuid4()}@example.com", "password": "test-password", "display_name": "Librería prueba"})
         self.assertEqual(bookstore.status_code, 201, bookstore.text)
         self.assertEqual(bookstore.json()["role"], "libreria")
+        edited = self.client.patch(f"/api/roles/profiles/{bookstore.json()['id']}", headers=self.auth(admin),
+                                   json={"display_name": "Librería renovada", "biography": "Libros de fantasía"})
+        self.assertEqual(edited.status_code, 200, edited.text)
+        self.assertEqual(edited.json()["role"], "libreria")
+        self.assertEqual(edited.json()["display_name"], "Librería renovada")
+        self.assertEqual(self.client.post(f"/api/roles/profiles/{bookstore.json()['id']}/revoke",
+                                          headers=self.auth(admin), json={"reason": "Motivo de prueba suficiente"}).status_code, 409)
 
     def test_reading_progress_creates_feed_posts(self):
         reader = self.register()
@@ -117,6 +124,72 @@ class UserRolesTest(unittest.TestCase):
             "event": "abandon", "abandonment_reason": "No me atrapó la historia"})
         self.assertEqual(abandon.status_code, 201, abandon.text)
         self.assertEqual(abandon.json()["post"]["reading_event"], "abandon")
+
+    def test_admin_profile_maintenance_and_revocation(self):
+        author = self.register("Autora verificable")
+        admin = self.register("Administrador de perfiles")
+        self.db.get(User, uuid.UUID(admin["user"]["id"])).role = "admin"
+        self.db.flush()
+        author_headers = self.auth(author)
+        admin_headers = self.auth(admin)
+        request = self.client.post("/api/roles/requests", headers=author_headers,
+                                   json={"requested_role": "autor", "note": "Tengo una novela publicada."})
+        self.assertEqual(request.status_code, 201, request.text)
+
+        for method, path in (("get", "/api/roles/profiles"),
+                             ("get", f"/api/roles/profiles/{author['user']['id']}/requests"),
+                             ("get", f"/api/roles/profiles/{author['user']['id']}/history")):
+            self.assertEqual(getattr(self.client, method)(path, headers=author_headers).status_code, 403)
+        results = self.client.get("/api/roles/profiles", headers=admin_headers,
+                                  params={"q": "Autora verificable", "role": "lector", "limit": 1})
+        self.assertEqual(results.status_code, 200, results.text)
+        self.assertEqual(results.json()["total"], 1)
+        self.assertEqual(results.json()["items"][0]["pending_role"], "autor")
+        self.assertEqual(self.client.get("/api/roles/profiles", headers=admin_headers,
+                                         params={"role": "administrador"}).status_code, 422)
+        self.assertEqual(self.client.patch(f"/api/roles/profiles/{author['user']['id']}",
+                                           headers=admin_headers, json={"display_name": "Nuevo nombre", "role": "admin"}).status_code, 422)
+        edited = self.client.patch(f"/api/roles/profiles/{author['user']['id']}", headers=admin_headers,
+                                   json={"display_name": "Autora actualizada", "biography": "Escribe ficción."})
+        self.assertEqual(edited.status_code, 200, edited.text)
+        self.assertEqual(edited.json()["role"], "lector")
+        self.assertEqual(len(self.client.get(f"/api/roles/profiles/{author['user']['id']}/requests",
+                                             headers=admin_headers).json()), 1)
+
+        approved = self.client.post(f"/api/roles/requests/{request.json()['id']}/approve", headers=admin_headers)
+        self.assertEqual(approved.status_code, 200, approved.text)
+        post = self.client.post("/api/posts", headers=author_headers,
+                                json={"source": "community", "kind": "community", "body": "Mi próximo libro"})
+        self.assertEqual(post.status_code, 201, post.text)
+        self.assertEqual(self.client.post(f"/api/roles/profiles/{author['user']['id']}/revoke",
+                                          headers=author_headers, json={"reason": "No corresponde al perfil"}).status_code, 403)
+        revoked = self.client.post(f"/api/roles/profiles/{author['user']['id']}/revoke", headers=admin_headers,
+                                   json={"reason": "Se retiró la verificación del perfil."})
+        self.assertEqual(revoked.status_code, 200, revoked.text)
+        self.assertEqual(revoked.json()["role"], "lector")
+        self.assertEqual(self.client.post("/api/posts", headers=author_headers,
+                                          json={"source": "community", "kind": "community", "body": "Otro libro"}).status_code, 403)
+        listed = self.client.get("/api/posts").json()
+        self.assertEqual(next(item for item in listed if item["id"] == post.json()["id"])["author_role"], "autor")
+        history = self.client.get(f"/api/roles/profiles/{author['user']['id']}/history", headers=admin_headers)
+        self.assertEqual(history.status_code, 200, history.text)
+        self.assertEqual(history.json()[0]["previous_role"], "autor")
+        self.assertEqual(history.json()[0]["new_role"], "lector")
+
+    def test_publishing_permissions_for_professional_profiles(self):
+        for role in ("influencer", "autor", "libreria"):
+            with self.subTest(role=role):
+                session = self.register(f"Cuenta {role}")
+                self.db.get(User, uuid.UUID(session["user"]["id"])).role = role
+                self.db.flush()
+                headers = self.auth(session)
+                publication = self.client.post("/api/posts", headers=headers,
+                                               json={"source": "community", "kind": "community", "body": "Una novedad"})
+                self.assertEqual(publication.status_code, 201, publication.text)
+                self.assertEqual(publication.json()["author_role"], role)
+                event = self.client.post("/api/posts", headers=headers,
+                                         json={"source": "event", "kind": "community", "body": "Encuentro de lectores"})
+                self.assertEqual(event.status_code, 403 if role == "influencer" else 201, event.text)
 
     def test_demo_examples_match_permissions(self):
         self.assertEqual({role for _, role in PEOPLE}, set(TEMPLATES))
