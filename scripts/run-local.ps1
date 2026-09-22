@@ -56,10 +56,31 @@ Write-Host 'Preparación completa.' -ForegroundColor Green
 if ($PreflightOnly) { return }
 
 # Cada servidor queda en una ventana visible para poder leer logs y detenerlo con Ctrl+C.
-Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m uvicorn app.main:app --reload"
-Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
+if (Test-NetConnection -ComputerName 127.0.0.1 -Port 8000 -InformationLevel Quiet -WarningAction SilentlyContinue) {
+    try { $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3 } catch {
+        throw 'El puerto 8000 está ocupado por otro proceso. Libéralo antes de iniciar LibrIA.'
+    }
+    if ($health.service -ne 'libria-api' -or $health.status -ne 'ok') {
+        throw 'El puerto 8000 está ocupado por otro servicio. Libéralo antes de iniciar LibrIA.'
+    }
+    Write-Host 'Backend: ya estaba iniciado en http://localhost:8000' -ForegroundColor Yellow
+} else {
+    Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m uvicorn app.main:app --reload"
+    Write-Host 'Backend:  http://localhost:8000/docs' -ForegroundColor Green
+}
+
+if (Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quiet -WarningAction SilentlyContinue) {
+    try { $webResponse = Invoke-WebRequest -Uri 'http://127.0.0.1:5173/' -UseBasicParsing -TimeoutSec 3 } catch {
+        throw 'El puerto 5173 está ocupado por otro proceso. Libéralo antes de iniciar LibrIA.'
+    }
+    if ($webResponse.Content -notmatch '/@vite/client' -or $webResponse.Content -notmatch 'LibrIA') {
+        throw 'El puerto 5173 está ocupado por otro servicio. Libéralo antes de iniciar LibrIA.'
+    }
+    Write-Host 'Frontend: ya estaba iniciado en http://localhost:5173' -ForegroundColor Yellow
+} else {
+    Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
+    Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
+}
 Start-Process -FilePath $python -WorkingDirectory $backendPath -ArgumentList '-m', 'scripts.generate_posts' -WindowStyle Hidden
 
-Write-Host 'Backend:  http://localhost:8000/docs' -ForegroundColor Green
-Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
 Write-Host 'Generador: una publicación cada 30 segundos' -ForegroundColor Green
