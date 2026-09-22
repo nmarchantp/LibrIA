@@ -14,7 +14,7 @@ class AuthService:
     def register(self, data: RegisterRequest) -> TokenResponse:
         if self.repository.get_account_by_email(data.email):
             raise EmailAlreadyRegisteredError
-        user = self.repository.create_account(data.email, hash_password(data.password), data.display_name)
+        user = self.repository.create_account(data.email, hash_password(data.password), data.display_name, "lector")
         return self._token_response(user)
 
     def login(self, data: LoginRequest) -> TokenResponse:
@@ -26,7 +26,7 @@ class AuthService:
     @staticmethod
     def _token_response(user) -> TokenResponse:
         public_user = UserResponse(
-            id=user.id, email=user.auth_account.email, display_name=user.display_name,
+            id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role,
             avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at,
         )
         return TokenResponse(access_token=create_access_token(str(user.id)), user=public_user)

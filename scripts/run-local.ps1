@@ -81,6 +81,14 @@ if (Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quie
     Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
     Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
 }
-Start-Process -FilePath $python -WorkingDirectory $backendPath -ArgumentList '-m', 'scripts.generate_posts' -WindowStyle Hidden
-
-Write-Host 'Generador: una publicación cada 30 segundos' -ForegroundColor Green
+Push-Location $backendPath
+try {
+    & $python -c 'from app.core.config import get_settings; import sys; sys.exit(0 if len(get_settings().libria_demo_password) >= 8 else 1)'
+    $demoPasswordReady = $LASTEXITCODE -eq 0
+} finally { Pop-Location }
+if ($demoPasswordReady) {
+    Start-Process -FilePath $python -WorkingDirectory $backendPath -ArgumentList '-m', 'scripts.generate_posts' -WindowStyle Hidden
+    Write-Host 'Generador: una publicación cada 30 segundos' -ForegroundColor Green
+} else {
+    Write-Warning 'Generador detenido: falta LIBRIA_DEMO_PASSWORD (mínimo 8 caracteres) en apps/backend/.env.'
+}

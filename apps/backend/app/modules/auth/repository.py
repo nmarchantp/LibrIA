@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from app.modules.auth.models import AuthAccount
 from app.modules.users.models import User
+from app.modules.users.roles import PublicUserRole
 from app.core.exceptions import EmailAlreadyRegisteredError
 
 
@@ -21,8 +22,8 @@ class AuthRepository:
         statement = select(User).options(joinedload(User.auth_account)).where(User.id == user_id)
         return self.db.scalar(statement)
 
-    def create_account(self, email: str, password_hash: str, display_name: str) -> User:
-        user = User(display_name=display_name.strip())
+    def create_account(self, email: str, password_hash: str, display_name: str, role: PublicUserRole) -> User:
+        user = User(display_name=display_name.strip(), role=role)
         user.auth_account = AuthAccount(email=email.lower(), password_hash=password_hash)
         self.db.add(user)
         try:

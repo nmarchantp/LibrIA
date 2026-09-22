@@ -4,11 +4,14 @@ import uuid
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.modules.users.roles import UserRole
+
 
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
     display_name: str
+    role: UserRole
     avatar_url: str | None
     biography: str | None
     created_at: datetime
