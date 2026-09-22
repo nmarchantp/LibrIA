@@ -15,7 +15,7 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 
 def as_response(post: Post, author: str, author_role: str) -> PostResponse:
-    return PostResponse(id=post.id, user_id=post.user_id, author=author, author_role=author_role,
+    return PostResponse(id=post.id, user_id=post.user_id, author=author, author_role=post.author_role or author_role,
                         source=post.source, kind=post.kind, title=post.title,
                         body=post.body, book_ref=post.book_ref, book_title=post.book_title,
                         rating=post.rating, progress_percent=post.progress_percent,
@@ -39,7 +39,7 @@ def create_post(data: PostCreate, user: Annotated[User, Depends(get_current_user
         raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
     if data.source == "event" and user.role not in {"autor", "libreria", "admin"}:
         raise HTTPException(status_code=403, detail="Esta cuenta no puede publicar eventos")
-    post = Post(user_id=user.id, **data.model_dump())
+    post = Post(user_id=user.id, author_role=user.role, **data.model_dump())
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -52,7 +52,7 @@ def list_posts(db: Annotated[Session, Depends(get_db)], limit: int = Query(50, g
                       .where(or_(
                           and_(Post.source == "review", Post.book_ref.is_not(None), Post.rating.is_not(None)),
                           and_(Post.source == "reading", Post.reading_event.is_not(None)),
-                          and_(Post.source.in_(("community", "event")), User.role != "lector"),
+                          and_(Post.source.in_(("community", "event")), Post.author_role != "lector"),
                       ))
                       .order_by(Post.created_at.desc(), Post.id.desc()).limit(limit)).all()
     return [as_response(post, name, role) for post, name, role in rows]

@@ -1,6 +1,8 @@
-import { Bell, BookOpen, BrainCircuit, CalendarDays, Compass, Home, Library, LogOut, MessageCircle, Sparkles, UserRound } from 'lucide-react'
+import { Bell, BookOpen, BrainCircuit, CalendarDays, Compass, Home, Library, LogOut, MessageCircle, Settings2, Sparkles, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -19,8 +21,9 @@ export default function Layout() {
         <NavLink to="/insights"><BrainCircuit size={22} /><span>Tu ADN lector</span></NavLink>
         <NavLink to="/recommendations"><Sparkles size={22} /><span>Recomendaciones IA</span></NavLink>
         <NavLink to="/profile"><UserRound size={22} /><span>Mi perfil</span></NavLink>
+        {user.role === 'admin' && <NavLink to="/admin/profiles"><Settings2 size={22} /><span>Gestionar perfiles</span></NavLink>}
       </nav>
-      <div className="sidebar-account"><NavLink to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>Mi espacio lector</small></span></NavLink><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
+      <div className="sidebar-account"><NavLink to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></NavLink><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
     </aside>
     <main className="social-main"><Outlet /></main>
   </div>

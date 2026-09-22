@@ -18,6 +18,7 @@ class Post(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
     source: Mapped[str] = mapped_column(String(40))
+    author_role: Mapped[str] = mapped_column(String(20))
     kind: Mapped[str] = mapped_column(String(20))
     title: Mapped[str | None] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text)
