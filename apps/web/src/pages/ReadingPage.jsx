@@ -10,6 +10,8 @@ export default function ReadingPage() {
   const book = getBook(id)
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
+  const [reviewImages, setReviewImages] = useState([])
+  const [reviewImageError, setReviewImageError] = useState('')
   const [page, setPage] = useState('')
   const [totalPages, setTotalPages] = useState(book?.pageCount || '')
   const [reason, setReason] = useState('')
@@ -18,6 +20,15 @@ export default function ReadingPage() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const selectReviewImages = event => {
+    const selected = Array.from(event.target.files || [])
+    const totalSize = selected.reduce((sum, image) => sum + image.size, 0)
+    if (selected.length > 10) setReviewImageError('Puedes adjuntar hasta 10 imágenes.')
+    else if (selected.some(image => !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(image.type))) setReviewImageError('Usa imágenes JPEG, PNG, GIF o WebP.')
+    else if (selected.some(image => image.size > 5 * 1024 * 1024) || totalSize > 25 * 1024 * 1024) setReviewImageError('Cada imagen puede pesar hasta 5 MB y el total hasta 25 MB.')
+    else { setReviewImages(selected); setReviewImageError('') }
+    event.target.value = ''
+  }
   if (loading) return <p role="status">Cargando biblioteca…</p>
   if (loadError) return <p role="alert">{loadError}</p>
   if (!book) return <Navigate to="/library" replace />
@@ -41,7 +52,14 @@ export default function ReadingPage() {
   }
   const submitReview = event => {
     event.preventDefault()
-    send('/posts', { source: 'review', kind: 'reviews', ...bookContext, rating: Number(rating), body: review.trim() }, 'Tu reseña ya aparece en el mural.')
+    const payload = { source: 'review', kind: 'reviews', ...bookContext, rating: Number(rating), body: review.trim() }
+    send('/posts', payload, 'Tu reseña ya aparece en el mural.', () => {
+      const form = new FormData()
+      Object.entries(payload).forEach(([key, value]) => form.append(key, value))
+      reviewImages.forEach(image => form.append('images', image))
+      const token = localStorage.getItem('libria_token')
+      return apiRequest('/posts', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: form })
+    })
   }
   const submitEvent = event => {
     event.preventDefault()
@@ -64,7 +82,10 @@ export default function ReadingPage() {
       <h2>Escribir reseña</h2>
       <label>Valoración (1 a 5)<input type="number" min="1" max="5" value={rating} onChange={event => setRating(event.target.value)} required /></label>
       <label>Reseña<textarea rows="5" maxLength="3000" value={review} onChange={event => setReview(event.target.value)} required /></label>
-      <button className="button primary" disabled={busy || !review.trim()}>Publicar reseña</button>
+      <label>Imágenes (hasta 10)<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple onChange={selectReviewImages} /></label>
+      {reviewImages.length > 0 && <ul>{reviewImages.map((image, index) => <li key={`${image.name}-${index}`}>{image.name}</li>)}</ul>}
+      {reviewImageError && <p className="notice" role="alert">{reviewImageError}</p>}
+      <button className="button primary" disabled={busy || !review.trim() || Boolean(reviewImageError)}>Publicar reseña</button>
     </form>
     <form className="experience-form" onSubmit={submitEvent}>
       <h2>Avance de lectura</h2>

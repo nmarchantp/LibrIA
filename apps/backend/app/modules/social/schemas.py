@@ -26,6 +26,8 @@ class PostCreate(BaseModel):
             raise ValueError("La categoría no corresponde a la fuente")
         if not self.body.strip():
             raise ValueError("El texto no puede estar vacío")
+        if self.source != "review" and len(self.body) > 500:
+            raise ValueError("Las publicaciones deben ser breves (máximo 500 caracteres)")
         if self.source == "review" and (not self.book_ref or not self.book_title or self.rating is None):
             raise ValueError("La reseña debe indicar libro y valoración")
         if self.source != "review" and self.rating is not None:
@@ -39,6 +41,10 @@ class PostResponse(BaseModel):
     feed_item_type: str = "publication"
     author_profile_id: uuid.UUID | None = None
     publication_type: str | None = None
+    images: list[str] = Field(default_factory=list)
+    like_count: int = 0
+    liked_by_me: bool = False
+    following_author: bool = False
     user_id: uuid.UUID
     author: str
     author_role: UserRole
@@ -52,6 +58,15 @@ class PostResponse(BaseModel):
     progress_percent: int | None
     reading_event: str | None
     created_at: datetime
+
+
+class PostLikeResponse(BaseModel):
+    like_count: int
+    liked_by_me: bool
+
+
+class ProfileFollowResponse(BaseModel):
+    following: bool
 
 
 class CommentCreate(BaseModel):

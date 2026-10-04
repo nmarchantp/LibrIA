@@ -29,3 +29,17 @@ def get_current_user(
     if not user:
         raise unauthorized
     return user
+
+
+def get_optional_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User | None:
+    if not credentials:
+        return None
+    subject = decode_access_token(credentials.credentials)
+    try:
+        user_id = uuid.UUID(subject) if subject else None
+    except ValueError:
+        return None
+    return AuthRepository(db).get_user_by_id(user_id) if user_id else None

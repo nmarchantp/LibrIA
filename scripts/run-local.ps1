@@ -81,4 +81,5 @@ if (Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quie
     Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
     Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
 }
-Write-Host 'Los datos demo solo se generan mediante ejecucion manual explicita.'
+Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m scripts.generate_posts --interval 20"
+Write-Host 'Posts demo: generación automática cada 20 segundos (detén la ventana para finalizar).' -ForegroundColor Green

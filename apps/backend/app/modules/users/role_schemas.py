@@ -34,7 +34,7 @@ class BookstoreCreate(BaseModel):
 class AdminProfile(BaseModel):
     id: uuid.UUID
     display_name: str
-    email: EmailStr
+    email: str
     role: UserRole
     biography: str | None
     created_at: datetime

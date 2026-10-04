@@ -177,6 +177,26 @@ class UserRolesTest(unittest.TestCase):
         self.assertEqual(history.json()[0]["previous_role"], "autor")
         self.assertEqual(history.json()[0]["new_role"], "lector")
 
+    def test_admin_profile_list_handles_legacy_invalid_email(self):
+        admin = self.register("Administrador de perfiles")
+        admin_user = self.db.get(User, uuid.UUID(admin["user"]["id"]))
+        admin_user.role = "admin"
+        self.db.add(AccountPermission(user_id=admin_user.id, permission="admin"))
+
+        legacy_user = self.register("Perfil con correo legado")
+        legacy_account = self.db.get(User, uuid.UUID(legacy_user["user"]["id"])).auth_account
+        legacy_account.email = f"-{uuid.uuid4()}"
+        self.db.flush()
+
+        response = self.client.get(
+            "/api/roles/profiles",
+            headers=self.auth(admin),
+            params={"q": "Perfil con correo legado"},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertTrue(response.json()["items"][0]["email"].startswith("-"))
+
     def test_reading_ownership_transitions_and_privacy(self):
         owner, other = self.register(), self.register()
         book = {"book_ref": f"test:{uuid.uuid4()}", "book_title": "Private book", "page_count": 100}

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, LargeBinary, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -29,6 +29,38 @@ class Post(Base):
     rating: Mapped[int | None] = mapped_column(Integer)
     progress_percent: Mapped[int | None] = mapped_column(Integer)
     reading_event: Mapped[str | None] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PostImage(Base):
+    __tablename__ = "imagenes_publicacion"
+    __table_args__ = (
+        Index("ix_imagenes_publicacion_post", "post_id"),
+        {"schema": "app"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="CASCADE"))
+    content_type: Mapped[str] = mapped_column(String(20))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PostLike(Base):
+    __tablename__ = "me_gusta_publicacion"
+    __table_args__ = {"schema": "app"}
+
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProfileFollow(Base):
+    __tablename__ = "seguimientos_perfil"
+    __table_args__ = {"schema": "app"}
+
+    profile_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.perfiles.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
