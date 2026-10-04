@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "namespace": "963edcca-47af-4654-8bc4-4a165b3cfbcd",
+  "accounts": [
+    {"key": "lector", "name": "Lector Demo", "email": "demo.lector@example.com", "capabilities": ["lector"]},
+    {"key": "autor", "name": "Autor Demo", "email": "demo.autor@example.com", "capabilities": ["lector", "autor"]},
+    {"key": "influencer", "name": "Influencer Demo", "email": "demo.influencer@example.com", "capabilities": ["lector", "influencer"]},
+    {"key": "libreria", "name": "Responsable Libreria Demo", "email": "demo.libreria@example.com", "capabilities": ["lector"], "organization": "Libreria Demo"},
+    {"key": "editorial", "name": "Responsable Editorial Demo", "email": "demo.editorial@example.com", "capabilities": ["lector"], "organization": "Editorial Demo"},
+    {"key": "admin", "name": "Administrador Demo", "email": "demo.admin@example.com", "capabilities": ["lector"], "admin": true}
+  ]
+}

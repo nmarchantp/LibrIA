@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     frontend_origins: str = "http://localhost:5173"
     jwt_secret: str = "development-only-change-this-secret"
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = Field(default=60, ge=1, le=1440)
     google_books_api_key: str = ""
     google_client_id: str = ""
     google_client_secret: str = ""
@@ -24,6 +25,17 @@ class Settings(BaseSettings):
     libria_demo_password: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @model_validator(mode="after")
+    def production_security(self):
+        if self.jwt_algorithm != "HS256":
+            raise ValueError("JWT_ALGORITHM debe ser HS256")
+        if self.app_env not in {"development", "test"}:
+            if self.jwt_secret == "development-only-change-this-secret" or len(self.jwt_secret) < 32:
+                raise ValueError("Configura JWT_SECRET aleatorio de al menos 32 caracteres")
+            if not self.cors_origins or any(not origin.startswith("https://") for origin in self.cors_origins):
+                raise ValueError("Configura orígenes HTTPS explícitos en producción")
+        return self
 
     @property
     def cors_origins(self) -> list[str]:

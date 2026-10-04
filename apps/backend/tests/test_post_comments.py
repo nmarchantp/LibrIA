@@ -11,6 +11,7 @@ from app.main import app
 from app.modules.auth.dependencies import get_current_user
 from app.modules.social.models import Post
 from app.modules.users.models import User
+from app.modules.users.identities import create_personal_profile
 
 
 class PostCommentsTest(unittest.TestCase):
@@ -21,7 +22,9 @@ class PostCommentsTest(unittest.TestCase):
         self.user = User(display_name="Lector de prueba")
         self.db.add(self.user)
         self.db.flush()
-        self.post = Post(user_id=self.user.id, source="reading", kind="progress", body="Avance de prueba")
+        create_personal_profile(self.db, self.user)
+        self.db.flush()
+        self.post = Post(user_id=self.user.id, author_role="lector", source="reading", kind="progress", body="Avance de prueba", reading_event="start")
         self.db.add(self.post)
         self.db.flush()
 
@@ -62,7 +65,7 @@ class PostCommentsTest(unittest.TestCase):
         self.assertEqual(self.client.post(missing_url, json={"body": "Hola"}).status_code, 404)
 
     def test_comments_are_separate_for_each_post(self):
-        review = Post(user_id=self.user.id, source="review", kind="reviews", body="Reseña de prueba")
+        review = Post(user_id=self.user.id, author_role="lector", source="review", kind="reviews", body="Reseña de prueba", book_ref="test:review", rating=4)
         self.db.add(review)
         self.db.flush()
         first_url = f"/api/posts/{self.post.id}/comments"

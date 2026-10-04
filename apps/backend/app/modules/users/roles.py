@@ -3,4 +3,4 @@
 from typing import Literal
 
 PublicUserRole = Literal["lector", "influencer", "autor", "libreria"]
-UserRole = Literal["lector", "influencer", "autor", "libreria", "admin"]
+UserRole = Literal["lector", "influencer", "autor", "libreria", "editorial", "admin"]

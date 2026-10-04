@@ -4,6 +4,13 @@ import BookCover from '../components/BookCover'
 import { useLibrary } from '../context/LibraryContext'
 import { getGoogleBookById } from '../services/booksService'
 
+const safeExternalUrl = value => {
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined
+  } catch { return undefined }
+}
+
 export default function BookDetailPage() {
   const { id } = useParams()
   const { getBook, updateStatus, addBook } = useLibrary()
@@ -27,7 +34,6 @@ export default function BookDetailPage() {
         if (!active) return
 
         if (remoteBook) {
-          addBook(remoteBook)
           setDetailBook(remoteBook)
         }
       } catch (error) {
@@ -70,12 +76,9 @@ export default function BookDetailPage() {
             </p>
           )}
 
-          <div
-            style={{ lineHeight: 1.7, color: '#59645f', marginTop: '18px' }}
-            dangerouslySetInnerHTML={{
-              __html: book.description || 'Este libro no tiene descripción disponible en Google Books.'
-            }}
-          />
+          <div style={{ lineHeight: 1.7, color: '#59645f', marginTop: '18px' }}>
+            {book.description || 'Este libro no tiene descripción disponible en Google Books.'}
+          </div>
 
           <div style={{ display: 'grid', gap: '8px', marginTop: '18px', fontSize: '14px', color: '#59645f' }}>
             {book.subtitle && <div><strong>Subtítulo:</strong> {book.subtitle}</div>}
@@ -88,17 +91,17 @@ export default function BookDetailPage() {
             {(book.previewLink || book.infoLink || book.canonicalVolumeLink) && (
               <div>
                 <strong>Más información:</strong>{' '}
-                {book.previewLink && <a href={book.previewLink} target="_blank" rel="noreferrer">Vista previa</a>}
+                {safeExternalUrl(book.previewLink) && <a href={safeExternalUrl(book.previewLink)} target="_blank" rel="noreferrer">Vista previa</a>}
                 {book.infoLink && (
                   <>
                     {' · '}
-                    <a href={book.infoLink} target="_blank" rel="noreferrer">Google Books</a>
+                    <a href={safeExternalUrl(book.infoLink)} target="_blank" rel="noreferrer">Google Books</a>
                   </>
                 )}
                 {book.canonicalVolumeLink && (
                   <>
                     {' · '}
-                    <a href={book.canonicalVolumeLink} target="_blank" rel="noreferrer">Volumen</a>
+                    <a href={safeExternalUrl(book.canonicalVolumeLink)} target="_blank" rel="noreferrer">Volumen</a>
                   </>
                 )}
               </div>
@@ -115,9 +118,13 @@ export default function BookDetailPage() {
               <option disabled>Abandonado</option>
             </select>
           </label>
+          <button className="button" onClick={async () => {
+            setStatusError('')
+            try { await addBook(book) } catch (cause) { setStatusError(cause.message) }
+          }}>Agregar a mi biblioteca</button>
           {statusError && <p className="notice" role="alert">{statusError}</p>}
 
-          <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>
+          {getBook(id) && <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>}
         </div>
       </div>
     </section>

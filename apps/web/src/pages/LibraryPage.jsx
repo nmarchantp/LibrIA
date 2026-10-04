@@ -4,7 +4,7 @@ import BookCover from '../components/BookCover'
 import { useLibrary } from '../context/LibraryContext'
 
 export default function LibraryPage() {
-  const { books, updateStatus } = useLibrary()
+  const { books, loading, loadError, updateStatus } = useLibrary()
   const [filter, setFilter] = useState('Todos')
   const [error, setError] = useState('')
   const shown = filter === 'Todos' ? books : books.filter(book => book.status === filter)
@@ -17,6 +17,8 @@ export default function LibraryPage() {
     <span className="kicker">TU RECORRIDO LECTOR</span><h1 className="page-title">Mi biblioteca</h1>
     <div className="tabs">{['Todos', 'Leyendo', 'Pendiente', 'Terminado', 'Abandonado'].map(item => <button className={filter === item ? 'active' : ''} onClick={() => setFilter(item)} key={item}>{item}</button>)}</div>
     {error && <p className="notice" role="alert">{error}</p>}
+    {loading && <p role="status">Cargando biblioteca…</p>}
+    {loadError && <p role="alert">{loadError}</p>}
     <div className="library-list">{shown.map(book => <article className="library-row" key={book.id}>
       <Link to={`/books/${book.id}`}><BookCover book={book} /></Link>
       <div className="library-details"><h2>{book.title}</h2><p>{book.author}</p><Link to={`/reading/${book.id}`}>Reseñar o registrar avance</Link></div>
