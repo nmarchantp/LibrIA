@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.core.database import SessionLocal
 from app.modules.auth.models import AuthAccount
 from app.modules.users.models import User  # noqa: F401 - registra la relación ORM
+from app.modules.users.identity_models import AccountPermission
 
 
 def main() -> None:
@@ -18,6 +19,8 @@ def main() -> None:
         if account is None:
             parser.error("No existe una cuenta con ese correo")
         account.user.role = "admin"
+        if db.get(AccountPermission, (account.user_id, "admin")) is None:
+            db.add(AccountPermission(user_id=account.user_id, permission="admin"))
         db.commit()
         print(f"Administrador habilitado: {account.email}")
 

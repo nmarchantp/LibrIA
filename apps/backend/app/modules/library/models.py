@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -64,3 +64,22 @@ class ReadingProgress(EntityMixin, Base):
     reading_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.lecturas.id", ondelete="RESTRICT"))
     page: Mapped[int] = mapped_column(Integer)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ReadingEvent(EntityMixin, Base):
+    __tablename__ = "eventos_lectura"
+    __table_args__ = (
+        CheckConstraint("kind IN ('start', 'progress', 'correction', 'finish', 'abandon')", name="ck_eventos_lectura_kind"),
+        CheckConstraint("total_pages > 0 AND page BETWEEN 0 AND total_pages AND previous_page BETWEEN 0 AND total_pages", name="ck_eventos_lectura_pages"),
+        CheckConstraint("kind <> 'correction' OR (reason IS NOT NULL AND length(trim(reason)) > 0 AND NOT is_public)", name="ck_eventos_lectura_correction"),
+        Index("ix_eventos_lectura_reading", "reading_id", "created_at"),
+        {"schema": "app"},
+    )
+    reading_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.lecturas.id", ondelete="RESTRICT"))
+    actor_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"))
+    kind: Mapped[str] = mapped_column(Text)
+    previous_page: Mapped[int] = mapped_column(Integer)
+    page: Mapped[int] = mapped_column(Integer)
+    total_pages: Mapped[int] = mapped_column(Integer)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    reason: Mapped[str | None] = mapped_column(Text)

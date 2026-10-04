@@ -8,16 +8,17 @@ import BookCover from '../components/BookCover'
 import './HomePage.css'
 
 const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
-const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Admin' }
+const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
 const roleColors = { lector: '#e8d6ce', influencer: '#dce5d8', autor: '#e7dfed', libreria: '#eedebc', admin: '#d5e3e8' }
 const composerCopy = {
   influencer: { heading: 'Comparte con tu comunidad', hint: 'Publica recomendaciones, lecturas conjuntas o conversaciones sobre libros.', placeholder: '¿Qué recomendarías hoy?' },
   autor: { heading: 'Comparte tu trabajo', hint: 'Publica novedades de tus obras o anuncia un encuentro con lectores.', placeholder: '¿Qué hay de nuevo en tu escritura?' },
   libreria: { heading: 'Publica desde tu librería', hint: 'Comparte promociones, novedades o un evento de tu librería.', placeholder: 'Cuéntale a la comunidad sobre tus libros o actividades.' },
+  editorial: { heading: 'Publica desde tu editorial', hint: 'Comparte novedades, promociones y eventos.', placeholder: 'Escribe una novedad editorial.' },
   admin: { heading: 'Publica como administrador', hint: 'Comparte anuncios y eventos para la comunidad.', placeholder: 'Escribe un anuncio para la comunidad.' },
 }
 
-function PostComposer({ role, onCreated }) {
+function PostComposer({ role, profileId, onCreated }) {
   const { retry } = useAuth()
   const copy = composerCopy[role]
   const [source, setSource] = useState('community')
@@ -32,7 +33,8 @@ function PostComposer({ role, onCreated }) {
     try {
       const token = localStorage.getItem('libria_token')
       await apiRequest('/posts', { method: 'POST', headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ source, kind: 'community', title: title.trim() || null, body: body.trim() }) })
+        body: JSON.stringify({ source: source === 'event' ? 'event' : 'community', publication_type: source === 'community' ? 'free' : source,
+          author_profile_id: profileId, kind: 'community', title: title.trim() || null, body: body.trim() }) })
       setTitle('')
       setBody('')
       onCreated()
@@ -45,7 +47,7 @@ function PostComposer({ role, onCreated }) {
   }
   return <form className="post-composer" onSubmit={submit}>
     <h2>{copy.heading}</h2><p className="composer-hint">{copy.hint}</p>
-    {(role === 'autor' || role === 'libreria' || role === 'admin') && <label>Tipo<select value={source} onChange={event => setSource(event.target.value)}><option value="community">{role === 'libreria' ? 'Publicación o promoción' : 'Publicación'}</option><option value="event">Evento</option></select></label>}
+    <label>Tipo<select value={source} onChange={event => setSource(event.target.value)}><option value="community">Publicación</option><option value="event">Evento</option><option value="promotion">Promoción</option></select></label>
     <label>Título<input value={title} onChange={event => setTitle(event.target.value)} maxLength="200" placeholder="Título opcional" /></label>
     <label>Contenido<textarea value={body} onChange={event => setBody(event.target.value)} maxLength="3000" rows="3" required placeholder={copy.placeholder} /></label>
     {error && <p className="comment-error" role="alert">{error}</p>}
@@ -139,6 +141,19 @@ export default function HomePage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const { books } = useLibrary()
   const { user } = useAuth()
+  const [profiles, setProfiles] = useState([])
+  const [profileId, setProfileId] = useState('')
+  const [profileError, setProfileError] = useState(false)
+  useEffect(() => {
+    let active = true
+    apiRequest('/profiles/me', { headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
+      .then(data => { if (active) { setProfiles(data); setProfileError(false) } })
+      .catch(() => { if (active) setProfileError(true) })
+    return () => { active = false }
+  }, [user.id, refreshKey])
+  const publishingProfiles = profiles.filter(profile => profile.kind === 'organization' || profile.capabilities.some(capability => ['autor', 'influencer'].includes(capability)))
+  const selectedProfile = publishingProfiles.find(profile => profile.id === profileId) || publishingProfiles[0]
+  const publishingRole = selectedProfile?.organization_type || (selectedProfile?.capabilities.includes('autor') ? 'autor' : 'influencer')
   useEffect(() => {
     let active = true
     const refresh = () => apiRequest('/posts').then(data => {
@@ -159,7 +174,9 @@ export default function HomePage() {
   }, [refreshKey])
   return <div className="mural-layout">
     <section className="mural-feed" aria-labelledby="mural-title"><header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
-      {user.role !== 'lector' && <PostComposer role={user.role} onCreated={() => setRefreshKey(current => current + 1)} />}
+      {profileError && <p role="alert">No se pudieron cargar tus permisos de publicación.</p>}
+      {publishingProfiles.length > 1 && <label>Publicar como<select value={selectedProfile?.id || ''} onChange={event => setProfileId(event.target.value)}>{publishingProfiles.map(profile => <option key={profile.id} value={profile.id}>{profile.display_name}</option>)}</select></label>}
+      {selectedProfile && <PostComposer key={selectedProfile.id} role={publishingRole} profileId={selectedProfile.id} onCreated={() => setRefreshKey(current => current + 1)} />}
       {feedError && <div className="demo-label">No se pudieron cargar las publicaciones.</div>}
       <nav className="feed-filters" aria-label="Filtrar mural">{filters.map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</nav>
       <div className="feed-posts">{posts.filter(post => filter === 'all' || post.type === filter).map(post => <FeedCard key={post.id} post={post} />)}</div>

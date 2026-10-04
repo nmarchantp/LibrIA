@@ -28,7 +28,7 @@ export default function AdminProfilesPage() {
   const [reason, setReason] = useState('')
   const [requests, setRequests] = useState([])
   const [history, setHistory] = useState([])
-  const [bookstore, setBookstore] = useState({ display_name: '', email: '', password: '' })
+  const [bookstore, setBookstore] = useState({ display_name: '', administrator_user_id: '', organization_type: 'libreria' })
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -122,17 +122,8 @@ export default function AdminProfilesPage() {
   }
   const createBookstore = async event => {
     event.preventDefault()
-    const result = await mutate('/roles/bookstores', 'POST', bookstore, 'Librería creada. Ya puede iniciar sesión.')
-    if (result) {
-      setBookstore({ display_name: '', email: '', password: '' })
-      setSearchDraft('')
-      setQuery('')
-      setRole('libreria')
-      setPage(0)
-      setTab('profiles')
-      openProfile(result)
-      setNotice('Librería creada. Ya puede iniciar sesión.')
-    }
+    const result = await mutate('/profiles/organizations', 'POST', bookstore, 'Organizacion creada y asignada al responsable.')
+    if (result) setBookstore({ display_name: '', administrator_user_id: '', organization_type: 'libreria' })
   }
 
   return <div className="admin-profiles page-width">
@@ -188,12 +179,13 @@ export default function AdminProfilesPage() {
       <p>{request.note}</p><div className="admin-request-actions"><button className="button primary" disabled={busy} onClick={() => decide(request, 'approve')}>Aprobar</button><button className="button" disabled={busy} onClick={() => decide(request, 'reject')}>Rechazar</button></div>
     </article>)}</section>}
 
-    {tab === 'bookstore' && <section className="admin-bookstore"><h2>Crear librería</h2><p>Solo un administrador puede crear este tipo de cuenta. Entrega la contraseña inicial por un canal seguro.</p>
+    {tab === 'bookstore' && <section className="admin-bookstore"><h2>Crear organizacion</h2><p>Asigna una cuenta personal existente como responsable. Cada miembro usa sus propias credenciales.</p>
       <form className="admin-form" onSubmit={createBookstore}>
         <label>Nombre visible<input value={bookstore.display_name} onChange={event => setBookstore(current => ({ ...current, display_name: event.target.value }))} minLength="2" maxLength="100" required /></label>
-        <label>Correo<input type="email" value={bookstore.email} onChange={event => setBookstore(current => ({ ...current, email: event.target.value }))} required /></label>
-        <label>Contraseña inicial<input type="password" value={bookstore.password} onChange={event => setBookstore(current => ({ ...current, password: event.target.value }))} minLength="8" required /></label>
-        <button className="button primary" disabled={busy}>Crear cuenta de librería</button>
+        <label>Tipo<select value={bookstore.organization_type} onChange={event => setBookstore(current => ({ ...current, organization_type: event.target.value }))}><option value="libreria">Libreria</option><option value="editorial">Editorial</option></select></label>
+        <label>Responsable<select value={bookstore.administrator_user_id} onChange={event => setBookstore(current => ({ ...current, administrator_user_id: event.target.value }))} required><option value="">Selecciona una cuenta de los resultados</option>{profiles.filter(profile => profile.role !== 'libreria').map(profile => <option key={profile.id} value={profile.id}>{profile.display_name} ({profile.email})</option>)}</select></label>
+        <p>Usa la busqueda de perfiles para localizar al responsable antes de crear la organizacion.</p>
+        <button className="button primary" disabled={busy}>Crear organizacion</button>
       </form>
     </section>}
   </div>

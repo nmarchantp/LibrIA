@@ -17,6 +17,8 @@ class Post(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
+    author_profile_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.perfiles.id", ondelete="RESTRICT"))
+    publication_type: Mapped[str | None] = mapped_column(String(20))
     source: Mapped[str] = mapped_column(String(40))
     author_role: Mapped[str] = mapped_column(String(20))
     kind: Mapped[str] = mapped_column(String(20))
@@ -34,12 +36,15 @@ class PostComment(Base):
     __tablename__ = "comentarios_publicacion"
     __table_args__ = (
         CheckConstraint("length(trim(body)) BETWEEN 1 AND 1000", name="ck_comentarios_publicacion_body"),
+        CheckConstraint("num_nonnulls(post_id, reading_event_id) = 1", name="ck_comentarios_destino"),
         Index("ix_comentarios_publicacion_post_created", "post_id", "created_at"),
         {"schema": "app"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="CASCADE"))
+    post_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="CASCADE"))
+    reading_event_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.eventos_lectura.id", ondelete="RESTRICT"), index=True)
+    author_profile_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.perfiles.id", ondelete="RESTRICT"))
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

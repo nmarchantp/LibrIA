@@ -8,6 +8,9 @@ from app.modules.users.roles import UserRole
 
 
 class PostCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    author_profile_id: uuid.UUID | None = None
+    publication_type: Literal["free", "event", "promotion", "news", "launch", "institutional"] | None = None
     source: Literal["community", "review", "event"]
     kind: Literal["community", "reviews"]
     title: str | None = Field(default=None, max_length=200)
@@ -25,12 +28,17 @@ class PostCreate(BaseModel):
             raise ValueError("El texto no puede estar vacío")
         if self.source == "review" and (not self.book_ref or not self.book_title or self.rating is None):
             raise ValueError("La reseña debe indicar libro y valoración")
+        if self.source != "review" and self.rating is not None:
+            raise ValueError("Solo las reseñas pueden incluir una valoración")
         return self
 
 
 class PostResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
+    feed_item_type: str = "publication"
+    author_profile_id: uuid.UUID | None = None
+    publication_type: str | None = None
     user_id: uuid.UUID
     author: str
     author_role: UserRole

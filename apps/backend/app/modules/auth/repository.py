@@ -8,6 +8,7 @@ from app.modules.auth.models import AuthAccount
 from app.modules.users.models import User
 from app.modules.users.roles import PublicUserRole
 from app.core.exceptions import EmailAlreadyRegisteredError
+from app.modules.users.identities import create_personal_profile
 
 
 class AuthRepository:
@@ -27,6 +28,9 @@ class AuthRepository:
         user.auth_account = AuthAccount(email=email.lower(), password_hash=password_hash)
         self.db.add(user)
         try:
+            self.db.flush()
+            if role != "libreria":
+                create_personal_profile(self.db, user)
             self.db.commit()
         except IntegrityError:
             self.db.rollback()

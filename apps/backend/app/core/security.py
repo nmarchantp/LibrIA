@@ -32,7 +32,8 @@ def decode_access_token(token: str) -> str | None:
     """Retorna el subject si la firma y expiración son válidas."""
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm],
+                             options={"require": ["sub", "exp"]})
         return payload.get("sub")
     except InvalidTokenError:
         return None

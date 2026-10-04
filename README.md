@@ -136,6 +136,10 @@ Estas exclusiones están definidas en `.gitignore`.
 
 ## Estructura
 
+Analítica: [catálogo de indicadores](docs/analytics-catalog.md), con públicos, fórmulas, granularidad, fuentes y brechas pendientes antes de implementar el ETL.
+
+Revisión previa al ETL: [brechas transaccionales](docs/transactional-gaps.md), con separación de publicaciones, reseñas y avances, tratamiento de datos existentes y orden de implementación.
+
 Documentación: [arquitectura](docs/architecture.md), [modelo de datos](docs/data-model.md) y [base de datos y pgAdmin](docs/database.md), con las tablas actuales, cómo visualizarlas y el diseño propuesto para las siguientes etapas.
 
 ```text
