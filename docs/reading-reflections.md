@@ -1,0 +1,15 @@
+# Reflexión cualitativa al finalizar una lectura
+
+Al seleccionar Terminado desde la biblioteca o la ficha se abre la experiencia de lectura. Antes de confirmar «Terminar libro», el titular puede elegir emociones, aspectos destacados, una experiencia positiva/mixta/negativa y un texto libre de hasta 1500 caracteres. Todo es opcional; no se exige una reflexión para terminar. Si se envía una, debe contener al menos una apreciación. Los valores se validan contra un catálogo cerrado, los textos se recortan y las selecciones duplicadas se eliminan.
+
+La reflexión se guarda en `app.eventos_lectura.reflection`, exclusivamente en el evento `finish`, en la misma transacción que la finalización. Está vinculada al intento de lectura y a su titular. Se devuelve solamente al titular en sus estados de biblioteca y en la respuesta al finalizar. No aparece en reseñas públicas, el mural, comentarios ni análisis comerciales. Las reflexiones se guardan al terminar; por ahora no hay edición posterior de esa reflexión.
+
+La migración `0022_reading_reflections` crea `analytics.hechos_reflexiones`. El ETL `daily-v3` extrae el evento dentro del intervalo temporal y aplica primero las reglas de identidad, páginas, estado y fechas del evento. Valida la reflexión con el mismo esquema del formulario. Una reflexión inválida se excluye con `reflection_invalid_contract` sin perder una finalización válida. La carga es atómica, se concilia el número de filas, y `(etl_run_id,source_id)` evita duplicados dentro de una ejecución. El resumen administrativo incluye `loaded_reflections`.
+
+El cierre diario mantiene su programación y exclusión mutua. La ejecución manual del administrador también prepara estas reflexiones, por lo que permite demostrar el recorrido sin esperar al próximo cierre. No se reescriben los cierres ya publicados con versiones anteriores.
+
+El ADN personal obtiene hasta diez reflexiones del propio titular dentro del periodo y la procedencia del ETL seleccionados. Incluye `Q01` como tamaño de esa muestra. Ollama recibe las emociones, aspectos, apreciación y texto, sin identificadores de usuarios. El formato obliga a utilizar Q01 en las observaciones cuando hay reflexiones. Se interpretan experiencias declaradas sobre libros, sin convertirlas en diagnósticos, emociones generales o rasgos estables de personalidad. El texto libre se trata como evidencia, nunca instrucciones. Los perfiles grupales no reciben reflexiones individuales. El hash de evidencia y la nueva versión del prompt invalidan el caché anterior.
+
+Para ver la experiencia en Mis análisis: ejecutar el ETL que incluya la fecha de finalización, seleccionar el origen correspondiente (las lecturas sin marca de demo son `unclassified`), actualizar datos y generar la interpretación. El ETL no genera interpretaciones automáticamente.
+
+Pruebas: `python -m unittest discover -s tests -p test_reading_reflections.py`. Verifican persistencia privada, validación, limpieza, carga repetible, aislamiento por titular, exclusión sin perder el evento y envío a Ollama únicamente en el análisis individual. Se comprobó también la interpretación con el modelo local real.

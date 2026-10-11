@@ -3,6 +3,7 @@
 from functools import lru_cache
 
 from pydantic import Field, model_validator
+from urllib.parse import urlparse
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,11 +24,20 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
     google_oauth_scope: str = "https://www.googleapis.com/auth/books"
     libria_demo_password: str = ""
+    analytics_scheduler_enabled: bool = True
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    ai_model: str = "qwen3:1.7b"
+    ai_timeout_seconds: int = Field(default=180, ge=5, le=300)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @model_validator(mode="after")
     def production_security(self):
+        ollama_url = urlparse(self.ollama_base_url)
+        if (ollama_url.scheme != "http" or ollama_url.hostname not in {"localhost", "127.0.0.1", "::1"}
+                or ollama_url.username or ollama_url.password or ollama_url.query or ollama_url.fragment
+                or ollama_url.path not in {"", "/"}):
+            raise ValueError("OLLAMA_BASE_URL debe apuntar a Ollama en este equipo")
         if self.jwt_algorithm != "HS256":
             raise ValueError("JWT_ALGORITHM debe ser HS256")
         if self.app_env not in {"development", "test"}:

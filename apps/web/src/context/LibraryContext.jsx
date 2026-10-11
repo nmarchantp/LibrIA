@@ -2,13 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { books as initialBooks } from '../data'
 import { apiRequest } from '../api/client'
 import { useAuth } from './AuthContext'
+import { normalizeGoogleBook } from '../services/booksService'
 
 const LibraryContext = createContext(null)
 const catalogBooks = initialBooks.map(book => ({ ...book, status: 'Pendiente', progress: 0 }))
 const statusLabels = { pending: 'Pendiente', reading: 'Leyendo', finished: 'Terminado', abandoned: 'Abandonado' }
 const withReading = (book, reading) => reading ? {
   ...book, status: statusLabels[reading.status] || book.status,
-  progress: reading.progress_percent, pageCount: reading.total_pages, readingId: reading.reading_id,
+  progress: reading.progress_percent, currentPage: reading.current_page, pageCount: reading.total_pages ?? book.pageCount, readingId: reading.reading_id,
+  workId: reading.work_id, editionId: reading.edition_id,
+  reflection: reading.reflection,
 } : book
 
 export function LibraryProvider({ children }) {
@@ -33,6 +36,7 @@ export function LibraryProvider({ children }) {
           const restored = data.filter(item => !existing.has(item.book_ref)).map(item => withReading({
             id: item.book_ref, title: item.book_title, author: '', color: '#173f35',
             accent: '#ffb65c', initial: item.book_title.charAt(0).toUpperCase(),
+            ...(item.catalog_volume ? normalizeGoogleBook(item.catalog_volume) : {}),
           }, item))
           return [...current.map(book => withReading(book, readings.current[String(book.id)])), ...restored]
         })
@@ -46,6 +50,10 @@ export function LibraryProvider({ children }) {
     if (!token) throw new Error('Inicia sesión para registrar una lectura.')
     const pageCount = Number(extra.page_count || book.pageCount)
     if (!Number.isInteger(pageCount) || pageCount < 1) throw new Error('Indica el total de páginas del libro.')
+    if (book.status === 'Pendiente' && ['progress', 'finish'].includes(event)) {
+      const started = await recordEvent(book, 'start', { page_count: pageCount })
+      return recordEvent({ ...book, status: 'Leyendo', readingId: started.reading_id, pageCount, currentPage: 0 }, event, extra)
+    }
     const result = await apiRequest('/readings/events', {
       method: 'POST', headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, page_count: pageCount, event, ...extra, reading_id: event === 'start' ? null : book.readingId }),
@@ -54,10 +62,12 @@ export function LibraryProvider({ children }) {
     const status = { start: 'Leyendo', progress: 'Leyendo', correction: 'Leyendo', finish: 'Terminado', abandon: 'Abandonado' }[event]
     readings.current[String(book.id)] = {
       reading_id: result.reading_id, book_ref: String(book.id), book_title: book.title, status: result.status,
-      progress_percent: result.progress_percent, total_pages: pageCount,
+      work_id: result.work_id, edition_id: result.edition_id,
+      progress_percent: result.progress_percent, current_page: result.current_page, total_pages: result.total_pages,
+      reflection: result.reflection,
     }
     setBooks(current => {
-      const updated = { ...book, status, progress: result.progress_percent, pageCount, readingId: result.reading_id }
+      const updated = { ...book, status, reflection: result.reflection, progress: result.progress_percent, currentPage: result.current_page, pageCount: result.total_pages, readingId: result.reading_id, workId: result.work_id, editionId: result.edition_id }
       return current.some(item => String(item.id) === String(book.id))
         ? current.map(item => String(item.id) === String(book.id) ? updated : item) : [...current, updated]
     })
@@ -87,6 +97,7 @@ export function LibraryProvider({ children }) {
     setBooks(current => current.some(item => String(item.id) === String(book.id))
       ? current.map(item => String(item.id) === String(book.id) ? withReading({ ...item, ...book }, reading) : item)
       : [...current, withReading(book, reading)])
+    return reading
   }, [])
   const getBook = useCallback((id) => books.find(book => String(book.id) === String(id))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])

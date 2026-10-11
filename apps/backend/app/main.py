@@ -1,5 +1,8 @@
 """Punto de entrada del único servidor FastAPI de LibrIA."""
 
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,9 +12,30 @@ from app.modules.social.router import profile_social_router, router as social_ro
 from app.modules.users.roles_router import router as roles_router
 from app.modules.library.router import router as readings_router
 from app.modules.users.identities_router import router as profiles_router
+from app.modules.analytics.router import router as analytics_router
+from app.modules.analytics.insights_router import router as insights_router
+from app.modules.analytics.scheduler import daily_scheduler, manual_scheduler
+from app.modules.social.reviews_router import router as reviews_router
+from app.modules.books.router import router as books_router
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    task = asyncio.create_task(daily_scheduler()) if settings.analytics_scheduler_enabled else None
+    manual_task = asyncio.create_task(manual_scheduler())
+    try:
+        yield
+    finally:
+        for worker in (task, manual_task):
+            if worker is None:
+                continue
+            worker.cancel()
+            with suppress(asyncio.CancelledError):
+                await worker
+
+
+app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 
 # Solo los orígenes configurados pueden consumir la API desde el navegador.
 app.add_middleware(
@@ -29,6 +53,10 @@ app.include_router(profile_social_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
 app.include_router(readings_router, prefix=settings.api_prefix)
 app.include_router(profiles_router, prefix=settings.api_prefix)
+app.include_router(analytics_router, prefix=settings.api_prefix)
+app.include_router(insights_router, prefix=settings.api_prefix)
+app.include_router(reviews_router, prefix=settings.api_prefix)
+app.include_router(books_router, prefix=settings.api_prefix)
 
 
 @app.get("/health", tags=["system"])

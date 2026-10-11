@@ -11,27 +11,22 @@ class PostCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     author_profile_id: uuid.UUID | None = None
     publication_type: Literal["free", "event", "promotion", "news", "launch", "institutional"] | None = None
-    source: Literal["community", "review", "event"]
-    kind: Literal["community", "reviews"]
+    source: Literal["community", "event"]
+    kind: Literal["community"]
     title: str | None = Field(default=None, max_length=200)
     body: str = Field(min_length=1, max_length=3000)
     book_ref: str | None = Field(default=None, min_length=1, max_length=200)
     book_title: str | None = Field(default=None, min_length=1, max_length=200)
-    rating: int | None = Field(default=None, ge=1, le=5)
 
     @model_validator(mode="after")
     def source_matches_kind(self):
-        expected = {"community": "community", "review": "reviews", "event": "community"}
+        expected = {"community": "community", "event": "community"}
         if self.kind != expected[self.source]:
             raise ValueError("La categoría no corresponde a la fuente")
         if not self.body.strip():
             raise ValueError("El texto no puede estar vacío")
-        if self.source != "review" and len(self.body) > 500:
+        if len(self.body) > 500:
             raise ValueError("Las publicaciones deben ser breves (máximo 500 caracteres)")
-        if self.source == "review" and (not self.book_ref or not self.book_title or self.rating is None):
-            raise ValueError("La reseña debe indicar libro y valoración")
-        if self.source != "review" and self.rating is not None:
-            raise ValueError("Solo las reseñas pueden incluir una valoración")
         return self
 
 
@@ -54,9 +49,17 @@ class PostResponse(BaseModel):
     body: str
     book_ref: str | None
     book_title: str | None
+    book_cover_url: str | None = None
     rating: int | None
     progress_percent: int | None
     reading_event: str | None
+    work_id: uuid.UUID | None = None
+    edition_id: uuid.UUID | None = None
+    is_spoiler: bool = False
+    status: str | None = None
+    published_at: datetime | None = None
+    updated_at: datetime | None = None
+    revision_number: int | None = None
     created_at: datetime
 
 
@@ -82,3 +85,23 @@ class CommentResponse(BaseModel):
     author_role: UserRole
     body: str
     created_at: datetime
+
+
+class ReviewCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    work_id: uuid.UUID
+    edition_id: uuid.UUID | None = None
+    author_profile_id: uuid.UUID | None = None
+    body: str = Field(min_length=1, max_length=3000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    is_spoiler: bool = False
+    status: Literal["draft", "published"] = "published"
+
+
+class ReviewUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    body: str = Field(min_length=1, max_length=3000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    is_spoiler: bool = False
+    status: Literal["draft", "published", "hidden"] = "published"
+    edition_id: uuid.UUID | None = None

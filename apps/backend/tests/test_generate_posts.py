@@ -1,21 +1,21 @@
 import unittest
 import uuid
 
-from app.modules.social.schemas import PostCreate
+from app.modules.social.schemas import PostCreate, ReviewCreate
 from scripts.generate_posts import make_post
 
 
 class GeneratePostsTest(unittest.TestCase):
     def test_reader_payload_is_a_valid_review_shape(self):
         profile_id = str(uuid.uuid4())
-        post = make_post({"key": "lector"}, profile_id, 0)
-        PostCreate.model_validate(post)
+        post = make_post({"key": "lector"}, profile_id, 0, str(uuid.uuid4()))
+        ReviewCreate.model_validate(post)
 
-        self.assertEqual(post["source"], "review")
-        self.assertEqual(post["kind"], "reviews")
+        self.assertNotIn("source", post)
+        self.assertNotIn("kind", post)
         self.assertEqual(post["author_profile_id"], profile_id)
-        self.assertTrue(post["book_ref"])
-        self.assertTrue(post["book_title"])
+        self.assertTrue(post["work_id"])
+        self.assertTrue(post["body"])
         self.assertGreaterEqual(post["rating"], 1)
         self.assertLessEqual(post["rating"], 5)
         self.assertTrue(post["body"])

@@ -1,13 +1,14 @@
-const GOOGLE_BOOKS_URL = 'https://www.googleapis.com/books/v1/volumes'
+import { apiRequest } from '../api/client'
 
-function normalizeGoogleBook(item) {
+export function normalizeGoogleBook(item) {
   const info = item?.volumeInfo ?? {}
   const authors = Array.isArray(info.authors) ? info.authors.join(', ') : 'Autor desconocido'
   const year = info.publishedDate ? Number(info.publishedDate.slice(0, 4)) : undefined
   const title = info.title ?? 'Sin título'
 
   return {
-    id: item?.id ?? `${Date.now()}-${Math.random()}`,
+    id: item.id,
+    rawVolume: item,
     title,
     subtitle: info.subtitle ?? '',
     author: authors,
@@ -37,33 +38,18 @@ function normalizeGoogleBook(item) {
 }
 
 export async function searchGoogleBooks(query) {
-  const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
   const q = query?.trim()
-
-  if (!apiKey || !q) return []
-
-  const url = `${GOOGLE_BOOKS_URL}?q=${encodeURIComponent(q)}&maxResults=12&key=${encodeURIComponent(apiKey)}`
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error('No fue posible consultar Google Books')
-  }
-
-  const data = await response.json()
+  const data = await apiRequest(`/books?q=${encodeURIComponent(q || '')}`)
   return (data.items ?? []).map(normalizeGoogleBook)
 }
 
+export async function searchBookCatalog(query) {
+  const data = await apiRequest(`/books?q=${encodeURIComponent(query?.trim() || '')}`)
+  return { books: (data.items ?? []).map(normalizeGoogleBook), warning: data.warning || '' }
+}
+
 export async function getGoogleBookById(id) {
-  const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
-  if (!id || !apiKey) return null
-
-  const url = `${GOOGLE_BOOKS_URL}/${encodeURIComponent(id)}?key=${encodeURIComponent(apiKey)}`
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error('No fue posible cargar la información del libro')
-  }
-
-  const item = await response.json()
+  if (!id) return null
+  const item = await apiRequest(`/books/${encodeURIComponent(id)}`)
   return normalizeGoogleBook(item)
 }

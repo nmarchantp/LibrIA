@@ -78,6 +78,16 @@ Después de actualizar el repositorio desde GitHub, puedes preparar el entorno s
 
 Este comando ejecuta `git pull --ff-only` y las mismas comprobaciones de `run.cmd`. Si usas `git pull` por tu cuenta, `run.cmd` detecta los cambios al siguiente inicio.
 
+### Nuevas funciones: IA local y analítica
+
+`setup.cmd`, `update.cmd` y `run.cmd` también ejecutan `scripts/prepare-ai.ps1`. Este paso agrega las variables faltantes de `apps/backend/.env.example` al `.env` local, sin reemplazar los valores existentes. Instala Ollama mediante `winget` si falta, inicia su servidor local si está detenido y descarga el modelo configurado en `AI_MODEL` (por defecto `qwen3:1.7b`) solo si aún no está disponible. La primera preparación necesita Internet, espacio para Ollama y el modelo, y puede tardar varios minutos. Las siguientes ejecuciones reutilizan la instalación y el modelo.
+
+Si `winget` no está disponible, instala [Ollama para Windows](https://ollama.com/download/windows) y ejecuta nuevamente `update.cmd`. Si una instalación o descarga falla, el comando se detiene con el motivo; después de corregirlo puedes repetirlo. No se requiere una clave de API para la IA local.
+
+Las nuevas tablas de reseñas, catálogo, analítica, recomendaciones y reflexiones se crean con las migraciones de Alembic que ya aplica la actualización. `requirements.txt` incluye `tzdata`, necesario para las fechas del ETL en `America/Santiago` en Windows. El ETL diario se ejecuta desde el backend con `ANALYTICS_SCHEDULER_ENABLED=true`; la tarea de Windows de `scripts/register-etl-task.ps1` es opcional.
+
+Después de actualizar, inicia LibrIA con `run.cmd`. Para llenar los análisis con actividad reciente, una cuenta administradora puede usar **Gestionar ETL → Ejecutar ETL ahora**. La instalación prepara las herramientas y las tablas; los datos y permisos de cada usuario determinan qué análisis puede consultar. Los escenarios ficticios de `scripts.seed_analytics_demo`, `scripts.seed_reviews_demo` y `scripts.seed_group_demo` se cargan manualmente desde `apps/backend` si se necesitan para una demostración.
+
 También puede ejecutarse directamente `.\scripts\run-local.ps1`.
 
 Se abrirán dos terminales:

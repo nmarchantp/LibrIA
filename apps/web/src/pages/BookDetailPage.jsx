@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Link, useParams } from 'react-router-dom'
+import { Navigate, Link, useNavigate, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
+import BookReviews from '../components/BookReviews'
 import { useLibrary } from '../context/LibraryContext'
 import { getGoogleBookById } from '../services/booksService'
 
@@ -13,6 +14,7 @@ const safeExternalUrl = value => {
 
 export default function BookDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { getBook, updateStatus, addBook } = useLibrary()
   const [loading, setLoading] = useState(true)
   const [detailBook, setDetailBook] = useState(null)
@@ -20,7 +22,7 @@ export default function BookDetailPage() {
 
   useEffect(() => {
     const existingBook = getBook(id)
-    if (existingBook) {
+    if (existingBook && !existingBook.rawVolume && (String(id).includes(':') || /^\d+$/.test(id))) {
       setDetailBook(existingBook)
       setLoading(false)
       return
@@ -37,7 +39,7 @@ export default function BookDetailPage() {
           setDetailBook(remoteBook)
         }
       } catch (error) {
-        if (active) setDetailBook(null)
+        if (active) setDetailBook(existingBook || null)
       } finally {
         if (active) setLoading(false)
       }
@@ -47,9 +49,12 @@ export default function BookDetailPage() {
     return () => { active = false }
   }, [id, getBook, addBook])
 
-  const book = getBook(id) ?? detailBook
+  const libraryBook = getBook(id)
+  const book = detailBook ? { ...libraryBook, ...detailBook,
+    ...(libraryBook ? { status: libraryBook.status, progress: libraryBook.progress, readingId: libraryBook.readingId, workId: libraryBook.workId, editionId: libraryBook.editionId } : {}) } : libraryBook
   const changeStatus = async status => {
     setStatusError('')
+    if (status === 'Terminado') { navigate(`/reading/${encodeURIComponent(book.id)}`); return }
     try { await updateStatus(book.id, status) }
     catch (cause) { setStatusError(cause.message || 'No se pudo registrar el cambio de lectura.') }
   }
@@ -124,9 +129,10 @@ export default function BookDetailPage() {
           }}>Agregar a mi biblioteca</button>
           {statusError && <p className="notice" role="alert">{statusError}</p>}
 
-          {getBook(id) && <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>}
+          {book.readingId && <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>}
         </div>
       </div>
+      <BookReviews key={id} bookRef={id} />
     </section>
   )
 }
