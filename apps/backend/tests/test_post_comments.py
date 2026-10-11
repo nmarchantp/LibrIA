@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 from app.core.database import engine, get_db
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
-from app.modules.social.models import Post
+from datetime import datetime, timezone
+from app.modules.social.models import Post, Review
+from app.modules.books.models import Work
 from app.modules.users.models import User
 from app.modules.users.identities import create_personal_profile
 
@@ -22,9 +24,9 @@ class PostCommentsTest(unittest.TestCase):
         self.user = User(display_name="Lector de prueba")
         self.db.add(self.user)
         self.db.flush()
-        create_personal_profile(self.db, self.user)
+        self.profile = create_personal_profile(self.db, self.user)
         self.db.flush()
-        self.post = Post(user_id=self.user.id, author_role="lector", source="reading", kind="progress", body="Avance de prueba", reading_event="start")
+        self.post = Post(user_id=self.user.id, author_profile_id=self.profile.id, author_role="autor", source="community", kind="community", body="Publicación de prueba")
         self.db.add(self.post)
         self.db.flush()
 
@@ -65,7 +67,13 @@ class PostCommentsTest(unittest.TestCase):
         self.assertEqual(self.client.post(missing_url, json={"body": "Hola"}).status_code, 404)
 
     def test_comments_are_separate_for_each_post(self):
-        review = Post(user_id=self.user.id, author_role="lector", source="review", kind="reviews", body="Reseña de prueba", book_ref="test:review", rating=4)
+        work = Work(title="Obra de prueba")
+        self.db.add(work)
+        self.db.flush()
+        now = datetime.now(timezone.utc)
+        review = Review(created_by_user_id=self.user.id, author_profile_id=self.profile.id,
+                        work_id=work.id, body="Reseña de prueba", rating=4, status="published",
+                        published_at=now, created_at=now, updated_at=now)
         self.db.add(review)
         self.db.flush()
         first_url = f"/api/posts/{self.post.id}/comments"

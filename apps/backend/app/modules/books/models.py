@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, SmallInteger, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.core.database import Base
 from app.core.model_mixins import EditableMixin, EntityMixin
@@ -60,4 +61,14 @@ class CatalogSource(EntityMixin, Base):
     edition_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.ediciones.id", ondelete="CASCADE"), index=True)
     provider: Mapped[str] = mapped_column(Text)
     external_id: Mapped[str] = mapped_column(Text)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    payload: Mapped[dict | None] = mapped_column(JSONB)
+    detail_complete: Mapped[bool] = mapped_column(default=False, server_default="false")
+
+
+class CatalogQuery(Base):
+    __tablename__ = "consultas_catalogo"
+    __table_args__ = {"schema": "app"}
+    query: Mapped[str] = mapped_column(Text, primary_key=True)
+    payload: Mapped[dict] = mapped_column(JSONB)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

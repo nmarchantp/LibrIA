@@ -11,7 +11,7 @@ from starlette.formparsers import MultiPartException
 
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user, get_optional_current_user
-from app.modules.social.models import Post, PostComment, PostImage, PostLike, ProfileFollow
+from app.modules.social.models import Post, PostComment, PostImage, PostLike, ProfileFollow, Review, ReviewLike
 from app.modules.social.schemas import (
     CommentCreate,
     CommentResponse,
@@ -22,7 +22,7 @@ from app.modules.social.schemas import (
 )
 from app.modules.users.models import User
 from app.modules.library.models import ReadingEvent, Reading
-from app.modules.books.models import Work
+from app.modules.books.models import Work, CatalogSource, Edition
 from app.modules.users.identities import personal_profile, publication_role, require_actor
 from app.modules.users.identity_models import Profile
 
@@ -56,16 +56,12 @@ def image_content_type(data: bytes) -> str | None:
 
 
 def as_comment_response(comment: PostComment, author: str, author_role: str) -> CommentResponse:
-    return CommentResponse(id=comment.id, post_id=comment.post_id or comment.reading_event_id, user_id=comment.user_id,
+    return CommentResponse(id=comment.id, post_id=comment.post_id or comment.reading_event_id or comment.review_id, user_id=comment.user_id,
                            author=author, author_role=author_role, body=comment.body, created_at=comment.created_at)
 
 
 def visible_posts():
-    return or_(
-                          and_(Post.source == "review", Post.book_ref.is_not(None), Post.rating.is_not(None)),
-                          and_(Post.source == "reading", Post.reading_event.is_not(None)),
-                          and_(Post.source.in_(("community", "event")), Post.author_role != "lector"),
-                      )
+    return and_(Post.source.in_(("community", "event")), Post.author_role != "lector")
 
 
 def require_post(db: Session, post_id: uuid.UUID) -> str:
@@ -73,16 +69,37 @@ def require_post(db: Session, post_id: uuid.UUID) -> str:
         return "publication"
     if db.scalar(select(ReadingEvent.id).where(ReadingEvent.id == post_id, ReadingEvent.is_public)) is not None:
         return "reading_event"
+    if db.scalar(select(Review.id).where(Review.id == post_id, Review.status == "published").with_for_update()) is not None:
+        return "review"
     raise HTTPException(status_code=404, detail="Contenido no encontrado")
 
 
-def as_reading_response(event: ReadingEvent, title: str, author: User) -> PostResponse:
+def as_review_response(db: Session, review: Review) -> PostResponse:
+    profile = db.get(Profile, review.author_profile_id)
+    work = db.get(Work, review.work_id)
+    edition = db.get(Edition, review.edition_id) if review.edition_id else None
+    reference = db.scalar(select(CatalogSource.external_id).where(
+        CatalogSource.edition_id == review.edition_id, CatalogSource.provider == "libria-feed")) if review.edition_id else None
+    return PostResponse(id=review.id, feed_item_type="review", author_profile_id=profile.id,
+                        user_id=profile.owner_user_id, author=profile.display_name,
+                        author_role=publication_role(db, profile), source="review", kind="reviews",
+                        title=None, body=review.body, book_ref=reference, book_title=work.title,
+                        book_cover_url=edition.cover_url if edition else None,
+                        rating=review.rating, progress_percent=None, reading_event=None,
+                        work_id=review.work_id, edition_id=review.edition_id, is_spoiler=review.is_spoiler,
+                        status=review.status, published_at=review.published_at, updated_at=review.updated_at,
+                        revision_number=review.revision_number, created_at=review.published_at or review.created_at,
+                        images=[])
+
+
+def as_reading_response(event: ReadingEvent, title: str, author: User,
+                        book_ref: str | None = None, cover_url: str | None = None) -> PostResponse:
     percent = round(event.page * 100 / event.total_pages)
     body = {"start": f'Comenzó a leer "{title}".', "progress": f'Llegó al {percent} % de "{title}".',
             "finish": f'Terminó "{title}".', "abandon": f'Abandonó "{title}".'}.get(event.kind, "")
     return PostResponse(id=event.id, feed_item_type="reading_event", user_id=author.id,
                         author=author.display_name, author_role=author.role, source="reading", kind="progress",
-                        title=None, body=body, book_ref=None, book_title=title, rating=None,
+                        title=None, body=body, book_ref=book_ref, book_title=title, book_cover_url=cover_url, rating=None,
                         progress_percent=percent, reading_event=event.kind, created_at=event.created_at)
 
 
@@ -148,15 +165,13 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
 
     profile = require_actor(db, user, data.author_profile_id) if data.author_profile_id else personal_profile(db, user)
     role = "admin" if user.role == "admin" and profile.kind == "personal" else publication_role(db, profile)
-    if role == "lector" and data.source != "review":
+    if role == "lector":
         raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
-    if data.source == "review" and profile.kind != "personal":
-        raise HTTPException(status_code=403, detail="Las reseñas requieren un perfil personal")
     publication_type = data.publication_type or ("event" if data.source == "event" else "free")
-    if (publication_type == "event") != (data.source == "event") or (data.source == "review" and data.publication_type):
+    if (publication_type == "event") != (data.source == "event"):
         raise HTTPException(status_code=422, detail="El tipo no corresponde al contenido")
     post = Post(user_id=user.id, author_role=role, author_profile_id=profile.id,
-                publication_type=publication_type if data.source != "review" else None,
+                publication_type=publication_type,
                 **data.model_dump(exclude={"author_profile_id", "publication_type"}))
     db.add(post)
     db.flush()
@@ -205,19 +220,40 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
             "liked_by_me": post.id in liked_ids,
             "following_author": post.author_profile_id in followed_ids,
         }))
-    events = db.execute(select(ReadingEvent, Work.title, User)
+    book_reference = select(CatalogSource.external_id).where(
+        CatalogSource.edition_id == Reading.edition_id,
+        CatalogSource.provider == "libria-feed").correlate(Reading).scalar_subquery()
+    events = db.execute(select(ReadingEvent, Work.title, User, book_reference, Edition.cover_url)
                         .join(Reading, Reading.id == ReadingEvent.reading_id)
                         .join(Work, Work.id == Reading.work_id)
+                        .join(Edition, Edition.id == Reading.edition_id)
                         .join(User, User.id == ReadingEvent.actor_user_id)
                         .where(ReadingEvent.is_public)
                         .order_by(ReadingEvent.created_at.desc(), ReadingEvent.id.desc()).limit(limit)).all()
-    items.extend(as_reading_response(event, title, author) for event, title, author in events)
+    items.extend(as_reading_response(event, title, author, reference, cover)
+                 for event, title, author, reference, cover in events)
+    reviews = db.scalars(select(Review).where(Review.status == "published")
+                         .order_by(Review.published_at.desc(), Review.id.desc()).limit(limit)).all()
+    review_ids = [review.id for review in reviews]
+    review_counts = dict(db.execute(select(ReviewLike.review_id, func.count())
+                                   .where(ReviewLike.review_id.in_(review_ids)).group_by(ReviewLike.review_id)).all()) if review_ids else {}
+    liked_reviews = set(db.scalars(select(ReviewLike.review_id).where(
+        ReviewLike.review_id.in_(review_ids), ReviewLike.user_id == user.id))) if user and review_ids else set()
+    review_profiles = {review.author_profile_id for review in reviews}
+    followed_reviews = set(db.scalars(select(ProfileFollow.profile_id).where(
+        ProfileFollow.profile_id.in_(review_profiles), ProfileFollow.user_id == user.id))) if user and review_profiles else set()
+    for review in reviews:
+        items.append(as_review_response(db, review).model_copy(update={
+            "like_count": review_counts.get(review.id, 0), "liked_by_me": review.id in liked_reviews,
+            "following_author": review.author_profile_id in followed_reviews}))
     return sorted(items, key=lambda item: (item.created_at, str(item.id)), reverse=True)[:limit]
 
 
 @router.get("/{post_id}/images/{image_id}")
 def get_post_image(post_id: uuid.UUID, image_id: uuid.UUID, db: Annotated[Session, Depends(get_db)]) -> Response:
-    require_post(db, post_id)
+    kind = require_post(db, post_id)
+    if kind != "publication":
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
     image = db.scalar(select(PostImage).where(PostImage.id == image_id, PostImage.post_id == post_id))
     if image is None:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
@@ -227,23 +263,27 @@ def get_post_image(post_id: uuid.UUID, image_id: uuid.UUID, db: Annotated[Sessio
 @router.put("/{post_id}/like", response_model=PostLikeResponse)
 def like_post(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
               db: Annotated[Session, Depends(get_db)]) -> PostLikeResponse:
-    if db.scalar(select(Post.id).where(Post.id == post_id, visible_posts())) is None:
+    kind = require_post(db, post_id)
+    if kind == "reading_event":
         raise HTTPException(status_code=404, detail="Publicación no encontrada")
-    db.execute(insert(PostLike).values(post_id=post_id, user_id=user.id)
-               .on_conflict_do_nothing(index_elements=["post_id", "user_id"]))
+    model, target, key = (ReviewLike, ReviewLike.review_id, "review_id") if kind == "review" else (PostLike, PostLike.post_id, "post_id")
+    db.execute(insert(model).values(**{key: post_id, "user_id": user.id})
+               .on_conflict_do_nothing(index_elements=[key, "user_id"]))
     db.commit()
-    count = db.scalar(select(func.count()).select_from(PostLike).where(PostLike.post_id == post_id)) or 0
+    count = db.scalar(select(func.count()).select_from(model).where(target == post_id)) or 0
     return PostLikeResponse(like_count=count, liked_by_me=True)
 
 
 @router.delete("/{post_id}/like", response_model=PostLikeResponse)
 def unlike_post(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
                 db: Annotated[Session, Depends(get_db)]) -> PostLikeResponse:
-    if db.scalar(select(Post.id).where(Post.id == post_id, visible_posts())) is None:
+    kind = require_post(db, post_id)
+    if kind == "reading_event":
         raise HTTPException(status_code=404, detail="Publicación no encontrada")
-    db.query(PostLike).filter(PostLike.post_id == post_id, PostLike.user_id == user.id).delete()
+    model, target = (ReviewLike, ReviewLike.review_id) if kind == "review" else (PostLike, PostLike.post_id)
+    db.query(model).filter(target == post_id, model.user_id == user.id).delete()
     db.commit()
-    count = db.scalar(select(func.count()).select_from(PostLike).where(PostLike.post_id == post_id)) or 0
+    count = db.scalar(select(func.count()).select_from(model).where(target == post_id)) or 0
     return PostLikeResponse(like_count=count, liked_by_me=False)
 
 
@@ -274,7 +314,7 @@ def list_comments(post_id: uuid.UUID, db: Annotated[Session, Depends(get_db)],
     require_post(db, post_id)
     rows = db.execute(select(PostComment, User.display_name, User.role)
                       .join(User, PostComment.user_id == User.id)
-                      .where(or_(PostComment.post_id == post_id, PostComment.reading_event_id == post_id))
+                      .where(or_(PostComment.post_id == post_id, PostComment.reading_event_id == post_id, PostComment.review_id == post_id))
                       .order_by(PostComment.created_at.desc(), PostComment.id.desc())
                       .limit(limit)).all()
     return [as_comment_response(comment, name, role) for comment, name, role in reversed(rows)]
@@ -288,6 +328,7 @@ def create_comment(post_id: uuid.UUID, data: CommentCreate,
     profile = personal_profile(db, user)
     comment = PostComment(post_id=post_id if kind == "publication" else None,
                           reading_event_id=post_id if kind == "reading_event" else None,
+                          review_id=post_id if kind == "review" else None,
                           user_id=user.id, author_profile_id=profile.id, body=data.body)
     db.add(comment)
     db.commit()

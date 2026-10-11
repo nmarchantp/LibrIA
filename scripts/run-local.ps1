@@ -52,6 +52,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la migración de la base de datos. No se iniciará el sistema.' }
 } finally { Pop-Location }
 
+& (Join-Path $PSScriptRoot 'prepare-ai.ps1')
+
 Write-Host 'Preparación completa.' -ForegroundColor Green
 if ($PreflightOnly) { return }
 

@@ -1,0 +1,26 @@
+{
+  "version": "analytics-demo-v1",
+  "namespace": "620c78c6-b4bb-49ac-a219-9091ab20df03",
+  "reference_date": "2026-10-09",
+  "works": [
+    {"key": "journey", "title": "El viaje de las páginas", "editions": [{"key": "es", "pages": 120, "language": "es"}, {"key": "en", "pages": 200, "language": "en"}]},
+    {"key": "garden", "title": "El jardín de los relatos", "editions": [{"key": "es", "pages": 200, "language": "es"}]},
+    {"key": "unknown", "title": "Historias sin paginación", "editions": [{"key": "es", "pages": null, "language": "es"}]}
+  ],
+  "readings": [
+    {"key": "first-finish", "work": "journey", "edition": "es", "created_at": "2026-10-08T10:00:00-03:00", "events": [{"kind": "start", "page": 0, "at": "2026-10-08T10:05:00-03:00"}, {"kind": "progress", "page": 50, "at": "2026-10-08T11:00:00-03:00"}, {"kind": "finish", "page": 120, "at": "2026-10-08T12:00:00-03:00"}]},
+    {"key": "reread", "work": "journey", "edition": "en", "created_at": "2026-10-09T10:00:00-03:00", "events": [{"kind": "start", "page": 0, "at": "2026-10-09T10:05:00-03:00"}, {"kind": "progress", "page": 100, "at": "2026-10-09T11:00:00-03:00"}, {"kind": "finish", "page": 200, "at": "2026-10-09T12:00:00-03:00"}]},
+    {"key": "abandoned", "work": "garden", "edition": "es", "created_at": "2026-10-09T13:00:00-03:00", "events": [{"kind": "start", "page": 0, "at": "2026-10-09T13:05:00-03:00"}, {"kind": "progress", "page": 50, "at": "2026-10-09T14:00:00-03:00"}, {"kind": "abandon", "page": 50, "at": "2026-10-09T15:00:00-03:00"}]},
+    {"key": "resumed-corrected", "work": "garden", "edition": "es", "created_at": "2026-10-09T16:00:00-03:00", "events": [{"kind": "start", "page": 0, "at": "2026-10-09T16:05:00-03:00"}, {"kind": "progress", "page": 60, "at": "2026-10-09T17:00:00-03:00"}, {"kind": "correction", "page": 40, "at": "2026-10-09T18:00:00-03:00"}, {"kind": "progress", "page": 100, "at": "2026-10-09T19:00:00-03:00"}]},
+    {"key": "pending-unknown", "work": "unknown", "edition": "es", "created_at": "2026-10-09T09:00:00-03:00", "events": []}
+  ],
+  "posts": [
+    {"key": "manual", "source": "community", "publication_type": "free", "at": "2026-10-09T20:00:00-03:00"},
+    {"key": "event", "source": "event", "publication_type": "event", "at": "2026-10-09T21:00:00-03:00"},
+    {"key": "legacy-review", "source": "review", "publication_type": null, "at": "2026-10-09T22:00:00-03:00"}
+  ],
+  "expected": {
+    "2026-10-08": {"reader": {"L02": 1, "L04": 1, "L05": 1, "L06": 0, "L09": 1, "L10": 120, "S03": 0}, "loaded_events": 3},
+    "2026-10-09": {"reader": {"L02": 2, "L04": 3, "L05": 1, "L06": 1, "L09": 1, "L10": 350, "S03": 0}, "author": {"S03": 2}, "loaded_events": 10, "loaded_posts": 2, "excluded_reviews": 1}
+  }
+}

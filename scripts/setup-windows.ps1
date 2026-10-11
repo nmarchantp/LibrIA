@@ -116,5 +116,7 @@ try {
     Assert-LastCommand 'La instalación del frontend'
 } finally { Pop-Location }
 
+& (Join-Path $PSScriptRoot 'prepare-ai.ps1')
+
 Write-Host "`nInstalación terminada correctamente." -ForegroundColor Green
 Write-Host 'Ejecuta: .\scripts\run-local.ps1'

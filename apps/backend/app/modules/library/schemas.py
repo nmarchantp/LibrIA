@@ -15,7 +15,24 @@ class LibraryBookCreate(BaseModel):
     page_count: int | None = Field(default=None, ge=1, le=100000)
 
 
+class ReadingReflection(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    emotions: list[Literal["alegria", "tristeza", "esperanza", "nostalgia", "asombro", "tension", "enojo", "calma", "indiferencia"]] = Field(default_factory=list, max_length=9)
+    aspects: list[Literal["personajes", "historia", "estilo", "ritmo", "final", "temas"]] = Field(default_factory=list, max_length=6)
+    sentiment: Literal["positivo", "mixto", "negativo"] | None = None
+    reflection: str = Field(default="", max_length=1500)
+
+    @model_validator(mode="after")
+    def validate_reflection(self):
+        self.emotions = list(dict.fromkeys(self.emotions))
+        self.aspects = list(dict.fromkeys(self.aspects))
+        if not (self.emotions or self.aspects or self.sentiment or self.reflection):
+            raise ValueError("Indica al menos una apreciación sobre el libro")
+        return self
+
+
 class ReadingEventCreate(LibraryBookCreate):
+    reflection: ReadingReflection | None = None
     reading_id: uuid.UUID | None = None
     share: bool = False
     page_count: int = Field(ge=1, le=100000)
@@ -26,6 +43,8 @@ class ReadingEventCreate(LibraryBookCreate):
 
     @model_validator(mode="after")
     def validate_event(self):
+        if self.reflection is not None and self.event != "finish":
+            raise ValueError("La reflexión corresponde a la finalización del libro")
         if self.event == "start" and self.reading_id is not None:
             raise ValueError("Un inicio crea un intento nuevo")
         if self.event != "start" and self.reading_id is None:
@@ -40,7 +59,10 @@ class ReadingEventCreate(LibraryBookCreate):
 
 
 class ReadingEventResponse(BaseModel):
+    reflection: dict | None = None
     reading_id: uuid.UUID
+    work_id: uuid.UUID
+    edition_id: uuid.UUID
     event_id: uuid.UUID
     current_page: int
     total_pages: int
@@ -50,7 +72,11 @@ class ReadingEventResponse(BaseModel):
 
 
 class ReadingState(BaseModel):
+    reflection: dict | None = None
+    catalog_volume: dict | None = None
     reading_id: uuid.UUID
+    work_id: uuid.UUID
+    edition_id: uuid.UUID
     book_ref: str
     book_title: str
     status: str

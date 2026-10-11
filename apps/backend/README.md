@@ -51,25 +51,34 @@ Para ejecutar las pruebas del backend en desarrollo, instala `requirements-dev.t
 
 ## Datos de demostración y ETL
 
+Las [reseñas normalizadas](../../docs/reviews.md) se crean en `/api/reviews`, con obra canónica y una sola reseña por perfil–obra. `/api/posts` solo admite publicaciones manuales. El feed de lectura combina las tres entidades y sus comentarios comprueban destinos y visibilidad. `python -m scripts.seed_reviews_demo` prepara escenarios de reseñas para el siguiente cierre `daily-v2`; editar no vuelve a contar la primera publicación y los cierres anteriores permanecen intactos.
+
+El [ETL diario](../../docs/etl-daily.md) procesa una sola vez cada día cerrado a las 00:00 de Santiago, recupera pendientes al iniciar y muestra seguimiento en `/admin/etl`. Se programa con FastAPI y, en este equipo, con la tarea de Windows `LibrIA-ETL-Diario`. Las credenciales técnicas se leen del `.env` local y no se publican.
+
+En esa pantalla, **Ejecutar ETL ahora** inicia una carga manual real de los últimos 30 días, incluyendo hoy. Requiere permiso administrativo; registra extracción, limpieza, carga y conciliación en `analytics`, por separado de los cierres diarios. Las solicitudes son idempotentes por UUID y se recuperan si se interrumpe la API. Aplicar primero `alembic upgrade head` (migración `0018_manual_etl`). Ver [demostración y consultas de comprobación](../../docs/etl-daily.md#ejecución-manual-desde-la-web).
+
+**Mis análisis / ADN lector** y **Pulso de la comunidad** consultan los datos limpios e interpretan sus indicadores con **Ollama local**, sin clave ni envío a un proveedor externo. Aplicar la migración `0019_ai_interpretations`, iniciar Ollama y descargar `qwen3:1.7b`. El panel grupal requiere capacidad de autor o membresía editorial/librería y publica únicamente agregados con umbrales mínimos. `python -m scripts.seed_group_demo` prepara una cohorte ficticia repetible; después ejecutar el ETL manual desde la web. Ver [contrato, configuración y demostración](../../docs/ai-interpretations.md).
+
 Primero aplica las migraciones y levanta la API. `run.cmd` inicia el generador continuo de publicaciones, que crea un post cada 20 segundos y lo guarda en las tablas transaccionales mediante `POST /api/posts`. El generador asegura las cuentas demo de forma idempotente y publica reseñas como lector, además de publicaciones y eventos como perfiles profesionales u organizaciones. Solo funciona con `APP_ENV=development` y necesita `LIBRIA_DEMO_PASSWORD` en `apps/backend/.env`; el instalador la genera automáticamente.
 
 ```powershell
 # Generación continua cada 20 segundos; detener con Ctrl+C
 python -m scripts.generate_posts
-# Para preparar una carga fija, detener primero el generador continuo
-python -m scripts.generate_posts --count 20 --interval 0.2
-# Ejecutar ETL con la carga fija
+# Carga finita de escenarios versionados con resultados esperados
+python -m scripts.seed_analytics_demo
+# Inicialización histórica: procesa una vez cada día cerrado
+python -m scripts.run_etl --from-date 2026-09-21
+# Recuperar cierres pendientes, sin duplicar los completados
 python -m scripts.run_etl
-# Reiniciar generación continua después del ETL
-python -m scripts.generate_posts --interval 20
 ```
 
-El generador permanece activo hasta detenerlo, reintenta si la API no está disponible y evita iniciar una segunda instancia. `--count` permite una carga finita y `--interval` cambia el intervalo en segundos. Mantén la misma clave para reutilizar las cuentas de demostración. La generación continua es independiente de la carga finita: ambas escriben en el esquema transaccional, mientras que el ETL se ejecuta explícitamente y guarda instantáneas históricas en `analytics`. El ETL toma una ventana móvil de 30 días, lee `app.publicaciones`, agrupa por fuente y categoría y escribe una instantánea JSONB en `analytics.instantaneas_actividad`. Cada ejecución queda registrada en `analytics.ejecuciones_etl`, incluso si falla. Las instantáneas son históricas; ejecutar el ETL otra vez crea otra instantánea. Puedes programar `python -m scripts.run_etl` con el planificador del sistema.
+El generador continuo sirve para actividad del mural; sus fechas y referencias aleatorias no constituyen escenarios de validación repetibles. Para comprobar indicadores se usa `analytics_demo.json` y su cargador estable. El ETL lee fuentes operacionales, excluye contratos incoherentes y reseñas/avances legados, escribe hechos limpios e indicadores privados y registra reglas y cantidades por cierre. Un fallo revierte la carga y permite reintentar la misma ejecución; un día exitoso nunca se vuelve a cargar. Los análisis grupales siguen deshabilitados hasta validar anonimización.
 
-Para revisar la última instantánea:
+Para revisar el último cierre diario:
 
 ```sql
-SELECT period_start, period_end, metrics
-FROM analytics.instantaneas_actividad
-ORDER BY created_at DESC LIMIT 1;
+SELECT business_date, status, source_cutoff_at, summary
+FROM analytics.ejecuciones_etl
+WHERE business_date IS NOT NULL
+ORDER BY business_date DESC LIMIT 1;
 ```

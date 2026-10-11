@@ -55,8 +55,10 @@ class UserRolesTest(unittest.TestCase):
             json={"source": "community", "kind": "community", "body": "Texto libre"}).status_code, 403)
         self.assertEqual(self.client.post("/api/posts", headers=self.auth(reader),
             json={"source": "event", "kind": "community", "body": "Evento"}).status_code, 403)
-        review = self.client.post("/api/posts", headers=self.auth(reader), json={
-            "source": "review", "kind": "reviews", "book_ref": "test:fourth-wing", "book_title": "Fourth Wing",
+        reading = self.client.post("/api/readings/library", headers=self.auth(reader), json={
+            "book_ref": "test:fourth-wing", "book_title": "Fourth Wing"}).json()
+        review = self.client.post("/api/reviews", headers=self.auth(reader), json={
+            "work_id": reading["work_id"], "edition_id": reading["edition_id"],
             "rating": 4, "body": "Me gustaron los personajes."})
         self.assertEqual(review.status_code, 201, review.text)
         self.assertEqual(review.json()["author_role"], "lector")

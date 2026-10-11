@@ -31,9 +31,11 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
     latest = {}
     for reading, book_ref, book_title in rows:
         if book_ref not in latest:
-            latest[book_ref] = ReadingState(reading_id=reading.id, book_ref=book_ref, book_title=book_title, status=reading.status,
+            latest[book_ref] = ReadingState(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, book_ref=book_ref, book_title=book_title, status=reading.status,
+                                            reflection=db.scalar(select(ReadingEvent.reflection).where(ReadingEvent.reading_id == reading.id, ReadingEvent.kind == "finish")),
+                                            catalog_volume=db.scalar(select(CatalogSource.payload).where(CatalogSource.edition_id == reading.edition_id, CatalogSource.provider == "google-books")),
                                             current_page=reading.current_page,
-                                            total_pages=reading.total_pages,
+                                            total_pages=reading.total_pages or (db.get(Edition, reading.edition_id).page_count if reading.status == "pending" else None),
                                             progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0)
     return list(latest.values())
 
@@ -74,11 +76,11 @@ def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_cu
                         .order_by(Reading.created_at.desc(), Reading.id.desc()))
     if reading is None:
         reading = Reading(library_entry_id=entry.id, work_id=work.id, edition_id=edition.id,
-                          status="pending", current_page=0, total_pages=data.page_count)
+                          status="pending", current_page=0, total_pages=edition.page_count or data.page_count)
         db.add(reading)
     db.commit()
     db.refresh(reading)
-    return ReadingState(reading_id=reading.id, book_ref=data.book_ref, book_title=edition.title,
+    return ReadingState(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, book_ref=data.book_ref, book_title=edition.title,
                         status=reading.status, current_page=reading.current_page, total_pages=reading.total_pages,
                         progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0)
 
@@ -160,13 +162,15 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
 
     public = data.event in {"start", "progress", "finish"} or (data.event == "abandon" and data.share)
     event = ReadingEvent(reading_id=reading.id, actor_user_id=user.id, kind=data.event,
+                          reflection=data.reflection.model_dump() if data.reflection else None,
                           previous_page=previous_page, page=reading.current_page, total_pages=reading.total_pages,
                           is_public=public, reason=data.correction_reason if data.event == "correction" else
                           data.abandonment_reason if data.event == "abandon" else None, created_at=now)
     db.add(event)
     db.commit()
     db.refresh(event)
-    return ReadingEventResponse(reading_id=reading.id, event_id=event.id, status=reading.status,
+    return ReadingEventResponse(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, event_id=event.id, status=reading.status,
+                                reflection=event.reflection,
                                 current_page=reading.current_page, total_pages=reading.total_pages,
                                 progress_percent=percent, post=as_reading_response(event, work.title, user) if public else None)
 

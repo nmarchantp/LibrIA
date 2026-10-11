@@ -53,8 +53,8 @@ class SingleInstance:
         self.file.close()
 
 
-def make_post(account: dict[str, Any], profile_id: str, sequence: int) -> dict[str, Any]:
-    """Construye un payload admitido por POST /api/posts."""
+def make_post(account: dict[str, Any], profile_id: str, sequence: int, work_id: str | None = None) -> dict[str, Any]:
+    """Publicaciones manuales o reseñas con obra canónica resuelta previamente."""
     books = (
         ("demo:papel-y-tinta", "Papel y tinta"),
         ("demo:mapa-de-invierno", "Mapa de invierno"),
@@ -70,13 +70,12 @@ def make_post(account: dict[str, Any], profile_id: str, sequence: int) -> dict[s
     key = account["key"]
 
     if key == "lector":
+        if not work_id:
+            raise ValueError("Resuelve la obra antes de crear una reseña")
         book_ref, book_title = books[sequence % len(books)]
         return {
-            "source": "review",
-            "kind": "reviews",
+            "work_id": work_id,
             "author_profile_id": profile_id,
-            "book_ref": book_ref,
-            "book_title": book_title,
             "rating": sequence % 5 + 1,
             "body": f"{book_title}: {topics[sequence % len(topics)]}",
         }
@@ -107,7 +106,7 @@ class ApiClient:
         self.password = password
 
     def request(self, path: str, payload: dict[str, Any] | None = None,
-                token: str | None = None) -> Any:
+                token: str | None = None, method: str | None = None) -> Any:
         headers = {"Accept": "application/json"}
         data = None
         if payload is not None:
@@ -115,7 +114,7 @@ class ApiClient:
             data = json.dumps(payload).encode("utf-8")
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        request = Request(f"{self.base_url}{path}", data=data, headers=headers)
+        request = Request(f"{self.base_url}{path}", data=data, headers=headers, method=method)
         try:
             with urlopen(request, timeout=10) as response:
                 if response.status == 204:
@@ -156,14 +155,29 @@ class ApiClient:
         return actors
 
     def create_post(self, actor: DemoActor, sequence: int) -> dict[str, Any]:
-        payload = make_post(actor.account, actor.profile_id, sequence)
-        try:
-            return self.request("/posts", payload, actor.token)
-        except ApiError as error:
-            if error.status != 401:
-                raise
-            actor.token = self.login(actor.account)
-            return self.request("/posts", payload, actor.token)
+        for attempt in range(2):
+            try:
+                if actor.account["key"] != "lector":
+                    return self.request("/posts", make_post(actor.account, actor.profile_id, sequence), actor.token)
+                books = (("papel-y-tinta", "Papel y tinta"), ("mapa-de-invierno", "Mapa de invierno"),
+                         ("la-casa-del-rio", "La casa del río"), ("ciudades-de-luz", "Ciudades de luz"))
+                reference, title = books[sequence % len(books)]
+                reading = self.request("/readings/library", {"book_ref": "demo:" + reference, "book_title": title}, actor.token)
+                payload = make_post(actor.account, actor.profile_id, sequence, reading["work_id"])
+                payload["edition_id"] = reading["edition_id"]
+                existing = self.request("/reviews/me?work_id=" + reading["work_id"], token=actor.token)
+                if existing:
+                    return self.request("/reviews/" + existing[0]["id"],
+                                        {key: value for key, value in payload.items() if key not in {"work_id", "author_profile_id"}},
+                                        actor.token, method="PUT")
+                return self.request("/reviews", payload, actor.token)
+            except ApiError as error:
+                if error.status == 409 and actor.account["key"] == "lector" and not attempt:
+                    continue
+                if error.status != 401 or attempt:
+                    raise
+                actor.token = self.login(actor.account)
+        raise RuntimeError("No se pudo recuperar la sesión demo")
 
 
 def parse_args() -> argparse.Namespace:

@@ -1,6 +1,10 @@
 # Revisión de brechas transaccionales
 
-Fecha: 2026-10-04. Punto 2 del trabajo de analítica. Estado: revisión actualizada después de las correcciones de seguridad y coherencia. Hay cambios de aplicación y pruebas; no se han modificado tablas ni ejecutado migraciones en esta entrega.
+Fecha de actualización: 2026-10-10. El diagnóstico detallado siguiente conserva el estado de la revisión del 2026-10-04.
+
+**Entrega posterior de reseñas:** [reviews.md](reviews.md) documenta entidad propia, unicidad perfil–obra, calificación opcional, estados, revisiones al corte, feed y comentarios adaptados. Se migró una reseña verificable conservando identidad e interacciones; 148 sin obra canónica quedaron registradas para conciliación. Los contratos nuevos cubren la separación de reseñas; el legado pendiente impide declarar resuelta toda la migración. El ETL `daily-v2` incorpora S02 y preparación restringida de S01 sin habilitar consumo grupal.
+
+**Cambios posteriores verificados:** perfiles/capacidades/membresías están implementados; `eventos_lectura` separa los nuevos hitos del almacenamiento de publicaciones y admite correcciones privadas; comandos posteriores al inicio resuelven por ID; comentarios admiten publicaciones o eventos; hay subtipos, me gusta y seguimientos. Biblioteca sigue limitada al último intento por referencia del proveedor y reseñas siguen almacenadas en publicaciones. La [entrega del ETL diario](etl-daily.md) implementa carga y seguimiento administrativo, excluyendo reseñas y avances legados. T10/T11 tienen cobertura parcial; anonimización grupal, reseñas normalizadas y escenarios del catálogo completo siguen pendientes. Las afirmaciones de ausencia en las tablas siguientes son históricas y no describen todas las migraciones actuales.
 
 ## 1. Alcance y requisitos que prevalecen
 

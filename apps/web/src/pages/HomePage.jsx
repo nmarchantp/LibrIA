@@ -77,7 +77,18 @@ function PostComposer({ role, profileId, onCreated }) {
 
 function FeedCard({ post }) {
   const { getBook } = useLibrary()
-  const book = post.bookId ? getBook(post.bookId) : null
+  const libraryBook = post.bookId ? getBook(post.bookId) : null
+  const book = post.bookTitle ? {
+    ...libraryBook,
+    id: post.bookId,
+    title: post.bookTitle,
+    author: libraryBook?.author || '',
+    image: post.bookCoverUrl || libraryBook?.image,
+    initial: post.bookTitle.charAt(0),
+    color: 'var(--lavender-soft)',
+    accent: 'var(--ink)',
+  } : libraryBook
+  const BookContainer = book?.id ? Link : 'div'
   const [liked, setLiked] = useState(post.likedByMe)
   const [likeCount, setLikeCount] = useState(post.likeCount)
   const [following, setFollowing] = useState(post.followingAuthor)
@@ -168,11 +179,11 @@ function FeedCard({ post }) {
     {post.title && <h2>{post.title}</h2>}
     {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill={i < post.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}<span>{post.rating}/5</span></div>}
     {post.bookTitle && !post.title && <h2>{post.bookTitle}</h2>}
-    <p className="post-text">{post.text}</p>
-    {post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la publicación de ${post.author}`} loading="lazy" />)}</div>}
+    {post.isSpoiler ? <details><summary>Contiene spoilers · Mostrar reseña</summary><p className="post-text">{post.text}</p>{post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la reseña de ${post.author}`} loading="lazy" />)}</div>}</details> : <><p className="post-text">{post.text}</p>
+    {post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la publicación de ${post.author}`} loading="lazy" />)}</div>}</>}
     {post.type === 'progress' && post.progressPercent !== null && <div className="progress-label"><span>Progreso de lectura</span><strong>{post.progressPercent} %</strong></div>}
     {post.quote && <blockquote className="post-quote">“{post.quote}”<span>Desde el cuaderno de la autora</span></blockquote>}
-    {book && <Link className="post-book" to={'/books/' + book.id}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'CONTINÚA LEYENDO' : 'EN ESTA RESEÑA'}</small><h3>{book.title}</h3><p>{book.author}</p>{post.page && <><div className="progress-label"><span>Página {post.page} de {post.total}</span><strong>{Math.round(post.page / post.total * 100)} %</strong></div><div className="progress"><span style={{ width: post.page / post.total * 100 + '%' }} /></div></>}</div><ArrowUpRight size={18} /></Link>}
+    {book && <BookContainer className="post-book" {...(book.id ? { to: '/books/' + book.id } : {})}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'LECTURA COMPARTIDA' : 'EN ESTA RESEÑA'}</small><h3>{book.title}</h3>{book.author && <p>{book.author}</p>}{post.progressPercent !== null && post.type === 'progress' && <div className="progress"><span style={{ width: post.progressPercent + '%' }} /></div>}</div>{book.id && <ArrowUpRight size={18} />}</BookContainer>}
     {post.feedItemType !== 'reading_event' && <div className="post-actions">
       <button type="button" aria-pressed={liked} disabled={interactionBusy} onClick={toggleLike}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> Me gusta <span>{likeCount}</span></button>
       {post.authorProfileId && <button type="button" aria-pressed={following} disabled={interactionBusy} onClick={toggleFollow}>{following ? <UserRoundCheck size={17} /> : <UserRoundPlus size={17} />}{following ? 'Siguiendo' : 'Seguir perfil'}</button>}
@@ -239,6 +250,8 @@ export default function HomePage() {
           time: new Date(post.created_at).toLocaleString('es-CL'),
           title: post.title, text: post.body, source: post.source, bookId: post.book_ref,
           bookTitle: post.book_title, rating: post.rating, progressPercent: post.progress_percent,
+          bookCoverUrl: post.book_cover_url,
+          isSpoiler: post.is_spoiler || false,
           color: roleColors[post.author_role] || roleColors.lector,
         })))
       }).catch(() => { if (active) setFeedError(true) })

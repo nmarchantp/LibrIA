@@ -1,6 +1,8 @@
 # Catálogo de indicadores de LibrIA
 
-Fecha de revisión: 2026-10-04. Estado: propuesta funcional para revisión, previa al diseño físico y la implementación del ETL.
+Fecha de revisión: 2026-10-10. Estado: catálogo funcional con alcance diario inicial implementado; las demás métricas permanecen como propuesta.
+
+**Actualización de ejecución:** [ETL diario](etl-daily.md) fija las fuentes, fórmulas, modelo, escenarios y límites de L02/L04/L05/L06/L09/L10/S03. [Reseñas normalizadas](reviews.md) añade S02 y la preparación restringida de S01 en `daily-v2`, que prevalece para los siguientes cierres. Los días `daily-v1` permanecen inmutables. Las referencias históricas siguientes describen el diagnóstico inicial: agregar libros ya persiste, los avances usan eventos y las nuevas reseñas tienen entidad propia. La conciliación de reseñas legadas sin obra verificable y el análisis grupal continúan pendientes.
 
 Este documento define qué preguntas responder, para quién y con qué datos. No crea tablas, permisos ni métricas en ejecución. El [modelo social acordado](social-model.md) prevalece para perfiles, publicaciones, reseñas y avances. Las fuentes actuales se contrastaron con modelos, rutas y migraciones del repositorio; no se auditó una base de datos en ejecución.
 

@@ -14,6 +14,8 @@ import NotificationsPage from './pages/NotificationsPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import AdminGate from './components/AdminGate'
 import AdminProfilesPage from './pages/AdminProfilesPage'
+import AdminEtlPage from './pages/AdminEtlPage'
+import GroupInsightsPage from './pages/GroupInsightsPage'
 
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
@@ -27,11 +29,13 @@ export default function App() {
       <Route index element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route element={<AdminGate />}><Route path="/admin/profiles" element={<AdminProfilesPage />} /></Route>
+      <Route element={<AdminGate />}><Route path="/admin/etl" element={<AdminEtlPage />} /></Route>
       <Route path="/books" element={<BooksPage />} />
       <Route path="/books/:id" element={<BookDetailPage />} />
       <Route path="/library" element={<Navigate to="/profile?tab=library" replace />} />
       <Route path="/reading/:id" element={<ReadingPage />} />
       <Route path="/insights" element={<Navigate to="/profile?tab=analysis" replace />} />
+      <Route path="/community-insights" element={<GroupInsightsPage />} />
       <Route path="/events" element={<EventsPage />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />

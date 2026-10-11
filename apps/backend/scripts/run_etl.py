@@ -1,50 +1,32 @@
-"""Crea una instantanea agregada de publicaciones en analytics."""
-
-import uuid
-from datetime import datetime, timedelta, timezone
-
-from sqlalchemy import text
-
-from app.core.database import engine
-
-VERSION = "1"
+﻿"""Carga únicamente días cerrados; repetir una fecha exitosa no vuelve a escribir."""
+import argparse
+import json
+from datetime import date, timedelta
+from app.modules.analytics.etl import last_closed_day, run_day, run_pending
 
 
-def run():
-    cutoff = datetime.now(timezone.utc)
-    start = cutoff - timedelta(days=30)
-    run_id = uuid.uuid4()
-    snapshot_id = uuid.uuid4()
-    with engine.begin() as connection:
-        connection.execute(text("""INSERT INTO analytics.ejecuciones_etl
-            (id, status, started_at, source_cutoff_at, transform_version)
-            VALUES (:id, 'running', :started, :cutoff, :version)"""),
-            {"id": run_id, "started": cutoff, "cutoff": cutoff, "version": VERSION})
-    try:
-        with engine.begin() as connection:
-            rows = connection.execute(text("""SELECT source, kind, count(*) AS total,
-                count(DISTINCT user_id) AS users FROM app.publicaciones
-                WHERE created_at >= :start AND created_at < :cutoff
-                GROUP BY source, kind ORDER BY source, kind"""), {"start": start, "cutoff": cutoff}).mappings().all()
-            total = sum(row["total"] for row in rows)
-            metrics = {"total_posts": total, "by_source_and_kind": [dict(row) for row in rows]}
-            # JSON serialization stays explicit so this works with SQL text and psycopg.
-            import json
-            connection.execute(text("""INSERT INTO analytics.instantaneas_actividad
-                (id, etl_run_id, period_start, period_end, schema_version, metrics)
-                VALUES (:id, :run_id, :start, :cutoff, :version, CAST(:metrics AS jsonb))"""),
-                {"id": snapshot_id, "run_id": run_id, "start": start, "cutoff": cutoff,
-                 "version": VERSION, "metrics": json.dumps(metrics)})
-            connection.execute(text("""UPDATE analytics.ejecuciones_etl SET status='succeeded', finished_at=:finished
-                WHERE id=:id"""), {"finished": datetime.now(timezone.utc), "id": run_id})
-    except Exception:
-        with engine.begin() as connection:
-            connection.execute(text("""UPDATE analytics.ejecuciones_etl SET status='failed', finished_at=:finished,
-                error_code='transform_failed' WHERE id=:id"""),
-                {"finished": datetime.now(timezone.utc), "id": run_id})
-        raise
-    print(f"ETL {run_id}: {total} publicaciones; instantanea {snapshot_id}")
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--date', type=date.fromisoformat, help='Día cerrado YYYY-MM-DD')
+    parser.add_argument('--from-date', type=date.fromisoformat, help='Inicialización histórica hasta el último día cerrado')
+    args = parser.parse_args()
+    if args.date and args.from_date:
+        parser.error('Usa --date o --from-date, no ambos')
+    if args.from_date:
+        if args.from_date > last_closed_day():
+            parser.error('La fecha inicial debe estar cerrada')
+        day = args.from_date
+        while day <= last_closed_day():
+            result = run_day(day)
+            print(json.dumps(result))
+            if result['status'] == 'busy':
+                raise SystemExit(1)
+            day += timedelta(days=1)
+    elif args.date:
+        print(json.dumps(run_day(args.date)))
+    else:
+        print(json.dumps(run_pending()))
 
 
-if __name__ == "__main__":
-    run()
+if __name__ == '__main__':
+    main()

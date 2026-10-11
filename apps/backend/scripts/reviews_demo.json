@@ -1,0 +1,35 @@
+{
+  "version": "reviews-demo-v1",
+  "namespace": "04b9d73e-79e5-4a1d-b201-e7fb14f5a116",
+  "reference_date": "2026-10-10",
+  "reviews": [
+    {"key": "reader-edited", "account": "lector", "work": "journey", "edition": "es", "revisions": [
+      {"at": "2026-10-10T08:00:00-03:00", "status": "published", "rating": 5},
+      {"at": "2026-10-10T08:20:00-03:00", "status": "published", "rating": 3}
+    ]},
+    {"key": "reader-unrated", "account": "lector", "work": "unknown", "edition": "es", "spoiler": true, "revisions": [
+      {"at": "2026-10-10T08:30:00-03:00", "status": "published", "rating": null}
+    ]},
+    {"key": "author-republished", "account": "autor", "work": "garden", "edition": "es", "revisions": [
+      {"at": "2026-10-10T08:00:00-03:00", "status": "draft", "rating": 4},
+      {"at": "2026-10-10T08:10:00-03:00", "status": "published", "rating": 4},
+      {"at": "2026-10-10T08:20:00-03:00", "status": "hidden", "rating": 4},
+      {"at": "2026-10-10T08:40:00-03:00", "status": "published", "rating": 4}
+    ]},
+    {"key": "author-draft", "account": "autor", "work": "unknown", "edition": "es", "revisions": [
+      {"at": "2026-10-10T08:00:00-03:00", "status": "draft", "rating": 1}
+    ]},
+    {"key": "admin-hidden", "account": "admin", "work": "journey", "edition": "es", "revisions": [
+      {"at": "2026-10-10T08:00:00-03:00", "status": "published", "rating": 2},
+      {"at": "2026-10-10T08:20:00-03:00", "status": "hidden", "rating": 2}
+    ]}
+  ],
+  "expected": {
+    "new_reviews": {"lector": 2, "autor": 1, "admin": 1},
+    "native_review_count": 5,
+    "native_published_count": 3,
+    "native_revision_count": 10,
+    "unrated_average": null,
+    "author_garden_average": 4
+  }
+}
