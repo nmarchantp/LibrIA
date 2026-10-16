@@ -4,6 +4,8 @@
 .book-review-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .book-review-heading time, .book-review-unrated { color: var(--muted); font-size: 14px; }
 .book-review-stars { color: var(--primary); font-size: 22px; }
+.book-review-dimensions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.book-review-dimensions span { padding:5px 8px; border-radius:999px; background:var(--lavender-soft); color:var(--muted); font-size:11px; }
 .book-review p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; margin-top: 10px; }
 .book-review details { margin-top: 10px; }
 .book-review summary { cursor: pointer; color: var(--ink); }

@@ -119,6 +119,24 @@ class ReviewTest(unittest.TestCase):
         self.assertFalse(page_two["has_more"])
         self.assertEqual({page_one["items"][0]["id"], page_two["items"][0]["id"]}, {first["id"], second["id"]})
 
+    def test_alternate_volume_records_share_reviews_and_prevent_duplicates(self):
+        self.edition.title = "Asesino de brujas"
+        alternate = Edition(work_id=self.work.id,
+                            title="Asesino de brujas - vol 1 La bruja blanca - ed coleccionista",
+                            language="es", page_count=520)
+        self.db.add(alternate)
+        self.db.flush()
+        reference = "collector-" + uuid.uuid4().hex
+        self.db.add(CatalogSource(edition_id=alternate.id, provider="google-books",
+                                  external_id=reference, fetched_at=datetime.now(timezone.utc)))
+        self.db.flush()
+
+        review = self.create(rating=5).json()
+        shown = self.client.get(f"/api/reviews/by-book/{reference}").json()["items"]
+        self.assertEqual([item["id"] for item in shown], [review["id"]])
+        duplicate = self.create(edition_id=str(alternate.id))
+        self.assertEqual(duplicate.status_code, 409)
+
     def test_database_rejects_duplicate_review_and_new_legacy_post(self):
         item = self.create().json()
         with self.assertRaises(IntegrityError), self.db.begin_nested():

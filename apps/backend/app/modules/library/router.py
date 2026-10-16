@@ -10,9 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user
+from app.modules.books.identity import canonical_work_key
 from app.modules.books.models import CatalogSource, Edition, Work
+from app.modules.books.service import equivalent_work_ids
 from app.modules.library.models import LibraryEntry, Reading, ReadingProgress, ReadingEvent
-from app.modules.library.schemas import LibraryBookCreate, ReadingEventCreate, ReadingEventResponse, ReadingState
+from app.modules.library.schemas import LibraryBookCreate, ReadingEventCreate, ReadingEventResponse, ReadingState, ReadingTotalUpdate, ReadingNotebookUpdate
 from app.modules.social.router import as_reading_response
 from app.modules.users.models import User
 
@@ -36,7 +38,9 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
                                             catalog_volume=db.scalar(select(CatalogSource.payload).where(CatalogSource.edition_id == reading.edition_id, CatalogSource.provider == "google-books")),
                                             current_page=reading.current_page,
                                             total_pages=reading.total_pages or (db.get(Edition, reading.edition_id).page_count if reading.status == "pending" else None),
-                                            progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0)
+                                            progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0,
+                                            started_at=reading.started_at, finished_at=reading.finished_at,
+                                            notebook=reading.notebook or {})
     return list(latest.values())
 
 
@@ -49,9 +53,28 @@ def resolve_book(db: Session, data: LibraryBookCreate) -> tuple[Work, Edition]:
     if source:
         edition = db.get(Edition, source.edition_id)
         return db.get(Work, edition.work_id), edition
-    work = Work(title=data.book_title)
-    db.add(work)
-    db.flush()
+    try:
+        internal_work_id = uuid.UUID(data.book_ref)
+    except ValueError:
+        internal_work_id = None
+    if internal_work_id:
+        work = db.get(Work, internal_work_id)
+        if work:
+            edition = db.get(Edition, data.edition_id) if data.edition_id else db.scalar(
+                select(Edition).where(Edition.work_id == work.id).order_by(Edition.created_at, Edition.id))
+            if edition is None or edition.work_id not in equivalent_work_ids(db, work.id):
+                raise HTTPException(status_code=422, detail="Selecciona una edición válida de la obra")
+            return db.get(Work, edition.work_id), edition
+    # Unknown/manual references have no author metadata. Google-backed books
+    # resolve through their source above and retain the author-aware identity.
+    identity_key = canonical_work_key(data.book_title)
+    if identity_key:
+        db.execute(select(func.pg_advisory_xact_lock(func.hashtext("catalog:work:" + identity_key))))
+    work = db.scalar(select(Work).where(Work.identity_key == identity_key)) if identity_key else None
+    if work is None:
+        work = Work(title=data.book_title, identity_key=identity_key, original_language="es")
+        db.add(work)
+        db.flush()
     edition = Edition(work_id=work.id, title=data.book_title, language="es", page_count=data.page_count)
     db.add(edition)
     db.flush()
@@ -67,7 +90,11 @@ def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_cu
     if user.role == "libreria":
         raise HTTPException(status_code=403, detail="Una librería no tiene biblioteca personal")
     work, edition = resolve_book(db, data)
-    entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id, LibraryEntry.work_id == work.id))
+    entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
+                      LibraryEntry.work_id.in_(equivalent_work_ids(db, work.id))))
+    if entry is not None and entry.work_id != work.id:
+        work = db.get(Work, entry.work_id)
+        edition = db.scalar(select(Edition).where(Edition.work_id == work.id).order_by(Edition.created_at, Edition.id))
     if entry is None:
         entry = LibraryEntry(user_id=user.id, work_id=work.id)
         db.add(entry)
@@ -82,7 +109,8 @@ def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_cu
     db.refresh(reading)
     return ReadingState(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, book_ref=data.book_ref, book_title=edition.title,
                         status=reading.status, current_page=reading.current_page, total_pages=reading.total_pages,
-                        progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0)
+                        progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0,
+                        started_at=reading.started_at, finished_at=reading.finished_at, notebook=reading.notebook or {})
 
 
 @router.post("/events", response_model=ReadingEventResponse, status_code=status.HTTP_201_CREATED)
@@ -104,7 +132,11 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
             raise HTTPException(status_code=409, detail="El total de páginas no puede cambiar durante un intento")
     else:
         work, edition = resolve_book(db, data)
-        entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id, LibraryEntry.work_id == work.id))
+        entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
+                          LibraryEntry.work_id.in_(equivalent_work_ids(db, work.id))))
+        if entry is not None and entry.work_id != work.id:
+            work = db.get(Work, entry.work_id)
+            edition = db.scalar(select(Edition).where(Edition.work_id == work.id).order_by(Edition.created_at, Edition.id))
         if entry is None:
             entry = LibraryEntry(user_id=user.id, work_id=work.id)
             db.add(entry)
@@ -173,6 +205,38 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
                                 reflection=event.reflection,
                                 current_page=reading.current_page, total_pages=reading.total_pages,
                                 progress_percent=percent, post=as_reading_response(event, work.title, user) if public else None)
+
+
+@router.patch("/{reading_id}/total-pages")
+def update_total_pages(reading_id: uuid.UUID, data: ReadingTotalUpdate,
+                       user: Annotated[User, Depends(get_current_user)],
+                       db: Annotated[Session, Depends(get_db)]):
+    reading = db.scalar(select(Reading).join(LibraryEntry, LibraryEntry.id == Reading.library_entry_id)
+                        .where(Reading.id == reading_id, LibraryEntry.user_id == user.id).with_for_update())
+    if reading is None:
+        raise HTTPException(status_code=404, detail="Lectura no encontrada")
+    if data.total_pages < reading.current_page:
+        raise HTTPException(status_code=422, detail="El total no puede ser menor que la pÃ¡gina actual")
+    if reading.status == "finished" and data.total_pages != reading.current_page:
+        reading.current_page = data.total_pages
+    reading.total_pages = data.total_pages
+    db.commit()
+    return {"reading_id": reading.id, "total_pages": reading.total_pages,
+            "current_page": reading.current_page,
+            "progress_percent": round(reading.current_page * 100 / reading.total_pages)}
+
+
+@router.patch("/{reading_id}/notebook")
+def update_notebook(reading_id: uuid.UUID, data: ReadingNotebookUpdate,
+                    user: Annotated[User, Depends(get_current_user)],
+                    db: Annotated[Session, Depends(get_db)]):
+    reading = db.scalar(select(Reading).join(LibraryEntry, LibraryEntry.id == Reading.library_entry_id)
+                        .where(Reading.id == reading_id, LibraryEntry.user_id == user.id).with_for_update())
+    if reading is None:
+        raise HTTPException(status_code=404, detail="Lectura no encontrada")
+    reading.notebook = data.model_dump()
+    db.commit()
+    return {"reading_id": reading.id, "notebook": reading.notebook}
 
 
 @router.get("/{reading_id}/history")

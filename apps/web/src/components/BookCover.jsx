@@ -1,22 +1,18 @@
+import { useEffect, useState } from 'react'
+
 export default function BookCover({ book, large = false }) {
-  const hasImage = Boolean(book?.image)
+  const [imageFailed, setImageFailed] = useState(false)
+  const hasImage = Boolean(book?.image) && !imageFailed
+
+  useEffect(() => { setImageFailed(false) }, [book?.image])
 
   return (
     <div
       className={`book-cover ${large ? 'book-cover--large' : ''}`}
-      style={
-        hasImage
-          ? {
-              backgroundImage: `url(${book.image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              color: '#fff',
-            }
-          : { background: book.color, color: book.accent }
-      }
+      style={{ background: book.color || '#605680', color: book.accent || '#ffffff' }}
       aria-label={`Portada de ${book.title}`}
     >
+      {hasImage && <img className="book-cover-image" src={book.image} alt="" onError={() => setImageFailed(true)} />}
       {!hasImage && (
         <>
           <span className="cover-mark">{book.initial}</span>

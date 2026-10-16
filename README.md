@@ -56,7 +56,11 @@ El script solicitará de forma oculta la contraseña de `postgres` y realizará 
 5. Creación del entorno virtual Python `.venv`.
 6. Instalación de versiones Python fijadas en `requirements.txt`.
 7. Ejecución de las migraciones de Alembic.
-8. Creación de `apps/web/.env` desde su ejemplo, si todavía no existe, e instalación exacta del frontend mediante `npm ci` y `package-lock.json`.
+8. Carga idempotente del catálogo popular general, de Chile y de Argentina, consultando Google Books y conservando solamente obras y ediciones en español.
+9. Consolidación de versiones de una misma obra y limpieza de cualquier registro bibliográfico que no esté en español.
+10. Creación de `apps/web/.env` desde su ejemplo, si todavía no existe, e instalación exacta del frontend mediante `npm ci` y `package-lock.json`.
+
+La carga del catálogo se ejecuta cada vez que se usa `setup.cmd`, para que cada computador de desarrollo reciba una base bibliográfica inicial equivalente. Puede tardar varios minutos y necesita conexión a Internet. Es seguro repetirla: reutiliza las obras y ediciones existentes, consolida duplicados y no elimina usuarios ni perfiles. En producción, `setup.cmd` no forma parte del arranque normal; esta carga debe ejecutarse una sola vez durante la preparación inicial del entorno.
 
 Los archivos [apps/backend/.env.example](apps/backend/.env.example) y [apps/web/.env.example](apps/web/.env.example) documentan todas las variables que usa cada aplicación. `setup.cmd` genera las contraseñas locales y deja listos ambos `.env`. Para habilitar Google OAuth o Google Books, cada integrante debe completar las variables `GOOGLE_*` y `VITE_GOOGLE_BOOKS_API_KEY` en sus archivos locales con las credenciales que tenga autorizadas. Los `.env` reales contienen secretos y siguen excluidos de Git.
 

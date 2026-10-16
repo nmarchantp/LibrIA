@@ -11,7 +11,8 @@ const withReading = (book, reading) => reading ? {
   ...book, status: statusLabels[reading.status] || book.status,
   progress: reading.progress_percent, currentPage: reading.current_page, pageCount: reading.total_pages ?? book.pageCount, readingId: reading.reading_id,
   workId: reading.work_id, editionId: reading.edition_id,
-  reflection: reading.reflection,
+  reflection: reading.reflection, startedAt: reading.started_at, finishedAt: reading.finished_at,
+  notebook: reading.notebook || {},
 } : book
 
 export function LibraryProvider({ children }) {
@@ -56,7 +57,7 @@ export function LibraryProvider({ children }) {
     }
     const result = await apiRequest('/readings/events', {
       method: 'POST', headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, page_count: pageCount, event, ...extra, reading_id: event === 'start' ? null : book.readingId }),
+      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, edition_id: book.editionId || null, page_count: pageCount, event, ...extra, reading_id: event === 'start' ? null : book.readingId }),
     })
     if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
     const status = { start: 'Leyendo', progress: 'Leyendo', correction: 'Leyendo', finish: 'Terminado', abandon: 'Abandonado' }[event]
@@ -65,9 +66,12 @@ export function LibraryProvider({ children }) {
       work_id: result.work_id, edition_id: result.edition_id,
       progress_percent: result.progress_percent, current_page: result.current_page, total_pages: result.total_pages,
       reflection: result.reflection,
+      started_at: result.started_at, finished_at: result.finished_at, notebook: book.notebook || {},
     }
     setBooks(current => {
-      const updated = { ...book, status, reflection: result.reflection, progress: result.progress_percent, currentPage: result.current_page, pageCount: result.total_pages, readingId: result.reading_id, workId: result.work_id, editionId: result.edition_id }
+      const updated = { ...book, status, reflection: result.reflection, progress: result.progress_percent, currentPage: result.current_page, pageCount: result.total_pages, readingId: result.reading_id, workId: result.work_id, editionId: result.edition_id,
+        startedAt: event === 'start' && !book.startedAt ? new Date().toISOString() : book.startedAt,
+        finishedAt: event === 'finish' ? new Date().toISOString() : book.finishedAt }
       return current.some(item => String(item.id) === String(book.id))
         ? current.map(item => String(item.id) === String(book.id) ? updated : item) : [...current, updated]
     })
@@ -84,13 +88,26 @@ export function LibraryProvider({ children }) {
     if (status === 'Terminado') return recordEvent(book, 'finish')
     throw new Error('Registra el cambio desde la experiencia de lectura.')
   }
+  const updateTotalPages = async (id, totalPages) => {
+    const book = books.find(item => String(item.id) === String(id))
+    if (!book?.readingId) throw new Error('No se encontró esta lectura en tu biblioteca.')
+    const token = localStorage.getItem('libria_token')
+    const result = await apiRequest(`/readings/${book.readingId}/total-pages`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ total_pages: Number(totalPages) }),
+    })
+    setBooks(current => current.map(item => String(item.id) === String(id) ? {
+      ...item, pageCount: result.total_pages, currentPage: result.current_page, progress: result.progress_percent,
+    } : item))
+    return result
+  }
   const addBook = useCallback(async (book) => {
     if (!book) return
     const token = localStorage.getItem('libria_token')
     if (!token) throw new Error('Inicia sesion para agregar libros.')
     const reading = await apiRequest('/readings/library', {
       method: 'POST', headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, page_count: book.pageCount || null }),
+      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, edition_id: book.editionId || null, page_count: book.pageCount || null }),
     })
     if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
     readings.current[String(book.id)] = reading
@@ -101,7 +118,7 @@ export function LibraryProvider({ children }) {
   }, [])
   const getBook = useCallback((id) => books.find(book => String(book.id) === String(id))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])
-  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, recordEvent, addBook, getBook }}>{children}</LibraryContext.Provider>
+  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, updateTotalPages, recordEvent, addBook, getBook }}>{children}</LibraryContext.Provider>
 }
 
 // Este archivo exporta deliberadamente el proveedor y su hook de acceso.

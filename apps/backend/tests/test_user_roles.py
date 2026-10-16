@@ -7,13 +7,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.database import engine, get_db
+from app.core.security import verify_password
 from app.main import app
 from app.modules.social.models import Post
 from app.modules.social.schemas import PostCreate
 from app.modules.users.models import User
 from app.modules.users.identity_models import AccountPermission, ProfileCapability
 from app.modules.users.identities import personal_profile
-from scripts.seed_demo import MANIFEST, seed
+from scripts.seed_demo import MANIFEST, seed, stable_id
 
 
 class UserRolesTest(unittest.TestCase):
@@ -266,10 +267,15 @@ class UserRolesTest(unittest.TestCase):
     def test_demo_accounts_are_repeatable(self):
         first = seed(self.db, "test-password")
         self.db.flush()
-        second = seed(self.db, "test-password")
+        account = self.db.get(User, stable_id("user:lector")).auth_account
+        self.assertTrue(verify_password("test-password", account.password_hash))
+
+        second = seed(self.db, "updated-password")
         self.db.flush()
         self.assertEqual(first, second)
         self.assertEqual(len(first), 6)
+        self.assertTrue(verify_password("updated-password", account.password_hash))
+        self.assertFalse(verify_password("test-password", account.password_hash))
         self.assertEqual({item["key"] for item in MANIFEST["accounts"]},
                          {"lector", "autor", "influencer", "libreria", "editorial", "admin"})
 

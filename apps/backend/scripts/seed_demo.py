@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.modules.auth.models import AuthAccount
 from app.modules.users.models import User
 from app.modules.users.identity_models import AccountPermission, Profile, ProfileCapability, ProfileMember
@@ -39,6 +39,11 @@ def seed(db, password):
             db.flush()
         elif account is None:
             raise ValueError("La identidad demo existente no coincide con el manifiesto")
+        elif not verify_password(password, account.password_hash):
+            # Son identidades ficticias y estables, exclusivas del entorno de
+            # desarrollo. Sincronizar su clave permite regenerar el .env sin
+            # perder perfiles, publicaciones ni datos de demostracion.
+            account.password_hash = hash_password(password)
         profile = db.get(Profile, profile_id)
         if profile is None:
             profile = Profile(id=profile_id, kind="personal", owner_user_id=user.id, display_name=user.display_name)
@@ -70,7 +75,7 @@ def main():
         from sqlalchemy import text
         db.execute(text("SELECT pg_advisory_xact_lock(96347)"))
         accounts = seed(db, settings.libria_demo_password)
-    print("Cuentas demo listas (contraseña: LIBRIA_DEMO_PASSWORD local; no se reemplazan claves existentes):")
+    print("Cuentas demo listas (contraseña sincronizada con LIBRIA_DEMO_PASSWORD local):")
     for email in accounts:
         print(email)
 

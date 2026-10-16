@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, LargeBinary, String, Text, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -98,6 +99,7 @@ class Review(Base):
     edition_id: Mapped[uuid.UUID | None] = mapped_column()
     body: Mapped[str] = mapped_column(Text)
     rating: Mapped[int | None] = mapped_column(Integer)
+    dimension_ratings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     is_spoiler: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(Text)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -114,6 +116,7 @@ class ReviewRevision(Base):
     recorded_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"))
     body: Mapped[str] = mapped_column(Text)
     rating: Mapped[int | None] = mapped_column(Integer)
+    dimension_ratings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     is_spoiler: Mapped[bool] = mapped_column(Boolean)
     status: Mapped[str] = mapped_column(Text)
     edition_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.ediciones.id", ondelete="RESTRICT"))

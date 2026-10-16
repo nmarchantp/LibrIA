@@ -13,7 +13,7 @@ export default function LibraryPage() {
   const changeStatus = async (book, status) => {
     setError('')
     if (status === 'Terminado' || (status === 'Leyendo' && !book.pageCount)) {
-      navigate(`/reading/${encodeURIComponent(book.id)}`)
+      navigate(`/library/${encodeURIComponent(book.id)}`)
       return
     }
     setBusy(true)
@@ -28,8 +28,8 @@ export default function LibraryPage() {
     {loading && <p role="status">Cargando biblioteca…</p>}
     {loadError && <p role="alert">{loadError}</p>}
     <div className="library-list">{shown.map(book => <article className="library-row" key={book.id}>
-      <Link to={`/books/${book.id}`}><BookCover book={book} /></Link>
-      <div className="library-details"><h2>{book.title}</h2><p>{book.author}</p><Link to={`/reading/${encodeURIComponent(book.id)}`}>Reseñar, registrar avance o terminar</Link></div>
+      <Link to={`/library/${encodeURIComponent(book.id)}`}><BookCover book={book} /></Link>
+      <div className="library-details"><h2>{book.title}</h2><p>{book.author}</p><Link to={`/library/${encodeURIComponent(book.id)}`}>Ver ficha en mi biblioteca</Link></div>
       <select disabled={busy} value={book.status} aria-label={`Estado de ${book.title}`} onChange={event => changeStatus(book, event.target.value)}>
         <option>Leyendo</option><option disabled={book.status !== 'Pendiente'}>Pendiente</option><option disabled={!['Pendiente', 'Leyendo', 'Terminado'].includes(book.status)}>Terminado</option><option disabled>Abandonado</option>
       </select>

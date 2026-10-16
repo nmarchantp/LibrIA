@@ -9,3 +9,15 @@
 .role-request { padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .role-request p { margin: 8px 0 14px; }
 .role-panel > .button { margin-top: 18px; }
+.profile-wall { padding:32px 0; }
+.profile-wall-heading h2 { margin:6px 0 22px; font:32px 'DM Serif Display',serif; }
+.profile-wall-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.profile-wall-post { position:relative; min-height:210px; padding:27px; border:1px solid var(--line); border-radius:5px; box-shadow:var(--shadow); }
+.profile-wall-post.note { background:#fff8c9; transform:rotate(-.25deg); }
+.profile-wall-post.theory { background:var(--lavender-soft); transform:rotate(.25deg); }
+.profile-wall-post>svg { color:var(--primary); }
+.profile-wall-post>span { display:block; margin-top:14px; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.12em; }
+.profile-wall-post h3 { margin:8px 0; font:22px 'DM Serif Display',serif; }
+.profile-wall-post p { color:var(--muted); line-height:1.65; white-space:pre-wrap; }
+.profile-wall-post a { font-size:12px; font-weight:700; }
+@media(max-width:700px) { .profile-wall-grid { grid-template-columns:1fr; } .profile-wall-post { transform:none!important; } }
