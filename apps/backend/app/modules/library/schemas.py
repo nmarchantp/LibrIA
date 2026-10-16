@@ -1,6 +1,7 @@
 """Eventos de lectura que generan avances en el mural."""
 
 import uuid
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
@@ -13,6 +14,7 @@ class LibraryBookCreate(BaseModel):
     book_ref: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     book_title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     page_count: int | None = Field(default=None, ge=1, le=100000)
+    edition_id: uuid.UUID | None = None
 
 
 class ReadingReflection(BaseModel):
@@ -83,3 +85,18 @@ class ReadingState(BaseModel):
     current_page: int
     total_pages: int | None
     progress_percent: int
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    notebook: dict = Field(default_factory=dict)
+
+
+class ReadingTotalUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    total_pages: int = Field(ge=1, le=100000)
+
+
+class ReadingNotebookUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    characters: str = Field(default="", max_length=3000)
+    places: str = Field(default="", max_length=3000)
+    summary: str = Field(default="", max_length=5000)

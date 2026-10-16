@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from pydantic import ValidationError
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException
 
@@ -61,7 +61,8 @@ def as_comment_response(comment: PostComment, author: str, author_role: str) -> 
 
 
 def visible_posts():
-    return and_(Post.source.in_(("community", "event")), Post.author_role != "lector")
+    return and_(Post.source.in_(("community", "event")),
+                or_(Post.author_role != "lector", Post.publication_type.in_(("note", "theory"))))
 
 
 def require_post(db: Session, post_id: uuid.UUID) -> str:
@@ -85,7 +86,7 @@ def as_review_response(db: Session, review: Review) -> PostResponse:
                         author_role=publication_role(db, profile), source="review", kind="reviews",
                         title=None, body=review.body, book_ref=reference, book_title=work.title,
                         book_cover_url=edition.cover_url if edition else None,
-                        rating=review.rating, progress_percent=None, reading_event=None,
+                        rating=review.rating, dimension_ratings=review.dimension_ratings or {}, progress_percent=None, reading_event=None,
                         work_id=review.work_id, edition_id=review.edition_id, is_spoiler=review.is_spoiler,
                         status=review.status, published_at=review.published_at, updated_at=review.updated_at,
                         revision_number=review.revision_number, created_at=review.published_at or review.created_at,
@@ -165,9 +166,9 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
 
     profile = require_actor(db, user, data.author_profile_id) if data.author_profile_id else personal_profile(db, user)
     role = "admin" if user.role == "admin" and profile.kind == "personal" else publication_role(db, profile)
-    if role == "lector":
-        raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
     publication_type = data.publication_type or ("event" if data.source == "event" else "free")
+    if role == "lector" and not (publication_type in {"note", "theory"} and data.book_ref and data.book_title):
+        raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
     if (publication_type == "event") != (data.source == "event"):
         raise HTTPException(status_code=422, detail="El tipo no corresponde al contenido")
     post = Post(user_id=user.id, author_role=role, author_profile_id=profile.id,
@@ -223,12 +224,17 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
     book_reference = select(CatalogSource.external_id).where(
         CatalogSource.edition_id == Reading.edition_id,
         CatalogSource.provider == "libria-feed").correlate(Reading).scalar_subquery()
+    shared_event = aliased(ReadingEvent)
+    shared_abandonment = select(shared_event.id).where(
+        shared_event.reading_id == Reading.id, shared_event.kind == "abandon",
+        shared_event.is_public).correlate(Reading).exists()
     events = db.execute(select(ReadingEvent, Work.title, User, book_reference, Edition.cover_url)
                         .join(Reading, Reading.id == ReadingEvent.reading_id)
                         .join(Work, Work.id == Reading.work_id)
                         .join(Edition, Edition.id == Reading.edition_id)
                         .join(User, User.id == ReadingEvent.actor_user_id)
-                        .where(ReadingEvent.is_public)
+                        .where(ReadingEvent.is_public,
+                               or_(Reading.status != "abandoned", shared_abandonment))
                         .order_by(ReadingEvent.created_at.desc(), ReadingEvent.id.desc()).limit(limit)).all()
     items.extend(as_reading_response(event, title, author, reference, cover)
                  for event, title, author, reference, cover in events)

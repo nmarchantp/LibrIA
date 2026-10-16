@@ -15,8 +15,13 @@ class Work(EditableMixin, Base):
     __tablename__ = "obras"
     __table_args__ = {"schema": "app"}
     title: Mapped[str] = mapped_column(Text)
+    identity_key: Mapped[str | None] = mapped_column(Text, unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text)
     original_language: Mapped[str | None] = mapped_column(Text)
+    series_title: Mapped[str | None] = mapped_column(Text)
+    volume_number: Mapped[str | None] = mapped_column(Text)
+    first_publication_date: Mapped[str | None] = mapped_column(Text)
+    categories: Mapped[list | None] = mapped_column(JSONB)
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.usuarios.id", ondelete="SET NULL"), index=True)
 
 
@@ -35,6 +40,16 @@ class WorkAuthor(Base):
     position: Mapped[int] = mapped_column(Integer)
 
 
+class AlternateTitle(EntityMixin, Base):
+    __tablename__ = "titulos_alternativos"
+    __table_args__ = (UniqueConstraint("work_id", "normalized_title", "language",
+                                      name="uq_titulos_alternativos_obra"), {"schema": "app"})
+    work_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.obras.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(Text)
+    normalized_title: Mapped[str] = mapped_column(Text, index=True)
+    language: Mapped[str | None] = mapped_column(Text)
+
+
 class Edition(EditableMixin, Base):
     __tablename__ = "ediciones"
     __table_args__ = (
@@ -48,6 +63,9 @@ class Edition(EditableMixin, Base):
     edition_label: Mapped[str | None] = mapped_column(Text)
     publication_year: Mapped[int | None] = mapped_column(SmallInteger)
     isbn13: Mapped[str | None] = mapped_column(String(13), unique=True)
+    isbn10: Mapped[str | None] = mapped_column(String(10), unique=True)
+    publication_date: Mapped[str | None] = mapped_column(Text)
+    format: Mapped[str | None] = mapped_column(Text)
     page_count: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str | None] = mapped_column(Text)
     cover_url: Mapped[str | None] = mapped_column(Text)
@@ -62,6 +80,9 @@ class CatalogSource(EntityMixin, Base):
     provider: Mapped[str] = mapped_column(Text)
     external_id: Mapped[str] = mapped_column(Text)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    validation_status: Mapped[str] = mapped_column(Text, default="validated", server_default="validated")
+    consolidation_status: Mapped[str] = mapped_column(Text, default="automatic", server_default="automatic")
     payload: Mapped[dict | None] = mapped_column(JSONB)
     detail_complete: Mapped[bool] = mapped_column(default=False, server_default="false")
 

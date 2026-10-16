@@ -105,6 +105,23 @@ Push-Location $backendPath
 try {
     & $venvPython -m alembic upgrade head
     Assert-LastCommand 'La migración de base de datos'
+
+    Write-Step 'Cargando catálogo inicial de desarrollo (solo español)'
+    $catalogModules = @(
+        'scripts.load_popular_spanish_books',
+        'scripts.load_popular_chile_books',
+        'scripts.load_popular_argentina_books',
+        'scripts.consolidate_catalog'
+    )
+    foreach ($catalogModule in $catalogModules) {
+        Write-Host "Ejecutando $catalogModule..." -ForegroundColor DarkCyan
+        & $venvPython -m $catalogModule
+        Assert-LastCommand "La carga de catálogo $catalogModule"
+    }
+    & $venvPython -m scripts.purge_non_spanish_catalog --apply
+    Assert-LastCommand 'La validación de idioma de las obras'
+    & $venvPython -m scripts.purge_non_spanish_editions --apply
+    Assert-LastCommand 'La validación de idioma de las ediciones'
 } finally { Pop-Location }
 
 Write-Step 'Instalando frontend JavaScript'

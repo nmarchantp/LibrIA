@@ -47,6 +47,7 @@ class Reading(EditableMixin, Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     abandoned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     abandonment_reason: Mapped[str | None] = mapped_column(Text)
+    notebook: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
 
     @property
     def progress_percentage(self) -> Decimal | None:

@@ -1,24 +1,40 @@
-import { useEffect, useState } from 'react'
-import { Navigate, Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { BookOpen, ChevronLeft, ChevronRight, CircleSlash2, Star, Users } from 'lucide-react'
+import { Navigate, Link, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
 import BookReviews from '../components/BookReviews'
 import { useLibrary } from '../context/LibraryContext'
 import { getGoogleBookById } from '../services/booksService'
+import './BookDetailPage.css'
 
-const safeExternalUrl = value => {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined
-  } catch { return undefined }
+const languageNames = { es: 'Español', en: 'Inglés', fr: 'Francés', pt: 'Portugués' }
+const formatNames = { BOOK: 'Libro', MAGAZINE: 'Revista' }
+
+function RatingStars({ value }) {
+  const rating = Number(value) || 0
+  return <span className="detail-rating-stars" role="img" aria-label={`${rating} de 5 estrellas`}>
+    {[1, 2, 3, 4, 5].map(star => <span className="detail-rating-star" key={star}>
+      <Star aria-hidden="true" />
+      <span style={{ width: `${Math.max(0, Math.min(1, rating - star + 1)) * 100}%` }}><Star aria-hidden="true" /></span>
+    </span>)}
+  </span>
+}
+
+function ReaderAvatar({ reader }) {
+  const initials = (reader.displayName || 'L').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase()
+  return reader.avatarUrl
+    ? <img src={reader.avatarUrl} alt={reader.displayName} title={reader.displayName} />
+    : <span title={reader.displayName} aria-label={reader.displayName}>{initials}</span>
 }
 
 export default function BookDetailPage() {
   const { id } = useParams()
-  const navigate = useNavigate()
-  const { getBook, updateStatus, addBook } = useLibrary()
+  const editionsRef = useRef(null)
+  const { getBook, addBook } = useLibrary()
   const [loading, setLoading] = useState(true)
   const [detailBook, setDetailBook] = useState(null)
   const [statusError, setStatusError] = useState('')
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     const existingBook = getBook(id)
@@ -27,112 +43,133 @@ export default function BookDetailPage() {
       setLoading(false)
       return
     }
-
     let active = true
-
-    const loadBook = async () => {
-      try {
-        const remoteBook = await getGoogleBookById(id)
-        if (!active) return
-
-        if (remoteBook) {
-          setDetailBook(remoteBook)
-        }
-      } catch (error) {
-        if (active) setDetailBook(existingBook || null)
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-
-    loadBook()
+    getGoogleBookById(id).then(remoteBook => {
+      if (active && remoteBook) setDetailBook(remoteBook)
+    }).catch(() => {
+      if (active) setDetailBook(existingBook || null)
+    }).finally(() => {
+      if (active) setLoading(false)
+    })
     return () => { active = false }
-  }, [id, getBook, addBook])
+  }, [id, getBook])
 
   const libraryBook = getBook(id)
-  const book = detailBook ? { ...libraryBook, ...detailBook,
-    ...(libraryBook ? { status: libraryBook.status, progress: libraryBook.progress, readingId: libraryBook.readingId, workId: libraryBook.workId, editionId: libraryBook.editionId } : {}) } : libraryBook
-  const changeStatus = async status => {
+  const book = detailBook ? {
+    ...libraryBook, ...detailBook,
+    ...(libraryBook ? {
+      status: libraryBook.status, progress: libraryBook.progress, readingId: libraryBook.readingId,
+      workId: libraryBook.workId, editionId: detailBook.editionId || libraryBook.editionId,
+    } : {}),
+  } : libraryBook
+
+  const selectEdition = editionId => {
+    const edition = detailBook?.editions?.find(item => item.id === editionId)
+    if (!edition) return
+    setDetailBook(current => ({
+      ...current, editionId: edition.id, externalId: edition.externalId,
+      title: edition.title || current.title, language: edition.language || current.language,
+      publisher: edition.publisher || 'Editorial desconocida', publishedDate: edition.publishedDate || '',
+      pageCount: edition.pageCount || null, printType: edition.format || 'BOOK',
+      isbn: edition.isbn13 || edition.isbn10 || '', image: edition.coverUrl || null,
+    }))
+  }
+
+  const addToLibrary = async () => {
     setStatusError('')
-    if (status === 'Terminado') { navigate(`/reading/${encodeURIComponent(book.id)}`); return }
-    try { await updateStatus(book.id, status) }
-    catch (cause) { setStatusError(cause.message || 'No se pudo registrar el cambio de lectura.') }
+    setAdding(true)
+    try { await addBook(book) }
+    catch (cause) { setStatusError(cause.message || 'No se pudo agregar el libro.') }
+    finally { setAdding(false) }
   }
 
-  if (loading) {
-    return <section className="page-width page"><div className="modal detail-page"><p>Cargando información del libro…</p></div></section>
-  }
-
+  if (loading) return <section className="page-width page"><div className="detail-loading" role="status">Cargando información del libro…</div></section>
   if (!book) return <Navigate to="/books" replace />
 
-  return (
-    <section className="page-width page">
-      <div className="modal detail-page">
-        <BookCover book={book} large />
-        <div className="modal-copy">
-          <span className="kicker">{book.status ?? 'Sin estado'}</span>
-          <h1 className="page-title">{book.title}</h1>
-          <p className="author">{book.author} · {book.year ?? book.publishedDate}</p>
+  const editions = book.editions ?? []
+  const stats = book.readingStats ?? { finished: 0, reading: 0, abandoned: 0, readerPreview: [] }
+  const rating = Number(book.averageRating) || 0
+  const ratingsCount = Number(book.ratingsCount) || 0
+  const firstAuthor = book.authors?.[0] || book.author
+  const details = [
+    ['Editorial', book.publisher], ['Publicación', book.publishedDate || book.year],
+    ['Páginas', book.pageCount ? `${book.pageCount} páginas` : null],
+    ['Idioma', languageNames[book.language] || book.language?.toUpperCase()],
+    ['Formato', formatNames[book.printType] || book.printType], ['ISBN', book.isbn],
+  ]
 
-          {(book.averageRating || book.ratingsCount) && (
-            <p style={{ marginTop: '8px', color: '#8a6a2a', fontWeight: 700 }}>
-              ★ {book.averageRating ?? 'Sin calificación'}
-              {book.ratingsCount ? ` · ${book.ratingsCount} valoraciones` : ''}
-            </p>
-          )}
+  return <section className="page-width page book-detail-page">
+    <article className="detail-hero">
+      <div className="detail-cover-wrap"><BookCover book={book} large /></div>
+      <div className="detail-intro">
+        <span className="kicker">{book.status || 'DETALLE DEL LIBRO'}</span>
+        <h1>{book.title}</h1>
+        {book.subtitle && <p className="detail-subtitle">{book.subtitle}</p>}
+        <p className="detail-byline"><strong>{book.author}</strong> · {book.year || book.publishedDate || 'Año no informado'}</p>
+        <div className="detail-actions">
+          {libraryBook?.readingId
+            ? <Link className="button primary" to={`/library/${encodeURIComponent(book.id)}`}><BookOpen aria-hidden="true" />Ver en mi biblioteca</Link>
+            : <button className="button primary" type="button" onClick={addToLibrary} disabled={adding}>
+              <BookOpen aria-hidden="true" />{adding ? 'Agregando…' : 'Agregar a biblioteca'}
+            </button>}
+          <Link className="button detail-secondary" to={`/books?by=author&q=${encodeURIComponent(firstAuthor)}`}>Ver más del mismo autor</Link>
+        </div>
+        {statusError && <p className="detail-error" role="alert">{statusError}</p>}
+      </div>
+    </article>
 
-          <div style={{ lineHeight: 1.7, color: '#59645f', marginTop: '18px' }}>
-            {book.description || 'Este libro no tiene descripción disponible en Google Books.'}
-          </div>
+    {editions.length > 0 && <section className="detail-section editions-section" aria-labelledby="editions-title">
+      <div className="detail-section-heading">
+        <div><span className="kicker">OTRAS VERSIONES</span><h2 id="editions-title">Ediciones</h2></div>
+        {editions.length > 3 && <div className="carousel-controls">
+          <button type="button" aria-label="Ver ediciones anteriores" onClick={() => editionsRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}><ChevronLeft /></button>
+          <button type="button" aria-label="Ver más ediciones" onClick={() => editionsRef.current?.scrollBy({ left: 240, behavior: 'smooth' })}><ChevronRight /></button>
+        </div>}
+      </div>
+      <div className="edition-carousel" ref={editionsRef}>
+        {editions.map(edition => {
+          const editionCover = { ...book, title: edition.title || book.title, image: edition.coverUrl || null }
+          return <button type="button" className={`edition-card ${book.editionId === edition.id ? 'active' : ''}`} key={edition.id}
+            aria-pressed={book.editionId === edition.id} onClick={() => selectEdition(edition.id)}>
+            <BookCover book={editionCover} />
+            <span><strong>{edition.publisher || 'Editorial desconocida'}</strong><small>{edition.publishedDate || 'Fecha no informada'} · {(edition.language || '—').toUpperCase()}</small></span>
+          </button>
+        })}
+      </div>
+    </section>}
 
-          <div style={{ display: 'grid', gap: '8px', marginTop: '18px', fontSize: '14px', color: '#59645f' }}>
-            {book.subtitle && <div><strong>Subtítulo:</strong> {book.subtitle}</div>}
-            {book.publisher && <div><strong>Editorial:</strong> {book.publisher}</div>}
-            {book.pageCount && <div><strong>Páginas:</strong> {book.pageCount}</div>}
-            {book.language && <div><strong>Idioma:</strong> {book.language}</div>}
-            {book.categories?.length > 0 && <div><strong>Categorías:</strong> {book.categories.join(', ')}</div>}
-            {book.printType && <div><strong>Tipo:</strong> {book.printType}</div>}
-            {book.maturityRating && <div><strong>Clasificación:</strong> {book.maturityRating}</div>}
-            {(book.previewLink || book.infoLink || book.canonicalVolumeLink) && (
-              <div>
-                <strong>Más información:</strong>{' '}
-                {safeExternalUrl(book.previewLink) && <a href={safeExternalUrl(book.previewLink)} target="_blank" rel="noreferrer">Vista previa</a>}
-                {book.infoLink && (
-                  <>
-                    {' · '}
-                    <a href={safeExternalUrl(book.infoLink)} target="_blank" rel="noreferrer">Google Books</a>
-                  </>
-                )}
-                {book.canonicalVolumeLink && (
-                  <>
-                    {' · '}
-                    <a href={safeExternalUrl(book.canonicalVolumeLink)} target="_blank" rel="noreferrer">Volumen</a>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <label>
-            Estado
-            <select value={book.status ?? ''} onChange={e => changeStatus(e.target.value)}>
-              <option value="">Sin estado</option>
-              <option>Leyendo</option>
-              <option>Pendiente</option>
-              <option>Terminado</option>
-              <option disabled>Abandonado</option>
-            </select>
-          </label>
-          <button className="button" onClick={async () => {
-            setStatusError('')
-            try { await addBook(book) } catch (cause) { setStatusError(cause.message) }
-          }}>Agregar a mi biblioteca</button>
-          {statusError && <p className="notice" role="alert">{statusError}</p>}
-
-          {book.readingId && <Link className="button primary" to={`/reading/${book.id}`}>Reseñar o registrar avance</Link>}
+    <section className="detail-section detail-social" aria-labelledby="rating-title">
+      <div className="detail-rating">
+        <span className="kicker">COMUNIDAD</span><h2 id="rating-title">Valoración del libro</h2>
+        <div className="rating-line"><strong>{rating ? rating.toFixed(1) : '0'} / 5</strong><RatingStars value={rating} /></div>
+        <p>{ratingsCount.toLocaleString('es-CL')} {ratingsCount === 1 ? 'valoración' : 'valoraciones'}</p>
+      </div>
+      <div className="reader-summary-block">
+        <div className="reader-avatars" aria-label="Lectores que terminaron este libro">
+          {stats.readerPreview?.map((reader, index) => <ReaderAvatar reader={reader} key={`${reader.displayName}-${index}`} />)}
+          {!stats.readerPreview?.length && <span className="reader-avatar-empty"><Users aria-hidden="true" /></span>}
+        </div>
+        <div className="reader-counts">
+          <div><BookOpen aria-hidden="true" /><strong>{stats.finished}</strong><span>lo leyeron</span></div>
+          <div><Users aria-hidden="true" /><strong>{stats.reading}</strong><span>leyendo</span></div>
+          <div><CircleSlash2 aria-hidden="true" /><strong>{stats.abandoned}</strong><span>lo abandonaron</span></div>
         </div>
       </div>
-      <BookReviews key={id} bookRef={id} />
     </section>
-  )
+
+    <BookReviews key={id} bookRef={id} />
+
+    <section className="detail-section" aria-labelledby="book-data-title">
+      <span className="kicker">FICHA TÉCNICA</span><h2 id="book-data-title">Detalle del libro</h2>
+      <dl className="book-data-grid">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'No informado'}</dd></div>)}</dl>
+    </section>
+
+    <section className="detail-section synopsis-section" aria-labelledby="synopsis-title">
+      <span className="kicker">SOBRE EL LIBRO</span><h2 id="synopsis-title">Sinopsis</h2>
+      <div className="synopsis-copy">{book.description || 'Este libro no tiene una sinopsis disponible.'}</div>
+      <div className="genre-tags" aria-label="Géneros del libro">
+        {(book.categories?.length ? book.categories : ['Sin género informado']).map(category => <span key={category}>{category}</span>)}
+      </div>
+    </section>
+  </section>
 }

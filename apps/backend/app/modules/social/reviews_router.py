@@ -14,6 +14,7 @@ from starlette.formparsers import MultiPartException
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user
 from app.modules.books.models import CatalogSource, Edition, Work
+from app.modules.books.service import equivalent_work_ids
 from app.modules.social.models import Review, ReviewRevision
 from app.modules.social.schemas import PostResponse, ReviewCreate, ReviewUpdate
 from app.modules.social.router import as_review_response
@@ -63,13 +64,14 @@ def validate_edition(db, work_id, edition_id):
         raise HTTPException(status_code=404, detail="Obra no encontrada")
     if edition_id:
         edition = db.get(Edition, edition_id)
-        if edition is None or edition.work_id != work_id:
+        if edition is None or edition.work_id not in equivalent_work_ids(db, work_id):
             raise HTTPException(status_code=422, detail="La edición debe pertenecer a la obra")
 
 
 def record_revision(db, review, user, now):
     db.add(ReviewRevision(review_id=review.id, revision_number=review.revision_number,
                          recorded_by_user_id=user.id, body=review.body, rating=review.rating,
+                         dimension_ratings=review.dimension_ratings or {},
                          is_spoiler=review.is_spoiler, status=review.status,
                          edition_id=review.edition_id, recorded_at=now))
 
@@ -80,7 +82,7 @@ def own_reviews(response: Response, user: CurrentUser, db: Database, work_id: uu
     profile = personal_profile(db, user)
     query = select(Review).where(Review.author_profile_id == profile.id)
     if work_id:
-        query = query.where(Review.work_id == work_id)
+        query = query.where(Review.work_id.in_(equivalent_work_ids(db, work_id)))
     reviews = db.scalars(query.order_by(Review.updated_at.desc()).limit(100)).all()
     return [as_review_response(db, review) for review in reviews]
 
@@ -89,13 +91,18 @@ def own_reviews(response: Response, user: CurrentUser, db: Database, work_id: uu
 def book_reviews(book_ref: str, response: Response, db: Database,
                  offset: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=50)):
     response.headers["Cache-Control"] = "no-store"
-    work_id = db.scalar(select(Edition.work_id).join(CatalogSource, CatalogSource.edition_id == Edition.id)
-                        .where(CatalogSource.external_id == book_ref,
-                               CatalogSource.provider.in_(["google-books", "libria-feed"]))
-                        .order_by(CatalogSource.provider).limit(1))
+    try:
+        internal_work_id = uuid.UUID(book_ref)
+    except ValueError:
+        internal_work_id = None
+    work_id = internal_work_id if internal_work_id and db.get(Work, internal_work_id) else db.scalar(
+        select(Edition.work_id).join(CatalogSource, CatalogSource.edition_id == Edition.id)
+        .where(CatalogSource.external_id == book_ref,
+               CatalogSource.provider.in_(["google-books", "libria-feed"]))
+        .order_by(CatalogSource.provider).limit(1))
     if work_id is None:
         return {"items": [], "has_more": False}
-    reviews = db.scalars(select(Review).where(Review.work_id == work_id, Review.status == "published")
+    reviews = db.scalars(select(Review).where(Review.work_id.in_(equivalent_work_ids(db, work_id)), Review.status == "published")
                          .order_by(Review.published_at.desc(), Review.id.desc())
                          .offset(offset).limit(limit + 1)).all()
     return {"items": [as_review_response(db, review) for review in reviews[:limit]],
@@ -111,12 +118,14 @@ async def create_review(request: Request, response: Response, user: CurrentUser,
     if profile.kind != "personal":
         raise HTTPException(status_code=403, detail="Las reseñas requieren tu perfil personal")
     validate_edition(db, data.work_id, data.edition_id)
-    existing = db.scalar(select(Review).where(Review.author_profile_id == profile.id, Review.work_id == data.work_id))
+    existing = db.scalar(select(Review).where(Review.author_profile_id == profile.id,
+                                               Review.work_id.in_(equivalent_work_ids(db, data.work_id))))
     if existing:
         raise HTTPException(status_code=409, detail="Ya tienes una reseña de esta obra; edítala para conservar su historial")
     now = datetime.now(timezone.utc)
     review = Review(author_profile_id=profile.id, created_by_user_id=user.id, work_id=data.work_id,
-                    edition_id=data.edition_id, body=data.body, rating=data.rating, is_spoiler=data.is_spoiler,
+                    edition_id=data.edition_id, body=data.body, rating=data.rating,
+                    dimension_ratings=data.dimension_ratings, is_spoiler=data.is_spoiler,
                     status=data.status, published_at=now if data.status == "published" else None,
                     created_at=now, updated_at=now, revision_number=1)
     db.add(review)
@@ -155,7 +164,7 @@ async def update_review(review_id: uuid.UUID, request: Request, response: Respon
     if data.status == "hidden" and review.published_at is None:
         raise HTTPException(status_code=422, detail="Un borrador todavía no tiene una publicación para ocultar")
     now = datetime.now(timezone.utc)
-    review.body, review.rating, review.is_spoiler = data.body, data.rating, data.is_spoiler
+    review.body, review.rating, review.dimension_ratings, review.is_spoiler = data.body, data.rating, data.dimension_ratings, data.is_spoiler
     review.edition_id, review.status = data.edition_id, data.status
     review.updated_at = now
     review.revision_number += 1

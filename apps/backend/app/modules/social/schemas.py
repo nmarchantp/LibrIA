@@ -10,7 +10,7 @@ from app.modules.users.roles import UserRole
 class PostCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     author_profile_id: uuid.UUID | None = None
-    publication_type: Literal["free", "event", "promotion", "news", "launch", "institutional"] | None = None
+    publication_type: Literal["free", "event", "promotion", "news", "launch", "institutional", "note", "theory"] | None = None
     source: Literal["community", "event"]
     kind: Literal["community"]
     title: str | None = Field(default=None, max_length=200)
@@ -51,6 +51,7 @@ class PostResponse(BaseModel):
     book_title: str | None
     book_cover_url: str | None = None
     rating: int | None
+    dimension_ratings: dict[str, int] = Field(default_factory=dict)
     progress_percent: int | None
     reading_event: str | None
     work_id: uuid.UUID | None = None
@@ -94,6 +95,7 @@ class ReviewCreate(BaseModel):
     author_profile_id: uuid.UUID | None = None
     body: str = Field(min_length=1, max_length=3000)
     rating: int | None = Field(default=None, ge=1, le=5)
+    dimension_ratings: dict[Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace"], Annotated[int, Field(ge=1, le=5)]] = Field(default_factory=dict)
     is_spoiler: bool = False
     status: Literal["draft", "published"] = "published"
 
@@ -102,6 +104,7 @@ class ReviewUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     body: str = Field(min_length=1, max_length=3000)
     rating: int | None = Field(default=None, ge=1, le=5)
+    dimension_ratings: dict[Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace"], Annotated[int, Field(ge=1, le=5)]] = Field(default_factory=dict)
     is_spoiler: bool = False
     status: Literal["draft", "published", "hidden"] = "published"
     edition_id: uuid.UUID | None = None

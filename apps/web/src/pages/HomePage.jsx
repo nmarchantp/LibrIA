@@ -175,7 +175,7 @@ function FeedCard({ post }) {
   }
 
   return <article className="feed-card">
-    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación'}</span></header>
+    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{post.publicationType === 'note' ? 'Nota' : post.publicationType === 'theory' ? 'Teoría' : post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación'}</span></header>
     {post.title && <h2>{post.title}</h2>}
     {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill={i < post.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}<span>{post.rating}/5</span></div>}
     {post.bookTitle && !post.title && <h2>{post.bookTitle}</h2>}
@@ -248,7 +248,7 @@ export default function HomePage() {
           followingAuthor: post.following_author || false, author: post.author, authorRole: post.author_role,
           initials: post.author.split(' ').slice(0, 2).map(part => part[0]).join('').toUpperCase(),
           time: new Date(post.created_at).toLocaleString('es-CL'),
-          title: post.title, text: post.body, source: post.source, bookId: post.book_ref,
+          title: post.title, text: post.body, source: post.source, publicationType: post.publication_type, bookId: post.book_ref,
           bookTitle: post.book_title, rating: post.rating, progressPercent: post.progress_percent,
           bookCoverUrl: post.book_cover_url,
           isSpoiler: post.is_spoiler || false,

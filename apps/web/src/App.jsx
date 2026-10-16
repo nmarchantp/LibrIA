@@ -16,6 +16,7 @@ import AdminGate from './components/AdminGate'
 import AdminProfilesPage from './pages/AdminProfilesPage'
 import AdminEtlPage from './pages/AdminEtlPage'
 import GroupInsightsPage from './pages/GroupInsightsPage'
+import LibraryBookPage from './pages/LibraryBookPage'
 
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/books" element={<BooksPage />} />
       <Route path="/books/:id" element={<BookDetailPage />} />
       <Route path="/library" element={<Navigate to="/profile?tab=library" replace />} />
+      <Route path="/library/:id" element={<LibraryBookPage />} />
       <Route path="/reading/:id" element={<ReadingPage />} />
       <Route path="/insights" element={<Navigate to="/profile?tab=analysis" replace />} />
       <Route path="/community-insights" element={<GroupInsightsPage />} />
