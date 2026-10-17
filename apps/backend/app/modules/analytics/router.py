@@ -111,7 +111,7 @@ def personal_indicators(response: Response, user: CurrentUser, db: Database,
     rows = db.execute(text("""SELECT e.business_date, i.indicator_code, i.value,
         i.definition_version, i.provenance FROM analytics.indicadores_personales i
         JOIN analytics.ejecuciones_etl e ON e.id=i.etl_run_id
-        WHERE i.user_id=:user AND e.status='succeeded' AND e.business_date BETWEEN :start AND :end
+        WHERE i.user_id=:user AND i.provenance <> 'simulated' AND e.status='succeeded' AND e.business_date BETWEEN :start AND :end
         ORDER BY e.business_date, i.indicator_code, i.provenance"""),
         {"user": user.id, "start": start, "end": end}).mappings().all()
     return {"start": start, "end": end, "items": [dict(row) for row in rows]}

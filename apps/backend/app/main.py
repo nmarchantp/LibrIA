@@ -14,9 +14,10 @@ from app.modules.library.router import router as readings_router
 from app.modules.users.identities_router import router as profiles_router
 from app.modules.analytics.router import router as analytics_router
 from app.modules.analytics.insights_router import router as insights_router
-from app.modules.analytics.scheduler import daily_scheduler, manual_scheduler
+from app.modules.analytics.scheduler import daily_scheduler, manual_scheduler, projection_scheduler
 from app.modules.social.reviews_router import router as reviews_router
 from app.modules.books.router import router as books_router
+from app.modules.analytics.adaptive_router import router as adaptive_router
 
 settings = get_settings()
 
@@ -24,10 +25,14 @@ settings = get_settings()
 async def lifespan(app):
     task = asyncio.create_task(daily_scheduler()) if settings.analytics_scheduler_enabled else None
     manual_task = asyncio.create_task(manual_scheduler())
+    projection_task = asyncio.create_task(projection_scheduler()) if settings.ai_worker_enabled else None
+    from app.modules.analytics.adaptive_worker import worker_loop
+    ai_task = asyncio.create_task(worker_loop(profile_only=False)) if settings.ai_worker_enabled else None
+    ai_profile_task = asyncio.create_task(worker_loop(profile_only=True)) if settings.ai_worker_enabled else None
     try:
         yield
     finally:
-        for worker in (task, manual_task):
+        for worker in (task, manual_task, projection_task, ai_task, ai_profile_task):
             if worker is None:
                 continue
             worker.cancel()
@@ -57,6 +62,7 @@ app.include_router(analytics_router, prefix=settings.api_prefix)
 app.include_router(insights_router, prefix=settings.api_prefix)
 app.include_router(reviews_router, prefix=settings.api_prefix)
 app.include_router(books_router, prefix=settings.api_prefix)
+app.include_router(adaptive_router, prefix=settings.api_prefix)
 
 
 @app.get("/health", tags=["system"])

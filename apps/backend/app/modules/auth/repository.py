@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.modules.auth.models import AuthAccount
 from app.modules.users.models import User
 from app.modules.users.roles import PublicUserRole
-from app.core.exceptions import EmailAlreadyRegisteredError
+from app.core.exceptions import EmailAlreadyRegisteredError, InvalidCredentialsError
 from app.modules.users.identities import create_personal_profile
 
 
@@ -22,6 +22,18 @@ class AuthRepository:
     def get_user_by_id(self, user_id: uuid.UUID) -> User | None:
         statement = select(User).options(joinedload(User.auth_account)).where(User.id == user_id)
         return self.db.scalar(statement)
+
+    def get_account_by_google_subject(self, subject: str) -> AuthAccount | None:
+        return self.db.scalar(select(AuthAccount).options(joinedload(AuthAccount.user)).where(AuthAccount.google_subject == subject))
+
+    def link_google(self, account: AuthAccount, subject: str) -> User:
+        account.google_subject = subject
+        try:
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            raise InvalidCredentialsError from None
+        return account.user
 
     def create_account(self, email: str, password_hash: str, display_name: str, role: PublicUserRole) -> User:
         user = User(display_name=display_name.strip(), role=role)

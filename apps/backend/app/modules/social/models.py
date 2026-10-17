@@ -27,6 +27,8 @@ class Post(Base):
     title: Mapped[str | None] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text)
     book_ref: Mapped[str | None] = mapped_column(String(200))
+    work_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.obras.id',ondelete='RESTRICT'))
+    edition_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.ediciones.id'))
     book_title: Mapped[str | None] = mapped_column(String(200))
     rating: Mapped[int | None] = mapped_column(Integer)
     progress_percent: Mapped[int | None] = mapped_column(Integer)

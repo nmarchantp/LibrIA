@@ -22,9 +22,14 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
-    google_oauth_scope: str = "https://www.googleapis.com/auth/books"
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 465
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
     libria_demo_password: str = ""
     analytics_scheduler_enabled: bool = True
+    ai_worker_enabled: bool = True
     ollama_base_url: str = "http://127.0.0.1:11434"
     ai_model: str = "qwen3:1.7b"
     ai_timeout_seconds: int = Field(default=180, ge=5, le=300)

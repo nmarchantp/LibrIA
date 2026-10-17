@@ -1,5 +1,10 @@
 # Acceso al ADN lector y a Recomendaciones IA
 
+La [especificación de identidad lectora adaptativa](adaptive-reader-ai.md) añade
+análisis por libro y perfil global bajo `/api/me/ai` sin un mínimo de diez obras.
+El requisito siguiente se conserva para las rutas de interpretación numérica
+del ETL y de recomendaciones anteriores, no para el nuevo perfil personal.
+
 Ambas funciones personales requieren al menos diez obras distintas registradas en la biblioteca del titular. Cuentan los estados pendiente, leyendo, terminado y abandonado. Las relecturas no incrementan el total y las entradas archivadas no cuentan. Los libros de otras personas no cuentan. El acceso grupal de profesionales conserva sus reglas anteriores.
 
 `GET /analytics/me/insights` y `GET /analytics/me/recommendations` devuelven `status=locked`, `book_count`, `minimum_books` y `missing_books` cuando el mínimo no se cumple, sin acceder a evidencia privada, resultados guardados ni Ollama. Sus pantallas explican el requisito y enlazan a Explorar. Los POST de interpretación y recomendaciones se rechazan con HTTP 403 y `detail.code=minimum_reader_books`, antes de consultar el modelo o el caché. `GET /analytics/access` informa también la elegibilidad personal.

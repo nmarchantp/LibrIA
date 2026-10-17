@@ -53,8 +53,6 @@ class ReadingEventCreate(LibraryBookCreate):
             raise ValueError("Indica el intento de lectura")
         if self.event in {"progress", "correction"} and self.current_page is None:
             raise ValueError("Indica la página alcanzada")
-        if self.event == "abandon" and not (self.abandonment_reason or "").strip():
-            raise ValueError("Indica el motivo del abandono")
         if self.event == "correction" and not self.correction_reason:
             raise ValueError("Indica el motivo de la corrección")
         return self

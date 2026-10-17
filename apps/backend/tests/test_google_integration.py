@@ -19,7 +19,7 @@ class GoogleIntegrationTest(unittest.TestCase):
         self.assertEqual(settings.google_redirect_uri, "http://localhost:8000/api/auth/google/callback")
         self.assertEqual(settings.google_books_api_key, "api-key-value")
 
-    def test_build_google_authorization_url_includes_books_scope(self):
+    def test_build_google_authorization_url_requests_identity_only(self):
         url = build_google_authorization_url(
             "cliente.test.apps.googleusercontent.com",
             "http://localhost:8000/api/auth/google/callback",
@@ -31,7 +31,8 @@ class GoogleIntegrationTest(unittest.TestCase):
         self.assertEqual(parsed.scheme + "://" + parsed.netloc, "https://accounts.google.com")
         self.assertEqual(params["client_id"][0], "cliente.test.apps.googleusercontent.com")
         self.assertEqual(params["redirect_uri"][0], "http://localhost:8000/api/auth/google/callback")
-        self.assertIn("https://www.googleapis.com/auth/books", params["scope"][0])
+        self.assertEqual(set(params["scope"][0].split()), {"openid", "email", "profile"})
+        self.assertNotIn("access_type", params)
         self.assertEqual(params["response_type"][0], "code")
 
 

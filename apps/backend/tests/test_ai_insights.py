@@ -5,6 +5,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from unittest.mock import patch
+from contextlib import contextmanager
+import httpx
+from app.modules.analytics.fast_profile import request_json
 
 from fastapi.testclient import TestClient
 from sqlalchemy import text
@@ -29,18 +32,27 @@ def narrative(metric="L02"):
             "limitations": ["Los datos disponibles no describen toda tu actividad."]}
 
 
+@contextmanager
+def provider_stream(response):
+    async def read(payload):
+        transport=httpx.MockTransport(lambda request:httpx.Response(200,content=response.getvalue()))
+        return await request_json(payload,1,transport=transport)
+    with patch('app.modules.analytics.interpretation_provider.request_book',side_effect=read) as transport:
+        yield transport
+
+
 class AggregateTest(unittest.TestCase):
     def population(self, count):
         return [{"user_id": uuid.uuid4(), "event_kind": "start"} for _ in range(count)]
 
     def test_small_group_never_releases_counts(self):
-        self.assertIsNone(aggregate_evidence(self.population(9), [], {}, "simulated"))
+        self.assertIsNone(aggregate_evidence(self.population(9), [], {}, "unclassified"))
 
     def test_thresholds_caps_rounding_and_no_identity(self):
         events = self.population(12)
         events += [{"user_id": events[0]["user_id"], "event_kind": "finish"}] * 100
         reviews = [{"user_id": events[i]["user_id"], "rating": 4} for i in range(4)]
-        result = aggregate_evidence(events, reviews, {}, "simulated")
+        result = aggregate_evidence(events, reviews, {}, "unclassified")
         self.assertEqual(result["metrics"]["G_READERS"]["value"], 10)
         self.assertNotIn("G_FINISHES", result["metrics"])
         self.assertNotIn("G_RATING", result["metrics"])
@@ -48,7 +60,7 @@ class AggregateTest(unittest.TestCase):
         self.assertNotIn("user_id", json.dumps(result))
         for index in range(1, 5):
             events.append({"user_id": events[index]["user_id"], "event_kind": "finish"})
-        result = aggregate_evidence(events, reviews, {}, "simulated")
+        result = aggregate_evidence(events, reviews, {}, "unclassified")
         self.assertEqual(result["metrics"]["G_FINISHES"]["value"], 15)
 
     def test_invalid_model_evidence_and_numbers_are_rejected(self):
@@ -70,12 +82,10 @@ class AggregateTest(unittest.TestCase):
 
     def test_provider_is_local_and_schema_constrained(self):
         response = BytesIO(json.dumps({"done": True, "done_reason": "stop", "message": {"content": json.dumps(narrative())}}).encode())
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=response) as transport:
+        with provider_stream(response) as transport:
             result = generate_interpretation({"metrics": {"L02": {"value": 2}}}, "personal")
         self.assertEqual(result["title"], narrative()["title"])
-        request = transport.call_args.args[0]
-        self.assertEqual(request.full_url, "http://127.0.0.1:11434/api/chat")
-        body = json.loads(request.data)
+        body = transport.call_args.args[0]
         self.assertTrue(body["stream"])
         self.assertFalse(body["think"])
         self.assertEqual(body["format"]["properties"]["observations"]["items"]["properties"]["metric"]["enum"], ["L02"])
@@ -84,12 +94,37 @@ class AggregateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             Settings(ollama_base_url="http://example.com", _env_file=None)
 
+    def test_personal_contributions_are_required_in_schema_and_response(self):
+        evidence = {"metrics": {"L02": {"value": 11}, "Q02": {"value": 2}},
+                    "reader_contributions": [{"kind": "review", "body": "Mi lectura"}]}
+        response = BytesIO(json.dumps({"done": True, "message": {"content": json.dumps(narrative("Q02"))}}).encode())
+        with provider_stream(response) as transport:
+            self.assertEqual(generate_interpretation(evidence, "personal")["observations"][0]["metric"], "Q02")
+        schema = transport.call_args.args[0]["format"]["properties"]["observations"]
+        self.assertEqual(schema["items"]["properties"]["metric"]["enum"], ["Q02"])
+        invalid = BytesIO(json.dumps({"done": True, "message": {"content": json.dumps(narrative("L02"))}}).encode())
+        with provider_stream(invalid), self.assertRaises(ProviderError):
+            generate_interpretation(evidence, "personal")
+
+    def test_reflections_and_contributions_must_both_be_covered(self):
+        evidence = {"metrics": {"Q01": {"value": 1}, "Q02": {"value": 2}},
+                    "qualitative": [{"reflection": "Mi experiencia"}],
+                    "reader_contributions": [{"kind": "review", "body": "Mi lectura"}]}
+        content = narrative("Q01")
+        content["observations"].append({"metric": "Q02", "interpretation": "Has expresado opiniones sobre tus libros."})
+        response = BytesIO(json.dumps({"done": True, "message": {"content": json.dumps(content)}}).encode())
+        with provider_stream(response) as transport:
+            self.assertEqual(len(generate_interpretation(evidence, "personal")["observations"]), 2)
+        schema = transport.call_args.args[0]["format"]["properties"]["observations"]
+        self.assertEqual(schema["minItems"], 2)
+        self.assertEqual(schema["items"]["properties"]["metric"]["enum"], ["Q01", "Q02"])
+
     def test_complete_json_at_token_limit_is_valid_but_partial_json_is_not(self):
         valid = BytesIO(json.dumps({"done": True, "done_reason": "length", "message": {"content": json.dumps(narrative())}}).encode())
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=valid):
+        with provider_stream(valid):
             self.assertEqual(generate_interpretation({"metrics": {"L02": {"value": 2}}}, "personal")["title"], narrative()["title"])
         partial = BytesIO(json.dumps({"done": True, "done_reason": "length", "message": {"content": '{"title":'}}).encode())
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=partial), self.assertRaises(ProviderError):
+        with provider_stream(partial), self.assertRaises(ProviderError):
             generate_interpretation({"metrics": {"L02": {"value": 2}}}, "personal")
 
     def test_stream_stops_after_complete_validated_object(self):
@@ -97,7 +132,7 @@ class AggregateTest(unittest.TestCase):
         lines = [json.dumps({"message": {"content": content[:30]}, "done": False}),
                  json.dumps({"message": {"content": content[30:]}, "done": False}), "invalid trailing padding"]
         response = BytesIO("\n".join(lines).encode())
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=response):
+        with provider_stream(response):
             self.assertEqual(generate_interpretation({"metrics": {"L02": {"value": 2}}}, "personal")["title"], narrative()["title"])
 
 
@@ -126,7 +161,7 @@ class InsightApiTest(unittest.TestCase):
         for owner, value in ((self.user.id, 2), (uuid.uuid4(), 999)):
             self.db.execute(text("""INSERT INTO analytics.indicadores_personales
                 (etl_run_id,user_id,indicator_code,value,definition_version,provenance)
-                VALUES (:id,:owner,'L02',:value,'test-insights','simulated')"""),
+                VALUES (:id,:owner,'L02',:value,'test-insights','unclassified')"""),
                 {"id": self.run_id, "owner": owner, "value": value})
         app.dependency_overrides[get_db] = lambda: self.db
         app.dependency_overrides[get_current_user] = lambda: self.user
@@ -159,13 +194,13 @@ class InsightApiTest(unittest.TestCase):
         for day, kind, previous, page in ((1, "start", 0, 0), (2, "progress", 0, 5), (3, "correction", 5, 2)):
             self.db.execute(text("""INSERT INTO analytics.hechos_lectura
                 (etl_run_id,source_id,user_id,work_id,edition_id,event_kind,occurred_at,previous_page,page,total_pages,provenance)
-                VALUES (:run,:id,:owner,:work,:edition,:kind,:at,:previous,:page,10,'simulated')"""),
+                VALUES (:run,:id,:owner,:work,:edition,:kind,:at,:previous,:page,10,'unclassified')"""),
                 {"run": self.run_id, "id": uuid.uuid4(), "owner": self.user.id, "work": work_id,
                  "edition": uuid.uuid4(), "kind": kind, "at": datetime.now(timezone.utc) - timedelta(days=day),
                  "previous": previous, "page": page})
         self.db.execute(text("""INSERT INTO analytics.indicadores_personales
             (etl_run_id,user_id,indicator_code,value,definition_version,provenance)
-            VALUES (:id,:owner,'L09',1,'test-insights','simulated')"""), {"id": self.run_id, "owner": self.user.id})
+            VALUES (:id,:owner,'L09',1,'test-insights','unclassified')"""), {"id": self.run_id, "owner": self.user.id})
         result = self.client.get("/api/analytics/me/insights").json()
         self.assertEqual(result["evidence"]["metrics"]["L09"]["value"], 2)
 

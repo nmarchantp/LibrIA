@@ -25,7 +25,16 @@ if ($targetIds.Count -eq 0) {
     return
 }
 # Detiene primero los lanzadores para que no vuelvan a iniciar a sus hijos.
+$failedIds = @()
 foreach ($targetId in $targetIds) {
-    Stop-Process -Id $targetId -Force -ErrorAction SilentlyContinue
+    $running = Get-Process -Id $targetId -ErrorAction SilentlyContinue
+    if (-not $running) { continue }
+    try { Stop-Process -Id $targetId -Force -ErrorAction Stop }
+    catch {
+        if (Get-Process -Id $targetId -ErrorAction SilentlyContinue) { $failedIds += $targetId }
+    }
+}
+if ($failedIds.Count -gt 0) {
+    throw "No se pudieron detener estos procesos de LibrIA: $($failedIds -join ', ')."
 }
 Write-Host 'Procesos de LibrIA detenidos.' -ForegroundColor Green

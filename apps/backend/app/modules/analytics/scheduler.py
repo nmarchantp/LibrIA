@@ -7,6 +7,21 @@ from app.modules.analytics.etl import run_pending, resume_manual_pending
 logger = logging.getLogger(__name__)
 
 
+async def projection_scheduler():
+    def step():
+        from app.core.database import SessionLocal
+        from app.modules.analytics.projections import refresh_pending
+        with SessionLocal() as db:
+            refresh_pending(db)
+            db.commit()
+    while True:
+        try:
+            await asyncio.to_thread(step)
+        except Exception:
+            logger.warning('Incremental ETL failed; pending changes retained for retry')
+        await asyncio.sleep(5)
+
+
 async def manual_scheduler():
     """Recover persisted web requests even when daily scheduling is disabled."""
     while True:

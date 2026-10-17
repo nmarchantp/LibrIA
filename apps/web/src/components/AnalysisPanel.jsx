@@ -3,33 +3,37 @@ import { BrainCircuit, RefreshCw, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import './AnalysisPanel.css'
+import ActionStatus from './ActionStatus'
 
 const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 const formatDate = value => new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', dateStyle: 'medium' }).format(new Date(value))
-const provenanceLabels = { simulated: 'Escenario ficticio', unclassified: 'Origen sin acreditar', operational: 'Origen real acreditado' }
+const provenanceLabels = { unclassified: 'Origen sin acreditar', operational: 'Origen real acreditado' }
 const errorMessage = (status, group) => ({
   403: group ? 'Esta sección requiere un perfil de autor o pertenecer a una editorial o librería.' : 'Necesitas al menos 10 libros registrados. Actualiza los datos para comprobar tu disponibilidad.',
   409: 'Ya se está generando esta interpretación. Espera y actualiza la pantalla.',
   422: 'Todavía no hay datos suficientes para esta interpretación.',
   429: 'Espera un minuto antes de generar otra interpretación.',
+  502: 'La IA no pudo completar una interpretación válida de tus aportes. Vuelve a intentarlo.',
   503: 'El modelo local no está disponible. Inicia Ollama en el servidor y vuelve a actualizar.',
 }[status] || 'No se pudo obtener la interpretación. Puedes volver a intentarlo.')
 
 export default function AnalysisPanel({ group = false }) {
   const [data, setData] = useState(null)
-  const [provenance, setProvenance] = useState('simulated')
+  const [provenance, setProvenance] = useState('unclassified')
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
+  const [completed, setCompleted] = useState('')
   const [refresh, setRefresh] = useState(0)
   const base = group ? '/analytics/group' : '/analytics/me'
   useEffect(() => {
     let active = true
     setLoading(true)
+    setCompleted('')
     setData(null)
     setError('')
     apiRequest(`${base}/insights?provenance=${provenance}`, { headers: headers() }).then(result => {
-      if (active) setData(result)
+      if (active) { setData(result); setCompleted('Consulta completada. Datos actualizados al último corte disponible.') }
     }).catch(err => { if (active) setError(errorMessage(err.status, group)) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
@@ -37,12 +41,14 @@ export default function AnalysisPanel({ group = false }) {
 
   async function generate() {
     setGenerating(true)
+    setCompleted('')
     setError('')
     try {
       const result = await apiRequest(`${base}/interpretation`, {
         method: 'POST', headers: headers(), body: JSON.stringify({ provenance }),
       })
       setData(current => ({ ...current, interpretation: result }))
+      setCompleted('Interpretación completada. Tu análisis está listo.')
     } catch (err) { setError(errorMessage(err.status, group)) }
     finally { setGenerating(false) }
   }
@@ -58,17 +64,26 @@ export default function AnalysisPanel({ group = false }) {
     <div className="insights-toolbar"><label>Datos que deseas consultar<select value={provenance} disabled={generating} onChange={event => setProvenance(event.target.value)}>
       {Object.entries(provenanceLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
     </select></label><button className="button secondary" disabled={loading || generating} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={17} /> Actualizar datos</button></div>
-    {error && <p className="notice" role="alert">{error}</p>}
-    {loading && <p role="status">Consultando indicadores…</p>}
+    <ActionStatus busy={loading || generating} message={loading ? 'Consultando tus datos…' : generating ? 'Ollama está analizando tus registros. La primera ejecución puede tardar unos minutos…' : error ? '' : completed} error={error} floating />
     {data && !evidence && <article className="analysis-card"><BrainCircuit /><h2>{group ? 'Todavía no podemos publicar este conjunto' : 'Todavía no hay registros analíticos propios'}</h2>
-      <p>{group ? `El resumen requiere al menos ${data.minimum_participants} participantes de la misma procedencia. Los grupos pequeños no se muestran.` : 'Prueba otra procedencia o registra actividad y espera una nueva carga del ETL.'}</p></article>}
+      <p>{group ? `El resumen requiere al menos ${data.minimum_participants} participantes de la misma procedencia. Los grupos pequeños no se muestran.` : 'Registra actividad y espera una nueva carga del ETL. No se generan datos de ejemplo.'}</p></article>}
     {evidence && <>
       <p className="insights-source"><strong>{provenanceLabels[provenance]}</strong> · Desde {formatDate(evidence.period.start)} hasta {formatDate(evidence.period.cutoff)} · {evidence.period.source === 'manual' ? 'Carga manual' : 'Cierres diarios'}
         {group && <> · Resumen publicado el {evidence.release_date}</>}</p>
-      {provenance === 'simulated' && <p className="notice">Estos resultados describen datos ficticios de demostración.</p>}
       {provenance === 'unclassified' && <p className="notice">La procedencia de estos registros no acredita que sean datos reales.</p>}
       <div className="insights-metrics">{Object.entries(evidence.metrics).map(([code, item]) => <article key={code}><span>{item.label}</span><strong>{new Intl.NumberFormat('es-CL', { maximumFractionDigits: 2 }).format(item.value)}</strong><small>{item.unit}</small></article>)}</div>
       {!group && evidence.qualitative?.length > 0 && <details className="insights-limits"><summary>Reflexiones privadas utilizadas en tu ADN lector</summary><p>Emociones y apreciaciones que declaraste al finalizar libros, preparadas por el ETL.</p>{evidence.qualitative.map((item, index) => <article key={index}><p><strong>Emociones:</strong> {item.emotions.join(' · ') || 'Sin indicar'}</p><p><strong>Aspectos:</strong> {item.aspects.join(' · ') || 'Sin indicar'} · <strong>Experiencia:</strong> {item.sentiment || 'Sin indicar'}</p>{item.reflection && <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.reflection}</p>}</article>)}</details>}
+      {!group && evidence.reader_contributions?.length > 0 && <details className="insights-limits"><summary>Aportes propios utilizados en tu perfil lector</summary>
+        <p>Instant?nea acumulada al corte del ETL: rese?as privadas y p?blicas, valoraciones, notas, teor?as y cuaderno. Solo se utiliza en tu an?lisis personal.</p>
+        {evidence.contributions_truncated && <p className="notice">La muestra est? limitada o contiene textos recortados para el an?lisis con IA.</p>}
+        {evidence.reader_contributions.map(item => <article key={`${item.kind}:${item.source_id}`}>
+          <h3>{item.title}</h3><small>{{ notebook: 'Cuaderno', review: 'Rese?a y valoraci?n', note: 'Nota', theory: 'Teor?a' }[item.kind]} ? {formatDate(item.recorded_at)}</small>
+          {item.rating != null && <p>Valoraci?n general: {item.rating}/5</p>}
+          {Object.keys(item.dimension_ratings || {}).length > 0 && <p>Valoraciones por aspecto: {Object.entries(item.dimension_ratings).map(([key, value]) => `${key}: ${value}/5`).join(' ? ')}</p>}
+          {item.body && <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.body}</p>}
+          {Object.entries(item.notebook || {}).map(([key, value]) => value && <p key={key} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}><strong>{{ characters: 'Personajes', places: 'Sitios', summary: 'Resumen' }[key]}: </strong>{value}</p>)}
+        </article>)}
+      </details>}
       <article className="analysis-card insights-interpretation"><div className="insights-title"><h2><Sparkles size={22} /> Interpretación con IA local</h2><button className="button primary" disabled={generating || !data.ai_ready} onClick={generate}>{generating ? 'Interpretando…' : content ? 'Consultar interpretación' : 'Generar interpretación'}</button></div>
         {!data.ai_ready && <p className="notice">El modelo local todavía no está disponible en el servidor.</p>}
         {generating && <p role="status">Ollama está interpretando los indicadores. La primera ejecución puede tardar mientras carga el modelo.</p>}

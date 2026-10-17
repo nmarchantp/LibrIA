@@ -33,7 +33,7 @@ class Reading(EditableMixin, Base):
         CheckConstraint("current_page >= 0 AND (total_pages IS NULL OR (total_pages > 0 AND current_page <= total_pages))", name="ck_lecturas_pages"),
         CheckConstraint("(status = 'pending' AND current_page = 0 AND started_at IS NULL) OR (status <> 'pending' AND total_pages IS NOT NULL AND started_at IS NOT NULL)", name="ck_lecturas_started"),
         CheckConstraint("(status = 'finished' AND finished_at IS NOT NULL AND current_page = total_pages AND finished_at >= started_at) OR (status <> 'finished' AND finished_at IS NULL)", name="ck_lecturas_finished"),
-        CheckConstraint("(status = 'abandoned' AND abandoned_at IS NOT NULL AND abandonment_reason IS NOT NULL AND length(trim(abandonment_reason)) > 0 AND abandoned_at >= started_at) OR (status <> 'abandoned' AND abandoned_at IS NULL AND abandonment_reason IS NULL)", name="ck_lecturas_abandoned"),
+        CheckConstraint("(status = 'abandoned' AND abandoned_at IS NOT NULL AND abandoned_at >= started_at) OR (status <> 'abandoned' AND abandoned_at IS NULL AND abandonment_reason IS NULL)", name="ck_lecturas_abandoned"),
         Index("ix_lecturas_biblioteca_created", "library_entry_id", "created_at"),
         {"schema": "app"},
     )

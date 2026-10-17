@@ -102,6 +102,22 @@ Se abrirán dos terminales:
 
 Para detener los servidores, presiona `Ctrl+C` en cada terminal.
 
+### Documentación de la API
+
+Con el backend en ejecución, abre <http://localhost:8000/docs> para consultar y probar los endpoints desde Swagger UI.
+
+También puedes consultar la documentación en ReDoc en <http://localhost:8000/redoc> o el esquema OpenAPI en <http://localhost:8000/openapi.json>.
+
+### Posts de demo
+
+El generador de posts de demo no se inicia por defecto. Para activarlo, ejecuta desde la raíz del proyecto en PowerShell:
+
+```powershell
+.\scripts\run-local.ps1 -DemoPosts
+```
+
+Este comando inicia LibrIA y abre una terminal adicional que genera posts de prueba cada 20 segundos. Para detener el generador, presiona `Ctrl+C` en su terminal.
+
 ## Inicio manual
 
 Backend:

@@ -4,5 +4,6 @@ import { apiRequest } from '../api/client'
 export const authService = {
   login: (credentials) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (user) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(user) }),
+  google: () => apiRequest('/auth/google/session', { method: 'POST', credentials: 'include' }),
   me: (token) => apiRequest('/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
 }

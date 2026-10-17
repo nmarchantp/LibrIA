@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Database, RefreshCw, CheckCircle2, Clock3, AlertTriangle, Play } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import './AdminEtlPage.css'
+import ActionStatus from '../components/ActionStatus'
 
 const labels = { succeeded: 'Completado', running: 'En ejecución', failed: 'Fallido' }
 const phases = { queued: 'En cola', extracting: 'Extrayendo de app', transforming: 'Limpiando y validando', loading: 'Cargando en analytics', completed: 'Extracción, limpieza y carga completadas', failed: 'Proceso detenido' }
@@ -34,7 +35,7 @@ export default function AdminEtlPage() {
   const [manualError, setManualError] = useState('')
   const [manualRun, setManualRun] = useState(null)
   const [requestId, setRequestId] = useState(null)
-  const running = data?.runs.some(run => run.status === 'running') || starting
+  const running = Boolean(data?.runs.some(run => run.status === 'running') || starting || (manualRun && !data?.runs.some(run => run.id === manualRun)))
   const shownRun = data?.runs.find(run => run.id === manualRun) || data?.runs.find(run => run.run_kind === 'manual')
 
   useEffect(() => {
@@ -90,13 +91,14 @@ export default function AdminEtlPage() {
     <div className="etl-heading"><div><span className="kicker">ADMINISTRACIÓN</span><h1 className="page-title">Carga de datos diarios</h1><p className="page-lead">Seguimiento del proceso que valida y prepara los datos de LibrIA.</p></div>
       <button className="button secondary" disabled={refreshing} onClick={() => setRefreshKey(value => value + 1)}><RefreshCw size={17} />{refreshing ? 'Actualizando…' : 'Actualizar estado'}</button></div>
     {error && <div className="etl-warning" role="alert">{error}</div>}
-    {!data && !error && <p role="status">Cargando estado del ETL…</p>}
+    {!data && !error && <ActionStatus busy message="Cargando estado del ETL…" />}
     {data && <>
       <article className="etl-manual">
         <div className="etl-heading"><div><h2>Ejecutar ETL ahora</h2><p>Extrae los datos de los últimos 30 días, incluyendo hoy, valida y limpia las filas, y carga una instantánea real en el esquema analytics.</p></div>
           <button className="button primary" disabled={running} onClick={executeEtl}><Play size={17} />{running ? 'ETL en ejecución…' : 'Ejecutar ETL ahora'}</button></div>
-        <p>Esta carga manual queda registrada por separado. El cierre diario sigue programado a las 00:00 y los indicadores personales utilizan los cierres diarios.</p>
+        <p>Esta carga manual queda registrada por separado. El cierre diario sigue programado a las 00:00. Los análisis personales utilizan la última carga disponible.</p>
         {manualError && <p className="etl-warning" role="alert">{manualError}</p>}
+        <ActionStatus busy={running} message={starting ? 'Solicitando ejecución del ETL…' : running ? (shownRun?.status === 'running' ? `${phases[shownRun.phase] || 'Procesando datos'}… El estado se actualiza automáticamente.` : 'Esperando confirmación del estado del ETL…') : shownRun?.status === 'succeeded' ? `ETL completado el ${formatTime(shownRun.finished_at)}. Los datos ya están disponibles.` : ''} error={shownRun?.status === 'failed' && !running ? 'El ETL terminó con un error. No se publicaron datos parciales; revisa el detalle y vuelve a intentarlo.' : ''} />
         {shownRun && <div className="etl-manual-result" role="status" aria-live="polite">
           <strong>{phases[shownRun.phase] || labels[shownRun.status]}</strong>
           <p>Origen: app → destino: analytics · Desde {formatTime(shownRun.period_start)} hasta {formatTime(shownRun.source_cutoff_at)} · ID: {shownRun.id}</p>
@@ -107,6 +109,7 @@ export default function AdminEtlPage() {
               <tr><td>Publicaciones</td><td>{shownRun.summary.source_posts}</td><td>{shownRun.summary.loaded_posts}</td></tr>
               <tr><td>Reseñas</td><td>{shownRun.summary.source_reviews}</td><td>{shownRun.summary.loaded_reviews}</td></tr>
               {shownRun.summary.loaded_reflections !== undefined && <tr><td>Reflexiones privadas de lectura</td><td>{shownRun.summary.source_reflections}</td><td>{shownRun.summary.loaded_reflections}</td></tr>}
+              {shownRun.summary.personal_evidence_rows !== undefined && <tr><td>Aportes personales sobre libros</td><td>Instantánea al corte</td><td>{shownRun.summary.personal_evidence_rows}</td></tr>}
               <tr><td>Incorporaciones a biblioteca</td><td>{shownRun.summary.source_library_entries}</td><td>{shownRun.summary.loaded_library_entries} utilizadas para indicadores</td></tr>
             </tbody></table></div>
             <p>Limpieza: {shownRun.summary.excluded_rows} filas excluidas por las reglas. Carga: {shownRun.summary.catalog_rows} obras y {shownRun.summary.indicator_rows} indicadores preparados. Conciliación completada.</p>
@@ -130,7 +133,7 @@ export default function AdminEtlPage() {
       </tbody></table></div>
       {selected && <article className="etl-validations"><div className="etl-heading"><h2>Validaciones de la ejecución {data.runs.find(run => run.id === selected)?.business_date || 'manual'}</h2><button className="etl-link" onClick={() => setSelected(null)}>Cerrar detalle</button></div>
         {validationError && <p role="alert">{validationError}</p>}
-        {!validations && !validationError && <p role="status">Cargando validaciones…</p>}
+        {!validations && !validationError && <ActionStatus busy message="Cargando validaciones…" />}
         {validations && (validations.length ? <ul>{validations.map(rule => <li key={rule.rule_code}>{rule.affected_rows > 0 ? <AlertTriangle size={17} /> : <CheckCircle2 size={17} />}<span>{rules[rule.rule_code] || rule.rule_code}</span><strong>{rule.affected_rows > 0 ? `${rule.affected_rows} excluidos` : 'Correcto'}</strong></li>)}</ul> : <p>No hay validaciones publicadas para esta ejecución.</p>)}
       </article>}
       <p className="etl-privacy">Este panel muestra el funcionamiento de la carga. Los análisis personales se consultan únicamente por su titular. Pulso de la comunidad publica resúmenes agregados para perfiles profesionales, con un mínimo de diez participantes y supresión de métricas con pocos contribuyentes.</p>

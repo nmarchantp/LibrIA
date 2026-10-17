@@ -31,6 +31,7 @@ export default function RegisterPage() {
       <label>Contraseña<input name="password" type="password" minLength="8" required /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button primary">Crear cuenta</button>
+      <p>Después de crear tu cuenta podrás verificar tu correo y vincular Google en Mi cuenta.</p>
       <p>¿Ya tienes cuenta? <Link to="/login">Ingresa</Link></p>
     </form>
   </main>

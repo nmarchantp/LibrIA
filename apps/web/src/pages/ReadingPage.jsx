@@ -142,7 +142,7 @@ export default function ReadingPage() {
       <label>Página actual (de {pageCount || '?'})<input type="number" min="0" max={pageCount || undefined} value={page} onChange={event => setPage(event.target.value)} /></label>
       {pageCount > 0 && Number(page) === pageCount && <p>Llegaste a la última página: selecciona «Terminar libro».</p>}
       <label>Motivo de corrección (privado)<textarea rows="2" maxLength="1000" value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label>
-      <label>Motivo de abandono<textarea rows="2" maxLength="1000" value={reason} onChange={event => setReason(event.target.value)} /></label>
+      <label>Motivo de abandono (opcional)<textarea rows="2" maxLength="1000" value={reason} onChange={event => setReason(event.target.value)} /></label>
       <label><input type="checkbox" checked={share} onChange={event => setShare(event.target.checked)} />Compartir el abandono en el mural</label>
       {canRecord && <fieldset className="reading-reflection" disabled={busy}>
         <legend>Al terminar: ¿qué te dejó este libro?</legend>
@@ -160,7 +160,7 @@ export default function ReadingPage() {
         <button className="button" type="submit" value="progress" disabled={busy || !canRecord || !page || Number(page) <= (book.currentPage || 0) || Number(page) >= pageCount}>Registrar avance</button>
         <button className="button" type="submit" value="correction" disabled={busy || !book.readingId || book.status !== 'Leyendo' || page === '' || !correctionReason.trim()}>Corregir página hacia atrás</button>
         <button className="button" type="submit" value="finish" disabled={busy || !canRecord}>Terminar libro</button>
-        <button className="button" type="submit" value="abandon" disabled={busy || !book.readingId || book.status !== 'Leyendo' || !reason.trim()}>Abandonar libro</button>
+        <button className="button" type="submit" value="abandon" disabled={busy || !book.readingId || book.status !== 'Leyendo'}>Abandonar libro</button>
       </div>
     </form>
     {message && <p className="notice" role="status">{message}</p>}

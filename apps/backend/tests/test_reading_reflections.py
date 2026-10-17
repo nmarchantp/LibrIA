@@ -122,14 +122,12 @@ class ReadingReflectionTest(unittest.TestCase):
         narrative = {"title": "Experiencias declaradas", "summary": "Tu reflexión expresa emociones sobre la lectura.",
             "observations": [{"metric": "Q01", "interpretation": "Declaraste esperanza y nostalgia ante este libro."}],
             "suggestions": [], "limitations": ["Una experiencia no define tu personalidad."]}
-        response = MagicMock()
-        response.__enter__.return_value = iter([json.dumps({"message": {"content": json.dumps(narrative)}}).encode()])
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=response) as provider:
+        from unittest.mock import AsyncMock
+        with patch("app.modules.analytics.interpretation_provider.request_book", new_callable=AsyncMock, return_value=narrative) as provider:
             generate_interpretation(evidence, "personal")
-            payload = json.loads(provider.call_args.args[0].data)
+            payload = provider.call_args.args[0]
             self.assertIn("PRIVATE", payload["messages"][1]["content"])
-        response.__enter__.return_value = iter([json.dumps({"message": {"content": json.dumps(narrative)}}).encode()])
-        with patch("app.modules.analytics.interpretation_provider.urlopen", return_value=response) as provider:
+        with patch("app.modules.analytics.interpretation_provider.request_book", new_callable=AsyncMock, return_value=narrative) as provider:
             generate_interpretation(evidence, "group")
-            payload = json.loads(provider.call_args.args[0].data)
+            payload = provider.call_args.args[0]
             self.assertNotIn("PRIVATE", payload["messages"][1]["content"])

@@ -107,6 +107,8 @@ def consolidate_equivalent_works(db, work_id):
                    {"target": target, "duplicate": duplicate})
         db.execute(text("UPDATE app.ediciones SET work_id=:target WHERE work_id=:duplicate"),
                    {"target": target, "duplicate": duplicate})
+        db.execute(text("UPDATE app.publicaciones SET work_id=:target WHERE work_id=:duplicate"),
+                   {"target": target, "duplicate": duplicate})
         db.execute(text("""
             INSERT INTO app.obras_autores(work_id,author_id,position)
             SELECT :target,author_id,position FROM app.obras_autores WHERE work_id=:duplicate

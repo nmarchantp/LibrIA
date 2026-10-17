@@ -17,6 +17,14 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class GoogleEmailRequest(BaseModel):
+    email: EmailStr
+
+
+class GoogleEmailConfirm(BaseModel):
+    code: str = Field(pattern=r"^\d{6}$", min_length=6, max_length=6)
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

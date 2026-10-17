@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import BookCover from '../components/BookCover'
+import ActionStatus from '../components/ActionStatus'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../api/client'
 import { normalizeGoogleBook } from '../services/booksService'
@@ -21,13 +22,15 @@ function loadRecommendations(token, provenance) {
   return pending.get(key)
 }
 
-export default function RecommendationsPage() {
+function ReaderRecommendations() {
   const { user } = useAuth()
-  const [provenance, setProvenance] = useState('unclassified')
+  const provenance = 'unclassified'
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const [moreLoading, setMoreLoading] = useState(false)
+  const [moreError, setMoreError] = useState('')
   useEffect(() => {
     let active = true
     setData(null)
@@ -47,20 +50,37 @@ export default function RecommendationsPage() {
     return () => { active = false }
   }, [user, provenance, attempt])
 
+  async function requestMore() {
+    setMoreLoading(true); setMoreError('')
+    const token = localStorage.getItem('libria_token')
+    try {
+      const result = await apiRequest('/analytics/me/recommendations', {
+        method:'POST', headers:{Authorization:`Bearer ${token}`},
+        body:JSON.stringify({provenance,exclude_ids:(data?.items || []).map(item => String(item.volume.id))}),
+      })
+      if (token !== localStorage.getItem('libria_token')) return
+      setData(current => {
+        if (result.status === 'no_positive_ratings' || result.status === 'locked') return result
+        const seen = new Set(current.items.map(item => String(item.volume.id)))
+        return {...result, status:result.status === 'no_candidates' ? current.status : result.status,
+          items:[...current.items,...result.items.filter(item => !seen.has(String(item.volume.id)))]}
+      })
+    } catch(cause) {
+      if(token !== localStorage.getItem('libria_token')) return
+      setMoreError(cause.status===429 ? 'Has pedido varias tandas seguidas. Espera un minuto y vuelve a intentarlo.'
+        : cause.status===409 ? 'Tu perfil o tus recomendaciones se están actualizando. Espera unos segundos y reintenta.'
+        : 'No se pudieron obtener más opciones. Tus recomendaciones anteriores se conservan.')
+    } finally { if(token === localStorage.getItem('libria_token')) setMoreLoading(false) }
+  }
+
   return <section className="page-width page community-page">
     <span className="kicker">PARA TI</span><h1 className="page-title">LibrIA te recomienda</h1>
-    <p className="page-lead">Libros seleccionados por IA según tu biblioteca y los indicadores disponibles de tu ADN lector.</p>
-    <label>Indicadores del ADN lector <select value={provenance} onChange={event => setProvenance(event.target.value)}>
-      <option value="unclassified">Registros sin clasificación de origen</option>
-      <option value="operational">Datos operacionales</option>
-      <option value="simulated">Escenario ficticio de demostración</option>
-    </select></label>
-    {loading && <p role="status">La IA está seleccionando tus libros. La primera generación puede tardar unos minutos…</p>}
+    <p className="page-lead">Ollama analiza los libros que valoraste con 4 o 5 estrellas, tus reseñas y tus apreciaciones para seleccionar nuevas lecturas.</p>
+    <ActionStatus busy={loading} message={loading ? 'Consultando tu biblioteca y preparando recomendaciones… La primera generación puede tardar unos minutos.' : !moreLoading && data?.status === 'ready' ? 'Consulta completada. Tus recomendaciones están listas.' : ''} />
     {error && <><p className="notice" role="alert">{error}</p><button className="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></>}
     {data?.status === 'locked' && <><p className="notice">Necesitas registrar al menos {data.minimum_books} libros para usar Recomendaciones IA. Tienes {data.book_count}; te faltan {data.missing_books}.</p><p>Cuentan libros distintos en cualquier estado. Una relectura no cuenta como otro libro.</p><Link className="button primary" to="/books">Explorar y agregar libros</Link> <button className="button" onClick={() => setAttempt(value => value + 1)}>Actualizar disponibilidad</button></>}
-    {data && data.status !== 'locked' && !data.has_adn && <p className="notice">Todavía no hay indicadores del ETL para el origen seleccionado. La selección usa tu biblioteca actual.</p>}
-    {data?.limited_profile && <p className="notice">Aún no hay historial suficiente para personalizar: estos libros son propuestas para explorar. Registra lecturas y valoraciones para desarrollar tu ADN lector.</p>}
-    {data?.provenance === 'simulated' && <p className="notice">Los indicadores seleccionados corresponden a un escenario ficticio.</p>}
+    {data?.status === 'no_positive_ratings' && <p className="notice">Valora al menos un libro de tu biblioteca con 4 o 5 estrellas para recibir recomendaciones basadas en lo que te gustó. No se asume que terminar un libro significa que te gustó.</p>}
+    {data?.status === 'ready' && <p>Selección basada en {data.positive_books_count} libro(s) bien valorados de tu biblioteca. Puedes pedir otras opciones sin perder las anteriores.</p>}
     {data?.status === 'no_candidates' && <p>No hay libros nuevos disponibles para recomendarte. Explora y amplía el catálogo.</p>}
     <div className="recommendation-grid">
       {(data?.items || []).map(item => {
@@ -70,6 +90,14 @@ export default function RecommendationsPage() {
         </Link>
       })}
     </div>
+    <ActionStatus busy={moreLoading} message={moreLoading ? 'Ollama está buscando otras opciones según tus libros favoritos…' : ''} error={moreError} />
+    {data?.status === 'ready' && data.has_more && <button className="button primary" disabled={loading || moreLoading} onClick={requestMore}>{moreLoading ? 'Buscando más opciones…' : moreError ? 'Reintentar más recomendaciones' : 'Recomendarme más opciones'}</button>}
+    {data?.status === 'ready' && !data.has_more && <p role="status">Ya viste las opciones disponibles en el catálogo actual. A medida que se incorporen más libros, habrá nuevas alternativas.</p>}
     {data?.status === 'ready' && <p className="demo-notice"><Sparkles size={17} /> Selección de Ollama · {data.model}. Son sugerencias basadas en registros; no garantizan tus gustos.</p>}
   </section>
+}
+
+export default function RecommendationsPage() {
+  const {user} = useAuth()
+  return <ReaderRecommendations key={user?.id} />
 }

@@ -40,6 +40,13 @@ class ReviewMigrationTest(unittest.TestCase):
                          (author, author_profile, "analytics-demo:garden:es"),
                          (author, author_profile, "analytics-demo:garden:es"),
                          (author, reader_profile, "analytics-demo:garden:es"))
+                # Keep migration tests independent of development seed contents.
+                # All fixtures exist only inside this rolled-back isolated schema.
+                for key in ('journey','garden'):
+                    work=source_id(f'work:{key}'); edition=source_id(f'edition:{key}:es')
+                    connection.execute(text(f"INSERT INTO {schema}.obras(id,title) VALUES (:id,:title) ON CONFLICT DO NOTHING"), {'id':work,'title':f'Migration fixture {key}'})
+                    connection.execute(text(f"INSERT INTO {schema}.ediciones(id,work_id,title,language) VALUES (:id,:work,:title,'es') ON CONFLICT DO NOTHING"), {'id':edition,'work':work,'title':f'Migration fixture {key}'})
+                    connection.execute(text(f"INSERT INTO {schema}.fuentes_catalogo(id,edition_id,provider,external_id,fetched_at) VALUES (:id,:edition,'libria-feed',:ref,now()) ON CONFLICT DO NOTHING"), {'id':uuid.uuid4(),'edition':edition,'ref':f'analytics-demo:{key}:es'})
                 post_ids = []
                 for user, profile, reference in cases:
                     post_id = uuid.uuid4()

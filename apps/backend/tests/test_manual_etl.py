@@ -27,7 +27,7 @@ class ManualEtlTest(unittest.TestCase):
         app.dependency_overrides.clear()
         with engine.begin() as connection:
             for run_id in self.ids:
-                for table in ("validaciones_etl", "indicadores_personales", "hechos_publicaciones",
+                for table in ("evidencia_lectora_personal", "hechos_reflexiones", "validaciones_etl", "indicadores_personales", "hechos_publicaciones",
                               "hechos_lectura", "hechos_resenas", "preparacion_valoraciones_obras", "catalogo_obras"):
                     connection.execute(text(f"DELETE FROM analytics.{table} WHERE etl_run_id=:id"), {"id": run_id})
                 connection.execute(text("DELETE FROM analytics.ejecuciones_etl WHERE id=:id"), {"id": run_id})
@@ -75,7 +75,7 @@ class ManualEtlTest(unittest.TestCase):
     def test_failed_load_rolls_back_all_rows(self):
         run_id = self.request()
 
-        def fail(connection, identifier, prepared):
+        def fail(connection, identifier, prepared, personal=None):
             connection.execute(text("INSERT INTO analytics.catalogo_obras (etl_run_id, work_id, title) VALUES (:id, :work, 'Failure test')"),
                                {"id": identifier, "work": uuid.uuid4()})
             raise RuntimeError("Expected test failure")
