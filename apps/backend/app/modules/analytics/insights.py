@@ -9,12 +9,14 @@ from fastapi import HTTPException
 from sqlalchemy import text
 
 from app.core.config import get_settings
+from app.modules.analytics.reader_evidence import personal_samples
 from app.modules.analytics.etl import ZONE, day_bounds
 from app.modules.analytics.interpretation_provider import PROMPT_VERSION, ProviderError, generate_interpretation, validate_interpretation, provider_ready
 
 MIN_GROUP = 10
 MIN_CONTRIBUTORS = 5
 LABELS = {
+    "Q02": ("Aportes personales incluidos sobre libros", "aportes"),
     "Q01": ("Reflexiones personales al finalizar", "reflexiones"),
     "L02": ("Libros incorporados", "libros"), "L04": ("Intentos iniciados", "intentos"),
     "L05": ("Intentos finalizados", "intentos"), "L06": ("Intentos abandonados", "intentos"),
@@ -93,7 +95,8 @@ def personal_evidence(db, user_id, provenance):
         WHERE etl_run_id=ANY(CAST(:ids AS uuid[])) AND user_id=:owner AND provenance=:provenance
         ORDER BY occurred_at DESC,source_id DESC LIMIT 10"""),
         {"ids": ids, "owner": user_id, "provenance": provenance}).mappings().all()
-    if not indicators and not events and not reviews and not reflections:
+    samples, truncated = personal_samples(db, source["latest_id"], user_id, provenance)
+    if not indicators and not events and not reviews and not reflections and not samples:
         return None
     values = {row["indicator_code"]: float(row["value"]) for row in indicators}
     values["L09"] = len({event["occurred_at"].astimezone(ZONE).date() for event in events if event["event_kind"] != "correction"})
@@ -102,13 +105,18 @@ def personal_evidence(db, user_id, provenance):
         values["RATING"] = round(sum(ratings) / len(ratings), 2)
     if reflections:
         values["Q01"] = len(reflections)
+    if samples:
+        values["Q02"] = len(samples)
     return {"scope": "personal", "period": source["period"], "provenance": provenance,
             "qualitative": [row["reflection"] for row in reflections],
+            "reader_contributions": samples, "contributions_truncated": truncated,
             "metrics": {code: metric(code, value) for code, value in values.items() if code in LABELS},
             "limitations": ["Se interpretan registros disponibles, no toda tu actividad lectora.",
                             "El cambio de posición no equivale a páginas efectivamente leídas.",
                             "Las emociones se interpretan solo cuando las declaras sobre un libro; no describen tu personalidad ni tu salud mental.",
-                            "La muestra cualitativa incluye hasta diez reflexiones privadas dentro del periodo cargado."]}
+                            "La muestra cualitativa incluye hasta diez reflexiones privadas dentro del periodo cargado.",
+                            "Los aportes son una instant?nea acumulada al corte, no actividad exclusiva del intervalo. Incluyen rese?as privadas, valoraciones, notas, teor?as y cuadernos propios.",
+                            "Se env?an hasta 32 aportes recientes y 18000 caracteres de texto; la muestra puede estar recortada. Los cuadernos no tienen historial de versiones."]}
 
 
 def round_count(value):
@@ -176,7 +184,7 @@ def cache_params(evidence, scope, user_id):
 
 def cached_interpretation(db, evidence, scope, user_id):
     params = cache_params(evidence, scope, user_id)
-    row = db.execute(text("""SELECT id, content, created_at, provider, model FROM analytics.interpretaciones_ia
+    row = db.execute(text("""SELECT id, content, created_at, provider, model FROM ia.interpretaciones_ia
         WHERE scope=:scope AND subject_key=:subject AND data_hash=:hash AND provider=:provider
             AND model=:model AND prompt_version=:version"""), params).mappings().first()
     return dict(row) if row else None
@@ -195,7 +203,7 @@ def interpret(db, evidence, scope, user_id):
     cached = cached_interpretation(db, evidence, scope, user_id)
     if cached:
         return cached
-    recent = db.execute(text("""SELECT 1 FROM analytics.interpretaciones_ia
+    recent = db.execute(text("""SELECT 1 FROM ia.interpretaciones_ia
         WHERE scope=:scope AND subject_key=:subject AND created_at > now() - interval '1 minute' LIMIT 1"""), params).first()
     if recent:
         raise HTTPException(status_code=429, detail="Espera un minuto antes de generar una interpretación nueva")
@@ -203,10 +211,17 @@ def interpret(db, evidence, scope, user_id):
         content = validate_interpretation(generate_interpretation(evidence, scope), evidence["metrics"])
         if scope == "personal" and evidence.get("qualitative") and not any(item["metric"] == "Q01" for item in content["observations"]):
             raise ValueError("Missing qualitative interpretation")
-    except (ProviderError, ValueError):
+        if scope == "personal" and evidence.get("reader_contributions") and not any(item["metric"] == "Q02" for item in content["observations"]):
+            raise ValueError("Missing reader contribution interpretation")
+    except ProviderError as error:
+        db.rollback()
+        if str(error)=='profile_priority':
+            raise HTTPException(409,'El ADN tiene prioridad. Espera a que termine antes de solicitar Insights.') from None
+        raise HTTPException(status_code=502, detail="No se pudo obtener una interpretación válida. Puedes reintentar.") from None
+    except ValueError:
         db.rollback()
         raise HTTPException(status_code=502, detail="No se pudo obtener una interpretación válida. Puedes reintentar.") from None
-    db.execute(text("""INSERT INTO analytics.interpretaciones_ia
+    db.execute(text("""INSERT INTO ia.interpretaciones_ia
         (id, scope, subject_key, owner_user_id, data_hash, provider, model, prompt_version, content)
         VALUES (:id, :scope, :subject, :owner, :hash, :provider, :model, :version, CAST(:content AS jsonb))"""),
         {**params, "id": uuid.uuid4(), "owner": user_id if scope == "personal" else None, "content": json.dumps(content)})

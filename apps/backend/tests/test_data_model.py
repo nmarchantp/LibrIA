@@ -69,10 +69,9 @@ class DataModelTest(unittest.TestCase):
             with self.subTest(changes=changes):
                 self.reject(self.reading(**changes))
 
-    def test_abandonment_requires_reason(self):
+    def test_abandonment_reason_is_optional(self):
         now = datetime.now(timezone.utc)
-        for reason in [None, "", "   "]:
-            self.reject(self.reading(status="abandoned", started_at=now, abandoned_at=now, abandonment_reason=reason))
+        self.db.add(self.reading(status="abandoned", started_at=now, abandoned_at=now, abandonment_reason=None))
         self.db.add(self.reading(status="abandoned", started_at=now, abandoned_at=now, abandonment_reason="No me interesó"))
         self.db.flush()
 

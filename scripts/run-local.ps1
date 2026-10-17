@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$PreflightOnly)
+param([switch]$PreflightOnly, [switch]$DemoPosts)
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -65,9 +65,9 @@ if (Test-NetConnection -ComputerName 127.0.0.1 -Port 8000 -InformationLevel Quie
     if ($health.service -ne 'libria-api' -or $health.status -ne 'ok') {
         throw 'El puerto 8000 está ocupado por otro servicio. Libéralo antes de iniciar LibrIA.'
     }
-    Write-Host 'Backend: ya estaba iniciado en http://localhost:8000' -ForegroundColor Yellow
+    Write-Host 'API: ya estaba iniciada en http://localhost:8000. No se abre otra instancia en el mismo puerto.' -ForegroundColor Yellow
 } else {
-    Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m uvicorn app.main:app --reload"
+    Start-Process cmd.exe -WorkingDirectory $projectRoot -ArgumentList '/k', 'scripts\run-api.cmd' -WindowStyle Normal
     Write-Host 'Backend:  http://localhost:8000/docs' -ForegroundColor Green
 }
 
@@ -83,5 +83,7 @@ if (Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quie
     Start-Process powershell.exe -WorkingDirectory $webPath -ArgumentList '-NoExit', '-Command', 'npm run dev'
     Write-Host 'Frontend: http://localhost:5173' -ForegroundColor Green
 }
-Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m scripts.generate_posts --interval 20"
-Write-Host 'Posts demo: generación automática cada 20 segundos (detén la ventana para finalizar).' -ForegroundColor Green
+if ($DemoPosts) {
+    Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m scripts.generate_posts --interval 20" -WindowStyle Normal
+    Write-Host 'Posts demo: generación automática cada 20 segundos (detén la ventana para finalizar).' -ForegroundColor Yellow
+}

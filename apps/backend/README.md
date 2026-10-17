@@ -49,6 +49,8 @@ python -m scripts.grant_admin --email admin@ejemplo.com
 
 Para ejecutar las pruebas del backend en desarrollo, instala `requirements-dev.txt` y ejecuta `python -m unittest discover -s tests`.
 
+El [ingreso con Google](../../docs/google-login.md) complementa el acceso con correo y contraseña. Incluye configuración de OAuth, vinculación de cuentas y comprobación manual.
+
 ## Datos de demostración y ETL
 
 Las [reseñas normalizadas](../../docs/reviews.md) se crean en `/api/reviews`, con obra canónica y una sola reseña por perfil–obra. `/api/posts` solo admite publicaciones manuales. El feed de lectura combina las tres entidades y sus comentarios comprueban destinos y visibilidad. `python -m scripts.seed_reviews_demo` prepara escenarios de reseñas para el siguiente cierre `daily-v2`; editar no vuelve a contar la primera publicación y los cierres anteriores permanecen intactos.

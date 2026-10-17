@@ -17,6 +17,8 @@ class PostCreate(BaseModel):
     body: str = Field(min_length=1, max_length=3000)
     book_ref: str | None = Field(default=None, min_length=1, max_length=200)
     book_title: str | None = Field(default=None, min_length=1, max_length=200)
+    work_id: uuid.UUID | None = None
+    edition_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def source_matches_kind(self):

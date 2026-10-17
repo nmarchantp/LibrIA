@@ -1,0 +1,295 @@
+LibrIA — Especificación funcional del módulo de Inteligencia Artificial
+Versión 1.0
+16 de octubre de 2026 · Propuesta para MVP
+
+Nombre del módulo: Motor de Análisis Literario e Identidad Lectora Adaptativa.
+Objetivo general: Implementar un sistema de inteligencia artificial que interprete las experiencias individuales de lectura y construya un perfil literario dinámico, personalizado, privado y corregible por el lector, utilizando información de su biblioteca personal.
+La solución combinará Ollama, FastAPI y PostgreSQL, manteniendo la separación entre análisis cualitativo, reglas de negocio y sistema de recomendaciones.
+1. Decisiones funcionales confirmadas
+Aspecto	Definición
+Análisis individual	Por cada libro registrado por un lector
+Análisis global	Considera la biblioteca personal completa
+Estados	Por leer, Leyendo, Terminado, Abandonado
+Evolución	Automática ante cambios relevantes
+Historial	Conserva la evolución de preferencias
+Correcciones	El lector puede corregir interpretaciones
+Visibilidad	Privada, solo para el lector
+Abandono	Motivo opcional
+Recomendaciones	Utilizan el perfil y las experiencias individuales
+Motor IA	Ollama con modelo de lenguaje local
+Una decisión adicional que considero necesaria: el análisis de un libro pertenece a la experiencia particular del lector, no a la ficha bibliográfica universal. Dos usuarios que leen la misma obra pueden tener interpretaciones completamente distintas.
+2. Alcance del MVP
+Funcionalidades priorizadas
+10 requerimientos
+
+IA-001
+Análisis cualitativo por libro
+
+MVP
+
+IA-002
+Interpretación según estado de lectura
+
+MVP
+
+IA-003
+Perfil literario global
+
+MVP
+
+IA-004
+Corrección de interpretaciones
+
+MVP
+
+IA-005
+Actualización automática por eventos
+
+MVP
+
+IA-006
+Privacidad y control de acceso
+
+MVP
+
+IA-007
+Conservación de evidencias
+
+MVP
+
+IA-008
+Historial de evolución del perfil
+
+Evolutivo
+
+IA-009
+Visualización de tendencias
+
+Evolutivo
+
+IA-010
+Recomendaciones explicables avanzadas
+
+Evolutivo
+
+
+Para evitar que el alcance de LibrIA crezca sin control, propongo implementar ahora un historial técnico básico de versiones y dejar para una segunda fase las gráficas históricas avanzadas.
+3. Requerimientos funcionales
+RF-IA-001. Análisis individual de la experiencia de lectura
+Descripción: El sistema deberá analizar la relación entre el lector y un libro de su biblioteca, considerando la información disponible.
+Entradas: libro, género, estado, avances, puntuación, reseña y motivo de abandono, cuando corresponda.
+Salidas:
+- Sentimiento hacia la obra: positivo, negativo, mixto o indeterminado.
+- Emociones expresadas por el lector.
+- Aspectos narrativos valorados y cuestionados.
+- Preferencias identificadas.
+- Resumen interpretativo individual.
+- Evidencias utilizadas para las conclusiones.
+Criterio de aceptación: al analizar una reseña, el resultado debe distinguir las emociones provocadas por la obra de la valoración que el lector hace de ella, sin atribuir opiniones no expresadas.
+RF-IA-002. Interpretación según estado de lectura
+Estado	Comportamiento esperado
+Por leer	No inferir satisfacción ni emociones experimentadas. Registrar solo interés declarado, si existe
+Leyendo	Generar interpretaciones provisionales utilizando avances y comentarios disponibles
+Terminado	Consolidar la experiencia usando reseñas, puntuación y registros anteriores
+Abandonado	Considerar progreso y motivo opcional; no asumir rechazo sin evidencia
+El sistema deberá distinguir siempre entre hechos registrados e interpretaciones generadas por IA.
+RF-IA-003. Perfil literario global
+El sistema deberá consolidar las experiencias individuales disponibles y generar un análisis del lector.
+El perfil deberá identificar géneros predominantes, temáticas preferidas, características narrativas valoradas, preferencias emocionales y posibles causas recurrentes de abandono.
+También deberá diferenciar:
+- Preferencias históricas.
+- Preferencias recientes.
+- Intereses exploratorios.
+- Preferencias expresamente confirmadas o corregidas por el lector.
+Criterio de aceptación: el perfil global no podrá concluir que un lector rechaza un género únicamente por abandonar un libro de ese género.
+RF-IA-004. Corrección de interpretaciones
+El lector podrá confirmar, corregir o rechazar una interpretación individual o global.
+Toda corrección deberá registrar el texto original de la interpretación, la nueva información proporcionada por el lector, la fecha y el estado de procesamiento.
+La interpretación corregida deberá dejar de mostrarse como válida cuando el sistema haya aceptado la corrección, y los futuros análisis deberán utilizar esa información como evidencia prioritaria.
+No se modificarán ni reentrenarán automáticamente los parámetros del modelo Ollama.
+RF-IA-005. Actualización automática
+El sistema deberá detectar cambios relevantes en los datos de lectura y procesar las actualizaciones de manera asíncrona.
+Las modificaciones que no aporten nueva información interpretativa no deberán ejecutar innecesariamente el modelo.
+RF-IA-006. Privacidad
+Los análisis emocionales individuales, las inferencias globales, las correcciones y sus evidencias serán privados.
+Esto incluye usuarios con perfiles de Autor, Librería, Influencer y Administrador: ninguno recibirá acceso a los análisis de otros lectores solo por su tipo de perfil.
+Los procesos administrativos y de soporte deberán aplicar controles especiales y no exponer el contenido emocional en registros operativos.
+4. Reglas de negocio
+Estas reglas deberían incorporarse tanto en el documento SRS como en la matriz de reglas del proyecto.
+ID	Regla de negocio
+RN-IA-001	Cada análisis individual estará asociado a un lector y un libro específico.
+RN-IA-002	Un libro podrá tener diferentes interpretaciones para distintos lectores.
+RN-IA-003	Los libros Por leer no aportarán evidencia de satisfacción con la obra.
+RN-IA-004	Los análisis de libros Leyendo tendrán carácter provisional.
+RN-IA-005	Abandonar un libro no equivaldrá automáticamente a una valoración negativa.
+RN-IA-006	El motivo de abandono será opcional.
+RN-IA-007	Las correcciones explícitas prevalecerán sobre inferencias automáticas contradictorias.
+RN-IA-008	Las actualizaciones conservarán la trazabilidad de las interpretaciones anteriores.
+RN-IA-009	El perfil global se actualizará cuando existan cambios relevantes y se mantendrá la última versión válida mientras se procesa una nueva.
+RN-IA-010	El lector será el único autorizado a consultar sus análisis privados mediante la aplicación.
+RN-IA-011	Las inferencias sin evidencia suficiente deberán identificarse como provisionales o indeterminadas.
+RN-IA-012	La IA no realizará diagnósticos psicológicos ni inferirá características clínicas del lector.
+RN-IA-013	Los resultados deberán validarse antes de persistirse.
+RN-IA-014	El estado de una tarea de análisis podrá ser Pendiente, Procesando, Completado o Fallido.
+RN-IA-015	La eliminación de datos personales deberá reflejarse en los análisis y evidencias derivados, según la política de retención.
+¿Qué eventos actualizan el perfil?
+No recomiendo ejecutar Ollama en cada clic o cada cambio de página. Eso consumiría recursos innecesarios.
+Evento	Análisis por libro	Perfil global
+Agregar a Por leer	No, salvo interés explícito	Solo actualizar señal de interés
+Pasar a Leyendo	Si existen datos interpretables	Si aporta información relevante
+Actualizar porcentaje leído	No, por sí solo	No
+Registrar comentario de lectura	Sí	Sí, si cambia preferencias
+Modificar puntuación	Sí	Sí
+Publicar o modificar reseña	Sí	Sí
+Marcar como Terminado	Sí	Sí
+Marcar como Abandonado	Sí	Sí
+Corregir interpretación	Sí, si aplica	Sí
+Eliminar un libro	Invalidar su análisis	Recalcular sin ese libro
+Regla técnica importante: cuando se reciba un evento, se deberá actualizar primero la información transaccional y después programar el análisis. Si llegan varios cambios sobre el mismo libro en pocos segundos, podrán consolidarse en una sola tarea.
+5. Modelo de datos propuesto
+No crearía una base de datos nueva exclusivamente para Ollama. Mantendría la estructura de tres esquemas que definimos para LibrIA: transaccional, analítico e IA.
+Las siguientes tablas son una propuesta lógica; sus nombres físicos definitivos pueden ajustarse durante el diseño.
+Esquema / tabla	Responsabilidad
+Transaccional · Biblioteca personal	Asociación usuario-libro, estado, progreso y fechas
+Transaccional · Reseñas	Texto y valoración del lector
+Transaccional · Avances	Historial de progreso de lectura
+IA · Análisis individual	Interpretación de cada experiencia lector-libro
+IA · Perfil literario	Interpretación global vigente
+IA · Evidencias	Origen y sustento de cada conclusión
+IA · Correcciones	Retroalimentación y rectificaciones
+IA · Historial de perfil	Versiones y cambios del perfil
+IA · Tareas de análisis	Cola lógica y estado de procesamiento
+No duplicaría información de los libros, reseñas o usuarios dentro del esquema IA. Las nuevas estructuras deberían referenciar los registros originales mediante identificadores.
+Datos mínimos del análisis individual
+Campo funcional	Tipo	Descripción
+Identificador de experiencia	Referencia	Relación lector-libro
+Versión	Numérico	Versión del análisis
+Estado de análisis	Enumerado	Provisional, consolidado, insuficiente
+Sentimiento	Enumerado	Positivo, negativo, mixto, indeterminado
+Emociones identificadas	Lista	Emociones expresadas
+Aspectos valorados	Lista	Elementos narrativos positivos
+Aspectos cuestionados	Lista	Elementos narrativos negativos
+Preferencias inferidas	Lista estructurada	Preferencias respaldadas por evidencia
+Interpretación	Texto	Resumen cualitativo
+Evidencias	Referencias	Registros que sustentan cada conclusión
+Modelo utilizado	Texto	Identificador del modelo Ollama
+Fecha del análisis	Fecha y hora	Momento de procesamiento
+Datos mínimos del perfil global
+Campo funcional	Tipo	Descripción
+Identificador del lector	Referencia	Propietario del perfil
+Versión del perfil	Numérico	Control histórico
+Descripción literaria	Texto	Resumen personalizado
+Afinidades históricas	Lista estructurada	Preferencias acumuladas
+Afinidades recientes	Lista estructurada	Preferencias actuales
+Intereses exploratorios	Lista estructurada	Nuevas tendencias
+Factores de satisfacción	Lista	Características valoradas
+Factores de abandono	Lista	Patrones respaldados por evidencia
+Evidencias utilizadas	Referencias	Análisis y datos de origen
+Fecha de actualización	Fecha y hora	Último cálculo válido
+No incluiría un campo de personalidad psicológica. LibrIA debe describir hábitos y preferencias literarias, no diagnosticar ni etiquetar psicológicamente al usuario.
+
+6. Arquitectura técnica del MVP
+Frontend React
+Biblioteca, reseñas, perfil y correcciones
+
+Backend FastAPI
+Autorización, validación y reglas de negocio
+
+PostgreSQL
+Datos transaccionales, IA y tareas
+
+
+Cola de tareas
+Análisis pendientes y reintentos
+
+
+
+Worker de análisis
+Recupera datos, prepara contexto y valida resultados
+
+Ollama — Modelo local
+Interpretación cualitativa en formato estructurado
+
+Persistencia y actualización de perfiles
+Versiones, evidencias y datos para recomendaciones
+
+Para el MVP utilizaría una cola de tareas respaldada por PostgreSQL y un worker Python independiente, en lugar de incorporar desde el primer día Redis, Celery y otros componentes adicionales.
+Esto no impide escalar posteriormente. La ventaja es que el worker podrá desplegarse de forma independiente si aumenta el volumen de análisis.
+7. Contratos de API propuestos
+Método	Endpoint	Función
+GET	/api/me/ai/books/{book_id}	Consultar el análisis de un libro
+POST	/api/me/ai/books/{book_id}/refresh	Solicitar nuevo análisis
+GET	/api/me/ai/profile	Consultar perfil literario vigente
+GET	/api/me/ai/profile/history	Consultar versiones históricas
+POST	/api/me/ai/feedback	Registrar corrección
+GET	/api/me/ai/jobs/{job_id}	Consultar estado de tarea
+Los eventos internos de la biblioteca y las reseñas deberían activar las actualizaciones automáticamente. Estos endpoints no sustituyen ese comportamiento.
+Seguridad: todos estos endpoints deben obtener la identidad del lector desde la sesión autenticada. No se debe permitir cambiar un usuario_id en la solicitud para consultar el análisis privado de otra persona.
+8. Ejemplo de integración real con Ollama
+Para este módulo aprovecharía las salidas estructuradas de Ollama, que permiten entregar un esquema JSON mediante format y validar la respuesta con Pydantic. Esta capacidad está documentada oficialmente. 
+
+GitHub
++1
+
+
+
+Este sería un prototipo de la función que utilizaría el worker para analizar un libro:
+import jsonfrom typing import Literalfrom pydantic import BaseModel, Fieldfrom ollama import AsyncClientclass Preferencia(BaseModel):    caracteristica: str    interpretacion: str    evidencia: strclass AnalisisLibro(BaseModel):    sentimiento: Literal[        "positivo", "negativo", "mixto",        "indeterminado"    ]    estado_analisis: Literal[        "provisional", "consolidado",        "insuficiente"    ]    emociones: list[str]    aspectos_valorados: list[str]    aspectos_cuestionados: list[str]    preferencias: list[Preferencia]    interpretacion: strcliente = AsyncClient(    host="http://localhost:11434")async def analizar_libro(datos: dict) -> AnalisisLibro:    respuesta = await cliente.chat(
+
+
+
+Este código implementa únicamente la parte de inferencia. El worker debe agregar autenticación interna, consulta de datos, versionado, validaciones de negocio, errores, reintentos y persistencia.
+Tampoco asumiría que un JSON válido significa que el análisis es correcto: debemos probar la calidad de las interpretaciones con casos de evaluación propios de LibrIA.
+9. Casos de prueba funcionales del MVP
+Estos son los casos mínimos que utilizaría en QA antes de habilitar la funcionalidad.
+Caso	Escenario	Resultado esperado
+CP-IA-001	Libro terminado con reseña positiva	Identifica satisfacción y preferencias respaldadas
+CP-IA-002	Libro triste valorado con 5 estrellas	No interpreta tristeza como rechazo
+CP-IA-003	Libro abandonado sin motivo	No inventa causas de abandono
+CP-IA-004	Libro abandonado por falta de tiempo	No concluye desagrado por el ritmo o género
+CP-IA-005	Libro en lectura sin comentarios	No inventa una experiencia emocional
+CP-IA-006	Usuario corrige una interpretación	Persiste corrección y la considera en nuevos análisis
+CP-IA-007	Usuario comienza a leer otro género	Actualiza las preferencias recientes sin eliminar las históricas
+CP-IA-008	Actualización simultánea de reseña y puntuación	Evita procesamientos redundantes o versiones inconsistentes
+CP-IA-009	Usuario intenta consultar perfil ajeno	Acceso denegado
+CP-IA-010	Ollama no responde	Conserva resultados previos y permite reintentar
+CP-IA-011	Se elimina una reseña o un libro	Invalida las evidencias dependientes y actualiza el perfil
+CP-IA-012	Reseña contiene instrucciones maliciosas	El sistema trata ese contenido como dato y no ejecuta instrucciones
+Incluiría además una evaluación de calidad con reseñas etiquetadas manualmente, para comparar las interpretaciones del modelo con resultados esperados. Es particularmente importante probar ironía, opiniones mixtas y abandono por motivos externos.
+10. Plan de implementación recomendado
+
+Etapa 1. Preparación de datos
+Revisar biblioteca, reseñas, puntuaciones, avances y estados. Incorporar el motivo opcional de abandono y establecer los eventos de actualización.
+
+
+
+
+Etapa 2. Análisis individual
+Integrar Ollama con FastAPI, definir esquemas JSON, almacenar resultados y mostrar la interpretación dentro de cada experiencia de lectura.
+
+
+
+
+Etapa 3. Perfil literario global
+Consolidar los análisis individuales, identificar preferencias y diferenciar tendencias históricas, actuales y exploratorias.
+
+
+
+
+Etapa 4. Retroalimentación y actualización automática
+Permitir correcciones del lector, incorporar eventos relevantes, tareas en segundo plano y controles de privacidad.
+
+
+
+
+Etapa 5. Validación integral
+Probar calidad de inferencias, coherencia entre análisis individual y global, rendimiento, seguridad y fallos del modelo.
+
+
+
+11. Límites del alcance
+Para mantener viable el MVP, dejaría explícitamente fuera de esta versión el entrenamiento propio de modelos, el fine-tuning, la predicción psicológica del usuario, las comparaciones emocionales públicas entre lectores y las visualizaciones históricas avanzadas.
+La integración con recomendaciones utilizará inicialmente las preferencias estructuradas del perfil, pero el desarrollo de un algoritmo de recomendación más sofisticado debe abordarse como una capacidad separada.
+También distinguiría frecuencia de lectura de afinidad: que alguien haya leído veinte libros de un género no significa necesariamente que ese sea su favorito. Las valoraciones, las reseñas y las correcciones deben influir en la interpretación.
+12. Criterio de aceptación general
+Consideraría funcionalmente completo este módulo del MVP cuando un lector pueda registrar sus libros, obtener una interpretación individual basada en evidencia, consultar su perfil literario privado, corregir una conclusión equivocada y observar cómo esa corrección o una nueva experiencia de lectura modifica su perfil global sin perder las preferencias anteriores.

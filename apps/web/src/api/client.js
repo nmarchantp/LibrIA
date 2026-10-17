@@ -10,7 +10,8 @@ export async function apiRequest(path, options = {}) {
   if (!(options.body instanceof FormData) && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
   const response = await fetch(apiUrl(path), { ...options, headers })
   if (!response.ok) {
-    const error = new Error('No fue posible completar la solicitud')
+    const payload = await response.json().catch(() => null)
+    const error = new Error(typeof payload?.detail === 'string' ? payload.detail : 'No fue posible completar la solicitud')
     error.status = response.status
     throw error
   }

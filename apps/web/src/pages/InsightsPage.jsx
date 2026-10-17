@@ -1,3 +1,3 @@
-import AnalysisPanel from '../components/AnalysisPanel'
+import AdaptiveAnalysis from '../components/AdaptiveAnalysis'
 
-export default function InsightsPage() { return <AnalysisPanel /> }
+export default function InsightsPage() { return <AdaptiveAnalysis scope="profile" /> }

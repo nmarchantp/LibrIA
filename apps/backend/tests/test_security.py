@@ -39,8 +39,8 @@ class SecurityTest(unittest.TestCase):
             response = MagicMock()
             response.read.return_value = b'{"access_token":"sensitive","refresh_token":"very-sensitive"}'
             upstream.return_value.__enter__.return_value = response
-            result = client.get("/api/auth/google/callback", params={"code": "test", "state": state})
-            self.assertEqual(result.status_code, 200)
+            result = client.get("/api/auth/google/callback", params={"code": "test", "state": state}, follow_redirects=False)
+            self.assertEqual(result.status_code, 303)
             self.assertNotIn("sensitive", result.text)
             self.assertEqual(result.headers["cache-control"], "no-store")
             self.assertEqual(client.get("/api/auth/google/callback", params={"code": "test", "state": state}).status_code, 400)

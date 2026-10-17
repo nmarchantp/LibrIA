@@ -40,7 +40,7 @@ def as_response(post: Post, author: str, author_role: str, image_ids: list[uuid.
                         source=post.source, kind=post.kind, title=post.title,
                         body=post.body, book_ref=post.book_ref, book_title=post.book_title,
                         rating=post.rating, progress_percent=post.progress_percent,
-                        reading_event=post.reading_event, created_at=post.created_at)
+                        reading_event=post.reading_event, created_at=post.created_at,work_id=post.work_id,edition_id=post.edition_id)
 
 
 def image_content_type(data: bytes) -> str | None:
@@ -171,9 +171,26 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
         raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
     if (publication_type == "event") != (data.source == "event"):
         raise HTTPException(status_code=422, detail="El tipo no corresponde al contenido")
+    resolved_work=data.work_id
+    resolved_edition=data.edition_id
+    if resolved_edition:
+        edition=db.get(Edition,resolved_edition)
+        if not edition or (resolved_work and resolved_work!=edition.work_id):
+            raise HTTPException(422,'La edición no corresponde a la obra')
+        resolved_work=edition.work_id
+    if data.book_ref:
+        matches=db.scalars(select(Edition).join(CatalogSource,CatalogSource.edition_id==Edition.id)
+          .where(CatalogSource.external_id==data.book_ref).order_by(Edition.id)).all()
+        works={e.work_id for e in matches}
+        if len(works)!=1 or (resolved_work and resolved_work not in works):
+            raise HTTPException(422,'El libro debe corresponder a una obra inequívoca del catálogo de LibrIA')
+        resolved_work=next(iter(works));resolved_edition=resolved_edition or matches[0].id
+    if resolved_work and not db.get(Work,resolved_work):
+        raise HTTPException(422,'Obra no encontrada en el catálogo de LibrIA')
     post = Post(user_id=user.id, author_role=role, author_profile_id=profile.id,
+                work_id=resolved_work,edition_id=resolved_edition,
                 publication_type=publication_type,
-                **data.model_dump(exclude={"author_profile_id", "publication_type"}))
+                **data.model_dump(exclude={"author_profile_id", "publication_type", "work_id", "edition_id"}))
     db.add(post)
     db.flush()
     images = [PostImage(post_id=post.id, content_type=image_type, data=content)

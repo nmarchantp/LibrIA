@@ -122,7 +122,7 @@ class DailyRunTest(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def test_failure_rolls_back_and_retry_reuses_run(self):
-        def failing_publish(connection, run_id, prepared):
+        def failing_publish(connection, run_id, prepared, personal=None):
             connection.execute(text("INSERT INTO analytics.catalogo_obras (etl_run_id, work_id, title) VALUES (:run, :work, 'Atomicidad')"),
                                {"run": run_id, "work": uuid.uuid4()})
             raise RuntimeError("Fallo de prueba")

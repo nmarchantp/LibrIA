@@ -28,7 +28,7 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
                       .join(LibraryEntry, Reading.library_entry_id == LibraryEntry.id)
                       .join(Edition, Reading.edition_id == Edition.id)
                       .join(CatalogSource, Reading.edition_id == CatalogSource.edition_id)
-                      .where(LibraryEntry.user_id == user.id, CatalogSource.provider == "libria-feed")
+                      .where(LibraryEntry.user_id == user.id, LibraryEntry.archived_at.is_(None), CatalogSource.provider == "libria-feed")
                       .order_by(Reading.created_at.desc(), Reading.id.desc())).all()
     latest = {}
     for reading, book_ref, book_title in rows:
@@ -99,6 +99,8 @@ def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_cu
         entry = LibraryEntry(user_id=user.id, work_id=work.id)
         db.add(entry)
         db.flush()
+    else:
+        entry.archived_at = None
     reading = db.scalar(select(Reading).where(Reading.library_entry_id == entry.id)
                         .order_by(Reading.created_at.desc(), Reading.id.desc()))
     if reading is None:
@@ -188,7 +190,7 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
             raise HTTPException(status_code=409, detail="Esta lectura ya terminó")
         reading.status = "abandoned"
         reading.abandoned_at = now
-        reading.abandonment_reason = data.abandonment_reason.strip()
+        reading.abandonment_reason = (data.abandonment_reason or '').strip() or None
         percent = round(reading.current_page * 100 / reading.total_pages)
         body = f'Abandonó "{work.title}".'
 
@@ -237,6 +239,17 @@ def update_notebook(reading_id: uuid.UUID, data: ReadingNotebookUpdate,
     reading.notebook = data.model_dump()
     db.commit()
     return {"reading_id": reading.id, "notebook": reading.notebook}
+
+
+@router.delete('/library/{work_id}', status_code=204)
+def remove_from_library(work_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
+                        db: Annotated[Session, Depends(get_db)]):
+    entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
+                       LibraryEntry.work_id == work_id, LibraryEntry.archived_at.is_(None)).with_for_update())
+    if entry is None:
+        raise HTTPException(404, 'Libro propio no encontrado')
+    entry.archived_at = datetime.now(timezone.utc)
+    db.commit()
 
 
 @router.get("/{reading_id}/history")

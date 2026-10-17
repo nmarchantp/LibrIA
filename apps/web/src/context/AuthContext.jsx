@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     return result
   }
   const logout = () => { localStorage.removeItem('libria_token'); setUser(null); setSessionError(false) }
-  const value = { user, loading, sessionError, retry: () => setAttempt(current => current + 1), logout, login: data => authenticate('login', data), register: data => authenticate('register', data) }
+  const value = { user, loading, sessionError, retry: () => setAttempt(current => current + 1), logout, login: data => authenticate('login', data), register: data => authenticate('register', data), googleLogin: () => authenticate('google') }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

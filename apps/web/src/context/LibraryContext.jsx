@@ -118,7 +118,12 @@ export function LibraryProvider({ children }) {
   }, [])
   const getBook = useCallback((id) => books.find(book => String(book.id) === String(id))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])
-  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, updateTotalPages, recordEvent, addBook, getBook }}>{children}</LibraryContext.Provider>
+  const removeBook = async book => {
+    await apiRequest(`/readings/library/${book.workId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
+    delete readings.current[String(book.id)]
+    setBooks(current => current.filter(item => item.workId !== book.workId))
+  }
+  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, updateTotalPages, recordEvent, addBook, removeBook, getBook }}>{children}</LibraryContext.Provider>
 }
 
 // Este archivo exporta deliberadamente el proveedor y su hook de acceso.

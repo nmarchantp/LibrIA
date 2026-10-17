@@ -4,6 +4,7 @@ import BookDetailPage from './pages/BookDetailPage'
 import BooksPage from './pages/BooksPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import GoogleCallbackPage from './pages/GoogleCallbackPage'
 import ProfilePage from './pages/ProfilePage'
 import ReadingPage from './pages/ReadingPage'
 import RegisterPage from './pages/RegisterPage'
@@ -21,6 +22,7 @@ import LibraryBookPage from './pages/LibraryBookPage'
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
   return <Routes>
+    <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
     <Route element={<SessionGate guest />}>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -36,7 +38,7 @@ export default function App() {
       <Route path="/library" element={<Navigate to="/profile?tab=library" replace />} />
       <Route path="/library/:id" element={<LibraryBookPage />} />
       <Route path="/reading/:id" element={<ReadingPage />} />
-      <Route path="/insights" element={<Navigate to="/profile?tab=analysis" replace />} />
+      <Route path="/insights" element={<GroupInsightsPage />} />
       <Route path="/community-insights" element={<GroupInsightsPage />} />
       <Route path="/events" element={<EventsPage />} />
       <Route path="/messages" element={<MessagesPage />} />

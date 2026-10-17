@@ -1,5 +1,13 @@
 # Arquitectura de LibrIA
 
+El recorrido vigente de ETL, proyecciones incrementales, IA e Insights profesional
+se detalla en [Motor de datos e inteligencia](analytics-pipelines.md).
+
+El [motor de identidad lectora adaptativa](adaptive-reader-ai.md) incorpora una
+cola PostgreSQL en el esquema `ia`, análisis individuales, perfiles versionados
+y correcciones privadas. Su consumidor puede ejecutarse con el servidor o como
+worker Python independiente, manteniendo una sola base de datos.
+
 El [modelo social acordado](social-model.md) define la separación de cuenta y perfil actor, reseñas por perfil y obra, y feed compuesto por publicaciones, reseñas y avances. El módulo social actual todavía es un prototipo y requiere migración para cumplirlo.
 
 ## Decisión

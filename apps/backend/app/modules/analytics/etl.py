@@ -9,11 +9,12 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import text
 
 from app.core.database import engine
+from app.modules.analytics.reader_evidence import extract_personal, publish_personal
 from app.modules.library.schemas import ReadingReflection
 from pydantic import ValidationError
 
 ZONE = ZoneInfo("America/Santiago")
-VERSION = "daily-v3"
+VERSION = "daily-v4-personal"
 LOCK_KEY = 963470014
 
 
@@ -196,8 +197,10 @@ def transform(works, events, posts, entries, reviews=()):
     }, clean_reviews, valuations, clean_reflections
 
 
-def publish(connection, run_id, prepared):
+def publish(connection, run_id, prepared, personal=None):
     catalog, events, posts, indicators, rules, summary, reviews, valuations, reflections = prepared
+    publish_personal(connection, run_id, personal or [])
+    summary = {**summary, "personal_evidence_rows": len(personal or [])}
     statements = (
         (reflections, """INSERT INTO analytics.hechos_reflexiones
             (etl_run_id,source_id,user_id,work_id,occurred_at,provenance,reflection)
@@ -241,6 +244,13 @@ def publish(connection, run_id, prepared):
         actual = connection.execute(text(f"SELECT count(*) FROM analytics.{table} WHERE etl_run_id = :id"), {"id": run_id}).scalar_one()
         if actual != expected:
             raise ValueError("reconciliation_failed")
+    # The same publication transaction also refreshes affected current projections.
+    # A failed extraction rolls back facts and projections together.
+    from sqlalchemy.orm import Session
+    from app.modules.analytics.projections import refresh_pending
+    with Session(bind=connection,join_transaction_mode='create_savepoint') as db:
+        refresh_pending(db)
+        db.commit()
     connection.execute(text("""UPDATE analytics.ejecuciones_etl SET status='succeeded',
         phase='completed', finished_at=now(), error_code=NULL, summary=CAST(:summary AS jsonb) WHERE id=:id"""),
                        {"id": run_id, "summary": json.dumps(summary)})
@@ -275,7 +285,8 @@ def run_day(day: date, *, db_engine=engine, now=None):
             try:
                 with db_engine.connect().execution_options(isolation_level="REPEATABLE READ") as connection:
                     with connection.begin():
-                        summary = publish(connection, run_id, transform(*extract(connection, start, cutoff)))
+                        summary = publish(connection, run_id, transform(*extract(connection, start, cutoff)),
+                                          extract_personal(connection, cutoff))
                 return {"status": "succeeded", "business_date": str(day), "id": str(run_id), "summary": summary}
             except Exception:
                 with lock_connection.begin():
@@ -324,6 +335,7 @@ def run_manual(run_id, *, db_engine=engine):
             with db_engine.connect().execution_options(isolation_level="REPEATABLE READ") as connection:
                 with connection.begin():
                     sources = extract(connection, run["period_start"], run["source_cutoff_at"])
+                    personal = extract_personal(connection, run["source_cutoff_at"])
                     with lock_connection.begin():
                         lock_connection.execute(text("UPDATE analytics.ejecuciones_etl SET phase='transforming' WHERE id=:id"), {"id": run_id})
                     prepared = transform(*sources)
@@ -332,7 +344,7 @@ def run_manual(run_id, *, db_engine=engine):
                     summary=CAST(:summary AS jsonb) WHERE id=:id"""),
                     {"id": run_id, "summary": json.dumps(prepared[5])})
             with db_engine.begin() as connection:
-                publish(connection, run_id, prepared)
+                publish(connection, run_id, prepared, personal)
         except Exception:
             logging.getLogger(__name__).exception("Manual ETL failed: %s", run_id)
             if lock_connection.in_transaction():

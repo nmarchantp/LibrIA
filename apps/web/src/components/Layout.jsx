@@ -31,8 +31,8 @@ export default function Layout() {
         <NavLink to="/events"><CalendarDays size={22} /><span>Eventos</span></NavLink>
         <NavLink to="/messages"><MessageCircle size={22} /><span>Mensajes</span></NavLink>
         <NavLink to="/notifications"><Bell size={22} /><span>Notificaciones</span></NavLink>
-        <NavLink to="/insights"><BrainCircuit size={22} /><span>Tu ADN lector</span></NavLink>
-        {groupAccess && <NavLink to="/community-insights"><BarChart3 size={22} /><span>Pulso de la comunidad</span></NavLink>}
+        <NavLink to="/profile?tab=analysis"><BrainCircuit size={22} /><span>Tu ADN lector</span></NavLink>
+        {groupAccess && <NavLink to="/insights"><BarChart3 size={22} /><span>LibrIA Insights</span></NavLink>}
         <NavLink to="/recommendations"><Sparkles size={22} /><span>Recomendaciones IA</span></NavLink>
         <NavLink to="/profile"><UserRound size={22} /><span>Mi perfil</span></NavLink>
         {user.role === 'admin' && <NavLink to="/admin/profiles"><Settings2 size={22} /><span>Gestionar perfiles</span></NavLink>}

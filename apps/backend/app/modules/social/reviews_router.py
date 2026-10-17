@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
@@ -139,6 +139,20 @@ async def create_review(request: Request, response: Response, user: CurrentUser,
             raise HTTPException(status_code=409, detail="Ya existe una reseña de esta obra") from None
         raise
     return as_review_response(db, review)
+
+
+@router.delete('/{review_id}', status_code=204)
+def delete_own_review(review_id: uuid.UUID, response: Response, user: CurrentUser, db: Database):
+    review = db.scalar(select(Review).where(Review.id == review_id, Review.created_by_user_id == user.id).with_for_update())
+    if review is None:
+        raise HTTPException(404, 'Reseña propia no encontrada')
+    require_actor(db, user, review.author_profile_id)
+    db.execute(text('DELETE FROM app.comentarios_publicacion WHERE review_id=:id'), {'id': review_id})
+    db.execute(text('DELETE FROM app.me_gusta_resena WHERE review_id=:id'), {'id': review_id})
+    db.execute(text('DELETE FROM app.revisiones_resena WHERE review_id=:id'), {'id': review_id})
+    db.delete(review)
+    db.commit()
+    response.headers['Cache-Control'] = 'no-store'
 
 
 @router.get("/{review_id}", response_model=PostResponse)

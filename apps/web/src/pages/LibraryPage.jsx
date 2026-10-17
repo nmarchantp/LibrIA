@@ -4,7 +4,7 @@ import BookCover from '../components/BookCover'
 import { useLibrary } from '../context/LibraryContext'
 
 export default function LibraryPage() {
-  const { books, loading, loadError, updateStatus } = useLibrary()
+  const { books, loading, loadError, updateStatus, removeBook } = useLibrary()
   const [filter, setFilter] = useState('Todos')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -33,7 +33,8 @@ export default function LibraryPage() {
       <select disabled={busy} value={book.status} aria-label={`Estado de ${book.title}`} onChange={event => changeStatus(book, event.target.value)}>
         <option>Leyendo</option><option disabled={book.status !== 'Pendiente'}>Pendiente</option><option disabled={!['Pendiente', 'Leyendo', 'Terminado'].includes(book.status)}>Terminado</option><option disabled>Abandonado</option>
       </select>
+      <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); setError(''); try { await removeBook(book) } catch { setError('No se pudo retirar el libro de tu biblioteca.') } finally { setBusy(false) } }}>Retirar de mi biblioteca</button>
     </article>)}</div>
-    <p className="notice">Para abandonar un libro, indica el motivo en “Registrar avance”.</p>
+    <p className="notice">Puedes abandonar un libro en “Registrar avance”; el motivo es opcional. Al retirar un libro se recalcula tu perfil sin esa experiencia.</p>
   </section>
 }
