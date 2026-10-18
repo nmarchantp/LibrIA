@@ -295,7 +295,15 @@ class VerificationMailTest(unittest.TestCase):
             smtp.login.assert_called_once_with("sender@gmail.com", "abcdefghijklmnop")
             message = smtp.send_message.call_args.args[0]
             self.assertEqual(message["To"], "recipient@gmail.com")
-            self.assertIn("123456", message.get_content())
+            self.assertIn("123456", message.get_body(preferencelist=("plain",)).get_content())
+            html = message.get_body(preferencelist=("html",)).get_content()
+            self.assertIn("123456", html)
+            self.assertIn("5 minutos", html)
+            self.assertIn('src="cid:libriaverse-logo"', html)
+            logo = next(part for part in message.walk() if part.get_content_type() == "image/png")
+            self.assertEqual(logo["Content-ID"], "<libriaverse-logo>")
+            self.assertEqual(logo.get_content_disposition(), "inline")
+            self.assertTrue(logo.get_payload(decode=True).startswith(b"\x89PNG\r\n\x1a\n"))
             self.assertEqual(connection.call_args.args, ("smtp.gmail.com", 465))
 
     def test_missing_credentials_never_reports_delivery(self):
