@@ -9,7 +9,7 @@ import './HomePage.css'
 
 const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
-const roleColors = { lector: '#e8d6ce', influencer: '#dce5d8', autor: '#e7dfed', libreria: '#eedebc', editorial: '#d5e3e8', admin: '#d5e3e8' }
+const roleColors = { lector: 'var(--secondary)', influencer: 'var(--soft)', autor: 'var(--secondary)', libreria: 'var(--soft)', editorial: 'var(--secondary)', admin: 'var(--secondary)' }
 const composerCopy = {
   influencer: { heading: 'Comparte con tu comunidad', hint: 'Publica recomendaciones, lecturas conjuntas o conversaciones sobre libros.', placeholder: '¿Qué recomendarías hoy?' },
   autor: { heading: 'Comparte tu trabajo', hint: 'Publica novedades de tus obras o anuncia un encuentro con lectores.', placeholder: '¿Qué hay de nuevo en tu escritura?' },

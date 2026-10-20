@@ -1,4 +1,4 @@
-import { BookOpen, BrainCircuit, Library, Lightbulb, StickyNote, UserRound } from 'lucide-react'
+import { BookOpen, BrainCircuit, Library, Lightbulb, Palette, StickyNote, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
@@ -7,6 +7,9 @@ import { useLibrary } from '../context/LibraryContext'
 import LibraryPage from './LibraryPage'
 import InsightsPage from './InsightsPage'
 import AccountPage from './AccountPage'
+import ProfileHeader from '../components/ProfileHeader'
+import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
+import ThemeSelector from '../components/ThemeSelector'
 import './ProfilePage.css'
 
 function ProfileActivity({ userId }) {
@@ -31,14 +34,16 @@ function ProfileActivity({ userId }) {
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const { books } = useLibrary()
+  const { books, loading, loadError } = useLibrary()
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
-  const tab = ['activity', 'library', 'analysis', 'account'].includes(requested) ? requested : 'library'
-  const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
-  return <div className="profile-page page-width"><div className="profile-banner"><BookOpen size={64} strokeWidth={1} /><span>Cada lectura cuenta algo de ti.</span></div><header className="profile-heading"><span className="profile-avatar">{initials}</span><div><span className="kicker">MI PERFIL</span><h1>{user.display_name}</h1><p>{user.biography || 'Este es tu espacio para reunir libros, experiencias y descubrimientos.'}</p></div></header>
-    <div className="profile-stats"><span><strong>{books.length}</strong> libros</span><span><strong>{books.filter(book => book.status === 'Leyendo').length}</strong> leyendo</span><span><strong>{books.filter(book => book.status === 'Terminado').length}</strong> terminados</span><small>Biblioteca personal</small></div>
-    <nav className="profile-tabs" aria-label="Secciones de mi perfil">{[['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['account', 'Mi cuenta', UserRound]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams({ tab: value })}><Icon size={18} />{label}</button>)}</nav>
-    <div className="profile-content">{tab === 'library' && <LibraryPage />}{tab === 'analysis' && <InsightsPage />}{tab === 'activity' && <ProfileActivity userId={user.id} />}{tab === 'account' && <AccountPage />}</div>
+  const tab = ['activity', 'library', 'analysis', 'account', 'personalization'].includes(requested) ? requested : 'library'
+  return <div className="profile-page page-width reader-profile">
+    <div className="reader-profile-main">
+      <ProfileHeader key={user.id} user={user} books={books} loading={loading} loadError={loadError} />
+      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['account', 'Mi cuenta', UserRound], ['personalization', 'Personalización', Palette]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
+      <div className="profile-content reader-profile-content">{tab === 'library' && <LibraryPage />}{tab === 'analysis' && <InsightsPage />}{tab === 'activity' && <ProfileActivity userId={user.id} />}{tab === 'account' && <AccountPage />}{tab === 'personalization' && <ThemeSelector />}</div>
+    </div>
+    <ProfilePersonalColumn biography={user.biography} />
   </div>
 }

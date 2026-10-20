@@ -9,7 +9,7 @@ export default function BookCover({ book, large = false }) {
   return (
     <div
       className={`book-cover ${large ? 'book-cover--large' : ''}`}
-      style={{ background: book.color || '#605680', color: book.accent || '#ffffff' }}
+      style={{ background: book.color || 'var(--primary)', color: book.accent || (book.color ? '#ffffff' : 'var(--on-primary)') }}
       aria-label={`Portada de ${book.title}`}
     >
       {hasImage && <img className="book-cover-image" src={book.image} alt="" onError={() => setImageFailed(true)} />}

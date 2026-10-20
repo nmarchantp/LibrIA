@@ -1,9 +1,9 @@
 .book-reviews { margin-top: 32px; }
 .book-reviews h2 { margin-bottom: 18px; }
-.book-review { padding: 20px; margin-bottom: 14px; background: white; border: 1px solid #e0e6e2; border-radius: 12px; }
+.book-review { padding: 20px; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .book-review-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .book-review-heading time, .book-review-unrated { color: var(--muted); font-size: 14px; }
-.book-review-stars { color: var(--primary); font-size: 22px; }
+.book-review-stars { color: var(--accent-text); font-size: 22px; }
 .book-review-dimensions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
 .book-review-dimensions span { padding:5px 8px; border-radius:999px; background:var(--lavender-soft); color:var(--muted); font-size:11px; }
 .book-review p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; margin-top: 10px; }
