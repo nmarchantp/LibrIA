@@ -1,0 +1,14 @@
+.profile-personalization { padding:28px 4px; }
+.profile-personalization h2 { margin:8px 0 12px; font:36px 'DM Serif Display',serif; color:var(--ink); }
+.profile-personalization>p { max-width:560px; color:var(--muted); line-height:1.65; }
+.theme-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:26px; }
+.theme-option { border:2px solid var(--line); border-radius:16px; padding:16px; background:var(--surface); color:var(--ink); text-align:left; cursor:pointer; box-shadow:var(--shadow); }
+.theme-option:hover { border-color:var(--accent-text); }
+.theme-option[aria-pressed="true"] { border-color:var(--accent-text); background:var(--lavender-soft); }
+.theme-swatches { display:flex; height:58px; border:1px solid var(--line); overflow:hidden; border-radius:9px; }
+.theme-swatches>span { flex:1; }
+.theme-option-name { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:14px; font-weight:700; }
+.theme-option-status { display:block; margin-top:6px; color:var(--muted); font-size:12px; }
+.profile-personalization .theme-help { font-size:12px; margin-top:24px; }
+@media(max-width:700px) { .theme-options { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } }
+@media(max-width:380px) { .theme-options { grid-template-columns:1fr; } }

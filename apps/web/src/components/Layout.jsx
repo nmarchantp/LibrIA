@@ -1,8 +1,10 @@
-import { Bell, BookOpen, BrainCircuit, CalendarDays, Compass, Database, Home, Library, LogOut, MessageCircle, Settings2, Sparkles, UserRound, BarChart3, Menu, X } from 'lucide-react'
+import { Bell, BrainCircuit, CalendarDays, Compass, Database, Home, Library, LogOut, MessageCircle, Settings2, Sparkles, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import BrandLogo from './BrandLogo'
+
 
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
 
@@ -21,8 +23,7 @@ export default function Layout() {
   return <div className="social-shell">
     <a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className="social-sidebar">
-      <NavLink className="brand" to="/" aria-label="LibrIA, mural"><span className="brand-icon"><BookOpen size={21} /></span><span>Libr<span>IA</span></span></NavLink>
-      <p className="sidebar-caption">Historias que nos conectan</p>
+      <NavLink className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /></NavLink>
       <button className="mobile-nav-toggle" type="button" aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
       <nav id="main-navigation" className={`social-nav${menuOpen ? ' social-nav--open' : ''}`} aria-label="Navegación principal" onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }} onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector('.mobile-nav-toggle')?.focus() } }}>
         <NavLink to="/" end><Home size={22} /><span>Mural</span></NavLink>
