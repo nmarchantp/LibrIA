@@ -11,17 +11,17 @@
   align-items: center;
   border-radius: 999px;
   padding: 3px 8px;
-  background: #e8d6ce;
-  color: #51443f;
+  background: var(--secondary);
+  color: var(--ink);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 }
-.user-role-badge.role-influencer { background: #dce5d8; color: #274c35; }
-.user-role-badge.role-autor { background: #e7dfed; color: #624b70; }
-.user-role-badge.role-libreria { background: #eedebc; color: #72552e; }
-.user-role-badge.role-admin { background: #d5e3e8; color: #244e5c; }
+.user-role-badge.role-influencer { background: var(--secondary); color: var(--ink); }
+.user-role-badge.role-autor { background: var(--secondary); color: var(--ink); }
+.user-role-badge.role-libreria { background: var(--secondary); color: var(--ink); }
+.user-role-badge.role-admin { background: var(--secondary); color: var(--ink); }
 
 .comments-toggle {
   display: inline-flex;
@@ -43,7 +43,7 @@
 .comments-state { margin: 0; color: var(--muted); font-size: 12px; }
 
 .comment-item {
-  background: #f7f5ef;
+  background: var(--soft);
   border-radius: 8px;
   padding: 12px 14px;
 }
@@ -59,7 +59,7 @@
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: white;
+  background: var(--surface);
   padding: 11px 12px;
   resize: vertical;
   font-size: 13px;
@@ -67,12 +67,12 @@
 .comment-form textarea:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .comment-form .button { justify-self: start; }
 .comment-form .button:disabled { opacity: .55; cursor: not-allowed; }
-.comment-error { margin: 0; color: #a52f26; font-size: 12px; }
+.comment-error { margin: 0; color: var(--error-text); font-size: 12px; }
 .post-composer { display: grid; gap: 12px; padding: 20px; margin: 0 0 26px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .post-composer h2 { margin: 0; font: 23px 'DM Serif Display', serif; }
 .post-composer .composer-hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .post-composer label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
-.post-composer input, .post-composer textarea, .post-composer select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: white; font: inherit; }
+.post-composer input, .post-composer textarea, .post-composer select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font: inherit; }
 .post-composer textarea { resize: vertical; }
 .post-composer .button { justify-self: start; }
 .composer-counter { justify-self: end; margin-top: -10px; color: var(--muted); font-size: 11px; }
@@ -80,7 +80,7 @@
 .selected-images li { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; }
 .selected-images button { display: inline-flex; align-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
 .post-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 14px; }
-.post-images img { width: 100%; max-height: 340px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #f0ede6; }
+.post-images img { width: 100%; max-height: 340px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: var(--soft); }
 .post-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 18px; }
 .post-actions button { display: inline-flex; align-items: center; gap: 7px; padding: 5px 0; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
 .post-actions button[aria-pressed="true"] { color: var(--orange); }

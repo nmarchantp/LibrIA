@@ -1,0 +1,9 @@
+.brand-logo { display:block; width:100%; height:auto; overflow:visible; color:var(--ink); }
+.brand-logo-word { font-family:Cambria, Georgia, serif; font-size:76px; font-weight:700; fill:currentColor; }
+.brand-logo-ai { fill:var(--primary); }
+.brand-logo-star { fill:var(--accent); }
+.brand-logo-star-glint { fill:none; stroke:var(--surface); stroke-width:1.25; stroke-linecap:round; }
+.brand-logo-orbit { fill:none; stroke:var(--accent); stroke-width:.45; }
+.brand-logo-tagline { font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; letter-spacing:2.6px; fill:currentColor; }
+.social-sidebar .brand-link { display:block; flex:0 0 auto; width:100%; max-width:220px; margin:0 0 16px; padding:0; line-height:0; }
+@media(max-width:700px) { .social-sidebar .brand-link { width:clamp(130px,46vw,190px); max-width:190px; margin:0; } }
