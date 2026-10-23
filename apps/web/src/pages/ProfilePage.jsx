@@ -3,13 +3,14 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { useLibrary } from '../context/LibraryContext'
 import LibraryPage from './LibraryPage'
 import InsightsPage from './InsightsPage'
 import AccountPage from './AccountPage'
 import ProfileHeader from '../components/ProfileHeader'
 import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
+import ProfileAboutSection from '../components/ProfileAboutSection'
 import ThemeSelector from '../components/ThemeSelector'
+import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
 import './ProfilePage.css'
 
 function ProfileActivity({ userId }) {
@@ -34,16 +35,38 @@ function ProfileActivity({ userId }) {
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const { books, loading, loadError } = useLibrary()
+  const preferences = useLiteraryPreferences()
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
-  const tab = ['activity', 'library', 'analysis', 'account', 'personalization'].includes(requested) ? requested : 'library'
+  const tab = ['about', 'activity', 'library', 'analysis', 'account', 'personalization'].includes(requested) ? requested : 'about'
+  // Only the active panel is mounted; leaving the library removes its entire tree.
+  let activeContent
+  switch (tab) {
+    case 'library':
+      activeContent = <LibraryPage />
+      break
+    case 'analysis':
+      activeContent = <InsightsPage />
+      break
+    case 'activity':
+      activeContent = <ProfileActivity userId={user.id} />
+      break
+    case 'account':
+      activeContent = <AccountPage biography={preferences.data?.biography} />
+      break
+    case 'personalization':
+      activeContent = <ThemeSelector />
+      break
+    default:
+      activeContent = <ProfileAboutSection key={user.id} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+  }
+
   return <div className="profile-page page-width reader-profile">
     <div className="reader-profile-main">
-      <ProfileHeader key={user.id} user={user} books={books} loading={loading} loadError={loadError} />
-      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['account', 'Mi cuenta', UserRound], ['personalization', 'Personalización', Palette]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
-      <div className="profile-content reader-profile-content">{tab === 'library' && <LibraryPage />}{tab === 'analysis' && <InsightsPage />}{tab === 'activity' && <ProfileActivity userId={user.id} />}{tab === 'account' && <AccountPage />}{tab === 'personalization' && <ThemeSelector />}</div>
+      <ProfileHeader key={user.id} user={user} />
+      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['account', 'Mi cuenta', UserRound], ['personalization', 'Personalización', Palette]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
+      <div key={tab} className="profile-content reader-profile-content">{activeContent}</div>
     </div>
-    <ProfilePersonalColumn biography={user.biography} />
+    <ProfilePersonalColumn key={user.id} preferences={preferences.data} />
   </div>
 }
