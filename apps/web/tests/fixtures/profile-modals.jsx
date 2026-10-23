@@ -17,8 +17,10 @@ const intensities = [['romance', 'Romance', 'heart'], ['spicy', 'Spicy', 'flame'
 let preferences = { id: 'fixture', profile_id: 'fixture', display_name: 'Perfil de prueba', avatar_url: null, biography: 'Historia guardada', genres: genres.slice(0, 5), tropes: tropes.slice(0, 5), intensities: intensities.slice(0, 5).map(item => ({ ...item, level: 3 })), featured_category_id: 'terror' }
 window.profileModalTest = { saves: [], attempts: [], failSave: false, failCatalog: false, delay: 50 }
 const qa = window.profileModalTest
+const fixtureParams = new URLSearchParams(location.search)
+const fixtureRole = fixtureParams.get('role') || 'lector'
 localStorage.setItem('libria_token', 'isolated-ui-test')
-authService.me = async () => ({ id: 'fixture', display_name: 'Perfil de prueba', role: 'lector', email: 'fixture@example.com', created_at: '2026-01-02', capabilities: [] })
+authService.me = async () => ({ id: 'fixture', display_name: 'Perfil de prueba', role: fixtureRole, email: 'fixture@example.com', created_at: '2026-01-02', capabilities: [] })
 profileService.mine = async () => preferences
 profileService.community = async () => preferences
 profileService.catalogs = async () => {
@@ -43,6 +45,6 @@ profileService.save = async fields => {
   return preferences
 }
 const realFetch = window.fetch
-window.fetch = (url, options) => String(url).includes('/api/') ? Promise.resolve(new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } })) : realFetch(url, options)
+window.fetch = (url, options) => String(url).includes('/api/') ? Promise.resolve(new Response(String(url).includes('/analytics/access') ? JSON.stringify({ group: fixtureParams.has('group') }) : '[]', { status: 200, headers: { 'Content-Type': 'application/json' } })) : realFetch(url, options)
 history.replaceState(null, '', location.search.includes('public') ? '/profiles/fixture' : '/profile')
 createRoot(document.getElementById('root')).render(<StrictMode><BrowserRouter><AuthProvider><ThemeProvider><LibraryProvider><App /></LibraryProvider></ThemeProvider></AuthProvider></BrowserRouter></StrictMode>)

@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:profile-modals": "node --experimental-websocket tests/profile-edit-modals.mjs",
+    "test:navigation": "node --experimental-websocket tests/main-navigation.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
