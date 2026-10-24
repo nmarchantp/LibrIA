@@ -35,7 +35,7 @@ export function LibraryProvider({ children }) {
         setBooks(current => {
           const existing = new Set(current.map(book => String(book.id)))
           const restored = data.filter(item => !existing.has(item.book_ref)).map(item => withReading({
-            id: item.book_ref, title: item.book_title, author: '', color: '#173f35',
+            id: item.book_ref, title: item.book_title, originalTitle: item.book_title, author: '', color: '#173f35',
             accent: '#ffb65c', initial: item.book_title.charAt(0).toUpperCase(),
             ...(item.catalog_volume ? normalizeGoogleBook(item.catalog_volume) : {}),
           }, item))
@@ -57,12 +57,12 @@ export function LibraryProvider({ children }) {
     }
     const result = await apiRequest('/readings/events', {
       method: 'POST', headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, edition_id: book.editionId || null, page_count: pageCount, event, ...extra, reading_id: event === 'start' ? null : book.readingId }),
+      body: JSON.stringify({ book_ref: String(book.id), book_title: book.originalTitle || book.title, edition_id: book.editionId || null, page_count: pageCount, event, ...extra, reading_id: event === 'start' ? null : book.readingId }),
     })
     if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
     const status = { start: 'Leyendo', progress: 'Leyendo', correction: 'Leyendo', finish: 'Terminado', abandon: 'Abandonado' }[event]
     readings.current[String(book.id)] = {
-      reading_id: result.reading_id, book_ref: String(book.id), book_title: book.title, status: result.status,
+      reading_id: result.reading_id, book_ref: String(book.id), book_title: book.originalTitle || book.title, status: result.status,
       work_id: result.work_id, edition_id: result.edition_id,
       progress_percent: result.progress_percent, current_page: result.current_page, total_pages: result.total_pages,
       reflection: result.reflection,
@@ -96,6 +96,10 @@ export function LibraryProvider({ children }) {
       method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ total_pages: Number(totalPages) }),
     })
+    if (readings.current[String(book.id)]) {
+      readings.current[String(book.id)] = { ...readings.current[String(book.id)],
+        total_pages: result.total_pages, current_page: result.current_page, progress_percent: result.progress_percent }
+    }
     setBooks(current => current.map(item => String(item.id) === String(id) ? {
       ...item, pageCount: result.total_pages, currentPage: result.current_page, progress: result.progress_percent,
     } : item))
@@ -107,7 +111,7 @@ export function LibraryProvider({ children }) {
     if (!token) throw new Error('Inicia sesion para agregar libros.')
     const reading = await apiRequest('/readings/library', {
       method: 'POST', headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_ref: String(book.id), book_title: book.title, edition_id: book.editionId || null, page_count: book.pageCount || null }),
+      body: JSON.stringify({ book_ref: String(book.id), book_title: book.originalTitle || book.title, edition_id: book.editionId || null, page_count: book.pageCount || null }),
     })
     if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
     readings.current[String(book.id)] = reading
@@ -116,7 +120,8 @@ export function LibraryProvider({ children }) {
       : [...current, withReading(book, reading)])
     return reading
   }, [])
-  const getBook = useCallback((id) => books.find(book => String(book.id) === String(id))
+  const getBook = useCallback((id) => books.find(book => [book.id, book.workId, book.externalId, book.rawVolume?.id]
+    .some(reference => reference != null && String(reference) === String(id)))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])
   const removeBook = async book => {
     await apiRequest(`/readings/library/${book.workId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })

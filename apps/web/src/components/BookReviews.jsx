@@ -1,8 +1,10 @@
+import { ratingDimensionLabels as dimensionLabels } from '../data/ratingDimensions'
+import RatingStar from './RatingStar'
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import './BookReviews.css'
 
-const dimensionLabels = { plot_twist: 'Plot twist', tears: 'Lágrimas', romance: 'Romance', spicy: 'Spicy', action: 'Acción', world_building: 'World building', pace: 'Ritmo' }
+
 
 export default function BookReviews({ bookRef }) {
   const [reviews, setReviews] = useState([])
@@ -37,7 +39,7 @@ export default function BookReviews({ bookRef }) {
     {!loading && !error && reviews.length === 0 && <p>Aún no hay reseñas publicadas de este libro.</p>}
     {reviews.map(review => <article className="book-review" key={review.id}>
       <div className="book-review-heading"><strong>{review.author}</strong><time dateTime={review.published_at}>{new Date(review.published_at).toLocaleDateString('es-CL')}</time></div>
-      {review.rating != null ? <span className="book-review-stars" role="img" aria-label={`${review.rating} de 5 estrellas`}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span> : <span className="book-review-unrated">Sin valoración</span>}
+      {review.rating != null ? <span className="book-review-stars" role="img" aria-label={`${review.rating} de 5 estrellas`}>{[1, 2, 3, 4, 5].map(score => <RatingStar key={score} size={22} fraction={review.rating - score + 1} />)}</span> : <span className="book-review-unrated">Sin valoración</span>}
       {Object.keys(review.dimension_ratings || {}).length > 0 && <div className="book-review-dimensions">
         {Object.entries(review.dimension_ratings).map(([key, value]) => <span key={key}><strong>{dimensionLabels[key] || key}</strong> {value}/5</span>)}
       </div>}

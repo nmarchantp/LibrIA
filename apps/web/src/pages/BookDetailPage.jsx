@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
-import { BookOpen, ChevronLeft, ChevronRight, CircleSlash2, Star, Users } from 'lucide-react'
+import BookCategoryChips from '../components/BookCategoryChips'
+import { normalizeBookCategories } from '../components/bookCategories'
+import BookSynopsisModal from '../components/BookSynopsisModal'
+import { parseBookSynopsis } from '../components/bookSynopsis'
+import RatingStar from '../components/RatingStar'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowUpRight, Ban, Barcode, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, CircleSlash2, Clock3, FileText, Globe2, Landmark, UserRound, Users } from 'lucide-react'
 import { Navigate, Link, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
 import BookReviews from '../components/BookReviews'
@@ -14,8 +19,8 @@ function RatingStars({ value }) {
   const rating = Number(value) || 0
   return <span className="detail-rating-stars" role="img" aria-label={`${rating} de 5 estrellas`}>
     {[1, 2, 3, 4, 5].map(star => <span className="detail-rating-star" key={star}>
-      <Star aria-hidden="true" />
-      <span style={{ width: `${Math.max(0, Math.min(1, rating - star + 1)) * 100}%` }}><Star aria-hidden="true" /></span>
+      <RatingStar />
+      <span style={{ width: `${Math.max(0, Math.min(1, rating - star + 1)) * 100}%` }}><RatingStar selected /></span>
     </span>)}
   </span>
 }
@@ -35,23 +40,35 @@ export default function BookDetailPage() {
   const [detailBook, setDetailBook] = useState(null)
   const [statusError, setStatusError] = useState('')
   const [adding, setAdding] = useState(false)
+  const [synopsisOpen, setSynopsisOpen] = useState(false)
 
   useEffect(() => {
     const existingBook = getBook(id)
-    if (existingBook && !existingBook.rawVolume && (String(id).includes(':') || /^\d+$/.test(id))) {
-      setDetailBook(existingBook)
-      setLoading(false)
-      return
-    }
     let active = true
-    getGoogleBookById(id).then(remoteBook => {
-      if (active && remoteBook) setDetailBook(remoteBook)
-    }).catch(() => {
-      if (active) setDetailBook(existingBook || null)
-    }).finally(() => {
-      if (active) setLoading(false)
-    })
-    return () => { active = false }
+    let request = 0
+    const refresh = () => {
+      const current = ++request
+      getGoogleBookById(id).then(remoteBook => {
+        if (active && current === request && remoteBook) setDetailBook(remoteBook)
+      }).catch(() => {
+        if (active && current === request) setDetailBook(previous =>
+          previous && [previous.id, previous.workId, previous.externalId, previous.rawVolume?.id].includes(id)
+            ? previous : existingBook || null)
+      }).finally(() => {
+        if (active && current === request) setLoading(false)
+      })
+    }
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh() }
+    refresh()
+    window.addEventListener('libria:book-activity-changed', refresh)
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      active = false
+      window.removeEventListener('libria:book-activity-changed', refresh)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [id, getBook])
 
   const libraryBook = getBook(id)
@@ -63,12 +80,15 @@ export default function BookDetailPage() {
     } : {}),
   } : libraryBook
 
+  const synopsis = useMemo(() => parseBookSynopsis(book?.description), [book?.description])
+
   const selectEdition = editionId => {
     const edition = detailBook?.editions?.find(item => item.id === editionId)
     if (!edition) return
     setDetailBook(current => ({
       ...current, editionId: edition.id, externalId: edition.externalId,
-      title: edition.title || current.title, language: edition.language || current.language,
+      title: edition.title || current.title, originalTitle: edition.originalTitle || edition.title || current.originalTitle,
+      language: edition.language || current.language,
       publisher: edition.publisher || 'Editorial desconocida', publishedDate: edition.publishedDate || '',
       pageCount: edition.pageCount || null, printType: edition.format || 'BOOK',
       isbn: edition.isbn13 || edition.isbn10 || '', image: edition.coverUrl || null,
@@ -92,31 +112,58 @@ export default function BookDetailPage() {
   const ratingsCount = Number(book.ratingsCount) || 0
   const firstAuthor = book.authors?.[0] || book.author
   const details = [
-    ['Editorial', book.publisher], ['Publicación', book.publishedDate || book.year],
-    ['Páginas', book.pageCount ? `${book.pageCount} páginas` : null],
-    ['Idioma', languageNames[book.language] || book.language?.toUpperCase()],
-    ['Formato', formatNames[book.printType] || book.printType], ['ISBN', book.isbn],
+    ['Editorial', book.publisher, Landmark], ['Publicación', book.publishedDate, CalendarDays],
+    ['Páginas', book.pageCount ? `${book.pageCount} páginas` : null, FileText],
+    ['Idioma', languageNames[book.language] || book.language?.toUpperCase(), Globe2],
+    ['Formato', formatNames[book.printType] || book.printType, BookOpen], ['ISBN', book.isbn, Barcode],
   ]
+
+  const statusClass = { Terminado: 'finished', Leyendo: 'reading', Pendiente: 'pending', Abandonado: 'abandoned' }[book.status]
+  const StatusIcon = { Terminado: Check, Leyendo: BookOpen, Pendiente: Clock3, Abandonado: CircleSlash2 }[book.status] || BookOpen
+  const formattedRating = rating.toLocaleString('es-CL', { maximumFractionDigits: 2 })
+  const catalogCategories = book.rawVolume?.volumeInfo?.categories
+  const categories = normalizeBookCategories(catalogCategories?.length ? catalogCategories : (book.categories || []), book.tropes || [])
 
   return <section className="page-width page book-detail-page">
     <article className="detail-hero">
-      <div className="detail-cover-wrap"><BookCover book={book} large /></div>
+      <div className="detail-cover-wrap"><BookCover book={book} large />
+        <Link className="detail-author-link" to={`/books?by=author&q=${encodeURIComponent(firstAuthor || '')}`} aria-label="Ver más del mismo autor" title="Ver más del mismo autor"><UserRound aria-hidden="true" /><span>Más del autor</span><ArrowUpRight aria-hidden="true" /></Link>
+      </div>
       <div className="detail-intro">
-        <span className="kicker">{book.status || 'DETALLE DEL LIBRO'}</span>
+        <div className="detail-intro-copy">
+        <BookCategoryChips key={book.id} categories={categories} />
         <h1>{book.title}</h1>
         {book.subtitle && <p className="detail-subtitle">{book.subtitle}</p>}
-        <p className="detail-byline"><strong>{book.author}</strong> · {book.year || book.publishedDate || 'Año no informado'}</p>
-        <div className="detail-actions">
-          {libraryBook?.readingId
-            ? <Link className="button primary" to={`/library/${encodeURIComponent(book.id)}`}><BookOpen aria-hidden="true" />Ver en mi biblioteca</Link>
-            : <button className="button primary" type="button" onClick={addToLibrary} disabled={adding}>
-              <BookOpen aria-hidden="true" />{adding ? 'Agregando…' : 'Agregar a biblioteca'}
-            </button>}
-          <Link className="button detail-secondary" to={`/books?by=author&q=${encodeURIComponent(firstAuthor)}`}>Ver más del mismo autor</Link>
+        <p className="detail-byline"><span>{book.author || 'Autor no disponible'}</span>{book.year && <span className="detail-publication-year"> · {book.year}</span>}
+        {libraryBook && statusClass && <span className={`detail-reading-status ${statusClass}`}><StatusIcon size={14} aria-hidden="true" />{book.status}</span>}
+        </p>
+        <div className="detail-synopsis-preview">{synopsis.text || 'Este libro no tiene una sinopsis disponible.'}</div>
+        {synopsis.text && <button className="detail-synopsis-more" type="button" onClick={() => setSynopsisOpen(true)}>Ver más<ChevronDown size={17} aria-hidden="true" /></button>}
         </div>
-        {statusError && <p className="detail-error" role="alert">{statusError}</p>}
+    <div className="detail-intro-footer">
+    <div className="detail-actions">
+      {libraryBook?.readingId
+        ? <Link className="detail-library-action" to={`/library/${encodeURIComponent(book.id)}`}><span className="detail-action-surface"><BookOpen aria-hidden="true" />Ver en mi biblioteca<ArrowUpRight aria-hidden="true" /></span></Link>
+        : <button className="detail-library-action" type="button" onClick={addToLibrary} disabled={adding}><span className="detail-action-surface"><BookOpen aria-hidden="true" />{adding ? 'Agregando…' : 'Agregar a biblioteca'}<ArrowUpRight aria-hidden="true" /></span></button>}
+    </div>
+    {statusError && <p className="detail-error" role="alert">{statusError}</p>}
+    </div>
+
       </div>
+      <aside className="detail-community" aria-labelledby="rating-title">
+        <h2 id="rating-title"><Users size={19} aria-hidden="true" />VALORACIÓN DE LA COMUNIDAD</h2>
+        <div className="rating-line"><RatingStars value={rating} /><strong>{formattedRating}<small> / 5</small></strong></div>
+        <p className="detail-rating-count">{ratingsCount.toLocaleString('es-CL')} {ratingsCount === 1 ? 'valoración' : 'valoraciones'}</p>
+        <div className="reader-counts">
+          <div className="reader-count-finished"><CircleCheck aria-hidden="true" /><strong>{Number(stats.finished ?? 0).toLocaleString('es-CL')}</strong><span>Lo leyeron</span></div>
+          <div><BookOpen aria-hidden="true" /><strong>{Number(stats.reading ?? 0).toLocaleString('es-CL')}</strong><span>Leyendo</span></div>
+          <div className="reader-count-abandoned"><Ban aria-hidden="true" /><strong>{Number(stats.abandoned ?? 0).toLocaleString('es-CL')}</strong><span>Abandonaron</span></div>
+        </div>
+        {stats.readerPreview?.length > 0 && <div className="reader-avatars" aria-label="Lectores que terminaron este libro">{stats.readerPreview.map((reader, index) => <ReaderAvatar reader={reader} key={`${reader.displayName}-${index}`} />)}</div>}
+      </aside>
+      <dl className="book-data-grid" aria-label="Ficha técnica">{details.map(([label, value, Icon]) => <div key={label}><Icon aria-hidden="true" /><dt>{label}</dt><dd>{value || 'No disponible'}</dd></div>)}</dl>
     </article>
+    {synopsisOpen && <BookSynopsisModal title={book.title} onClose={() => setSynopsisOpen(false)}>{synopsis.content}</BookSynopsisModal>}
 
     {editions.length > 0 && <section className="detail-section editions-section" aria-labelledby="editions-title">
       <div className="detail-section-heading">
@@ -138,38 +185,6 @@ export default function BookDetailPage() {
       </div>
     </section>}
 
-    <section className="detail-section detail-social" aria-labelledby="rating-title">
-      <div className="detail-rating">
-        <span className="kicker">COMUNIDAD</span><h2 id="rating-title">Valoración del libro</h2>
-        <div className="rating-line"><strong>{rating ? rating.toFixed(1) : '0'} / 5</strong><RatingStars value={rating} /></div>
-        <p>{ratingsCount.toLocaleString('es-CL')} {ratingsCount === 1 ? 'valoración' : 'valoraciones'}</p>
-      </div>
-      <div className="reader-summary-block">
-        <div className="reader-avatars" aria-label="Lectores que terminaron este libro">
-          {stats.readerPreview?.map((reader, index) => <ReaderAvatar reader={reader} key={`${reader.displayName}-${index}`} />)}
-          {!stats.readerPreview?.length && <span className="reader-avatar-empty"><Users aria-hidden="true" /></span>}
-        </div>
-        <div className="reader-counts">
-          <div><BookOpen aria-hidden="true" /><strong>{stats.finished}</strong><span>lo leyeron</span></div>
-          <div><Users aria-hidden="true" /><strong>{stats.reading}</strong><span>leyendo</span></div>
-          <div><CircleSlash2 aria-hidden="true" /><strong>{stats.abandoned}</strong><span>lo abandonaron</span></div>
-        </div>
-      </div>
-    </section>
-
     <BookReviews key={id} bookRef={id} />
-
-    <section className="detail-section" aria-labelledby="book-data-title">
-      <span className="kicker">FICHA TÉCNICA</span><h2 id="book-data-title">Detalle del libro</h2>
-      <dl className="book-data-grid">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'No informado'}</dd></div>)}</dl>
-    </section>
-
-    <section className="detail-section synopsis-section" aria-labelledby="synopsis-title">
-      <span className="kicker">SOBRE EL LIBRO</span><h2 id="synopsis-title">Sinopsis</h2>
-      <div className="synopsis-copy">{book.description || 'Este libro no tiene una sinopsis disponible.'}</div>
-      <div className="genre-tags" aria-label="Géneros del libro">
-        {(book.categories?.length ? book.categories : ['Sin género informado']).map(category => <span key={category}>{category}</span>)}
-      </div>
-    </section>
   </section>
 }

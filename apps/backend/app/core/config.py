@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, ge=1, le=1440)
     google_books_api_key: str = ""
+    open_library_contact: str = ""
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
@@ -55,7 +56,16 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         """Convierte la lista separada por comas al formato esperado por CORS."""
-        return [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
+        if self.app_env in {"development", "test"}:
+            for origin in list(origins):
+                parsed = urlparse(origin)
+                if parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"} and parsed.port == 5173:
+                    alias = "127.0.0.1" if parsed.hostname == "localhost" else "localhost"
+                    equivalent = f"http://{alias}:5173"
+                    if equivalent not in origins:
+                        origins.append(equivalent)
+        return origins
 
 
 @lru_cache

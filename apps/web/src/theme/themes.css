@@ -44,6 +44,7 @@
   --info-bg:#f0f5fc;
   --info-line:#becfe4;
   --rating:#946500;
+  --rating-star-color:var(--primary);
   color:var(--ink);
   background:var(--paper);
 }
@@ -65,6 +66,7 @@
   --info-bg:#27374d;
   --info-line:#6f8eb4;
   --rating:#f4bf45;
+  --rating-star-color:color-mix(in srgb,var(--accent) 80%,white);
 }
 /* New variants only: original light palettes and Dark retain every role above. */
 :root[data-theme="dark-rosado"] {

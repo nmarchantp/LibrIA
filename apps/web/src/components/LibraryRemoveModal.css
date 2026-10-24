@@ -1,0 +1,26 @@
+.reader-profile-modal.reader-remove-confirmation {
+  width:min(440px,calc(100vw - 32px));
+  max-width:440px;
+}
+.reader-remove-confirmation .reader-modal-heading { padding:18px 20px; align-items:center; }
+.reader-remove-confirmation .reader-modal-heading h2 { margin:0; font-size:24px; }
+.reader-remove-confirmation .reader-modal-fields { gap:16px; padding:20px; }
+.reader-remove-confirmation .reader-remove-book-summary { display:grid; grid-template-columns:76px minmax(0,1fr); align-items:center; gap:16px; min-width:0; }
+.reader-remove-confirmation .reader-remove-book-summary .book-cover { width:76px; height:auto; aspect-ratio:2/3; padding:8px 5px; transform:none; }
+.reader-remove-confirmation .reader-remove-book-summary .cover-title { font-size:10px; overflow-wrap:anywhere; }
+.reader-remove-confirmation .reader-remove-book-summary .cover-author { font-size:6px; }
+.reader-remove-confirmation .reader-remove-book-summary>div:last-child { min-width:0; }
+.reader-remove-confirmation .reader-remove-book-summary h3 { margin:0; color:var(--ink); font:600 16px/1.4 'DM Sans',sans-serif; overflow-wrap:anywhere; }
+.reader-remove-confirmation .reader-remove-book-summary p { margin:5px 0 0; color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+.reader-remove-confirmation .reader-modal-fields>p { font-size:13px; line-height:1.65; }
+.reader-remove-confirmation .reader-modal-footer { padding:15px 20px; }
+.reader-remove-confirmation .reader-modal-footer .reader-remove-confirm-button { border-color:var(--error-line); background:color-mix(in srgb,var(--error-bg) 84%,var(--surface)); color:var(--error-text); }
+.reader-remove-confirmation .reader-modal-footer .reader-remove-confirm-button:hover:not(:disabled) { border-color:var(--error-text); background:var(--error-bg); }
+.reader-remove-confirmation :is(.reader-modal-close,.reader-modal-footer button):focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+@media(max-width:380px) {
+  .reader-remove-confirmation .reader-modal-heading { padding:16px; }
+  .reader-remove-confirmation .reader-modal-fields { padding:16px; gap:14px; }
+  .reader-remove-confirmation .reader-modal-footer { padding:13px 16px; }
+  .reader-remove-confirmation .reader-remove-book-summary { grid-template-columns:64px minmax(0,1fr); gap:12px; }
+  .reader-remove-confirmation .reader-remove-book-summary .book-cover { width:64px; }
+}
