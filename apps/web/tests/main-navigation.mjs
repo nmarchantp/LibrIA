@@ -90,7 +90,7 @@ try {
     assert.equal(await evaluate(`document.querySelectorAll('.navigation-tools-menu a').length`), expected)
     await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 700, deviceScaleFactor: 1, mobile: true })
     await click('.navigation-tools summary')
-    assert.equal(await evaluate(`(() => {const brand=document.querySelector('.brand-link').getBoundingClientRect();const toggle=document.querySelector('.mobile-nav-toggle').getBoundingClientRect();const header=document.querySelector('.social-topbar').getBoundingClientRect();const menu=document.querySelector('.navigation-tools-menu').getBoundingClientRect();return brand.right<=toggle.left+1&&toggle.right<=header.left+1&&menu.left>=0&&menu.right<=innerWidth&&document.documentElement.scrollWidth<=innerWidth})()`), true, `Privileged mobile header at ${options}`)
+    assert.equal(await evaluate(`(() => {const brand=document.querySelector('.brand-link').getBoundingClientRect();const toggle=document.querySelector('.mobile-nav-toggle').getBoundingClientRect();const header=document.querySelector('.global-header-actions').getBoundingClientRect();const menu=document.querySelector('.navigation-tools-menu').getBoundingClientRect();return brand.right<=toggle.left+1&&toggle.right<=header.left+1&&menu.left>=0&&menu.right<=innerWidth&&document.documentElement.scrollWidth<=innerWidth})()`), true, `Privileged mobile header at ${options}`)
     await evaluate(`document.querySelector('.navigation-tools summary').focus()`)
     await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
     await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })

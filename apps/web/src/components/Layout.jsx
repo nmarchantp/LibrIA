@@ -8,6 +8,7 @@ import NavigationIcon from './NavigationIcon'
 import NavigationGalaxy from './NavigationGalaxy'
 import MessageBubbleIcon from './MessageBubbleIcon'
 import NotificationBellIcon from './NotificationBellIcon'
+import HeaderGreeting from './HeaderGreeting'
 import './LayoutNavigation.css'
 
 
@@ -63,7 +64,7 @@ export default function Layout() {
       </div>
     </aside>
     <div className="social-page-column">
-      <header className="social-topbar"><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
+      <header className="social-topbar"><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
         <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
         {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>

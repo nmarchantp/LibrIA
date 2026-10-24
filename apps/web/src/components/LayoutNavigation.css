@@ -12,7 +12,9 @@
 /* Only outer page containers share the gutter; embedded profile tabs retain theirs. */
 .social-shell .social-main > :is(.page-width,.mural-layout) { width:min(var(--main-max-width),calc(100% - 2 * var(--main-gutter))); max-width:var(--main-max-width); margin-inline:auto; }
 .social-topbar { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:flex-end; width:100%; min-height:64px; padding:8px max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)); border:0; background:var(--paper); box-shadow:none; }
-.global-header-actions { display:flex; align-items:center; gap:8px; }
+.header-greeting { min-width:0; margin-right:auto; padding-right:16px; position:relative; top:4px; }
+.header-greeting-title { margin:0; color:var(--orange); font:700 13px/1.5 'DM Sans',sans-serif; letter-spacing:.15em; text-transform:uppercase; overflow-wrap:anywhere; }
+.global-header-actions { display:flex; flex-shrink:0; align-items:center; gap:8px; }
 .global-header-action { position:relative; display:grid; flex-shrink:0; place-items:center; width:44px; height:44px; border:1px solid transparent; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; transition:background .15s,color .15s; }
 .global-header-action:hover { background:var(--soft); color:var(--ink); }
 .message-bubble-icon,.notification-bell-icon { width:28px; height:28px; }
@@ -57,7 +59,8 @@
   .sidebar-navigation .sidebar-account { margin:14px 0 0; padding:16px 10px 0; border-top:1px solid var(--line); }
   .sidebar-navigation .sidebar-account .account-link { display:flex; }
   .sidebar-navigation .logout-button { font-size:12px; padding:16px 0 0; }
-  .social-shell .social-topbar { position:fixed; top:0; right:var(--main-gutter); z-index:45; width:auto; margin:0; height:68px; min-height:68px; padding:0; border:0; background:var(--paper); backdrop-filter:none; }
-  .global-header-actions { gap:6px; }
+  .social-shell .social-topbar { position:relative; top:auto; z-index:auto; width:100%; margin:0; min-height:68px; padding:10px var(--main-gutter); border:0; background:var(--paper); backdrop-filter:none; }
+  .header-greeting { padding-right:0; }
+  .global-header-actions { position:fixed; top:0; right:var(--main-gutter); z-index:45; height:68px; gap:6px; }
   .global-header-action { width:40px; height:44px; }
 }
