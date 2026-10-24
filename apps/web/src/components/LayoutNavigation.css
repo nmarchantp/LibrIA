@@ -2,15 +2,35 @@
 .social-shell .social-sidebar { flex-direction:column; align-items:stretch; justify-content:flex-start; }
 .sidebar-navigation { display:flex; flex:1; flex-direction:column; min-height:0; }
 .sidebar-navigation .social-nav { display:grid; grid-template-columns:minmax(0,1fr); position:static; flex-shrink:1; }
+.sidebar-navigation .social-nav a > span:not(.navigation-galaxy) { letter-spacing:0; transition:letter-spacing 200ms ease; }
+.sidebar-navigation .social-nav a:is(:hover,:focus-visible) > span:not(.navigation-galaxy) { letter-spacing:.035em; }
+@media(prefers-reduced-motion:reduce) {
+  .sidebar-navigation .social-nav a > span:not(.navigation-galaxy) { transition:none; }
+}
 .sidebar-navigation .sidebar-account { margin-top:auto; }
-.social-page-column { min-width:0; --main-gutter:20px; --main-max-width:1520px; }
+.social-page-column { min-width:0; --main-gutter:20px; --main-max-width:1520px; background:var(--paper); }
 /* Only outer page containers share the gutter; embedded profile tabs retain theirs. */
 .social-shell .social-main > :is(.page-width,.mural-layout) { width:min(var(--main-max-width),calc(100% - 2 * var(--main-gutter))); max-width:var(--main-max-width); margin-inline:auto; }
-.social-topbar { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:flex-end; width:min(var(--main-max-width),calc(100% - 2 * var(--main-gutter))); margin-inline:auto; min-height:64px; padding:8px 0; border:0; background:transparent; box-shadow:none; }
+.social-topbar { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:flex-end; width:100%; min-height:64px; padding:8px max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)); border:0; background:var(--paper); box-shadow:none; }
 .global-header-actions { display:flex; align-items:center; gap:8px; }
 .global-header-action { position:relative; display:grid; flex-shrink:0; place-items:center; width:44px; height:44px; border:1px solid transparent; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; transition:background .15s,color .15s; }
 .global-header-action:hover { background:var(--soft); color:var(--ink); }
+.message-bubble-icon,.notification-bell-icon { width:28px; height:28px; }
+.message-envelope,.notification-bell { transition:transform 200ms ease; }
+.message-envelope--open { display:none; }
+.global-header-action.active .message-envelope--closed { display:none; }
+.global-header-action.active .message-envelope--open { display:inline; }
+.global-header-action:is(:hover,:focus-visible) :is(.message-envelope,.notification-bell) { transform:translateY(-1px); }
+@media(prefers-reduced-motion:reduce) {
+  .message-envelope,.notification-bell { transition:none; }
+  .global-header-action:is(:hover,:focus-visible) :is(.message-envelope,.notification-bell) { transform:none; }
+}
 .global-header-action.active { border-color:var(--primary); background:var(--secondary); color:var(--ink); }
+.global-header-action.active:has(.message-bubble-icon,.notification-bell-icon) { border-color:transparent; background:transparent; }
+.global-header-action.active .message-envelope > :is(rect,path:last-child) { fill:color-mix(in srgb,var(--primary) 35%,var(--secondary)); }
+.global-header-action.active .message-envelope { stroke-width:1.9; }
+.global-header-action.active .notification-bell { stroke-width:1.9; }
+.global-header-action.active .notification-bell-body { fill:color-mix(in srgb,var(--primary) 35%,var(--secondary)); }
 .global-header-action:focus-visible,.navigation-tools-menu a:focus-visible,.sidebar-navigation .social-nav a:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
 .global-header-tooltip { position:absolute; top:calc(100% + 8px); right:0; z-index:1; width:max-content; max-width:210px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); box-shadow:var(--shadow); color:var(--ink); font-size:12px; line-height:1.5; pointer-events:none; opacity:0; visibility:hidden; }
 .global-header-action:hover>.global-header-tooltip,.global-header-action:focus-visible>.global-header-tooltip { opacity:1; visibility:visible; }
@@ -37,7 +57,7 @@
   .sidebar-navigation .sidebar-account { margin:14px 0 0; padding:16px 10px 0; border-top:1px solid var(--line); }
   .sidebar-navigation .sidebar-account .account-link { display:flex; }
   .sidebar-navigation .logout-button { font-size:12px; padding:16px 0 0; }
-  .social-shell .social-topbar { position:fixed; top:0; right:var(--main-gutter); z-index:45; width:auto; margin:0; height:68px; min-height:68px; padding:0; border:0; background:transparent; backdrop-filter:none; }
+  .social-shell .social-topbar { position:fixed; top:0; right:var(--main-gutter); z-index:45; width:auto; margin:0; height:68px; min-height:68px; padding:0; border:0; background:var(--paper); backdrop-filter:none; }
   .global-header-actions { gap:6px; }
   .global-header-action { width:40px; height:44px; }
 }

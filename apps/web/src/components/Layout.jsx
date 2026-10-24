@@ -1,4 +1,4 @@
-import { Bell, CalendarDays, Database, Home, LogOut, MessageCircle, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
+import { CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext'
 import BrandLogo from './BrandLogo'
 import NavigationIcon from './NavigationIcon'
 import NavigationGalaxy from './NavigationGalaxy'
+import MessageBubbleIcon from './MessageBubbleIcon'
+import NotificationBellIcon from './NotificationBellIcon'
 import './LayoutNavigation.css'
 
 
@@ -62,8 +64,8 @@ export default function Layout() {
     </aside>
     <div className="social-page-column">
       <header className="social-topbar"><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
-        <HeaderShortcut to="/messages" label="Mensajes" icon={MessageCircle} />
-        <HeaderShortcut to="/notifications" label="Notificaciones" icon={Bell} />
+        <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
+        <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
         {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>
           <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>
           <nav className="navigation-tools-menu" aria-label="Herramientas disponibles">
