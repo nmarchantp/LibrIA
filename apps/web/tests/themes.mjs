@@ -54,8 +54,12 @@ try {
     for (const [selector, expected] of Object.entries(baseline[id].appearance)) {
       // SVGs paint with explicit fill/stroke, not their transitioning inherited
       // color/border-color. Compare the stable properties captured before edits.
-      const properties = expected && Object.fromEntries(Object.keys(expected).map(key => [key, actual.appearance[selector]?.[key]]))
-      assert.deepEqual(properties, expected, `${id}: ${selector}`)
+      // The header was independently changed to transparent after this palette
+      // baseline. Keep the palette comparison without undoing that approved UI.
+      const stableExpected = expected && Object.fromEntries(Object.entries(expected).filter(([key]) => !(selector === '.social-topbar' && key === 'backgroundColor')))
+      const properties = stableExpected && Object.fromEntries(Object.keys(stableExpected).map(key => [key, actual.appearance[selector]?.[key]]))
+      assert.deepEqual(properties, stableExpected, `${id}: ${selector}`)
+      if (selector === '.social-topbar') assert.equal(actual.appearance[selector].backgroundColor, 'rgba(0, 0, 0, 0)')
     }
   }
   console.log('PASS six original palettes: unchanged variables, component colors, shadows, color scheme and banner configuration')
@@ -66,7 +70,8 @@ try {
   for (const id of ids) {
     await navigate('/settings?tab=personalization')
     await until(`document.querySelectorAll('.theme-option').length===9`)
-    assert.deepEqual(await evaluate(`[...document.querySelectorAll('.theme-group')].map(g=>g.querySelectorAll('.theme-option').length)`), [5, 4])
+    assert.equal(await evaluate(`document.querySelectorAll('.theme-options').length===1&&!document.querySelector('.theme-group')`), true)
+    assert.deepEqual(await evaluate(`[...document.querySelectorAll('.theme-option')].map(e=>e.dataset.themeOption)`), ids)
     await evaluate(`document.querySelector('[data-theme-option="${id}"]').click()`)
     await until(`document.documentElement.dataset.theme==='${id}'&&localStorage.getItem('libria_theme')==='${id}'`)
     assert.equal(await evaluate(`document.querySelectorAll('.theme-option[aria-pressed=true]').length`), 1)
@@ -97,12 +102,13 @@ try {
   }
   await navigate('/settings?tab=personalization')
   await until(`document.querySelectorAll('.theme-option').length===9`)
-  for (const [width, columns] of [[1440, 4], [768, 2], [390, 1], [320, 1]]) {
+  for (const [width, columns] of [[1440, 5], [768, 2], [600, 1], [390, 1], [320, 1]]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 })
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.theme-options')).gridTemplateColumns.split(' ').length`), columns)
     assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth`), true)
+    assert.equal(await evaluate(`[...document.querySelectorAll('.theme-option')].every(e=>{const r=e.getBoundingClientRect(),s=e.querySelector('.theme-swatches'),c=s.getBoundingClientRect();return r.height>=60&&r.height<=70&&c.width===44&&c.height===44&&getComputedStyle(s).backgroundImage.startsWith('linear-gradient(')&&e.scrollWidth<=e.clientWidth})`), true)
   }
-  console.log('PASS selector responsive 4/2/1 columns without horizontal overflow')
+  console.log('PASS single circular selector, compact 68px rows and responsive 5/2/1 columns without overflow')
   assert.deepEqual(browserErrors, [], 'No console errors or uncaught browser exceptions')
 } finally {
   ws.close()

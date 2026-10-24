@@ -3,12 +3,14 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import BrandLogo from './BrandLogo'
 import NavigationIcon from './NavigationIcon'
 import NavigationGalaxy from './NavigationGalaxy'
 import MessageBubbleIcon from './MessageBubbleIcon'
 import NotificationBellIcon from './NotificationBellIcon'
 import HeaderGreeting from './HeaderGreeting'
+import MagicalBackground from './MagicalBackground'
 import './LayoutNavigation.css'
 
 
@@ -23,11 +25,19 @@ function HeaderShortcut({ to, label, icon: Icon }) {
 
 export default function Layout() {
   const { user, logout } = useAuth()
+  const { magicalBackground } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [headerScrolled, setHeaderScrolled] = useState(() => window.scrollY > 8)
   const toolsRef = useRef(null)
   const { pathname, search } = useLocation()
   const hasTools = groupAccess || user.role === 'admin'
+  useEffect(() => {
+    const updateHeader = () => setHeaderScrolled(window.scrollY > 8)
+    updateHeader()
+    window.addEventListener('scroll', updateHeader, { passive: true })
+    return () => window.removeEventListener('scroll', updateHeader)
+  }, [])
   useEffect(() => {
     setMenuOpen(false)
     if (toolsRef.current) toolsRef.current.open = false
@@ -64,8 +74,9 @@ export default function Layout() {
       <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
       </div>
     </aside>
-    <div className="social-page-column">
-      <header className="social-topbar"><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
+    <div className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined}>
+      {magicalBackground && <MagicalBackground />}
+      <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
         <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
         {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>

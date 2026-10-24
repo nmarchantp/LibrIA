@@ -44,6 +44,12 @@ y variando el paisaje. Se guardaron en WebP a 2172 × 724 px.
 
 ## Ampliación a nueve temas
 
+El fondo mágico global se configura por separado en **Configuración →
+Personalización → Efectos visuales**. Reutiliza ThemeContext, guarda la preferencia
+en `libriaverse-magical-background` y se monta una sola vez desde Layout.
+Los detalles de implementación y pruebas están en
+[Fondo mágico global](../../../../docs/magical-background.md).
+
 Los claros conservan sus IDs y paletas: `lavanda`, `otono`, `invierno`,
 `rosa-antiguo`, `bosque` (nombre visible: Bosque feérico).
 `dark` conserva exactamente su paleta y roles; se presenta como Reino de Sombras.

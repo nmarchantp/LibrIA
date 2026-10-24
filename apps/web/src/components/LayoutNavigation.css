@@ -1,4 +1,5 @@
 /* Shared application navigation only: page contents retain their existing CSS. */
+:root:has(.social-shell) { scrollbar-gutter:stable; }
 .social-shell .social-sidebar { flex-direction:column; align-items:stretch; justify-content:flex-start; }
 .sidebar-navigation { display:flex; flex:1; flex-direction:column; min-height:0; }
 .sidebar-navigation .social-nav { display:grid; grid-template-columns:minmax(0,1fr); position:static; flex-shrink:1; }
@@ -8,10 +9,16 @@
   .sidebar-navigation .social-nav a > span:not(.navigation-galaxy) { transition:none; }
 }
 .sidebar-navigation .sidebar-account { margin-top:auto; }
-.social-page-column { min-width:0; --main-gutter:20px; --main-max-width:1520px; background:var(--paper); }
+.social-page-column { min-width:0; --main-gutter:20px; --main-max-width:1520px; --main-top-space:52px; background:var(--paper); }
 /* Only outer page containers share the gutter; embedded profile tabs retain theirs. */
-.social-shell .social-main > :is(.page-width,.mural-layout) { width:min(var(--main-max-width),calc(100% - 2 * var(--main-gutter))); max-width:var(--main-max-width); margin-inline:auto; }
-.social-topbar { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:flex-end; width:100%; min-height:64px; padding:8px max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)); border:0; background:var(--paper); box-shadow:none; }
+.social-shell .social-page-column .social-main > :is(.page-width,.mural-layout) { width:min(var(--main-max-width),calc(100% - 2 * var(--main-gutter))); max-width:var(--main-max-width); margin-inline:auto; padding-top:var(--main-top-space); }
+.social-topbar { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:flex-end; width:100%; min-height:64px; padding:8px max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)); border:0; background:transparent; box-shadow:none; }
+.social-topbar::before { content:""; position:absolute; inset:0 0 -12px; z-index:-1; pointer-events:none; background:color-mix(in srgb,var(--paper) 72%,transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); mask-image:linear-gradient(to bottom,black calc(100% - 16px),transparent); opacity:0; transition:opacity 180ms ease; }
+.social-topbar.is-scrolled::before { opacity:1; }
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .social-topbar::before { background:color-mix(in srgb,var(--paper) 94%,transparent); }
+}
+@media(prefers-reduced-motion:reduce) { .social-topbar::before { transition:none; } }
 .header-greeting { min-width:0; margin-right:auto; padding-right:16px; position:relative; top:4px; }
 .header-greeting-title { margin:0; color:var(--orange); font:700 13px/1.5 'DM Sans',sans-serif; letter-spacing:.15em; text-transform:uppercase; overflow-wrap:anywhere; }
 .global-header-actions { display:flex; flex-shrink:0; align-items:center; gap:8px; }
@@ -45,7 +52,7 @@
 .navigation-tools-menu a { display:flex; align-items:center; gap:9px; padding:12px 10px; border-radius:8px; color:var(--ink); font-size:13px; }
 .navigation-tools-menu a:hover,.navigation-tools-menu a.active { background:var(--soft); }
 @media(max-width:700px) {
-  .social-page-column { --main-gutter:14px; }
+  .social-page-column { --main-gutter:14px; --main-top-space:28px; }
   .social-shell { --header-actions-width:86px; }
   .social-shell.has-navigation-tools { --header-actions-width:132px; }
   .social-shell .social-sidebar { position:sticky; top:0; z-index:40; flex-direction:row; align-items:center; height:68px; padding:10px 12px; gap:4px; }
@@ -59,8 +66,10 @@
   .sidebar-navigation .sidebar-account { margin:14px 0 0; padding:16px 10px 0; border-top:1px solid var(--line); }
   .sidebar-navigation .sidebar-account .account-link { display:flex; }
   .sidebar-navigation .logout-button { font-size:12px; padding:16px 0 0; }
-  .social-shell .social-topbar { position:relative; top:auto; z-index:auto; width:100%; margin:0; min-height:68px; padding:10px var(--main-gutter); border:0; background:var(--paper); backdrop-filter:none; }
+  .social-shell .social-topbar { position:relative; top:auto; z-index:auto; width:100%; margin:0; min-height:68px; padding:10px var(--main-gutter); border:0; background:transparent; backdrop-filter:none; }
+  .social-topbar::before { content:none; }
   .header-greeting { padding-right:0; }
   .global-header-actions { position:fixed; top:0; right:var(--main-gutter); z-index:45; height:68px; gap:6px; }
+  .social-topbar.is-scrolled .global-header-actions::before { content:""; position:absolute; inset:0 -8px; z-index:-1; pointer-events:none; background:color-mix(in srgb,var(--paper) 72%,transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
   .global-header-action { width:40px; height:44px; }
 }

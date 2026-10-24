@@ -1,0 +1,113 @@
+/* From Uiverse.io by amir_6539: https://uiverse.io/amir_6539/red-duck-82
+   MIT notice: docs/licenses/uiverse-profile-starfield-MIT.txt.
+   Three descending particle planes adapted into lightweight repeating gradients.
+   Approved particle colors, density, opacity and timing are kept unchanged. */
+.social-page-column[data-magical-background="enabled"] { position:relative; }
+.social-page-column[data-magical-background="enabled"] .social-main { position:relative; z-index:1; }
+.social-page-column[data-magical-background="enabled"] .header-greeting { z-index:1; }
+.profile-starfield { position:absolute; inset:0; z-index:0; overflow:clip; pointer-events:none; user-select:none; background:radial-gradient(ellipse at bottom,color-mix(in srgb,var(--primary) 12%,var(--paper)) 0%,var(--paper) 100%); }
+.profile-starfield-layer { position:absolute; inset:0 0 -600px; pointer-events:none; background-size:600px 600px; background-repeat:repeat; animation:profile-starfield-rise var(--starfield-duration) linear infinite; }
+.profile-starfield-layer--fine { opacity:.28; }
+.profile-starfield-layer--medium { opacity:.4; }
+.profile-starfield-layer--large { opacity:.55; }
+@keyframes profile-starfield-rise { from { transform:translateY(-600px); } to { transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .profile-starfield-layer { animation:none; } }
+.profile-starfield-layer--fine { --starfield-duration:50s; background-image:
+  radial-gradient(circle at 25.05% 40.55%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 72.5% 66.2%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 54.65% 89%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 73.45% 33.9%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 45.2% 37.05%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 58% 39.05%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 92.05% 98.1%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 81.5% 83.35%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 89.4% 33.8%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 18.35% 86.7%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 67.15% 7.8%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 64.15% 57.1%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 53.1% 18.9%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 69.75% 23.35%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 50.85% 94.55%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 6.85% 55.7%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 88.35% 70.15%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 77.15% 0.55%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 53.9% 9.05%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 59.45% 78.7%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 84.85% 77.55%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 21.95% 23.6%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 74.55% 33.85%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 68.2% 29.95%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 1.7% 19.1%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 61.05% 79.2%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 63.3% 74.95%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 8.45% 95.35%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 60.95% 56.25%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 32.95% 0.9%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 86.55% 97.95%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 16.6% 60.8%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 95.65% 39.4%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 4% 35.6%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 16.3% 80.25%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 28.7% 75.1%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 23.65% 82.65%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 20.2% 48.75%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 16.1% 89.85%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 21.25% 66.05%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 56.05% 89.85%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 36.55% 32.35%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 44.55% 79.2%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 76.15% 5.45%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 68.95% 12.2%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 43.25% 53.2%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 24.65% 47.8%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 31.2% 69%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 22% 30.95%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 81.5% 38.35%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 47.75% 59.8%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 3.1% 36.45%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 6.3% 47.3%,var(--primary) 0 0.65px,transparent 1.25px),
+  radial-gradient(circle at 62.8% 44.8%,var(--primary) 0 0.65px,transparent 1.25px); }
+
+.profile-starfield-layer--medium { --starfield-duration:100s; background-image:
+  radial-gradient(circle at 96.25% 66%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 34.65% 88.9%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 50.8% 35.55%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 58.55% 28.15%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 33.05% 95.95%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 80.5% 2.2%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 63.75% 7%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 60.4% 90.1%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 73.65% 79.35%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 0.55% 55.85%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 42.65% 87.85%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 57.45% 46.85%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 67.65% 21.4%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 13.5% 13.95%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 12.9% 70.2%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 20.85% 59.4%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 14.3% 28.05%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 19.65% 88.25%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 7.35% 44.05%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 33.3% 54.85%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 71.25% 63.9%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 40.3% 7.8%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 62.6% 28.05%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 10.9% 2.6%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 68.55% 99%,var(--primary) 0 1px,transparent 1.6px),
+  radial-gradient(circle at 8.55% 37.25%,var(--primary) 0 1px,transparent 1.6px); }
+
+.profile-starfield-layer--large { --starfield-duration:150s; background-image:
+  radial-gradient(circle at 10% 49.05%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 86.55% 26.05%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 6.6% 51.95%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 94.4% 77.35%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 44.95% 61.3%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 94.35% 29%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 77.4% 54.6%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 81.3% 34.45%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 12.7% 53.6%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 84.2% 60.55%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 33.6% 63.35%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 46.95% 33.4%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 98.45% 32.25%,var(--primary) 0 1.5px,transparent 2.1px),
+  radial-gradient(circle at 56.3% 49.15%,var(--primary) 0 1.5px,transparent 2.1px); }
