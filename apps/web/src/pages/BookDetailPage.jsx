@@ -1,5 +1,6 @@
+import RatingStar from '../components/RatingStar'
 import { useEffect, useRef, useState } from 'react'
-import { BookOpen, ChevronLeft, ChevronRight, CircleSlash2, Star, Users } from 'lucide-react'
+import { BookOpen, ChevronLeft, ChevronRight, CircleSlash2, Users } from 'lucide-react'
 import { Navigate, Link, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
 import BookReviews from '../components/BookReviews'
@@ -14,8 +15,8 @@ function RatingStars({ value }) {
   const rating = Number(value) || 0
   return <span className="detail-rating-stars" role="img" aria-label={`${rating} de 5 estrellas`}>
     {[1, 2, 3, 4, 5].map(star => <span className="detail-rating-star" key={star}>
-      <Star aria-hidden="true" />
-      <span style={{ width: `${Math.max(0, Math.min(1, rating - star + 1)) * 100}%` }}><Star aria-hidden="true" /></span>
+      <RatingStar />
+      <span style={{ width: `${Math.max(0, Math.min(1, rating - star + 1)) * 100}%` }}><RatingStar selected /></span>
     </span>)}
   </span>
 }

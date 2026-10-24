@@ -1,6 +1,6 @@
+import RatingStar from '../components/RatingStar'
 import { useEffect, useState } from 'react'
 import { Navigate, Link, useParams } from 'react-router-dom'
-import { Star } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import './ReadingPage.css'
@@ -119,7 +119,7 @@ export default function ReadingPage() {
         <div className="review-stars">
           {[1, 2, 3, 4, 5].map(value => <label className="review-star" key={value}>
             <input type="radio" name="review-rating" value={value} checked={Number(rating) === value} onChange={() => setRating(value)} aria-label={`${value} ${value === 1 ? 'estrella' : 'estrellas'}`} />
-            <Star aria-hidden="true" className={Number(rating) >= value ? 'selected' : ''} />
+            <RatingStar selected={Number(rating) >= value} />
           </label>)}
         </div>
         <span className="review-rating-value">{rating === '' ? 'Sin valoración' : `${rating} de 5 estrellas`}</span>

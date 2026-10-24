@@ -308,7 +308,7 @@ button:focus-visible,a:focus-visible { outline-color:var(--focus); }
 .etl-cards svg,.etl-link { color:var(--accent-text); }
 .etl-table th { background:var(--lavender-soft); }
 .catalog-state { border-color:var(--lavender); }
-.review-star svg.selected { fill:var(--pink); }
+
 @media(max-width:700px) { .social-sidebar { background:var(--surface-glass); } }
 
 .auth-divider { text-align: center; margin: 0; color: var(--muted); }

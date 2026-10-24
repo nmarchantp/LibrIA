@@ -1,4 +1,5 @@
-import { CalendarDays, ChevronRight, Cloud, Database, FileText, Search, Star, X } from 'lucide-react'
+import RatingStar from '../components/RatingStar'
+import { CalendarDays, ChevronRight, Cloud, Database, FileText, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
@@ -82,7 +83,7 @@ export default function BooksPage() {
                 {book.catalogOrigin === 'libria' ? 'LibrIA' : 'Google Books'}
               </span>
               {book.editionCount > 0 && <span>{book.editionCount} {book.editionCount === 1 ? 'edición' : 'ediciones'}</span>}
-              {book.averageRating && <span className="rating-chip"><Star />{book.averageRating}{book.ratingsCount ? ` · ${book.ratingsCount.toLocaleString('es-CL')}` : ''}</span>}
+              {book.averageRating && <span className="rating-chip"><RatingStar selected />{book.averageRating}{book.ratingsCount ? ` · ${book.ratingsCount.toLocaleString('es-CL')}` : ''}</span>}
             </div>
           </div>
           <ChevronRight className="catalog-result-arrow" aria-hidden="true" />

@@ -96,6 +96,10 @@ export function LibraryProvider({ children }) {
       method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ total_pages: Number(totalPages) }),
     })
+    if (readings.current[String(book.id)]) {
+      readings.current[String(book.id)] = { ...readings.current[String(book.id)],
+        total_pages: result.total_pages, current_page: result.current_page, progress_percent: result.progress_percent }
+    }
     setBooks(current => current.map(item => String(item.id) === String(id) ? {
       ...item, pageCount: result.total_pages, currentPage: result.current_page, progress: result.progress_percent,
     } : item))
