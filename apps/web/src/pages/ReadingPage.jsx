@@ -119,7 +119,7 @@ export default function ReadingPage() {
         <div className="review-stars">
           {[1, 2, 3, 4, 5].map(value => <label className="review-star" key={value}>
             <input type="radio" name="review-rating" value={value} checked={Number(rating) === value} onChange={() => setRating(value)} aria-label={`${value} ${value === 1 ? 'estrella' : 'estrellas'}`} />
-            <RatingStar selected={Number(rating) >= value} />
+            <RatingStar fraction={Number(rating) - value + 1} />
           </label>)}
         </div>
         <span className="review-rating-value">{rating === '' ? 'Sin valoración' : `${rating} de 5 estrellas`}</span>

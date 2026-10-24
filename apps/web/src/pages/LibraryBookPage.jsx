@@ -1,8 +1,7 @@
 import { ratingDimensions } from '../data/ratingDimensions'
-import WorldBuildingRatingIcon from '../components/WorldBuildingRatingIcon'
-import SpicyRatingIcon from '../components/SpicyRatingIcon'
+import RatingControl from '../components/RatingControl'
 import { useEffect, useId, useState } from 'react'
-import { BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, FileText, Flag, Info, Lightbulb, MessageCircle, PartyPopper, Save, Star, StickyNote, Tags, Users } from 'lucide-react'
+import { BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, FileText, Flag, Lightbulb, MessageCircle, NotebookPen, PartyPopper, Save, Star, StickyNote, Tags, Users } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
 import ActionStatus from '../components/ActionStatus'
@@ -12,25 +11,8 @@ import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import './LibraryBookPage.css'
 
-const tabs = [['rating', 'Valoración', Star], ['notes', 'Notas', StickyNote], ['theories', 'Teorías', Lightbulb], ['community', 'Comunidad', Users]]
+const tabs = [['rating', 'Valoración', Star], ['notebook', 'Cuaderno', NotebookPen], ['notes', 'Notas', StickyNote], ['theories', 'Teorías', Lightbulb], ['community', 'Comunidad', Users]]
 const formatReadingDate = value => value ? new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Añadir'
-
-function RatingControl({ categoryKey, label, Icon, value, onChange, description, color }) {
-  const descriptionId = useId()
-  return <div className="library-rating-row" style={{ '--rating-category-color': color, '--rating-star-color': color }}>
-    <span className="library-rating-label" title={description} tabIndex={description ? 0 : undefined} aria-describedby={description ? descriptionId : undefined}><Icon aria-hidden="true" /><strong>{label}</strong>{description && <span className="library-rating-tooltip" id={descriptionId} role="tooltip">{description} Sin valorar: sin puntuación registrada.</span>}</span>
-    <span className="library-rating-buttons" role="radiogroup" aria-label={`Valoración de ${label}`} aria-describedby={description ? descriptionId : undefined}>
-      {[1, 2, 3, 4, 5].map(score => <button type="button" role="radio" aria-checked={value === score}
-        aria-label={`${score} de 5 en ${label}`}
-        className={score <= value ? 'selected' : ''} key={score} onClick={() => onChange(value === score ? 0 : score)}>
-        {categoryKey === 'world_building' ? <WorldBuildingRatingIcon selected={score <= value} /> : categoryKey === 'spicy' ? <SpicyRatingIcon selected={score <= value} /> : <Icon aria-hidden="true" stroke="var(--rating-star-color)" strokeWidth={2.3}
-          fill={score <= value ? 'var(--rating-star-color)' : 'none'}
-          style={{ stroke: 'var(--rating-star-color)', strokeWidth: 2.3, fill: score <= value ? 'var(--rating-star-color)' : 'none', opacity: 1 }} />}
-      </button>)}
-    </span>
-    <span className="library-rating-value">{value ? `${value}/5` : '—'}</span>
-  </div>
-}
 
 function WallComposer({ type, book }) {
   const isNote = type === 'note'
@@ -64,12 +46,13 @@ function WallComposer({ type, book }) {
 }
 
 export default function LibraryBookPage() {
+  const bookDetailsTooltipId = useId()
   const { id } = useParams()
   const { getBook, loading, loadError, recordEvent, updateTotalPages } = useLibrary()
   const book = getBook(id)
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
-  const [ratings, setRatings] = useState(Object.fromEntries(ratingDimensions.map(([key]) => [key, 0])))
+  const [ratings, setRatings] = useState(Object.fromEntries(ratingDimensions.map(([key]) => [key, null])))
   const [comment, setComment] = useState('')
   const [existingReview, setExistingReview] = useState(null)
   const [reviewVisibility, setReviewVisibility] = useState('public')
@@ -95,7 +78,7 @@ export default function LibraryBookPage() {
         setExistingReview(review)
         setComment(review.body || '')
         setReviewVisibility(review.status === 'published' ? 'public' : 'private')
-        setRatings(current => ({ ...current, ...review.dimension_ratings, general: review.rating || 0 }))
+        setRatings(current => ({ ...current, ...review.dimension_ratings, general: review.rating ?? null }))
       }).catch(() => { if (active) setError('No se pudo recuperar tu valoración.') })
     return () => { active = false }
   }, [book?.workId])
@@ -185,7 +168,7 @@ export default function LibraryBookPage() {
     try {
       await apiRequest(`/reviews/${existingReview.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
       setExistingReview(null); setComment('')
-      setRatings(Object.fromEntries(ratingDimensions.map(([key]) => [key, 0])))
+      setRatings(Object.fromEntries(ratingDimensions.map(([key]) => [key, null])))
       setMessage('Reseña y valoración eliminadas. Tu perfil se actualizará sin esa evidencia.')
     } catch { setError('No se pudo eliminar tu reseña.') }
     finally { setBusy(false) }
@@ -195,7 +178,10 @@ export default function LibraryBookPage() {
     <header className="reading-page-header">
       <Link className="reading-back-button" to="/profile?tab=library" aria-label="Volver a mi biblioteca"><ChevronLeft /></Link>
       <div><span className="kicker">MI ESTANTERÍA</span><strong>Mi lectura</strong></div>
-      <Link className="reading-info-button" to={`/books/${book.id}`} aria-label="Ver información pública del libro"><Info /></Link>
+      <Link className="reading-info-button" to={`/books/${encodeURIComponent(book.id)}`} aria-label="Ver información general del libro" aria-describedby={bookDetailsTooltipId}>
+        <BookOpen aria-hidden="true" />
+        <span className="reading-book-details-tooltip" id={bookDetailsTooltipId} role="tooltip"><strong>Descubre este libro</strong><span>Explora su sinopsis, autor y detalles.</span></span>
+      </Link>
     </header>
 
     <section className="reading-overview" aria-label="Resumen de tu lectura">
@@ -232,34 +218,40 @@ export default function LibraryBookPage() {
     </section>
 
     <nav className="reading-tabs" aria-label="Secciones de mi lectura">
-      {tabs.map(([value, label, Icon]) => <button type="button" key={value} disabled={Boolean(busy)} className={activeTab === value ? 'active' : ''} aria-pressed={activeTab === value} onClick={() => { setMessage(''); setError(''); setActiveTab(value) }}><Icon /><span>{label}</span></button>)}
+      {tabs.map(([value, label, Icon]) => <button type="button" key={value} aria-label={label} title={label} disabled={Boolean(busy)} className={activeTab === value ? 'active' : ''} aria-pressed={activeTab === value} onClick={() => { setMessage(''); setError(''); setActiveTab(value) }}><Icon /><span>{label}</span></button>)}
     </nav>
 
     <ActionStatus busy={Boolean(busy)} message={busy || message} error={error} floating />
 
-    {activeTab === 'rating' && <section className="reading-tab-content library-ratings">
-      <form className="rating-form book-review-layout" onSubmit={saveRating} aria-busy={Boolean(busy)}>
+    {activeTab === 'rating' && <form className="rating-form" onSubmit={saveRating} aria-busy={Boolean(busy)}>
+      <section className="reading-tab-content library-ratings"><div className="book-review-layout">
       <section className="book-review-writing" aria-labelledby="book-review-title">
       <div className="review-heading"><h2 id="book-review-title">Reseña</h2><label>Visibilidad<select value={reviewVisibility} onChange={event => setReviewVisibility(event.target.value)}><option value="public">Pública</option><option value="private">Privada</option></select></label></div>
       <textarea className="reading-review-textarea" aria-label="Texto de tu reseña" rows="6" maxLength="3000" required value={comment} onChange={event => setComment(event.target.value)} placeholder="¿Qué te ha parecido? Esta reseña puede ser pública o privada, según tus preferencias." />
-      <div className="book-review-submit">
-      <button className="button primary reading-save-review" disabled={busy || !comment.trim() || !ratings.general}>{busy === 'Guardando valoración y reseña…' ? 'Guardando…' : existingReview ? 'Guardar valoración' : 'Crear valoración'}</button>
-      {existingReview && <button className="button secondary" type="button" disabled={Boolean(busy)} onClick={deleteReview}>Eliminar mi reseña y valoración</button>}
-      </div>
       </section>
       <section className="book-review-ratings" aria-labelledby="book-ratings-title">
       <div className="reading-section-title"><h2 id="book-ratings-title">Valoración</h2></div>
-      <div className="library-rating-grid">{ratingDimensions.map(([key, label, Icon, description, color]) => <RatingControl categoryKey={key} color={color} description={description} key={key} label={label} Icon={Icon} value={ratings[key]} onChange={value => setRatings(current => ({ ...current, [key]: value }))} />)}</div>
+      <div className="library-rating-grid">{ratingDimensions.map(([key, label, Icon, description, color, outlineColor]) => <RatingControl outlineColor={outlineColor} categoryKey={key} color={color} description={description} key={key} label={label} Icon={Icon} value={ratings[key]} onChange={value => setRatings(current => ({ ...current, [key]: value }))} />)}</div>
       </section>
-      </form>
+      </div></section>
+      <div className="book-review-submit">
+      <button className="button primary reading-save-review" disabled={busy || !comment.trim()}>{busy === 'Guardando valoración y reseña…' ? 'Guardando…' : existingReview ? 'Guardar valoración' : 'Crear valoración'}</button>
+      {existingReview && <button className="button secondary" type="button" disabled={Boolean(busy)} onClick={deleteReview}>Eliminar mi reseña y valoración</button>}
+      </div>
+      </form>}
 
-      <form className="reading-notebook" onSubmit={saveNotebook} aria-busy={Boolean(busy)}>
+    {activeTab === 'notebook' && <form className="notebook-form" onSubmit={saveNotebook} aria-busy={Boolean(busy)}>
+      <section className="reading-tab-content library-notebook-panel" aria-label="Cuaderno">
+      <div className="reading-notebook">
         <label>Personajes<textarea rows="5" maxLength="3000" value={notebook.characters} onChange={event => setNotebook(current => ({ ...current, characters: event.target.value }))} placeholder="Nombres, quién es quién…" /></label>
         <label>Sitios<textarea rows="5" maxLength="3000" value={notebook.places} onChange={event => setNotebook(current => ({ ...current, places: event.target.value }))} placeholder="Lugares de la historia…" /></label>
         <label className="notebook-summary">Resumen<textarea rows="6" maxLength="5000" value={notebook.summary} onChange={event => setNotebook(current => ({ ...current, summary: event.target.value }))} placeholder="¿De qué va? Escribe tu resumen…" /></label>
-        <button className="button detail-secondary" disabled={busy}><Save />{busy === 'Guardando personajes, sitios y resumen…' ? 'Guardando cuaderno…' : 'Guardar cuaderno'}</button>
-      </form>
-    </section>}
+      </div>
+      </section>
+      <div className="book-review-submit">
+        <button className="button primary reading-save-review" type="submit" disabled={busy}>{busy === 'Guardando personajes, sitios y resumen…' ? 'Guardando cuaderno…' : 'Guardar cuaderno'}</button>
+      </div>
+    </form>}
 
     {activeTab === 'notes' && <section className="reading-tab-content"><WallComposer type="note" book={book} /></section>}
     {activeTab === 'theories' && <section className="reading-tab-content"><WallComposer type="theory" book={book} /></section>}

@@ -13,7 +13,7 @@ def extract_book_context(db, owner, work):
         sources.append({'key': 'reading:'+str(r['id']), 'kind': 'reading', 'id': str(r['id']),
             'at': r['created_at'].isoformat(), 'data': {'state': r['status'],
             'abandonment_reason': r['abandonment_reason'], 'notebook': r['notebook'] or {}}})
-    reviews = db.execute(text("""SELECT rv.id,v.body,v.rating,v.dimension_ratings,v.recorded_at AS updated_at,v.revision_number
+    reviews = db.execute(text("""SELECT rv.id,v.body,v.rating::double precision AS rating,v.dimension_ratings,v.recorded_at AS updated_at,v.revision_number
         FROM app.resenas rv JOIN app.perfiles p ON p.id=rv.author_profile_id
         JOIN app.revisiones_resena v ON v.review_id=rv.id
         WHERE p.kind='personal' AND p.owner_user_id=:owner AND rv.created_by_user_id=:owner AND rv.work_id=:work

@@ -8,6 +8,23 @@ from app.modules.social.schemas import ReviewCreate, ReviewUpdate
 
 
 class RatingDimensionsTest(unittest.TestCase):
+    def test_every_quarter_round_trips_without_rounding(self):
+        for step in range(1, 21):
+            value = step / 4
+            created = ReviewCreate(work_id=uuid.uuid4(), body='Quarter rating', rating=value,
+                                   dimension_ratings={'spicy': value, 'world_building': value})
+            restored = ReviewCreate.model_validate_json(created.model_dump_json())
+            self.assertEqual(restored.rating, value)
+            self.assertEqual(restored.dimension_ratings['spicy'], value)
+            self.assertEqual(ReviewUpdate(body='Quarter rating', rating=value).rating, value)
+
+    def test_non_quarters_and_zero_are_not_valid_scores(self):
+        for value in (0, -0.25, 0.1, 1.33, 5.25, float('inf'), float('nan')):
+            for field in ({'rating': value}, {'dimension_ratings': {'romance': value}}):
+                with self.subTest(value=value, field=field):
+                    with self.assertRaises(ValidationError):
+                        ReviewCreate(work_id=uuid.uuid4(), body='Invalid rating', **field)
+
     def test_new_dimensions_round_trip_with_existing_ratings(self):
         values = {'plot_twist': 2, 'pace': 4, 'battles': 5, 'horror': 1,
                   'boring_moments': 3, 'comedy': 4}
