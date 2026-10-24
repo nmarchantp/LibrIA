@@ -169,7 +169,7 @@ try {
   await closed()
 
   const sections = ['.reader-story', '.reader-favorite-genres', '.reader-tastes', '.reader-reading-tastes']
-  for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo']) {
+  for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo', 'dark-rosado', 'dark-blood', 'dark-dorado']) {
     await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
     for (const width of [1440, 768, 390, 320]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 500 })
@@ -181,7 +181,7 @@ try {
       }
     }
   }
-  console.log('PASS: X/Escape/backdrop close rules; all four modals in six themes at desktop/tablet/mobile widths, without card movement or horizontal overflow')
+  console.log('PASS: X/Escape/backdrop close rules; all four modals in nine themes at desktop/tablet/mobile widths, without card movement or horizontal overflow')
   await send('Emulation.setDeviceMetricsOverride', { width: 768, height: 380, deviceScaleFactor: 1, mobile: false })
   await open('.reader-reading-tastes')
   assert.equal(await evaluate(`(() => {const r=document.querySelector('dialog').getBoundingClientRect();const fields=document.querySelector('.reader-modal-fields');return r.height<=innerHeight&&fields.scrollHeight>fields.clientHeight&&fields.clientHeight>0&&document.querySelector('.reader-modal-footer').getBoundingClientRect().bottom<=innerHeight})()`), true, 'Short viewports must scroll only the modal body and keep footer visible')

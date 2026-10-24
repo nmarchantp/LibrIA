@@ -65,7 +65,7 @@ try {
   await until(`Boolean(document.querySelector('.settings-page .account-details'))`)
   assert.equal(await evaluate(`document.querySelector('#main-navigation a[href="/settings"]').getAttribute('aria-current')`), 'page')
   await click('.settings-navigation a[href="/settings?tab=personalization"]')
-  await until(`document.querySelectorAll('.settings-page .theme-option').length===6`)
+  await until(`document.querySelectorAll('.settings-page .theme-option').length===9`)
   assert.equal(await evaluate(`!document.querySelector('.settings-page .account-details')`), true)
   for (const legacy of ['account', 'personalization']) {
     await evaluate(`history.pushState({},'', '/profile?tab=${legacy}');window.dispatchEvent(new PopStateEvent('popstate'))`)
@@ -76,7 +76,7 @@ try {
   await until(`document.querySelectorAll('.reader-profile-tabs button').length===4`)
   console.log('PASS settings account/theme sections, profile tabs relocated without duplication, and legacy profile links redirect')
 
-  for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo']) {
+  for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo', 'dark-rosado', 'dark-blood', 'dark-dorado']) {
     await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
     for (const width of [1440, 768, 390, 320]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 500 })
@@ -94,7 +94,7 @@ try {
       }
     }
   }
-  console.log('PASS header/sidebar across six palettes and desktop/tablet/mobile widths; mobile menu closes on navigation and retains user/logout block')
+  console.log('PASS header/sidebar across nine palettes and desktop/tablet/mobile widths; mobile menu closes on navigation and retains user/logout block')
 
   // Existing conditional links move to the header without changing their guards.
   for (const options of ['?group', '?role=admin', '?role=admin&group']) {

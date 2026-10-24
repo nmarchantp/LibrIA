@@ -47,7 +47,7 @@
   color:var(--ink);
   background:var(--paper);
 }
-:root[data-theme="dark"] {
+:root:is([data-theme="dark"],[data-theme="dark-rosado"],[data-theme="dark-blood"],[data-theme="dark-dorado"]) {
   color-scheme:dark;
   --on-primary:#181721;
   --primary-hover:color-mix(in srgb,var(--primary) 85%,white);
@@ -66,6 +66,34 @@
   --info-line:#6f8eb4;
   --rating:#f4bf45;
 }
+/* New variants only: original light palettes and Dark retain every role above. */
+:root[data-theme="dark-rosado"] {
+  --on-primary:#1C161E;
+  --muted:#D2B9C8;
+  --line:#674358;
+  --soft:#30232F;
+  --feature-start:#30232F;
+  --feature-end:#1C161E;
+}
+:root[data-theme="dark-blood"] {
+  /* Blood red stays on filled controls; a luminous rose-red serves small text,
+     focus rings and SVG outlines against the black/charcoal surfaces. */
+  --button-bg:#89001F;
+  --on-primary:#F5EDF0;
+  --primary-hover:#C4183D;
+  --muted:#BEB4BF;
+  --soft:#111116;
+  --feature-start:#111116;
+  --feature-end:#050507;
+}
+:root[data-theme="dark-dorado"] {
+  --on-primary:#141416;
+  --muted:#C7BEAF;
+  --line:#63523B;
+  --soft:#202023;
+  --feature-start:#202023;
+  --feature-end:#141416;
+}
 input,select,textarea { color:var(--ink); accent-color:var(--primary); }
 input::placeholder,textarea::placeholder { color:var(--muted); opacity:1; }
 /* Explicit text roles keep contrast when primary becomes light in Dark. */
@@ -78,3 +106,5 @@ input::placeholder,textarea::placeholder { color:var(--muted); opacity:1; }
 /* Rosa needs a slightly deeper control background for normal-size white text. */
 :root[data-theme="rosa-antiguo"] { --button-bg:color-mix(in srgb,var(--primary) 90%,var(--ink)); }
 .button.primary,.skip-link,.brand-icon,.avatar,.profile-avatar { background:var(--button-bg); }
+/* Filled controls that predate --button-bg need the same readable blood red. */
+:root[data-theme="dark-blood"] :is(.unread-count,.search-clear,.reader-avatars>span) { background:var(--button-bg); }

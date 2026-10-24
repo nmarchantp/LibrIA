@@ -15,5 +15,6 @@ export const profileBanners = {
 }
 
 export function getProfileBanner(theme) {
+  if (['dark-rosado', 'dark-blood', 'dark-dorado'].includes(theme)) return profileBanners.dark
   return profileBanners[theme] || defaultProfileBanner
 }

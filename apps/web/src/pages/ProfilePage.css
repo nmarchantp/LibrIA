@@ -31,7 +31,7 @@
 .reader-profile-cover { position:relative; aspect-ratio:4.3; overflow:hidden; border-radius:19px; background:var(--secondary); box-shadow:inset 0 0 0 1px var(--line); isolation:isolate; }
 .reader-profile-cover img { display:block; width:100%; height:100%; object-fit:cover; object-position:var(--banner-position,center 52%); }
 .reader-profile-cover::after { content:''; position:absolute; inset:0; background:var(--primary); opacity:.07; pointer-events:none; }
-:root[data-theme="dark"] .reader-profile-cover img { filter:brightness(.78) saturate(.8); }
+:root:is([data-theme="dark"],[data-theme="dark-rosado"],[data-theme="dark-blood"],[data-theme="dark-dorado"]) .reader-profile-cover img { filter:brightness(.78) saturate(.8); }
 .reader-profile-identity { display:flex; gap:25px; align-items:center; padding:24px 18px 26px; }
 .reader-profile-avatar { display:grid; place-items:center; flex:0 0 92px; height:92px; overflow:hidden; border-radius:50%; background:var(--button-bg); color:var(--on-primary); font:36px 'DM Serif Display',serif; box-shadow:0 0 0 5px var(--paper); }
 .reader-profile-avatar img { width:100%; height:100%; object-fit:cover; }

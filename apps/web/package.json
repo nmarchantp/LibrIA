@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:profile-modals": "node --experimental-websocket tests/profile-edit-modals.mjs",
     "test:navigation": "node --experimental-websocket tests/main-navigation.mjs",
+    "test:themes": "node --experimental-websocket tests/themes.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
