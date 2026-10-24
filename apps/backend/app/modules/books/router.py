@@ -1,25 +1,24 @@
 """Local-first, lossless mirror of public Google Books volume resources."""
 from datetime import datetime, timezone
-import logging
 import re
 import uuid
 from typing import Annotated, Literal
 from urllib.parse import quote
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
-from app.core.config import get_settings
 from app.core.database import get_db
+from app.modules.books.google_books import google_request, safe_volume_info, valid_volume
+from app.modules.books import open_library
+from app.modules.books.open_library_catalog import ensure_edition, present as present_open_library
 from app.modules.books.community import public_rating, reading_statistics
-from app.modules.books.identity import canonical_book_title, canonical_title_variants, canonical_work_key
+from app.modules.books.identity import bibliographic_title, canonical_book_title, canonical_title_variants, canonical_work_key
 from app.modules.books.models import AlternateTitle, Author, CatalogQuery, CatalogSource, Edition, Work, WorkAuthor
-from app.modules.books.service import consolidate_equivalent_works, equivalent_work_ids
+from app.modules.books.service import equivalent_work_ids, verified_original_publication, verified_work_for_import
 
 router = APIRouter(prefix="/books", tags=["books"])
-logger = logging.getLogger(__name__)
 
 
 def publication_sort_key(value):
@@ -36,60 +35,25 @@ def publication_sort_key(value):
     return (year, month, day)
 
 
-def google_request(path="", query=None):
-    params = {"projection": "full"}
-    if query is not None:
-        params.update(q=query, maxResults=40, langRestrict="es")
-    key = get_settings().google_books_api_key
-    if key:
-        params["key"] = key
-    try:
-        with httpx.Client(timeout=20) as client:
-            pages = []
-            starts = (0, 40, 80) if query is not None else (0,)
-            for start in starts:
-                page_params = {**params, "startIndex": start} if query is not None else params
-                for attempt in range(2):
-                    response = client.get("https://www.googleapis.com/books/v1/volumes" + path, params=page_params)
-                    if response.status_code not in {500, 502, 503, 504} or attempt == 1:
-                        break
-                if response.status_code == 404:
-                    raise HTTPException(404, "Libro no encontrado")
-                response.raise_for_status()
-                page = response.json()
-                if not isinstance(page, dict):
-                    raise ValueError("Invalid volume response")
-                pages.append(page)
-                if query is None or len(page.get("items", [])) < 40:
-                    break
-        if query is None:
-            return pages[0]
-        unique = {}
-        for page in pages:
-            for item in page.get("items", []):
-                if item.get("id"):
-                    unique[item["id"]] = item
-        return {**pages[0], "totalItems": len(unique), "items": list(unique.values())}
-    except (httpx.HTTPError, ValueError) as error:
-        logger.warning("Google Books unavailable: %s, HTTP %s", type(error).__name__,
-                       error.response.status_code if isinstance(error, httpx.HTTPStatusError) else "unavailable")
-        raise HTTPException(502, "No se pudo consultar Google Books. Inténtalo nuevamente.") from None
-
-
 def store_volume(db, item, complete=False):
     external_id = item.get("id")
-    info = item.get("volumeInfo", {})
+    info = safe_volume_info(item)
     if not external_id or not isinstance(info, dict):
         raise HTTPException(502, "Google Books devolvió un libro sin identificación válida")
-    title_variants = canonical_title_variants(info.get("title")) or {canonical_book_title(info.get("title"))}
-    identity_keys = [canonical_work_key(title, info.get("authors")) for title in sorted(title_variants)]
-    identity_key = identity_keys[0]
+    title_variants = canonical_title_variants(bibliographic_title(info)) or {canonical_book_title(info.get("title"))}
+    identity_keys = [key for title in sorted(title_variants)
+                     if (key := canonical_work_key(title, info.get("authors")))]
+    identity_key = identity_keys[0] if identity_keys else None
     identifiers = {value.get("type"): str(value.get("identifier", "")).replace("-", "")
                    for value in info.get("industryIdentifiers", []) if isinstance(value, dict)}
     isbn10 = identifiers.get("ISBN_10") if len(identifiers.get("ISBN_10", "")) == 10 else None
     isbn13 = identifiers.get("ISBN_13") if len(identifiers.get("ISBN_13", "")) == 13 else None
     isbn_conflict = False
     db.execute(select(func.pg_advisory_xact_lock(func.hashtext("catalog:libria-feed:" + external_id))))
+    from app.modules.books.open_library_catalog import identifiers
+    valid_ten, valid_thirteen = identifiers(item)
+    if valid_ten or valid_thirteen:
+        db.execute(select(func.pg_advisory_xact_lock(func.hashtext('catalog:isbn:' + (valid_thirteen or valid_ten)))))
     if identity_key:
         db.execute(select(func.pg_advisory_xact_lock(func.hashtext("catalog:work:" + identity_key))))
     sources = db.scalars(select(CatalogSource).where(CatalogSource.external_id == external_id,
@@ -100,7 +64,12 @@ def store_volume(db, item, complete=False):
         return source
     edition = db.get(Edition, (source or legacy).edition_id) if sources else None
     if edition is None:
-        work = db.scalar(select(Work).where(Work.identity_key.in_(identity_keys))) if identity_key else None
+        from app.modules.books.open_library_catalog import find_existing
+        verified = find_existing(db, item)
+        if verified and db.scalar(select(CatalogSource.id).where(CatalogSource.edition_id == verified.id, CatalogSource.provider == 'open-library').limit(1)):
+            edition = verified
+    if edition is None:
+        work = verified_work_for_import(db, bibliographic_title(info), info.get("authors"))
         isbn_edition = db.scalar(select(Edition).where(
             (Edition.isbn13 == isbn13) if isbn13 else (Edition.isbn10 == isbn10))) if isbn13 or isbn10 else None
         if isbn_edition and work and isbn_edition.work_id == work.id:
@@ -108,6 +77,8 @@ def store_volume(db, item, complete=False):
         elif isbn_edition:
             isbn_conflict = True
         if work is None:
+            if identity_key and db.scalar(select(Work.id).where(Work.identity_key == identity_key)):
+                identity_key = None  # Existing incompatible evidence: preserve both records.
             work = Work(title=info.get("title") or "Sin título", identity_key=identity_key,
                         original_language=info.get("language"))
             db.add(work)
@@ -120,26 +91,25 @@ def store_volume(db, item, complete=False):
     edition.title = info.get("title") or edition.title
     if len(edition.title) < len(work.title):
         work.title = edition.title
-    edition.description = info.get("description")
+    edition.description = info.get("description") or edition.description
     work.description = work.description or edition.description
-    edition.language = info.get("language") or "und"
-    edition.publication_date = info.get("publishedDate")
+    edition.language = info.get("language") or edition.language or "und"
+    edition.publication_date = info.get("publishedDate") or edition.publication_date
     try:
-        edition.publication_year = int(str(info.get("publishedDate", ""))[:4]) or None
+        edition.publication_year = int(str(edition.publication_date or "")[:4]) or edition.publication_year
     except ValueError:
-        edition.publication_year = None
-    edition.format = info.get("printType")
+        pass
+    edition.format = info.get("printType") or edition.format
     conflicting_edition = db.scalar(select(Edition).where(Edition.id != edition.id,
         ((Edition.isbn13 == isbn13) if isbn13 else (Edition.isbn10 == isbn10)))) if isbn13 or isbn10 else None
     isbn_conflict = isbn_conflict or conflicting_edition is not None
     if not isbn_conflict:
-        edition.isbn10, edition.isbn13 = isbn10, isbn13
+        edition.isbn10, edition.isbn13 = isbn10 or edition.isbn10, isbn13 or edition.isbn13
     pages = info.get("pageCount")
-    edition.page_count = pages if isinstance(pages, int) and pages > 0 else None
-    edition.publisher_name = info.get("publisher")
-    edition.cover_url = info.get("imageLinks", {}).get("thumbnail")
+    edition.page_count = pages if isinstance(pages, int) and pages > 0 else edition.page_count
+    edition.publisher_name = info.get("publisher") or edition.publisher_name
+    edition.cover_url = info.get("imageLinks", {}).get("thumbnail") or edition.cover_url
     work.categories = work.categories or info.get("categories")
-    work.first_publication_date = work.first_publication_date or info.get("publishedDate")
     for normalized_title in title_variants:
         alternate = db.scalar(select(AlternateTitle).where(AlternateTitle.work_id == work.id,
             AlternateTitle.normalized_title == normalized_title,
@@ -193,21 +163,22 @@ def source_payload(db, source):
 
 def work_payload(db, work_id, preferred_source=None, include_reading_stats=False):
     work_ids = equivalent_work_ids(db, work_id) or {work_id}
-    rows = db.execute(select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id)
-                      .where(Edition.work_id.in_(work_ids), CatalogSource.provider == "google-books")
-                      .order_by(Edition.language, Edition.title, CatalogSource.external_id)).all()
-    if not rows:
-        rows = db.execute(select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id)
-                          .where(Edition.work_id.in_(work_ids)).order_by(Edition.title)).all()
+    all_rows = db.execute(select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id)
+        .where(Edition.work_id.in_(work_ids))).all()
+    priority = {"google-books": 0, "open-library": 1, "libria-feed": 2}
+    chosen = {}
+    for source, edition in sorted((row for row in all_rows if row[0].provider in priority), key=lambda row: (priority.get(row[0].provider, 3), row[1].language, row[1].title)):
+        chosen.setdefault(edition.id, (source, edition))
+    rows = list(chosen.values())
     if not rows:
         return None
     localized = next(((source, edition) for source, edition in rows
                       if is_spanish(edition.language)), None)
     preferred = next(((source, edition) for source, edition in rows
                       if source.external_id == preferred_source), None)
-    source, edition = localized or preferred or rows[0]
+    source, edition = (preferred if preferred and is_spanish(preferred[1].language) else None) or localized or preferred or rows[0]
     payload = source_payload(db, source)
-    editions = [{"id": str(row_edition.id), "externalId": row_source.external_id,
+    editions = [{"id": str(row_edition.id), "externalId": ('openlibrary:' if row_source.provider == 'open-library' else '') + row_source.external_id,
                  "title": row_edition.title, "language": row_edition.language,
                  "publisher": row_edition.publisher_name, "pageCount": row_edition.page_count,
                  "coverUrl": row_edition.cover_url, "publishedDate": row_edition.publication_date,
@@ -216,14 +187,17 @@ def work_payload(db, work_id, preferred_source=None, include_reading_stats=False
                 for row_source, row_edition in rows]
     known_dates = [row_edition.publication_date for _, row_edition in rows
                    if publication_sort_key(row_edition.publication_date)[0] != 9999]
-    first_publication_date = min(known_dates, key=publication_sort_key) if known_dates else None
+    earliest_edition_date = min(known_dates, key=publication_sort_key) if known_dates else None
+    first_publication_date = verified_original_publication(db, work_id)
     rating_average, rating_count = public_rating(db, work_ids)
     reading_stats = reading_statistics(db, work_ids) if include_reading_stats else None
-    return {**payload, "id": str(work_id), "libria": {"workId": str(work_id),
-            "editionId": str(edition.id), "externalId": source.external_id,
-            "catalogOrigin": "google_books" if source.provider == "google-books" else "libria",
+    return {**payload, "id": str(work_id), "libria": {**payload.get('libria', {}), "workId": str(work_id),
+            "editionId": str(edition.id), "externalId": ('openlibrary:' if source.provider == 'open-library' else '') + source.external_id,
+            "catalogOrigin": {"google-books": "google_books", "open-library": "open_library"}.get(source.provider, "libria"),
             "editionCount": len({row_edition.id for _, row_edition in rows}), "editions": editions,
             "firstPublicationDate": first_publication_date,
+            "originalPublicationVerified": first_publication_date is not None,
+            "earliestEditionDate": earliest_edition_date,
             "averageRating": round(float(rating_average), 2) if rating_average is not None else None,
             "ratingsCount": rating_count,
             **({"readingStats": reading_stats} if reading_stats is not None else {})}}
@@ -234,7 +208,7 @@ def local_works(db, query, search_by, limit=40):
     mirrored = select(google_source.id).where(google_source.edition_id == CatalogSource.edition_id,
         google_source.provider == "google-books").exists()
     statement = select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id).where(
-        (CatalogSource.provider == "google-books") | ((CatalogSource.provider == "libria-feed") & ~mirrored))
+        (CatalogSource.provider.in_(["google-books", "open-library"])) | ((CatalogSource.provider == "libria-feed") & ~mirrored))
     if query:
         pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         if search_by == "isbn":
@@ -248,11 +222,11 @@ def local_works(db, query, search_by, limit=40):
         needle = canonical_book_title(query)
         def matches(row):
             source, edition = row
-            info = source.payload.get("volumeInfo", {}) if source.payload else {}
+            info = safe_volume_info(source.payload) if source.payload else {}
             titles = [edition.title, info.get("title", ""), info.get("subtitle", "")]
             authors = info.get("authors") or []
             fields = authors if search_by == "author" else titles + (authors if search_by == "all" else [])
-            return any(needle in canonical_book_title(value) for value in fields)
+            return any(needle in canonical_book_title(value) for value in fields if isinstance(value, str))
         rows = [row for row in rows if matches(row)]
     works = {}
     for source, edition in rows:
@@ -273,71 +247,145 @@ def local_works(db, query, search_by, limit=40):
         exact = title == normalized_query
         starts = bool(normalized_query and title.startswith(normalized_query))
         completeness = sum(bool(info.get(field)) for field in ("authors", "description", "publishedDate", "imageLinks"))
-        publication = publication_sort_key(item.get("libria", {}).get("firstPublicationDate"))
+        publication = publication_sort_key(item.get("libria", {}).get("earliestEditionDate"))
         return (publication, 0 if exact else 1 if starts else 2, -completeness, title)
     return sorted(items, key=relevance)[:limit]
 
 
 def consolidate_catalog_matches(db, query, search_by):
-    """Physically normalize any duplicate groups reached by this search."""
-    matches = local_works(db, query, search_by, limit=1000)
-    for item in matches:
-        consolidate_equivalent_works(db, uuid.UUID(item["libria"]["workId"]))
+    """Search must never physically consolidate catalog records.
+
+    Kept as a compatibility hook for callers; duplicate review is read-only.
+    """
+    return None
+
+
+def search_warning(payload):
+    if not payload.get('partial'):
+        return payload.get('warning')
+    if payload.get('error_code') == 'external_unavailable':
+        return 'La búsqueda externa está temporalmente limitada; mostramos los resultados disponibles. Puedes reintentar más tarde.'
+    warning = payload.get('warning') or 'La búsqueda externa está temporalmente limitada.'
+    return warning.split(' Mostramos los resultados disponibles; pueden faltar libros.')[0]
+
+
+def cached_search_payload(db, key, items, refresh):
+    cached = db.get(CatalogQuery, key, populate_existing=True)
+    if cached is None:
+        return None
+    age = (datetime.now(timezone.utc) - cached.fetched_at).total_seconds()
+    payload = cached.payload or {}
+    ttl = 30 if payload.get("error_code") and not payload.get("items") else 60 if payload.get("partial") else 600 if not payload.get("items") else 86400
+    cooldown = max(30 if payload.get("error_code") else 10, payload.get("retry_after", 0))
+    ttl = max(ttl, payload.get("retry_after", 0))
+    # Forced refreshes also share a small cooldown, including across web workers.
+    if age >= ttl or (refresh and age >= cooldown):
+        return None
+    extra = [present_open_library(db, item, match_work=not key.startswith('es-only-v4:isbn:')) for item in payload.get("items", []) if str(item.get("id", "")).startswith("openlibrary:")]
+    items = list({item["id"]: item for item in items + extra}.values())
+    result = {**payload, "items": items, "totalItems": len(items)}
+    if result.get('partial'):
+        result['warning'] = search_warning(result)
+    return result
 
 
 @router.get("")
-def search_books(db: Annotated[Session, Depends(get_db)], q: str = Query(default="", max_length=200),
-                 search_by: Literal["all", "title", "author", "isbn"] = "all"):
+def search_books(response: Response, db: Annotated[Session, Depends(get_db)], q: str = Query(default="", max_length=200),
+                 search_by: Literal["all", "title", "author", "isbn"] = "all",
+                 refresh: bool = False, start_index: int = Query(default=0, ge=0, le=1000),
+                 provider: Literal["google_books", "open_library"] = "google_books",
+                 page: int = Query(default=1, ge=1, le=1000)):
+    response.headers["Cache-Control"] = "no-store"
     query = q.strip()
-    # Google's intitle operator is unexpectedly narrow for multi-word saga names
-    # (for example, it only exposes a couple of Spanish Harry Potter records).
-    # General relevance gives the title tab the expected discovery behaviour.
     google_query = ({"author": "inauthor:", "isbn": "isbn:"}.get(search_by, "") + query)
-    # Version the cache because older entries may contain non-Spanish results.
-    key = "es-only-v2:" + search_by + ":" + query.casefold()
+    key = "es-only-v4:" + search_by + ":" + query.casefold() + ":" + provider + ":" + str(page if provider == "open_library" else start_index)
     consolidate_catalog_matches(db, query, search_by)
-    # Search is also the catalog synchronization boundary; persist physical
-    # consolidation even when no Google request is necessary afterwards.
     db.commit()
     db.expire_all()
-    items = local_works(db, query, search_by)
-    total = len(items)
+    limit = max(40, start_index + 40)
+    items = local_works(db, query, search_by, limit=limit)
+    base = {"kind": "books#volumes", "totalItems": len(items), "items": items}
     if not query:
-        return {"kind": "books#volumes", "totalItems": total, "items": items}
-    exact = any(canonical_book_title(item.get("volumeInfo", {}).get("title")) == canonical_book_title(query)
-                for item in items)
-    cached = db.get(CatalogQuery, key)
-    if exact or len(items) >= 5 or cached:
-        return {"kind": "books#volumes", "totalItems": total, "items": items}
+        return base
+    cached = cached_search_payload(db, key, items, refresh)
+    if cached is not None:
+        return cached
     db.execute(select(func.pg_advisory_xact_lock(func.hashtext("catalog:query:" + key))))
-    try:
-        result = google_request(query=google_query)
-    except HTTPException as error:
-        if error.status_code != 502:
-            raise
-        return {"totalItems": total, "items": items, "partial": True,
-                "warning": "Google Books no está disponible en este momento. Mostramos solo coincidencias guardadas; pueden faltar libros. Vuelve a intentar la búsqueda."}
-    external_items = result.get("items", [])
-    for item in sorted(external_items, key=lambda value: value["id"]):
-        if is_spanish(item.get("volumeInfo", {}).get("language")):
-            store_volume(db, item)
-    consolidate_catalog_matches(db, query, search_by)
+    # A concurrent request may have completed while this one waited for the lock.
+    items = local_works(db, query, search_by, limit=limit)
+    cached = cached_search_payload(db, key, items, refresh)
+    if cached is not None:
+        return cached
+    previous = db.get(CatalogQuery, key)
+    previous_items = list((previous.payload or {}).get('items') or []) if previous else []
+    result = {"items": []}
+    google_failed = False
+    if provider == "google_books":
+        try:
+            result = google_request(query=google_query, **({"start_index": start_index} if start_index else {}))
+        except HTTPException as error:
+            if error.status_code != 502:
+                raise
+            google_failed = True
+            detail = error.detail if isinstance(error.detail, dict) else {}
+            result = {"items": [], "partial": True, "error_code": detail.get("code", "unavailable"),
+                      "warning": detail.get("message", "Búsqueda externa limitada."), **({"retry_after": detail["retry_after"]} if "retry_after" in detail else {})}
+    raw = result.get("items") or []
+    valid = [item for item in raw if valid_volume(item)] if isinstance(raw, list) else []
+    if not isinstance(raw, list) or len(valid) != len(raw):
+        result.update(partial=True, error_code="invalid_response", warning="Se omitieron registros inválidos.")
+    useful = [item for item in valid if is_spanish(item["volumeInfo"].get("language"))]
+    for item in sorted(useful, key=lambda value: value["id"]):
+        store_volume(db, item)
+    external = []
+    selected_provider = provider
+    if provider == "open_library" or google_failed or result.get("partial") or not useful:
+        try:
+            fallback = open_library.search(query, search_by, page if provider == "open_library" else 1)
+            external = fallback.get("items") or []
+            if external or (not google_failed and not result.get("partial")):
+                result = fallback
+                selected_provider = "open_library"
+            elif google_failed or result.get("partial"):
+                result.update(has_more=False, next_start_index=None)
+        except HTTPException:
+            result.update(partial=True, error_code="external_unavailable", has_more=False, next_start_index=None,
+                          warning="La búsqueda externa está temporalmente limitada. Mostramos los libros disponibles; puedes reintentar.")
+    # Searches never physically consolidate existing Work records.
+    if useful:
+        consolidate_catalog_matches(db, query, search_by)
     db.flush()
     db.expire_all()
-    items = local_works(db, query, search_by)
-    result = {"kind": "books#volumes", "totalItems": len(items), "items": items}
+    items = local_works(db, query, search_by, limit=limit)
+    if result.get('partial'):
+        # Stale-if-error: keep verified, previously discovered editions when a
+        # refresh fails. They may exist only in cache until the user selects one.
+        external += [item for item in previous_items if str(item.get('id', '')).startswith('openlibrary:')]
+    items += [present_open_library(db, item, match_work=search_by != "isbn") for item in external]
+    items = list({item["id"]: item for item in items}.values())
+    payload = {"kind": "books#volumes", "totalItems": len(items), "items": items, "active_provider": selected_provider}
+    for field in ("has_more", "next_start_index", "next_page", "partial", "error_code", "warning", "retry_after"):
+        if field in result:
+            payload[field] = result[field]
+    if payload.get("partial"):
+        payload["has_more"] = False
+        payload["warning"] = search_warning(payload)
     cached = db.get(CatalogQuery, key)
     if cached:
-        cached.payload, cached.fetched_at = result, datetime.now(timezone.utc)
+        cached.payload, cached.fetched_at = payload, datetime.now(timezone.utc)
     else:
-        db.add(CatalogQuery(query=key, payload=result, fetched_at=datetime.now(timezone.utc)))
+        db.add(CatalogQuery(query=key, payload=payload, fetched_at=datetime.now(timezone.utc)))
     db.commit()
-    return result
+    return payload
 
 
 @router.get("/{volume_id}")
 def get_book(volume_id: str, response: Response, db: Annotated[Session, Depends(get_db)]):
     response.headers["Cache-Control"] = "no-store"
+    if volume_id.startswith("openlibrary:"):
+        edition = ensure_edition(db, volume_id)
+        db.commit()
+        return work_payload(db, edition.work_id, preferred_source=volume_id.removeprefix("openlibrary:"), include_reading_stats=True)
     try:
         work_id = uuid.UUID(volume_id)
     except ValueError:

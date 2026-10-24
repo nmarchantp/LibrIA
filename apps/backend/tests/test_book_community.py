@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.database import engine, get_db
 from app.main import app
 from app.modules.auth.dependencies import get_current_user
-from app.modules.books.models import CatalogSource, Edition, Work
+from app.modules.books.models import CatalogSource, Edition, Work, WorkAuthor
 from app.modules.books.router import store_volume
 from app.modules.library.models import LibraryEntry, Reading
 from app.modules.social.models import Review
@@ -158,6 +158,8 @@ class BookCommunityTest(unittest.TestCase):
         duplicate = Work(title=self.volume['volumeInfo']['title'])
         self.db.add(duplicate)
         self.db.flush()
+        for link in self.db.scalars(select(WorkAuthor).where(WorkAuthor.work_id == self.work_id)):
+            self.db.add(WorkAuthor(work_id=duplicate.id, author_id=link.author_id, position=link.position))
         edition = Edition(work_id=duplicate.id, title=duplicate.title, language='es', page_count=100)
         self.db.add(edition)
         self.db.flush()

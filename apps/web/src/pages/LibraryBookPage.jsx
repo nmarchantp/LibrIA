@@ -28,7 +28,7 @@ function WallComposer({ type, book }) {
         method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },
         body: JSON.stringify({ source: 'community', kind: 'community', publication_type: type,
           title: `${isNote ? 'Nota' : 'Teoría'} · ${book.title}`, body: body.trim(),
-          book_ref: String(book.id), book_title: book.title }),
+          book_ref: String(book.id), book_title: book.originalTitle || book.title }),
       })
       setBody('')
       setMessage(`${isNote ? 'Nota' : 'Teoría'} publicada en tu muro.`)

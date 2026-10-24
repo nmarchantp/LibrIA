@@ -16,27 +16,40 @@ export default function BooksPage() {
   const [error, setError] = useState('')
   const [warning, setWarning] = useState('')
   const [retry, setRetry] = useState(0)
+  const [startIndex, setStartIndex] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [nextStartIndex, setNextStartIndex] = useState(0)
+  const [cursor, setCursor] = useState({ provider: 'google_books', page: 1, append: false })
+  const [nextCursor, setNextCursor] = useState({ provider: 'google_books', page: 1 })
 
   useEffect(() => {
     let active = true
+    const controller = new AbortController()
     const loadBooks = async () => {
       if (!query.trim()) {
-        setBooks([]); setError(''); setWarning(''); setLoading(false)
+        setBooks([]); setError(''); setWarning(''); setLoading(false); setHasMore(false)
         return
       }
       try {
         setLoading(true); setError(''); setWarning('')
-        const results = await searchBookCatalog(query, searchBy)
-        if (active) { setBooks(results.books); setWarning(results.warning) }
-      } catch {
-        if (active) { setBooks([]); setError('No se pudo consultar el catálogo. Inténtalo nuevamente.') }
+        const results = await searchBookCatalog(query, searchBy, { signal: controller.signal, refresh: retry > 0, startIndex, ...cursor })
+        if (active) {
+          setBooks(current => cursor.append ? [...new Map([...current, ...results.books].map(book => [book.id, book])).values()] : results.books)
+          setWarning(results.warning); setHasMore(results.hasMore); setNextStartIndex(results.nextStartIndex)
+          setNextCursor({ provider: results.provider, page: results.nextPage, append: true })
+        }
+      } catch (cause) {
+        if (active && cause.name !== 'AbortError') {
+          if (!cursor.append) setBooks([])
+          setError(cause.code === 'backend_connection' ? cause.message : cause.message || 'No se pudo consultar el catálogo. Inténtalo nuevamente.')
+        }
       } finally {
         if (active) setLoading(false)
       }
     }
     const timer = setTimeout(loadBooks, 350)
-    return () => { active = false; clearTimeout(timer) }
-  }, [query, searchBy, retry])
+    return () => { active = false; clearTimeout(timer); controller.abort() }
+  }, [query, searchBy, retry, startIndex, cursor])
 
   return (
     <section className="page-width page books-search-page">
@@ -48,14 +61,14 @@ export default function BooksPage() {
         <label className="search-box catalog-search-input">
           <Search aria-hidden="true" />
           <input type="search" aria-label={`Buscar por ${searchBy}`} autoComplete="off"
-            value={query} onChange={event => setQuery(event.target.value)}
+            value={query} onChange={event => { setQuery(event.target.value); setStartIndex(0); setRetry(0); setHasMore(false); setCursor({ provider: 'google_books', page: 1, append: false }) }}
             placeholder={searchBy === 'isbn' ? 'Escribe el ISBN…' : `Buscar por ${searchBy === 'title' ? 'título' : 'autor'}…`} />
           {query && <button type="button" className="search-clear" aria-label="Limpiar búsqueda" onClick={() => setQuery('')}><X /></button>}
         </label>
         <div className="catalog-search-tabs" role="tablist" aria-label="Tipo de búsqueda">
           {searchModes.map(([value, label]) => <button type="button" role="tab" key={value}
             aria-selected={searchBy === value} className={searchBy === value ? 'active' : ''}
-            onClick={() => setSearchBy(value)}>{label}</button>)}
+            onClick={() => { setSearchBy(value); setStartIndex(0); setRetry(0); setHasMore(false); setCursor({ provider: 'google_books', page: 1, append: false }) }}>{label}</button>)}
         </div>
       </div>
 
@@ -80,7 +93,7 @@ export default function BooksPage() {
               {book.language && <span className="language-chip">{book.language.toUpperCase()}</span>}
               <span className={`origin-chip ${book.catalogOrigin === 'libria' ? 'origin-libria' : 'origin-google'}`}>
                 {book.catalogOrigin === 'libria' ? <Database /> : <Cloud />}
-                {book.catalogOrigin === 'libria' ? 'LibrIA' : 'Google Books'}
+                {book.catalogOrigin === 'libria' ? 'LibrIAverse' : 'Google Books'}
               </span>
               {book.editionCount > 0 && <span>{book.editionCount} {book.editionCount === 1 ? 'edición' : 'ediciones'}</span>}
               {book.averageRating && <span className="rating-chip"><RatingStar selected />{book.averageRating}{book.ratingsCount ? ` · ${book.ratingsCount.toLocaleString('es-CL')}` : ''}</span>}
@@ -89,6 +102,7 @@ export default function BooksPage() {
           <ChevronRight className="catalog-result-arrow" aria-hidden="true" />
         </Link>)}
       </div>
+      {hasMore && !error && !warning && <div className="catalog-state"><button type="button" className="button primary" disabled={loading} onClick={() => { setStartIndex(nextStartIndex); setCursor(nextCursor); setRetry(value => value + 1) }}>Ver más resultados</button></div>}
     </section>
   )
 }

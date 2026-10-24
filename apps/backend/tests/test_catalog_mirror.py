@@ -18,6 +18,12 @@ from app.modules.books.router import google_request, store_volume
 
 class CatalogMirrorTest(unittest.TestCase):
     def setUp(self):
+        fallback = patch('app.modules.books.router.open_library.search', return_value={'items': [], 'has_more': False, 'next_page': None})
+        self.fallback = fallback.start()
+        self.addCleanup(fallback.stop)
+        google = patch('app.modules.books.router.google_request', return_value={'items': [], 'has_more': False})
+        google.start()
+        self.addCleanup(google.stop)
         self.connection = engine.connect()
         self.transaction = self.connection.begin()
         self.db = Session(bind=self.connection, join_transaction_mode="create_savepoint")
@@ -66,14 +72,14 @@ class CatalogMirrorTest(unittest.TestCase):
             self.assertEqual(self.client.get("/api/books").status_code, 200)
             self.assertEqual(provider.call_count, 1)
 
-    def test_exact_local_match_skips_google(self):
+    def test_exact_local_match_does_not_prevent_external_discovery(self):
         store_volume(self.db, self.volume)
         with patch("app.modules.books.router.google_request",
                    return_value={"totalItems": 1, "items": [self.volume]}) as provider:
             response = self.client.get("/api/books", params={"q": self.volume["volumeInfo"]["title"]})
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(response.json()["items"][0]["libria"]["externalId"], self.volume["id"])
-            provider.assert_not_called()
+            provider.assert_called_once()
 
     def test_native_catalog_book_is_identified_as_libria(self):
         title = "Libro LibrIA " + uuid.uuid4().hex
@@ -192,7 +198,7 @@ class CatalogMirrorTest(unittest.TestCase):
         with patch("app.modules.books.router.google_request",
                    return_value={"totalItems": 3, "items": books}):
             response = self.client.get("/api/books", params={"q": f"Coleccion {marker}"})
-        self.assertEqual([item["libria"]["firstPublicationDate"] for item in response.json()["items"]],
+        self.assertEqual([item["libria"]["earliestEditionDate"] for item in response.json()["items"]],
                          ["2001-06", "2002-01-15", "2003"])
 
     def test_bilingual_title_bridges_editions_into_one_result(self):
@@ -237,27 +243,37 @@ class CatalogMirrorTest(unittest.TestCase):
     def test_empty_result_is_cached(self):
         with patch("app.modules.books.router.google_request", return_value={"totalItems": 0}) as provider:
             query = uuid.uuid4().hex
-            self.assertEqual(self.client.get("/api/books", params={"q": query}).json(), {"kind": "books#volumes", "totalItems": 0, "items": []})
+            result = self.client.get("/api/books", params={"q": query}).json()
+            self.assertEqual(result['totalItems'], 0)
+            self.assertEqual(result['items'], [])
             self.client.get("/api/books", params={"q": query})
             self.assertEqual(provider.call_count, 1)
 
-    def test_provider_failure_returns_explicit_partial_results_without_caching(self):
+    def test_provider_failure_returns_partial_results_with_short_cooldown(self):
         query = "missing-" + uuid.uuid4().hex
         with patch("app.modules.books.router.google_request", side_effect=HTTPException(502, "Unavailable")):
             response = self.client.get("/api/books", params={"q": query})
             self.assertEqual(response.status_code, 200, response.text)
             self.assertTrue(response.json()["partial"])
             self.assertEqual(response.json()["items"], [])
-            self.assertIn("pueden faltar libros", response.json()["warning"])
+            self.assertIn("limitada", response.json()["warning"])
+            self.assertNotIn("pueden faltar libros", response.json()["warning"])
         matching = {**self.volume, "volumeInfo": {**self.volume["volumeInfo"], "title": query}}
         result = {"totalItems": 1, "items": [matching]}
         with patch("app.modules.books.router.google_request", return_value=result) as provider:
+            self.assertTrue(self.client.get("/api/books", params={"q": query, "refresh": True}).json()["partial"])
+            provider.assert_not_called()
+            from app.modules.books.models import CatalogQuery
+            from datetime import timedelta
+            cached = self.db.get(CatalogQuery, "es-only-v4:all:" + query + ":google_books:0")
+            cached.fetched_at -= timedelta(seconds=31)
+            self.db.flush()
             self.assertEqual(self.client.get("/api/books", params={"q": query}).json()["totalItems"], 1)
             provider.assert_called_once()
 
     def test_transient_google_failure_is_retried(self):
         request = httpx.Request("GET", "https://www.googleapis.com/books/v1/volumes")
-        with patch("app.modules.books.router.httpx.Client") as client:
+        with patch("app.modules.books.google_books.httpx.Client") as client:
             transport = client.return_value.__enter__.return_value
             transport.get.side_effect = [httpx.Response(503, request=request),
                 httpx.Response(200, request=request, json=self.volume)]
@@ -266,7 +282,7 @@ class CatalogMirrorTest(unittest.TestCase):
 
     def test_google_search_restricts_provider_results_to_spanish(self):
         request = httpx.Request("GET", "https://www.googleapis.com/books/v1/volumes")
-        with patch("app.modules.books.router.httpx.Client") as client:
+        with patch("app.modules.books.google_books.httpx.Client") as client:
             transport = client.return_value.__enter__.return_value
             transport.get.return_value = httpx.Response(200, request=request, json={"totalItems": 0})
             google_request(query="quijote")
@@ -276,11 +292,11 @@ class CatalogMirrorTest(unittest.TestCase):
         request = httpx.Request("GET", "https://www.googleapis.com/books/v1/volumes")
         first_page = [{"id": f"book-{index}", "volumeInfo": {"title": str(index)}} for index in range(40)]
         second_page = [first_page[-1], {"id": "book-40", "volumeInfo": {"title": "40"}}]
-        with patch("app.modules.books.router.httpx.Client") as client:
+        with patch("app.modules.books.google_books.httpx.Client") as client:
             transport = client.return_value.__enter__.return_value
             transport.get.side_effect = [httpx.Response(200, request=request, json={"items": first_page}),
                                          httpx.Response(200, request=request, json={"items": second_page})]
-            result = google_request(query="harry potter")
+            result = google_request(query="harry potter", pages=2)
         self.assertEqual(len(result["items"]), 41)
         self.assertEqual(transport.get.call_args_list[1].kwargs["params"]["startIndex"], 40)
 

@@ -87,7 +87,8 @@ export default function BookDetailPage() {
     if (!edition) return
     setDetailBook(current => ({
       ...current, editionId: edition.id, externalId: edition.externalId,
-      title: edition.title || current.title, language: edition.language || current.language,
+      title: edition.title || current.title, originalTitle: edition.originalTitle || edition.title || current.originalTitle,
+      language: edition.language || current.language,
       publisher: edition.publisher || 'Editorial desconocida', publishedDate: edition.publishedDate || '',
       pageCount: edition.pageCount || null, printType: edition.format || 'BOOK',
       isbn: edition.isbn13 || edition.isbn10 || '', image: edition.coverUrl || null,
@@ -111,7 +112,7 @@ export default function BookDetailPage() {
   const ratingsCount = Number(book.ratingsCount) || 0
   const firstAuthor = book.authors?.[0] || book.author
   const details = [
-    ['Editorial', book.publisher, Landmark], ['Publicación', book.publishedDate || book.year, CalendarDays],
+    ['Editorial', book.publisher, Landmark], ['Publicación', book.publishedDate, CalendarDays],
     ['Páginas', book.pageCount ? `${book.pageCount} páginas` : null, FileText],
     ['Idioma', languageNames[book.language] || book.language?.toUpperCase(), Globe2],
     ['Formato', formatNames[book.printType] || book.printType, BookOpen], ['ISBN', book.isbn, Barcode],
@@ -133,7 +134,7 @@ export default function BookDetailPage() {
         <BookCategoryChips key={book.id} categories={categories} />
         <h1>{book.title}</h1>
         {book.subtitle && <p className="detail-subtitle">{book.subtitle}</p>}
-        <p className="detail-byline"><span>{book.author || 'Autor no disponible'}</span>{(book.year || book.publishedDate) && <span className="detail-publication-year"> · {book.year || book.publishedDate.slice(0, 4)}</span>}
+        <p className="detail-byline"><span>{book.author || 'Autor no disponible'}</span>{book.year && <span className="detail-publication-year"> · {book.year}</span>}
         {libraryBook && statusClass && <span className={`detail-reading-status ${statusClass}`}><StatusIcon size={14} aria-hidden="true" />{book.status}</span>}
         </p>
         <div className="detail-synopsis-preview">{synopsis.text || 'Este libro no tiene una sinopsis disponible.'}</div>
