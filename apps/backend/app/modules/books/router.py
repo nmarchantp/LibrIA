@@ -7,12 +7,13 @@ from typing import Annotated, Literal
 from urllib.parse import quote
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from app.core.config import get_settings
 from app.core.database import get_db
+from app.modules.books.community import public_rating, reading_statistics
 from app.modules.books.identity import canonical_book_title, canonical_title_variants, canonical_work_key
 from app.modules.books.models import AlternateTitle, Author, CatalogQuery, CatalogSource, Edition, Work, WorkAuthor
 from app.modules.books.service import consolidate_equivalent_works, equivalent_work_ids
@@ -191,7 +192,6 @@ def source_payload(db, source):
 
 
 def work_payload(db, work_id, preferred_source=None, include_reading_stats=False):
-    from app.modules.social.models import Review
     work_ids = equivalent_work_ids(db, work_id) or {work_id}
     rows = db.execute(select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id)
                       .where(Edition.work_id.in_(work_ids), CatalogSource.provider == "google-books")
@@ -217,31 +217,8 @@ def work_payload(db, work_id, preferred_source=None, include_reading_stats=False
     known_dates = [row_edition.publication_date for _, row_edition in rows
                    if publication_sort_key(row_edition.publication_date)[0] != 9999]
     first_publication_date = min(known_dates, key=publication_sort_key) if known_dates else None
-    rating_average, rating_count = db.execute(select(func.avg(Review.rating), func.count(Review.rating)).where(
-        Review.work_id.in_(work_ids), Review.status == "published", Review.rating.is_not(None))).one()
-
-    reading_stats = None
-    if include_reading_stats:
-        from app.modules.library.models import LibraryEntry, Reading
-        from app.modules.users.models import User
-
-        def reader_ids(status):
-            return select(LibraryEntry.user_id).join(Reading, Reading.library_entry_id == LibraryEntry.id).where(
-                Reading.work_id.in_(work_ids), Reading.status == status).distinct().subquery()
-
-        finished_readers = reader_ids("finished")
-        reading_readers = reader_ids("reading")
-        abandoned_readers = reader_ids("abandoned")
-        reader_preview = db.execute(select(User.display_name, User.avatar_url)
-            .where(User.id.in_(select(finished_readers.c.user_id)))
-            .order_by(User.display_name).limit(6)).all()
-        reading_stats = {
-            "finished": db.scalar(select(func.count()).select_from(finished_readers)) or 0,
-            "reading": db.scalar(select(func.count()).select_from(reading_readers)) or 0,
-            "abandoned": db.scalar(select(func.count()).select_from(abandoned_readers)) or 0,
-            "readerPreview": [{"displayName": name, "avatarUrl": avatar_url}
-                              for name, avatar_url in reader_preview],
-        }
+    rating_average, rating_count = public_rating(db, work_ids)
+    reading_stats = reading_statistics(db, work_ids) if include_reading_stats else None
     return {**payload, "id": str(work_id), "libria": {"workId": str(work_id),
             "editionId": str(edition.id), "externalId": source.external_id,
             "catalogOrigin": "google_books" if source.provider == "google-books" else "libria",
@@ -359,25 +336,29 @@ def search_books(db: Annotated[Session, Depends(get_db)], q: str = Query(default
 
 
 @router.get("/{volume_id}")
-def get_book(volume_id: str, db: Annotated[Session, Depends(get_db)]):
+def get_book(volume_id: str, response: Response, db: Annotated[Session, Depends(get_db)]):
+    response.headers["Cache-Control"] = "no-store"
     try:
         work_id = uuid.UUID(volume_id)
     except ValueError:
         work_id = None
     if work_id and db.get(Work, work_id):
         return work_payload(db, work_id, include_reading_stats=True)
+    if work_id and (edition := db.get(Edition, work_id)):
+        return work_payload(db, edition.work_id, include_reading_stats=True)
     source = db.scalar(select(CatalogSource).where(CatalogSource.provider == "google-books", CatalogSource.external_id == volume_id))
     if source and source.detail_complete:
-        return source.payload
+        edition = db.get(Edition, source.edition_id)
+        return work_payload(db, edition.work_id, preferred_source=volume_id, include_reading_stats=True)
     if source is None and (":" in volume_id or volume_id.isdigit()):
         legacy = db.scalar(select(CatalogSource).where(CatalogSource.provider == "libria-feed", CatalogSource.external_id == volume_id))
         if legacy:
             edition = db.get(Edition, legacy.edition_id)
-            return {"id": volume_id, "kind": "books#volume", "volumeInfo": {"title": edition.title,
-                "language": edition.language, "pageCount": edition.page_count, "description": edition.description}}
+            return work_payload(db, edition.work_id, preferred_source=volume_id, include_reading_stats=True)
     item = google_request("/" + quote(volume_id, safe=""))
     if item.get("id") != volume_id:
         raise HTTPException(502, "Google Books devolvió un identificador diferente")
     source = store_volume(db, item, complete=True)
     db.commit()
-    return source.payload
+    edition = db.get(Edition, source.edition_id)
+    return work_payload(db, edition.work_id, preferred_source=volume_id, include_reading_stats=True)

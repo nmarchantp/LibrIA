@@ -15,5 +15,9 @@ export async function apiRequest(path, options = {}) {
     error.status = response.status
     throw error
   }
-  return response.status === 204 ? null : response.json()
+  const data = response.status === 204 ? null : await response.json()
+  if (/^\/(reviews|readings)(\/|\?|$)/.test(path) && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method?.toUpperCase())) {
+    window.dispatchEvent(new Event('libria:book-activity-changed'))
+  }
+  return data
 }

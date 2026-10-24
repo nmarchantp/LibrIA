@@ -60,6 +60,6 @@ export async function searchBookCatalog(query, searchBy = 'all') {
 
 export async function getGoogleBookById(id) {
   if (!id) return null
-  const item = await apiRequest(`/books/${encodeURIComponent(id)}`)
+  const item = await apiRequest(`/books/${encodeURIComponent(id)}`, { cache: 'no-store' })
   return normalizeGoogleBook(item)
 }

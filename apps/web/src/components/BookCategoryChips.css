@@ -1,0 +1,43 @@
+/* Family tokens follow theme luminance without changing any theme palette. */
+:root {
+  --genre-fantasy:#52745b;
+  --genre-romance:#9b526d;
+  --genre-young:#795a9b;
+  --genre-adventure:#8b651f;
+  --genre-mystery:#536b80;
+  --genre-horror:#735080;
+  --genre-scifi:#396fa0;
+  --genre-historical:#9b5d46;
+  --genre-fiction:#527a95;
+  --genre-classics:#806849;
+  --genre-neutral:var(--muted);
+}
+:root:is([data-theme="dark"],[data-theme="dark-rosado"],[data-theme="dark-blood"],[data-theme="dark-dorado"]) {
+  --genre-fantasy:#a0c5a8;
+  --genre-romance:#dcadc0;
+  --genre-young:#c8b0e1;
+  --genre-adventure:#d5bb85;
+  --genre-mystery:#aabfce;
+  --genre-horror:#baa0cf;
+  --genre-scifi:#9abfe0;
+  --genre-historical:#d9aa96;
+  --genre-fiction:#abc9dc;
+  --genre-classics:#d0bea2;
+}
+.genre-tags [data-family="fantasy"] { --genre-color:var(--genre-fantasy); }
+.genre-tags [data-family="romance"] { --genre-color:var(--genre-romance); }
+.genre-tags [data-family="young"] { --genre-color:var(--genre-young); }
+.genre-tags [data-family="adventure"] { --genre-color:var(--genre-adventure); }
+.genre-tags [data-family="mystery"] { --genre-color:var(--genre-mystery); }
+.genre-tags [data-family="horror"] { --genre-color:var(--genre-horror); }
+.genre-tags [data-family="scifi"] { --genre-color:var(--genre-scifi); }
+.genre-tags [data-family="historical"] { --genre-color:var(--genre-historical); }
+.genre-tags [data-family="fiction"] { --genre-color:var(--genre-fiction); }
+.genre-tags [data-family="classics"] { --genre-color:var(--genre-classics); }
+.genre-tags [data-family="neutral"] { --genre-color:var(--genre-neutral); }
+.genre-tags span[data-family] {
+  color:var(--genre-color);
+  border-color:color-mix(in srgb,var(--genre-color) 42%,transparent);
+  background:color-mix(in srgb,var(--genre-color) 6%,transparent);
+}
+.genre-tags .genre-tags-more { color:var(--genre-neutral); }

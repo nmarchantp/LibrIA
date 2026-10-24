@@ -120,7 +120,8 @@ export function LibraryProvider({ children }) {
       : [...current, withReading(book, reading)])
     return reading
   }, [])
-  const getBook = useCallback((id) => books.find(book => String(book.id) === String(id))
+  const getBook = useCallback((id) => books.find(book => [book.id, book.workId, book.externalId, book.rawVolume?.id]
+    .some(reference => reference != null && String(reference) === String(id)))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])
   const removeBook = async book => {
     await apiRequest(`/readings/library/${book.workId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })

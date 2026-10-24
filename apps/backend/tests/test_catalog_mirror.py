@@ -55,8 +55,13 @@ class CatalogMirrorTest(unittest.TestCase):
     def test_complete_detail_is_served_offline(self):
         with patch("app.modules.books.router.google_request", return_value=self.volume) as provider:
             url = "/api/books/" + self.volume["id"]
-            self.assertEqual(self.client.get(url).json(), self.volume)
-            self.assertEqual(self.client.get(url).json(), self.volume)
+            first = self.client.get(url).json()
+            self.assertEqual(first["volumeInfo"], self.volume["volumeInfo"])
+            self.assertEqual(first["unknownFutureField"], self.volume["unknownFutureField"])
+            self.assertEqual(first["libria"]["externalId"], self.volume["id"])
+            self.assertEqual(first["libria"]["ratingsCount"], 0)
+            self.assertEqual(first["libria"]["readingStats"]["finished"], 0)
+            self.assertEqual(self.client.get(url).json(), first)
             self.assertEqual(provider.call_count, 1)
             self.assertEqual(self.client.get("/api/books").status_code, 200)
             self.assertEqual(provider.call_count, 1)
