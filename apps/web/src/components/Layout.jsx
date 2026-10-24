@@ -59,6 +59,7 @@ export default function Layout() {
         <NavLink to="/books" className="navigation-galaxy-link"><NavigationIcon variant="book" /><span>Explorar libros</span><NavigationGalaxy /></NavLink>
         <NavLink to="/events" className="navigation-galaxy-link"><CalendarDays size={22} /><span>Eventos</span><NavigationGalaxy /></NavLink>
         <NavLink to="/recommendations" className="navigation-galaxy-link"><NavigationIcon variant="wand" /><span>Recomendaciones IA</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/settings" className="navigation-galaxy-link"><Settings2 size={22} /><span>Configuración</span><NavigationGalaxy /></NavLink>
       </nav>
       <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
       </div>

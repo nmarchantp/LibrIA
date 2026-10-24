@@ -28,7 +28,7 @@ async function until(expression) {
   throw new Error(`Timed out: ${expression}`)
 }
 async function click(selector) { await evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`); await pause(70) }
-const labels = ['Mural', 'Mi perfil', 'Explorar libros', 'Eventos', 'Recomendaciones IA']
+const labels = ['Mural', 'Mi perfil', 'Explorar libros', 'Eventos', 'Recomendaciones IA', 'Configuración']
 async function checkNavigation() {
   assert.deepEqual(await evaluate(`[...document.querySelectorAll('#main-navigation>a')].map(a=>a.textContent.trim())`), labels)
   assert.equal(await evaluate(`document.querySelectorAll('.social-topbar').length===1 && document.querySelectorAll('a[aria-current=page]').length<=1`), true, 'Single header and active route')
@@ -51,15 +51,30 @@ try {
     await checkNavigation()
   }
   await click('#main-navigation a[href="/profile"]')
-  await until(`document.querySelectorAll('.reader-profile-tabs button').length===6`)
-  assert.deepEqual(await evaluate(`[...document.querySelectorAll('.reader-profile-tabs button')].map(b=>b.textContent.trim())`), ['Sobre mí', 'Mi biblioteca', 'Mis análisis', 'Mi actividad', 'Mi cuenta', 'Personalización'])
+  await until(`document.querySelectorAll('.reader-profile-tabs button').length===4`)
+  assert.deepEqual(await evaluate(`[...document.querySelectorAll('.reader-profile-tabs button')].map(b=>b.textContent.trim())`), ['Sobre mí', 'Mi biblioteca', 'Mis análisis', 'Mi actividad'])
   await evaluate(`document.querySelectorAll('.reader-profile-tabs button')[1].click()`)
   await until(`Boolean(document.querySelector('.reader-library-filters'))`)
   assert.equal(await evaluate(`new URLSearchParams(location.search).get('tab')`), 'library')
   await evaluate(`document.querySelectorAll('.reader-profile-tabs button')[2].click()`)
   assert.equal(await evaluate(`new URLSearchParams(location.search).get('tab')`), 'analysis')
   await checkNavigation()
-  console.log('PASS exact five-link sidebar, single active route, header shortcuts, all profile tabs and existing library/analysis access')
+  console.log('PASS exact six-link sidebar, single active route, header shortcuts, all profile tabs and existing library/analysis access')
+
+  await click('#main-navigation a[href="/settings"]')
+  await until(`Boolean(document.querySelector('.settings-page .account-details'))`)
+  assert.equal(await evaluate(`document.querySelector('#main-navigation a[href="/settings"]').getAttribute('aria-current')`), 'page')
+  await click('.settings-navigation a[href="/settings?tab=personalization"]')
+  await until(`document.querySelectorAll('.settings-page .theme-option').length===6`)
+  assert.equal(await evaluate(`!document.querySelector('.settings-page .account-details')`), true)
+  for (const legacy of ['account', 'personalization']) {
+    await evaluate(`history.pushState({},'', '/profile?tab=${legacy}');window.dispatchEvent(new PopStateEvent('popstate'))`)
+    await until(`location.pathname==='/settings'`)
+    assert.equal(await evaluate(`new URLSearchParams(location.search).get('tab')`), legacy === 'personalization' ? 'personalization' : null)
+  }
+  await click('#main-navigation a[href="/profile"]')
+  await until(`document.querySelectorAll('.reader-profile-tabs button').length===4`)
+  console.log('PASS settings account/theme sections, profile tabs relocated without duplication, and legacy profile links redirect')
 
   for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo']) {
     await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
