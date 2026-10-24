@@ -1,0 +1,91 @@
+/* This composition belongs only to Sobre mí. Header, tabs and other pages keep
+   their existing styles. The quotes area is reserved, with no placeholder card. */
+.reader-about-section { container:reader-about / inline-size; padding-top:30px; }
+.reader-about-intro { display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
+.reader-about-intro>svg { flex:0 0 32px; width:32px; height:48px; color:var(--accent-text); opacity:.6; }
+.reader-about-intro .reader-about-title { margin:0 0 10px; font-size:clamp(30px,3vw,40px); line-height:1.1; letter-spacing:-.025em; }
+.reader-about-intro p { max-width:66ch; margin:0; color:var(--muted); font-size:14px; line-height:1.75; }
+.reader-about-section .reader-about-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  grid-template-areas:"history genres" "tropes featured" "statistics quotes";
+  align-items:stretch;
+  gap:22px;
+}
+.reader-about-grid>.reader-story { grid-area:history; }
+.reader-about-grid>.reader-favorite-genres { grid-area:genres; }
+.reader-about-grid>.reader-tastes { grid-area:tropes; }
+.reader-about-section .reader-about-grid>.reader-reading-tastes { grid-area:featured; }
+.reader-about-grid>.reader-most-read { grid-area:statistics; }
+.reader-about-section.is-public .reader-about-grid { grid-template-areas:"history genres" "tropes featured"; }
+.reader-about-section .reader-personal-card { position:relative; isolation:isolate; padding:26px; border:1px solid color-mix(in srgb,var(--line) 58%,var(--surface)); border-radius:22px; background:linear-gradient(140deg,var(--surface),color-mix(in srgb,var(--surface) 97%,var(--secondary))); box-shadow:0 5px 22px color-mix(in srgb,var(--shadow-color) 45%,transparent); }
+.reader-about-section .reader-card-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; margin-bottom:18px; }
+.reader-about-section .reader-personal-card h2 { align-items:flex-start; min-width:0; margin:0; gap:11px; font-size:23px; line-height:1.3; letter-spacing:-.015em; }
+.reader-about-section .reader-personal-card h2 svg { width:24px; height:26px; }
+.reader-about-section .reader-edit-button { min-height:34px; padding:6px 10px; border-radius:999px; font-size:12px; background:var(--surface); }
+.reader-about-section .reader-edit-button span { display:inline; }
+.reader-about-section .reader-personal-card p { font-size:14px; line-height:1.75; }
+.reader-about-section .reader-personal-card .reader-card-description { margin:-8px 0 20px; color:var(--muted); font-size:13px; line-height:1.65; }
+.reader-about-section .reader-story .reader-biography { padding:2px clamp(18px,6%,44px) 12px 0; font:18px/1.85 'DM Serif Display',serif; color:var(--ink); }
+.reader-about-section .reader-story:not(.is-editing) { min-height:210px; }
+/* Dedicated slots for future transparent illustrations; never intercept input. */
+.reader-story-decoration-slot { position:absolute; right:18px; bottom:18px; width:60px; height:105px; pointer-events:none; }
+.reader-featured-decoration-slot { position:absolute; right:18px; bottom:18px; width:55px; height:75px; pointer-events:none; }
+.reader-card-decoration { position:absolute; right:18px; bottom:18px; display:flex; align-items:flex-end; color:var(--accent-text); opacity:.24; pointer-events:none; z-index:-1; }
+.reader-card-decoration svg:first-child { width:37px; height:37px; stroke-width:1; }
+.reader-card-decoration svg:last-child { width:23px; height:45px; margin-left:-5px; stroke-width:1; }
+.reader-about-section .reader-taste-tags { gap:10px; margin:10px 0 6px; }
+.reader-about-section .reader-taste-tags li { padding:9px 15px; border:1px solid color-mix(in srgb,var(--line) 30%,transparent); color:var(--ink); background:var(--soft); font-size:13px; line-height:1.55; }
+.reader-about-section .reader-favorite-genres .reader-taste-tags li { padding:10px 17px; font-size:14px; }
+.reader-about-section .reader-favorite-genres .reader-taste-tags li:nth-child(3n+2) { background:color-mix(in srgb,var(--accent) 23%,var(--surface)); }
+.reader-about-section .reader-favorite-genres .reader-taste-tags li:nth-child(3n) { background:color-mix(in srgb,var(--primary) 16%,var(--surface)); }
+.reader-about-section .reader-tastes:not(.is-editing) .reader-taste-tags { padding-right:20px; }
+.reader-about-section .reader-taste-highlight { margin:27px 0 6px; }
+.reader-about-section .reader-taste-highlight .reader-intensity-scale { gap:7px; margin:0 0 18px; }
+.reader-about-section .reader-taste-highlight .reader-intensity-scale>span { width:43px; height:48px; }
+.reader-about-section .reader-taste-highlight .reader-intensity-scale svg { width:32px; height:32px; stroke-width:1.6; }
+.reader-about-section .reader-taste-highlight .reader-intensity-description { color:var(--ink); font-size:14px; font-weight:500; line-height:1.7; }
+.reader-about-section .reader-reading-tastes:not(.is-editing) { min-height:230px; }
+.reader-about-section .reader-genre-ranking { gap:21px; margin:24px 0 20px; }
+.reader-about-section .reader-genre-ranking li { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.8fr) auto; align-items:center; gap:14px; }
+.reader-about-section .reader-genre-ranking li>div { display:contents; font-size:14px; }
+.reader-about-section .reader-genre-ranking li>div>span { grid-column:1; grid-row:1; color:var(--ink); }
+.reader-about-section .reader-genre-ranking strong { grid-column:3; grid-row:1; color:var(--ink); font-size:13px; }
+.reader-about-section .reader-genre-bar { grid-column:2; grid-row:1; height:12px; margin:0; }
+.reader-about-section .reader-most-read>.reader-card-description { margin:9px 0 18px; }
+.reader-about-section .reader-genre-method { margin-top:20px; color:var(--muted); font-size:12px; line-height:1.7; }
+.reader-genre-method summary { width:fit-content; cursor:pointer; text-underline-offset:3px; }
+.reader-genre-method summary:focus-visible { outline:2px solid var(--primary); outline-offset:4px; border-radius:3px; }
+.reader-genre-method>div { padding-top:8px; }
+.reader-about-section .reader-most-read .reader-genre-explanation { margin-top:7px; font-size:12px; line-height:1.7; }
+.reader-about-section .reader-preferences-form { gap:13px; }
+.reader-about-section .reader-preferences-form textarea { padding:14px; font-size:15px; line-height:1.75; }
+.reader-about-section .reader-preferences-form>label,.reader-about-section .reader-preferences-form legend { font-size:13px; }
+.reader-about-section .reader-preference-options label { font-size:13px; }
+.reader-about-section .reader-form-actions button { min-height:42px; font-size:13px; }
+.reader-about-section .reader-intensity-item { padding:6px 0 16px; border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; }
+.reader-about-section .reader-reading-tastes .reader-preferences-form>.reader-intensity-grid { grid-template-columns:minmax(0,1fr); }
+.reader-about-section .reader-personal-card .reader-save-status { font-size:12px; margin-top:16px; }
+@container reader-about (max-width:660px) {
+  .reader-about-section .reader-about-grid { grid-template-columns:minmax(0,1fr); grid-template-areas:"history" "genres" "tropes" "featured" "statistics"; gap:18px; }
+  .reader-about-section.is-public .reader-about-grid { grid-template-areas:"history" "genres" "tropes" "featured"; }
+  .reader-about-section .reader-personal-card { padding:24px; }
+  .reader-about-section .reader-story:not(.is-editing),.reader-about-section .reader-reading-tastes:not(.is-editing) { min-height:0; }
+  .reader-about-section .reader-story .reader-biography { max-width:none; padding-right:20px; }
+}
+@media(max-width:480px) {
+  .reader-about-section { padding-top:24px; }
+  .reader-about-intro { gap:10px; margin-bottom:22px; }
+  .reader-about-intro>svg { flex-basis:24px; width:24px; height:37px; }
+  .reader-about-intro .reader-about-title { font-size:32px; }
+  .reader-about-intro p { font-size:13px; }
+  .reader-about-section .reader-personal-card { padding:21px 18px; border-radius:18px; }
+  .reader-about-section .reader-personal-card h2 { font-size:21px; gap:8px; }
+  .reader-about-section .reader-card-heading { gap:8px; }
+  .reader-about-section .reader-personal-card h2 svg { width:21px; height:24px; }
+  .reader-about-section .reader-taste-tags { gap:8px; }
+  .reader-about-section .reader-taste-tags li,.reader-about-section .reader-favorite-genres .reader-taste-tags li { padding:8px 12px; font-size:13px; }
+  .reader-about-section .reader-taste-highlight .reader-intensity-scale { gap:4px; }
+  .reader-about-section .reader-taste-highlight .reader-intensity-scale>span { width:39px; height:45px; }
+  .reader-card-decoration { right:12px; bottom:12px; opacity:.16; }
+}

@@ -1,0 +1,27 @@
+.navigation-icon { flex:none; overflow:visible; }
+.navigation-icon-page { transform-box:view-box; transform-origin:14px 23px; transition:transform 300ms ease,fill 250ms ease; }
+.navigation-icon-ink { opacity:.55; }
+.navigation-icon-cover { opacity:.65; }
+.navigation-icon-glint { color:var(--accent-text); opacity:0; transition:opacity 200ms ease; }
+.navigation-icon-wand { transform-origin:14px 14px; transition:transform 300ms ease; }
+.navigation-icon-star { color:var(--primary); transform-box:fill-box; transform-origin:center; }
+.navigation-icon-star--small,.navigation-icon-star--trail { opacity:.5; }
+.social-nav a.active .navigation-icon-page { fill:color-mix(in srgb,var(--primary) 12%,transparent); }
+.social-nav a.active .navigation-icon-star--main { fill:color-mix(in srgb,var(--primary) 22%,transparent); }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-page--left { transform:rotate(-7deg); }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-page--right { transform:rotate(7deg); }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-glint { opacity:1; }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-wand { transform:rotate(-9deg); }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-star { animation:navigation-stardust 650ms ease both; }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-star--small { animation-delay:90ms; }
+.social-nav a:is(:hover,:focus-visible) .navigation-icon-star--trail { animation-delay:180ms; }
+@keyframes navigation-stardust {
+  0% { opacity:.4; transform:scale(.8) rotate(-12deg); }
+  45% { opacity:1; transform:scale(1.15) rotate(8deg); }
+  100% { opacity:1; transform:scale(1) rotate(0); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .navigation-icon * { animation:none!important; transition:none!important; }
+  .social-nav a:is(:hover,:focus-visible) :is(.navigation-icon-page,.navigation-icon-wand) { transform:none; }
+  .social-nav a:is(:hover,:focus-visible) .navigation-icon-star { opacity:1; }
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, MoreHorizontal } from 'lucide-react'
 import './LibraryPage.css'
 import BookCover from '../components/BookCover'
+import ProfileReadingStats from '../components/ProfileReadingStats'
 import { useLibrary } from '../context/LibraryContext'
 
 export default function LibraryPage() {
@@ -25,6 +26,7 @@ export default function LibraryPage() {
   }
   return <section className="page-width page reader-library" aria-labelledby="reader-library-heading">
     <span className="kicker">TU RECORRIDO LECTOR</span><h2 className="page-title" id="reader-library-heading">Mi biblioteca</h2><p className="reader-library-lead">Todos los mundos que habitan en ti.</p>
+    <div className="reader-profile-summary"><ProfileReadingStats books={books} loading={loading} loadError={loadError} /></div>
     <div className="tabs reader-library-filters" role="group" aria-label="Filtrar biblioteca por estado">{['Todos', 'Leyendo', 'Pendiente', 'Terminado', 'Abandonado'].map(item => <button className={filter === item ? 'active' : ''} aria-pressed={filter === item} onClick={() => setFilter(item)} key={item}>{item}</button>)}</div>
     {error && <p className="notice" role="alert">{error}</p>}
     {loading && <p role="status">Cargando biblioteca…</p>}

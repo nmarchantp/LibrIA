@@ -74,7 +74,7 @@ export default function GoogleAccountPanel() {
     } catch (cause) { setError(cause.message); setBusy(false) }
   }
   return <section className="google-account-panel" aria-labelledby="google-account-heading">
-    <h2 id="google-account-heading">Vincular cuenta de Google</h2>
+    <h2 id="google-account-heading"><Link2 size={22} aria-hidden="true" />Cuentas vinculadas</h2>
     {!status && !error && <p role="status">Consultando vinculación…</p>}
     {status?.linked ? <p role="status">Cuenta de Google vinculada: <strong>{status.email}</strong>. Puedes ingresar con Google o con tu contraseña.</p> : <>
       <p>Ingresa el correo que quieres vincular. Te enviaremos un código para verificarlo.</p>
@@ -97,3 +97,4 @@ export default function GoogleAccountPanel() {
     {error && <p role="alert">{error} {!status && <button type="button" className="button text" onClick={() => setAttempt(value => value + 1)}>Reintentar</button>}</p>}
   </section>
 }
+import { Link2 } from 'lucide-react'

@@ -1,0 +1,32 @@
+/* Account presentation only; services, validation and form state stay in panels. */
+.settings-page .account-page { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+.settings-page .account-page > :is(.account-personal-info,.google-account-panel,.role-panel) { min-width:0; max-width:none; margin:0; padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 4px 16px color-mix(in srgb,var(--shadow-color) 40%,transparent); }
+.settings-page .account-personal-info { grid-column:1 / -1; }
+.settings-page .account-page h2 { display:flex; align-items:center; gap:10px; margin:0 0 18px; color:var(--ink); font:24px/1.3 'DM Serif Display',serif; }
+.settings-page .account-page h2 svg { flex:none; color:var(--accent-text); }
+.settings-page .account-page h3 { margin:22px 0 10px; font:20px/1.3 'DM Serif Display',serif; }
+.settings-page .account-page p { font-size:14px; line-height:1.65; overflow-wrap:anywhere; }
+.settings-page .account-page > section > p { color:var(--muted); }
+.settings-page .account-page .account-details { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 32px; margin:0; }
+.settings-page .account-page dt { color:var(--muted); font-size:12px; font-weight:500; line-height:1.5; }
+.settings-page .account-page dd { margin:5px 0 0; color:var(--ink); font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.settings-page .account-biography { margin:20px 0 0; border-top:1px solid var(--line); padding-top:16px; }
+.settings-page .account-biography dd { white-space:pre-wrap; }
+.settings-page .account-page .account-sign-in-note { margin:14px 0 0; font-size:12px; color:var(--muted); }
+.settings-page .account-page .account-current-role { margin:0 0 12px; color:var(--muted); }
+.settings-page .account-current-role strong { color:var(--ink); }
+.settings-page .account-page :is(.google-verification-form,.role-form) { display:grid; gap:14px; margin:18px 0; }
+.settings-page .account-page form label { display:grid; min-width:0; gap:7px; color:var(--ink); font-size:13px; font-weight:500; line-height:1.5; }
+.settings-page .account-page form :is(input,select,textarea) { width:100%; min-width:0; min-height:44px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--paper); color:var(--ink); font:400 14px/1.5 'DM Sans',sans-serif; }
+.settings-page .account-page textarea { resize:vertical; }
+.settings-page .account-page form :is(input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.settings-page .account-page .button { max-width:100%; min-height:44px; padding:10px 16px; font-size:13px; line-height:1.5; white-space:normal; text-align:center; }
+.settings-page .account-page form .button { justify-self:stretch; width:100%; }
+.settings-page .account-page :is([role="status"],[role="alert"]) { margin:14px 0 0; padding:10px 12px; border:1px solid var(--info-line); border-radius:10px; background:var(--info-bg); color:var(--info-text); }
+.settings-page .account-page [role="alert"] { border-color:var(--error-line); background:var(--error-bg); color:var(--error-text); }
+.settings-page .account-page .notice { font-size:13px; }
+@media(max-width:1000px) { .settings-page .account-page { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:560px) {
+  .settings-page .account-page > :is(.account-personal-info,.google-account-panel,.role-panel) { padding:20px 16px; }
+  .settings-page .account-page .account-details { grid-template-columns:minmax(0,1fr); gap:14px; }
+}
