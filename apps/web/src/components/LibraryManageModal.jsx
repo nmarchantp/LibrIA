@@ -6,7 +6,7 @@ import BookCover from './BookCover'
 import './ProfileEditModal.css'
 import './LibraryManageModal.css'
 
-export default function LibraryManageModal({ book, busy, error, onClose, onChangeStatus, onRemove }) {
+export default function LibraryManageModal({ book, busy, error, onClose, onChangeStatus }) {
   const dialogRef = useRef(null)
   const titleId = useId()
   const bookId = useId()
@@ -58,9 +58,6 @@ export default function LibraryManageModal({ book, busy, error, onClose, onChang
       </select></label>
       {error && <p className="reader-field-error" role="alert">{error}</p>}
       {busy && <p role="status">Guardando cambios…</p>}
-      <div className="reader-library-danger"><button className="reader-book-remove" type="button" disabled={busy} onClick={() => {
-        if (window.confirm(`¿Retirar “${book.title}” de tu biblioteca? Se recalculará tu perfil sin esta experiencia.`)) onRemove(book)
-      }}>Retirar de mi biblioteca</button><p className="reader-library-help">Al retirar un libro se recalcula tu perfil sin esa experiencia.</p></div>
     </div>
   </dialog>, document.body)
 }

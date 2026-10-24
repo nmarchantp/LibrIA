@@ -45,7 +45,6 @@
 }
 .reader-library-modal .reader-library-help { font-size:12px; line-height:1.5; color:var(--muted); }
 .reader-library-modal .reader-library-state { gap:6px; }
-.reader-library-modal .reader-library-danger { gap:7px; margin-top:0; padding-top:14px; }
 @media(max-width:380px) {
   .reader-library-modal .reader-modal-heading { padding:16px; }
   .reader-library-modal .reader-modal-fields { padding:16px; gap:14px; }
