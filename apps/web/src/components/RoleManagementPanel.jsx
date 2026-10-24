@@ -46,8 +46,9 @@ export default function RoleManagementPanel({ user }) {
     }
   }
 
-  return <section className="role-panel">
-    <h2>Tipo de perfil: {labels[user.role]}</h2>
+  return <section className="role-panel" aria-labelledby="account-role-heading">
+    <h2 id="account-role-heading"><BadgeCheck size={22} aria-hidden="true" />Tipo de perfil</h2>
+    <p className="account-current-role">Perfil actual: <strong>{labels[user.role]}</strong></p>
     {user.role === 'lector' && <>
       <p>Todos comienzan como lectores. Solicita verificación para publicar como autor o influencer.</p>
       <form className="role-form" onSubmit={requestRole}>
@@ -64,3 +65,4 @@ export default function RoleManagementPanel({ user }) {
     {error && <p className="notice" role="alert">{error}</p>}
   </section>
 }
+import { BadgeCheck } from 'lucide-react'

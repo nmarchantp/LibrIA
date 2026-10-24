@@ -4,3 +4,4 @@
 .settings-navigation a.selected { border-color:var(--primary); color:var(--ink); font-weight:700; }
 .settings-navigation a:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
 @media(max-width:420px) { .settings-navigation { gap:16px; } .settings-navigation a { font-size:13px; } }
+.settings-description { margin:0; font-family:inherit; font-size:14px; font-weight:400; line-height:1.65; color:var(--muted); }

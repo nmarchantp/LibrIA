@@ -12,6 +12,7 @@ export default function SettingsPage() {
   return <section className="page-width page settings-page" aria-labelledby="settings-heading">
     <span className="kicker">TU ESPACIO PERSONAL</span>
     <h1 className="page-title" id="settings-heading">Configuración</h1>
+    <p className="settings-description">Tu espacio personal, a tu manera.</p>
     <nav className="settings-navigation" aria-label="Secciones de configuración">
       <Link to="/settings" className={!personalization ? 'selected' : ''} aria-current={!personalization ? 'page' : undefined}><UserRound size={18} aria-hidden="true" />Mi cuenta</Link>
       <Link to="/settings?tab=personalization" className={personalization ? 'selected' : ''} aria-current={personalization ? 'page' : undefined}><Palette size={18} aria-hidden="true" />Personalización</Link>
