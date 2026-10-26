@@ -54,7 +54,6 @@
 .reader-profile-tabs button svg { flex-shrink:0; }
 .reader-profile-content { min-width:0; }
 .reader-profile-summary { margin-top:20px; }
-.reader-profile-content .adaptive-analysis { margin-top:28px; }
 .reader-profile-content .account-page { padding-top:5px; }
 .reader-profile-content .google-account-panel { margin-inline:0; }
 .reader-personal-column { display:grid; gap:16px; padding-top:0; min-width:0; }
