@@ -131,62 +131,12 @@ svg { flex-shrink:0; }
 .search-box { min-height:58px; height:auto; padding:16px 20px; border-radius:14px; box-shadow:var(--shadow); }
 .search-box:focus-within { border-color:var(--accent-text); box-shadow:0 0 0 3px var(--lavender-soft); }
 .search-box input { min-width:0; width:100%; font-size:16px; }
-.book-search-autocomplete { position:relative; z-index:5; }
-.book-suggestions { position:absolute; top:calc(100% + 8px); left:0; right:0; max-height:390px; overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
-.book-suggestion { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:14px 18px; color:var(--ink); border-bottom:1px solid var(--line); }
-.book-suggestion:last-child { border-bottom:0; }
-.book-suggestion:hover,.book-suggestion:focus-visible { background:var(--lavender-soft); }
-.book-suggestion span { display:grid; gap:3px; min-width:0; }
-.book-suggestion strong,.book-suggestion small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.book-suggestion small,.book-suggestion time,.book-suggestion-state { color:var(--muted); }
-.book-suggestion-state { margin:0; padding:18px; text-align:center; }
-.books-search-page { max-width:900px; }
-.catalog-search-controls { background:var(--soft); border-radius:18px; padding:10px; }
-.catalog-search-input { box-shadow:none; background:var(--soft); }
-.search-clear { display:grid; place-items:center; width:34px; height:34px; padding:0; border:0; border-radius:50%; background:var(--muted); color:var(--on-primary); cursor:pointer; }
-.search-clear svg { width:18px; }
-.catalog-search-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:10px; padding:3px; border-radius:12px; background:var(--line); }
-.catalog-search-tabs button { min-height:40px; border:0; border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-weight:650; cursor:pointer; }
-.catalog-search-tabs button.active { background:var(--surface); box-shadow:0 2px 8px var(--shadow-color); }
-.catalog-results-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:30px 4px 14px; color:var(--muted); }
-.catalog-results-heading strong { color:var(--ink); font-size:18px; }
-.catalog-results-heading span { color:var(--accent-text); font-weight:700; }
-.catalog-result-list { display:grid; gap:14px; }
-.catalog-result-card { display:grid; grid-template-columns:92px minmax(0,1fr) 28px; align-items:center; gap:18px; min-height:146px; padding:13px; color:var(--ink); background:var(--soft); border:1px solid var(--line); border-radius:22px; box-shadow:0 5px 15px var(--shadow-color); }
-.catalog-result-card:hover { transform:translateY(-1px); border-color:var(--line); box-shadow:0 9px 22px var(--shadow-color); }
-.catalog-result-card .book-cover { width:92px; height:120px; border-radius:8px; box-shadow:0 4px 10px var(--shadow-color); }
-.catalog-result-copy { min-width:0; }
-.catalog-result-copy h2 { margin:0 0 3px; font:700 22px/1.18 inherit; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-.catalog-result-subtitle,.catalog-result-author { margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.catalog-result-subtitle { color:var(--muted); font-size:14px; }
-.catalog-result-author { margin-top:4px; color:var(--muted); font-size:17px; }
-.catalog-result-meta { display:flex; flex-wrap:wrap; gap:7px 12px; margin-top:12px; color:var(--muted); font-size:13px; }
-.catalog-result-meta span { display:inline-flex; align-items:center; gap:5px; }
-.catalog-result-meta svg { width:16px; height:16px; }
-.catalog-result-meta .language-chip { padding:3px 7px; color:var(--accent-text); background:var(--soft); border-radius:7px; font-weight:750; }
-.catalog-result-meta .origin-chip { padding:3px 8px; border-radius:999px; font-weight:750; }
-.catalog-result-meta .origin-chip svg { width:14px; height:14px; }
-.catalog-result-meta .origin-google { color:var(--info-text); background:var(--info-bg); }
-.catalog-result-meta .origin-libria { color:var(--success-text); background:var(--success-bg); }
-.catalog-result-meta .rating-chip { color:var(--rating); }
-.catalog-result-meta .rating-chip svg { fill:var(--rating); stroke:var(--rating); }
-.catalog-result-arrow { color:var(--muted); }
-@media(max-width:560px) {
-  .catalog-result-card { grid-template-columns:72px minmax(0,1fr) 20px; gap:12px; min-height:126px; padding:10px; border-radius:18px; }
-  .catalog-result-card .book-cover { width:72px; height:102px; }
-  .catalog-result-copy h2 { font-size:18px; }
-  .catalog-result-author { font-size:15px; }
-  .catalog-results-heading span { font-size:13px; }
-}
 .social-main .book-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
 .book-tile { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
 .book-tile .book-cover { height:270px; border-radius:4px 10px 10px 4px; }
 .book-tile h3 { line-height:1.25; overflow-wrap:anywhere; }
 .book-tile p { font-size:13px; line-height:1.6; }
 .book-tile .pill { top:26px; right:26px; }
-.catalog-state { padding:36px 24px; border:1px dashed var(--line); border-radius:var(--radius); text-align:center; color:var(--muted); background:var(--surface); }
-.catalog-state h2 { color:var(--ink); font:26px 'DM Serif Display',serif; }
-.catalog-state p { line-height:1.6; }
 .profile-banner { background:linear-gradient(120deg,var(--secondary),var(--secondary)); border-radius:22px; }
 .profile-stats { gap:12px; }
 .profile-stats>span { background:var(--surface); border:1px solid var(--line); padding:12px 18px; border-radius:12px; }
@@ -307,7 +257,6 @@ button:focus-visible,a:focus-visible { outline-color:var(--focus); }
 .demo-label { background:var(--soft); color:var(--muted); }
 .etl-cards svg,.etl-link { color:var(--accent-text); }
 .etl-table th { background:var(--lavender-soft); }
-.catalog-state { border-color:var(--lavender); }
 
 @media(max-width:700px) { .social-sidebar { background:var(--surface-glass); } }
 
