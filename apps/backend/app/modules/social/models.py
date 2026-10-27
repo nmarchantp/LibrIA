@@ -1,7 +1,8 @@
 import uuid
+from decimal import Decimal
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, LargeBinary, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, Numeric, LargeBinary, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,7 +31,7 @@ class Post(Base):
     work_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.obras.id',ondelete='RESTRICT'))
     edition_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.ediciones.id'))
     book_title: Mapped[str | None] = mapped_column(String(200))
-    rating: Mapped[int | None] = mapped_column(Integer)
+    rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
     progress_percent: Mapped[int | None] = mapped_column(Integer)
     reading_event: Mapped[str | None] = mapped_column(String(20))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -100,7 +101,7 @@ class Review(Base):
     work_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.obras.id", ondelete="RESTRICT"))
     edition_id: Mapped[uuid.UUID | None] = mapped_column()
     body: Mapped[str] = mapped_column(Text)
-    rating: Mapped[int | None] = mapped_column(Integer)
+    rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
     dimension_ratings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     is_spoiler: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(Text)
@@ -117,7 +118,7 @@ class ReviewRevision(Base):
     revision_number: Mapped[int] = mapped_column(Integer, primary_key=True)
     recorded_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"))
     body: Mapped[str] = mapped_column(Text)
-    rating: Mapped[int | None] = mapped_column(Integer)
+    rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
     dimension_ratings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     is_spoiler: Mapped[bool] = mapped_column(Boolean)
     status: Mapped[str] = mapped_column(Text)

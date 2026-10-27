@@ -1,5 +1,6 @@
+import RatingStar from '../components/RatingStar'
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, BookOpen, Heart, MessageCircle, Star, UserRoundCheck, UserRoundPlus, X } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Heart, MessageCircle, UserRoundCheck, UserRoundPlus, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiRequest, apiUrl } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
@@ -9,7 +10,7 @@ import './HomePage.css'
 
 const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
-const roleColors = { lector: '#e8d6ce', influencer: '#dce5d8', autor: '#e7dfed', libreria: '#eedebc', editorial: '#d5e3e8', admin: '#d5e3e8' }
+const roleColors = { lector: 'var(--secondary)', influencer: 'var(--soft)', autor: 'var(--secondary)', libreria: 'var(--soft)', editorial: 'var(--secondary)', admin: 'var(--secondary)' }
 const composerCopy = {
   influencer: { heading: 'Comparte con tu comunidad', hint: 'Publica recomendaciones, lecturas conjuntas o conversaciones sobre libros.', placeholder: '¿Qué recomendarías hoy?' },
   autor: { heading: 'Comparte tu trabajo', hint: 'Publica novedades de tus obras o anuncia un encuentro con lectores.', placeholder: '¿Qué hay de nuevo en tu escritura?' },
@@ -177,7 +178,7 @@ function FeedCard({ post }) {
   return <article className="feed-card">
     <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{post.publicationType === 'note' ? 'Nota' : post.publicationType === 'theory' ? 'Teoría' : post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación'}</span></header>
     {post.title && <h2>{post.title}</h2>}
-    {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill={i < post.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}<span>{post.rating}/5</span></div>}
+    {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <RatingStar key={i} size={16} fraction={post.rating - i} />)}<span>{post.rating}/5</span></div>}
     {post.bookTitle && !post.title && <h2>{post.bookTitle}</h2>}
     {post.isSpoiler ? <details><summary>Contiene spoilers · Mostrar reseña</summary><p className="post-text">{post.text}</p>{post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la reseña de ${post.author}`} loading="lazy" />)}</div>}</details> : <><p className="post-text">{post.text}</p>
     {post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la publicación de ${post.author}`} loading="lazy" />)}</div>}</>}

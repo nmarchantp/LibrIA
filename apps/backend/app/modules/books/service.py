@@ -1,62 +1,142 @@
 """Queries that resolve multiple catalog records to one logical work."""
+from datetime import date
+import re
+
 from sqlalchemy import func, select, text
 
-from app.modules.books.identity import canonical_author_name, canonical_match_title, canonical_title_variants
-from app.modules.books.models import Author, Edition, Work, WorkAuthor
+from app.modules.books.identity import bibliographic_title, canonical_author_name, canonical_title_variants, canonical_work_key, duplicate_candidate, identity_matches
+from app.modules.books.models import Author, CatalogSource, Edition, Work, WorkAuthor
 
 
 def equivalent_work_ids(db, work_id):
-    selected = db.get(Work, work_id)
-    if selected is None:
+    """Logical grouping only, using source-level, known author evidence.
+
+    An anonymous edition in a contaminated Work cannot inherit its author's
+    identity. Conflicting or missing provider authors quarantine that Work.
+    """
+    if db.get(Work, work_id) is None:
         return set()
-    selected_titles = set()
-    for title in db.scalars(select(Edition.title).where(Edition.work_id == work_id)):
-        selected_titles.update(canonical_match_title(value) for value in canonical_title_variants(title))
-    if not selected_titles:
-        return {work_id}
     author_rows = db.execute(select(WorkAuthor.work_id, Author.name)
                              .join(Author, Author.id == WorkAuthor.author_id)).all()
     authors = {}
-    for author_work_id, name in author_rows:
-        authors.setdefault(author_work_id, set()).add(canonical_author_name(name))
-    selected_authors = authors.get(work_id, set())
-    candidates = db.execute(select(Work.id, Edition.title)
-                            .join(Edition, Edition.work_id == Work.id)).all()
-    matches = {work_id}
-    for candidate_id, title in candidates:
-        candidate_authors = authors.get(candidate_id, set())
-        if selected_authors and candidate_authors and not selected_authors.intersection(candidate_authors):
+    for identifier, name in author_rows:
+        authors.setdefault(identifier, []).append(name)
+    rows = db.execute(select(Edition, CatalogSource).outerjoin(
+        CatalogSource, CatalogSource.edition_id == Edition.id)).all()
+    evidence = {}
+    for edition, source in rows:
+        record = evidence.setdefault(edition.work_id, {"titles": set(), "authors": set(), "unknown": False})
+        if source and source.provider in {"google-books", "open-library"}:
+            payload = source.payload or {}
+            info = payload.get("volumeInfo") or {}
+            names = info.get("authors") or []
+            record["titles"].update(canonical_title_variants(bibliographic_title(info) or edition.title))
+        elif source is None:
+            names = authors.get(edition.work_id, [])
+            record["titles"].update(canonical_title_variants(edition.title))
+        else:
             continue
-        candidate_titles = {canonical_match_title(value) for value in canonical_title_variants(title)}
-        if candidate_titles & selected_titles:
-            matches.add(candidate_id)
-    # A bilingual record can bridge Spanish and English titles transitively.
+        normalized = [canonical_author_name(name) for name in names]
+        if not normalized or not all(normalized):
+            record["unknown"] = True
+        else:
+            record["authors"].add(tuple(sorted(set(normalized))))
+    selected = evidence.get(work_id)
+    if not selected or selected["unknown"] or len(selected["authors"]) != 1:
+        return {work_id}
+    matches = {work_id}
+    known_titles = set(selected["titles"])
     changed = True
     while changed:
         changed = False
-        known_titles = set()
-        for candidate_id, title in candidates:
-            if candidate_id in matches:
-                known_titles.update(canonical_match_title(value) for value in canonical_title_variants(title))
-        for candidate_id, title in candidates:
-            candidate_authors = authors.get(candidate_id, set())
-            compatible_author = (not selected_authors or not candidate_authors
-                                 or bool(selected_authors.intersection(candidate_authors)))
-            if candidate_id not in matches and compatible_author:
-                candidate_titles = {canonical_match_title(value) for value in canonical_title_variants(title)}
-                if candidate_titles & known_titles:
-                    matches.add(candidate_id)
-                    changed = True
+        for identifier, candidate in evidence.items():
+            if (identifier not in matches and not candidate["unknown"]
+                    and candidate["authors"] == selected["authors"]
+                    and candidate["titles"] & known_titles):
+                matches.add(identifier)
+                known_titles.update(candidate["titles"])
+                changed = True
     return matches
 
 
-def consolidate_equivalent_works(db, work_id):
+def verified_work_for_import(db, title, names):
+    """Resolve legacy identity keys by evidence, never by an obsolete key alone."""
+    if not canonical_work_key(title, names):
+        return None
+    rows = db.execute(select(Edition, CatalogSource).join(
+        CatalogSource, CatalogSource.edition_id == Edition.id).where(
+        CatalogSource.provider.in_(["google-books", "open-library"]))).all()
+    candidates, unsafe = set(), set()
+    incoming = {canonical_author_name(name) for name in names}
+    for edition, source in rows:
+        info = (source.payload or {}).get("volumeInfo") or {}
+        authors = info.get("authors") or []
+        normalized = {canonical_author_name(name) for name in authors}
+        if not normalized or "" in normalized or normalized != incoming:
+            unsafe.add(edition.work_id)
+        if identity_matches(title, names, bibliographic_title(info) or edition.title, authors):
+            candidates.add(edition.work_id)
+    candidates -= unsafe
+    # Ambiguous matches require review rather than selecting an arbitrary Work.
+    return db.get(Work, next(iter(candidates))) if len(candidates) == 1 else None
+
+
+def duplicate_work_candidates(db, work_id):
+    """Read-only review report, deliberately separate from identity resolution."""
+    work = db.get(Work, work_id)
+    if work is None:
+        return []
+    authors = {}
+    for identifier, name in db.execute(select(WorkAuthor.work_id, Author.name)
+            .join(Author, Author.id == WorkAuthor.author_id)).all():
+        authors.setdefault(identifier, []).append(name)
+    return [{"workId": str(candidate.id), "title": candidate.title,
+             "reason": "similar_title_requires_bibliographic_review"}
+            for candidate in db.scalars(select(Work).where(Work.id != work_id)).all()
+            if duplicate_candidate(work.title, authors.get(work_id, []),
+                                   candidate.title, authors.get(candidate.id, []))]
+
+
+def verified_original_publication(db, work_id):
+    """Only editorial provenance can attest the legacy original-date field.
+
+    Provider edition dates and existing unverified values are never evidence.
+    No verification records are created by catalog imports.
+    """
+    work = db.get(Work, work_id)
+    if not work or not work.first_publication_date:
+        return None
+    value = work.first_publication_date
+    if not re.fullmatch(r"\d{4}(?:-\d{2})?(?:-\d{2})?", value):
+        return None
+    try:
+        parts = [int(part) for part in value.split("-")]
+        date(*(parts + [1] * (3 - len(parts))))
+    except ValueError:
+        return None
+    sources = db.scalars(select(CatalogSource).join(Edition, CatalogSource.edition_id == Edition.id)
+        .where(Edition.work_id == work_id, CatalogSource.provider == "libria-verification",
+               CatalogSource.validation_status == "validated")).all()
+    for source in sources:
+        proof = (source.payload or {}).get("originalPublication", {})
+        if (isinstance(proof, dict) and proof.get("workId") == str(work_id)
+                and proof.get("date") == work.first_publication_date
+                and isinstance(proof.get("evidenceUrl"), str)
+                and proof["evidenceUrl"].startswith("https://")
+                and proof.get("verifiedBy") and proof.get("verifiedAt")):
+            return work.first_publication_date
+    return None
+
+
+def consolidate_equivalent_works(db, work_id, *, reviewed=False):
     """Move every dependent record to one Work and delete physical duplicates.
 
     The most-used Work wins, so existing public/library references remain stable.
     If one profile reviewed two duplicates, consolidation is postponed because
     choosing which of those two reviews to discard requires an editorial decision.
     """
+    if not reviewed:
+        return work_id
     work_ids = equivalent_work_ids(db, work_id)
     if len(work_ids) < 2:
         return work_id

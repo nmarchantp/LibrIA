@@ -1,12 +1,14 @@
 import { BookOpen, BrainCircuit, Library, Lightbulb, StickyNote, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { useLibrary } from '../context/LibraryContext'
 import LibraryPage from './LibraryPage'
 import InsightsPage from './InsightsPage'
-import AccountPage from './AccountPage'
+import ProfileHeader from '../components/ProfileHeader'
+import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
+import ProfileAboutSection from '../components/ProfileAboutSection'
+import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
 import './ProfilePage.css'
 
 function ProfileActivity({ userId }) {
@@ -31,14 +33,35 @@ function ProfileActivity({ userId }) {
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const { books } = useLibrary()
+  const preferences = useLiteraryPreferences()
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
-  const tab = ['activity', 'library', 'analysis', 'account'].includes(requested) ? requested : 'library'
-  const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
-  return <div className="profile-page page-width"><div className="profile-banner"><BookOpen size={64} strokeWidth={1} /><span>Cada lectura cuenta algo de ti.</span></div><header className="profile-heading"><span className="profile-avatar">{initials}</span><div><span className="kicker">MI PERFIL</span><h1>{user.display_name}</h1><p>{user.biography || 'Este es tu espacio para reunir libros, experiencias y descubrimientos.'}</p></div></header>
-    <div className="profile-stats"><span><strong>{books.length}</strong> libros</span><span><strong>{books.filter(book => book.status === 'Leyendo').length}</strong> leyendo</span><span><strong>{books.filter(book => book.status === 'Terminado').length}</strong> terminados</span><small>Biblioteca personal</small></div>
-    <nav className="profile-tabs" aria-label="Secciones de mi perfil">{[['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['account', 'Mi cuenta', UserRound]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams({ tab: value })}><Icon size={18} />{label}</button>)}</nav>
-    <div className="profile-content">{tab === 'library' && <LibraryPage />}{tab === 'analysis' && <InsightsPage />}{tab === 'activity' && <ProfileActivity userId={user.id} />}{tab === 'account' && <AccountPage />}</div>
+  const tab = ['about', 'activity', 'library', 'analysis'].includes(requested) ? requested : 'about'
+  if (requested === 'account' || requested === 'personalization') {
+    return <Navigate to={requested === 'personalization' ? '/settings?tab=personalization' : '/settings'} replace />
+  }
+  // Only the active panel is mounted; leaving the library removes its entire tree.
+  let activeContent
+  switch (tab) {
+    case 'library':
+      activeContent = <LibraryPage />
+      break
+    case 'analysis':
+      activeContent = <InsightsPage />
+      break
+    case 'activity':
+      activeContent = <ProfileActivity userId={user.id} />
+      break
+    default:
+      activeContent = <ProfileAboutSection key={user.id} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+  }
+
+  return <div className="profile-page page-width reader-profile">
+    <div className="reader-profile-main">
+      <ProfileHeader key={user.id} user={user} />
+      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
+      <div key={tab} className="profile-content reader-profile-content">{activeContent}</div>
+    </div>
+    <ProfilePersonalColumn key={user.id} preferences={preferences.data} />
   </div>
 }

@@ -161,7 +161,7 @@ def transform(works, events, posts, entries, reviews=()):
             continue
         if (review["status"] not in {"published", "hidden"} or review["published_at"] is None
                 or review["published_at"] > review["recorded_at"]
-                or (review["rating"] is not None and not 1 <= review["rating"] <= 5)):
+                or (review["rating"] is not None and (not 0.25 <= review["rating"] <= 5 or review["rating"] * 4 % 1 != 0))):
             rules["review_invalid_revision"] += 1
             continue
         clean_reviews.append({"source_id": review["id"], "user_id": review["owner_user_id"],
@@ -178,7 +178,7 @@ def transform(works, events, posts, entries, reviews=()):
         valuations.append({"work_id": work_id, "provenance": provenance, "review_count": len(ratings),
                            "rated_count": len(rated), "rating_sum": sum(rated),
                            "rating_average": sum(rated) / len(rated) if rated else None,
-                           "distribution": json.dumps({str(value): rated.count(value) for value in range(1, 6)})})
+                           "distribution": json.dumps({format(value, "g"): rated.count(value) for value in [step / 4 for step in range(1, 21)]})})
     indicators = []
     for (user_id, provenance), values in metrics.items():
         for code in ("L02", "L04", "L05", "L06", "L09", "L10", "S03", "S02"):

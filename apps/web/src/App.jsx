@@ -18,6 +18,8 @@ import AdminProfilesPage from './pages/AdminProfilesPage'
 import AdminEtlPage from './pages/AdminEtlPage'
 import GroupInsightsPage from './pages/GroupInsightsPage'
 import LibraryBookPage from './pages/LibraryBookPage'
+import CommunityProfilePage from './pages/CommunityProfilePage'
+import SettingsPage from './pages/SettingsPage'
 
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
     <Route element={<Layout />}>
       <Route index element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/profiles/:profileId" element={<CommunityProfilePage />} />
       <Route element={<AdminGate />}><Route path="/admin/profiles" element={<AdminProfilesPage />} /></Route>
       <Route element={<AdminGate />}><Route path="/admin/etl" element={<AdminEtlPage />} /></Route>
       <Route path="/books" element={<BooksPage />} />

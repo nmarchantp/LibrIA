@@ -1,13 +1,13 @@
 .insights-toolbar, .insights-title { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .insights-toolbar { margin: 24px 0; }
 .insights-toolbar label { display: grid; gap: 8px; color: var(--muted); }
-.insights-toolbar select { padding: 10px 16px; border: 1px solid var(--line); background: white; border-radius: 10px; font: inherit; }
+.insights-toolbar select { padding: 10px 16px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font: inherit; }
 .insights-toolbar button, .insights-title h2 { display: inline-flex; align-items: center; gap: 8px; }
 .insights-source { color: var(--muted); line-height: 1.6; }
-.insights-page .notice { border: 0; border-radius: 10px; background: #fff4dd; color: #71501f; padding: 16px; margin: 18px 0; font-size: 14px; line-height: 1.6; }
+.insights-page .notice { border: 0; border-radius: 10px; background: var(--warning-bg); color: var(--warning-text); padding: 16px; margin: 18px 0; font-size: 14px; line-height: 1.6; }
 .insights-title h2 { font-size: 26px; }
 .insights-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin: 24px 0; }
-.insights-metrics article { background: white; padding: 22px; border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 12px; }
+.insights-metrics article { background: var(--surface); padding: 22px; border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 12px; }
 .insights-metrics strong { font-size: 30px; color: var(--ink); }
 .insights-metrics small { color: var(--muted); }
 .insights-interpretation { margin-top: 24px; }
@@ -15,5 +15,5 @@
 .insights-observations { list-style: none; padding: 0; }
 .insights-observations li { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; }
 .insights-interpretation small { display: block; margin-top: 24px; color: var(--muted); }
-.insights-limits { margin: 24px 0; padding: 20px; background: #f6f2ec; border-radius: 12px; }
+.insights-limits { margin: 24px 0; padding: 20px; background: var(--soft); border-radius: 12px; }
 .insights-limits summary { cursor: pointer; font-weight: 600; }

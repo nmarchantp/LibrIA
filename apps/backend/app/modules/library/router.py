@@ -35,7 +35,7 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
         if book_ref not in latest:
             latest[book_ref] = ReadingState(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, book_ref=book_ref, book_title=book_title, status=reading.status,
                                             reflection=db.scalar(select(ReadingEvent.reflection).where(ReadingEvent.reading_id == reading.id, ReadingEvent.kind == "finish")),
-                                            catalog_volume=db.scalar(select(CatalogSource.payload).where(CatalogSource.edition_id == reading.edition_id, CatalogSource.provider == "google-books")),
+                                            catalog_volume=db.scalar(select(CatalogSource.payload).where(CatalogSource.edition_id == reading.edition_id, CatalogSource.provider.in_(["google-books", "open-library"])).order_by(CatalogSource.provider).limit(1)),
                                             current_page=reading.current_page,
                                             total_pages=reading.total_pages or (db.get(Edition, reading.edition_id).page_count if reading.status == "pending" else None),
                                             progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0,
@@ -45,6 +45,10 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
 
 
 def resolve_book(db: Session, data: LibraryBookCreate) -> tuple[Work, Edition]:
+    if data.book_ref.startswith('openlibrary:'):
+        from app.modules.books.open_library_catalog import ensure_edition
+        edition = ensure_edition(db, data.book_ref)
+        return db.get(Work, edition.work_id), edition
     # Una misma referencia importada simultáneamente no debe duplicar el catálogo.
     db.execute(select(func.pg_advisory_xact_lock(func.hashtext("catalog:libria-feed:" + data.book_ref))))
     source = db.scalar(select(CatalogSource).where(

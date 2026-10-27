@@ -1,0 +1,26 @@
+.social-nav .navigation-galaxy-link { position:relative; isolation:isolate; }
+.navigation-galaxy-link::before { content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 55% 50%,color-mix(in srgb,var(--primary) 18%,transparent),transparent 75%); box-shadow:0 0 16px color-mix(in srgb,var(--primary) 14%,transparent); transition:opacity 300ms ease; }
+.navigation-galaxy-link.active::before { opacity:.35; }
+.navigation-galaxy-link:is(:hover,:focus-visible)::before { opacity:1; }
+.social-nav .navigation-galaxy { position:absolute; inset:0; display:block; overflow:clip; pointer-events:none; border-radius:inherit; }
+.navigation-galaxy-star,.navigation-galaxy-dust { position:absolute; pointer-events:none; color:var(--primary); opacity:0; transform:translate(0,0) scale(.25); transition:opacity 300ms ease,transform 650ms cubic-bezier(.2,.7,.25,1); }
+.navigation-galaxy-star { width:var(--star-size,9px); height:var(--star-size,9px); fill:currentColor; filter:drop-shadow(0 0 3px color-mix(in srgb,var(--primary) 65%,transparent)); }
+/* Active navigation icons use ink; decorative stars keep their theme glow. */
+.social-nav a.navigation-galaxy-link .navigation-galaxy-star { color:var(--primary); }
+.navigation-galaxy-star--1 { left:16%; top:12%; --star-size:12px; --star-x:-9px; --star-y:-8px; }
+.navigation-galaxy-star--2 { left:42%; top:8%; --star-size:6px; --star-x:3px; --star-y:-5px; }
+.navigation-galaxy-star--3 { right:10%; top:16%; --star-size:10px; --star-x:8px; --star-y:-6px; }
+.navigation-galaxy-star--4 { right:20%; bottom:6%; --star-size:8px; --star-x:5px; --star-y:7px; }
+.navigation-galaxy-star--5 { left:30%; bottom:9%; --star-size:7px; --star-x:-3px; --star-y:7px; }
+.navigation-galaxy-star--6 { right:3%; top:53%; --star-size:5px; --star-x:5px; --star-y:2px; }
+.navigation-galaxy-dust { width:3px; height:3px; border-radius:50%; background:currentColor; box-shadow:0 0 5px currentColor; }
+.navigation-galaxy-dust--1 { left:6%; top:40%; --star-x:-4px; --star-y:-3px; }
+.navigation-galaxy-dust--2 { right:36%; bottom:5%; --star-x:2px; --star-y:6px; }
+.navigation-galaxy-dust--3 { right:6%; top:9%; --star-x:4px; --star-y:-4px; }
+.navigation-galaxy-link:is(:hover,:focus-visible) :is(.navigation-galaxy-star,.navigation-galaxy-dust) { opacity:.9; transform:translate(var(--star-x),var(--star-y)) scale(1); }
+/* This prototype decorates the link, leaving its existing icon still. */
+.social-nav a.navigation-galaxy-link:is(:hover,:focus-visible) :is(.navigation-icon-star,.navigation-icon-wand) { animation:none; transform:none; }
+@media(prefers-reduced-motion:reduce) {
+  .navigation-galaxy-link::before,.navigation-galaxy-star,.navigation-galaxy-dust { transition:none; }
+  .navigation-galaxy-link:is(:hover,:focus-visible) :is(.navigation-galaxy-star,.navigation-galaxy-dust) { transform:none; }
+}

@@ -1,0 +1,112 @@
+/* Palette roles are initialized in themes.js before React mounts.
+   Legacy names stay available so pages consume the same semantic colors. */
+:root {
+  color-scheme:light;
+  --paper:#F4EFF9;
+  --surface:#FFFCFF;
+  --primary:#7856A4;
+  --secondary:#DFD1EF;
+  --accent:#B38BCD;
+  --ink:#332743;
+  --on-primary:#fff;
+  --button-bg:var(--primary);
+  --muted:color-mix(in srgb,var(--ink) 78%,var(--surface));
+  --line:color-mix(in srgb,var(--ink) 30%,var(--surface));
+  --primary-hover:color-mix(in srgb,var(--primary) 85%,var(--ink));
+  --focus:var(--primary);
+  --accent-text:color-mix(in srgb,var(--primary) 45%,var(--ink));
+  --soft:color-mix(in srgb,var(--secondary) 45%,var(--surface));
+  --orange:var(--accent-text);
+  --turquoise:var(--accent);
+  --blue:var(--primary);
+  --lavender:var(--primary);
+  --pink:var(--accent);
+  --gray:var(--secondary);
+  --mint-soft:var(--soft);
+  --lavender-soft:var(--soft);
+  --bg:var(--paper);
+  --feature-start:color-mix(in srgb,var(--primary) 55%,#181721);
+  --feature-end:color-mix(in srgb,var(--primary) 35%,#181721);
+  --on-feature:#fff;
+  --overlay:rgb(12 10 18 / 72%);
+  --shadow-color:color-mix(in srgb,var(--ink) 12%,transparent);
+  --shadow:0 8px 28px var(--shadow-color);
+  --surface-glass:color-mix(in srgb,var(--surface) 96%,transparent);
+  --success-text:#245644;
+  --success-bg:#eff8f3;
+  --success-line:#b6cfc5;
+  --error-text:#923e34;
+  --error-bg:#fff0ed;
+  --error-line:#e4b5a8;
+  --warning-text:#71501f;
+  --warning-bg:#fff4dd;
+  --info-text:#294b71;
+  --info-bg:#f0f5fc;
+  --info-line:#becfe4;
+  --rating:#946500;
+  --rating-star-color:var(--primary);
+  color:var(--ink);
+  background:var(--paper);
+}
+:root:is([data-theme="dark"],[data-theme="dark-rosado"],[data-theme="dark-blood"],[data-theme="dark-dorado"]) {
+  color-scheme:dark;
+  --on-primary:#181721;
+  --primary-hover:color-mix(in srgb,var(--primary) 85%,white);
+  --accent-text:var(--primary);
+  --shadow-color:rgb(0 0 0 / 30%);
+  --success-text:#a8e2bf;
+  --success-bg:#203b30;
+  --success-line:#638b74;
+  --error-text:#ffc0b8;
+  --error-bg:#482b30;
+  --error-line:#a7676e;
+  --warning-text:#f4d391;
+  --warning-bg:#403522;
+  --info-text:#bed9ff;
+  --info-bg:#27374d;
+  --info-line:#6f8eb4;
+  --rating:#f4bf45;
+  --rating-star-color:color-mix(in srgb,var(--accent) 80%,white);
+}
+/* New variants only: original light palettes and Dark retain every role above. */
+:root[data-theme="dark-rosado"] {
+  --on-primary:#1C161E;
+  --muted:#D2B9C8;
+  --line:#674358;
+  --soft:#30232F;
+  --feature-start:#30232F;
+  --feature-end:#1C161E;
+}
+:root[data-theme="dark-blood"] {
+  /* Blood red stays on filled controls; a luminous rose-red serves small text,
+     focus rings and SVG outlines against the black/charcoal surfaces. */
+  --button-bg:#89001F;
+  --on-primary:#F5EDF0;
+  --primary-hover:#C4183D;
+  --muted:#BEB4BF;
+  --soft:#111116;
+  --feature-start:#111116;
+  --feature-end:#050507;
+}
+:root[data-theme="dark-dorado"] {
+  --on-primary:#141416;
+  --muted:#C7BEAF;
+  --line:#63523B;
+  --soft:#202023;
+  --feature-start:#202023;
+  --feature-end:#141416;
+}
+input,select,textarea { color:var(--ink); accent-color:var(--primary); }
+input::placeholder,textarea::placeholder { color:var(--muted); opacity:1; }
+/* Explicit text roles keep contrast when primary becomes light in Dark. */
+.button.primary,.skip-link,.brand-icon,.avatar,.profile-avatar { color:var(--on-primary); }
+.reader-summary,.analysis-card.featured,.insight-band { color:var(--on-feature); }
+.reader-summary h2,.reader-summary p,.reader-summary a,.reader-summary .kicker,
+.featured h2,.featured>p,.featured .notice,.insight-inner h2,.insight-inner p,.kicker.light { color:var(--on-feature); }
+.reading-tabs button.active { color:var(--on-primary); }
+
+/* Rosa needs a slightly deeper control background for normal-size white text. */
+:root[data-theme="rosa-antiguo"] { --button-bg:color-mix(in srgb,var(--primary) 90%,var(--ink)); }
+.button.primary,.skip-link,.brand-icon,.avatar,.profile-avatar { background:var(--button-bg); }
+/* Filled controls that predate --button-bg need the same readable blood red. */
+:root[data-theme="dark-blood"] :is(.unread-count,.search-clear,.reader-avatars>span) { background:var(--button-bg); }

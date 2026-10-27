@@ -1,0 +1,6 @@
+.partial-rating-icon { position:relative; display:inline-block; flex:none; width:var(--partial-icon-size); height:var(--partial-icon-size); vertical-align:middle; }
+.partial-rating-icon.partial-rating-icon,.partial-rating-icon>.partial-rating-fill,.partial-rating-icon>.partial-rating-foreground { margin:0; }
+.partial-rating-icon svg { display:block; width:var(--partial-icon-size)!important; height:var(--partial-icon-size)!important; max-width:none; }
+.partial-rating-fill { position:absolute; inset:0 auto 0 0; height:100%; overflow:hidden; pointer-events:none; }
+.partial-rating-foreground { position:absolute; inset:0; pointer-events:none; }
+.partial-rating-fill .rating-category-fill>:is(path,circle,polygon,rect,ellipse) { fill:var(--rating-category-color); stroke:none; }
