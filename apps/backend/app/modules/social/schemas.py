@@ -52,8 +52,8 @@ class PostResponse(BaseModel):
     book_ref: str | None
     book_title: str | None
     book_cover_url: str | None = None
-    rating: int | None
-    dimension_ratings: dict[str, int] = Field(default_factory=dict)
+    rating: float | None
+    dimension_ratings: dict[str, float] = Field(default_factory=dict)
     progress_percent: int | None
     reading_event: str | None
     work_id: uuid.UUID | None = None
@@ -90,14 +90,17 @@ class CommentResponse(BaseModel):
     created_at: datetime
 
 
+RatingDimension = Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace", "battles", "horror", "boring_moments", "comedy"]
+
+
 class ReviewCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     work_id: uuid.UUID
     edition_id: uuid.UUID | None = None
     author_profile_id: uuid.UUID | None = None
     body: str = Field(min_length=1, max_length=3000)
-    rating: int | None = Field(default=None, ge=1, le=5)
-    dimension_ratings: dict[Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace"], Annotated[int, Field(ge=1, le=5)]] = Field(default_factory=dict)
+    rating: float | None = Field(default=None, ge=0.25, le=5, multiple_of=0.25, allow_inf_nan=False)
+    dimension_ratings: dict[RatingDimension, Annotated[float, Field(ge=0.25, le=5, multiple_of=0.25, allow_inf_nan=False)]] = Field(default_factory=dict)
     is_spoiler: bool = False
     status: Literal["draft", "published"] = "published"
 
@@ -105,8 +108,8 @@ class ReviewCreate(BaseModel):
 class ReviewUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     body: str = Field(min_length=1, max_length=3000)
-    rating: int | None = Field(default=None, ge=1, le=5)
-    dimension_ratings: dict[Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace"], Annotated[int, Field(ge=1, le=5)]] = Field(default_factory=dict)
+    rating: float | None = Field(default=None, ge=0.25, le=5, multiple_of=0.25, allow_inf_nan=False)
+    dimension_ratings: dict[RatingDimension, Annotated[float, Field(ge=0.25, le=5, multiple_of=0.25, allow_inf_nan=False)]] = Field(default_factory=dict)
     is_spoiler: bool = False
     status: Literal["draft", "published", "hidden"] = "published"
     edition_id: uuid.UUID | None = None

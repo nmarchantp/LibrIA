@@ -1,15 +1,54 @@
-import { Bell, BookOpen, BrainCircuit, CalendarDays, Compass, Database, Home, Library, LogOut, MessageCircle, Settings2, Sparkles, UserRound, BarChart3, Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import BrandLogo from './BrandLogo'
+import NavigationIcon from './NavigationIcon'
+import NavigationGalaxy from './NavigationGalaxy'
+import MessageBubbleIcon from './MessageBubbleIcon'
+import NotificationBellIcon from './NotificationBellIcon'
+import HeaderGreeting from './HeaderGreeting'
+import MagicalBackground from './MagicalBackground'
+import './LayoutNavigation.css'
+
 
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
 
+function HeaderShortcut({ to, label, icon: Icon }) {
+  const tooltipId = useId()
+  return <NavLink to={to} className="global-header-action" aria-label={label} aria-describedby={tooltipId}>
+    <Icon size={21} aria-hidden="true" /><span id={tooltipId} className="global-header-tooltip" role="tooltip">{label}</span>
+  </NavLink>
+}
+
 export default function Layout() {
   const { user, logout } = useAuth()
+  const { magicalBackground } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [headerScrolled, setHeaderScrolled] = useState(() => window.scrollY > 8)
+  const toolsRef = useRef(null)
+  const { pathname, search } = useLocation()
+  const hasTools = groupAccess || user.role === 'admin'
+  useEffect(() => {
+    const updateHeader = () => setHeaderScrolled(window.scrollY > 8)
+    updateHeader()
+    window.addEventListener('scroll', updateHeader, { passive: true })
+    return () => window.removeEventListener('scroll', updateHeader)
+  }, [])
+  useEffect(() => {
+    setMenuOpen(false)
+    if (toolsRef.current) toolsRef.current.open = false
+  }, [pathname, search])
+  useEffect(() => {
+    const dismissTools = event => {
+      if (toolsRef.current && !toolsRef.current.contains(event.target)) toolsRef.current.open = false
+    }
+    document.addEventListener('pointerdown', dismissTools)
+    return () => document.removeEventListener('pointerdown', dismissTools)
+  }, [])
   useEffect(() => {
     let active = true
     apiRequest('/analytics/access', { headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
@@ -18,28 +57,37 @@ export default function Layout() {
     return () => { active = false }
   }, [user.id])
   const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
-  return <div className="social-shell">
+  return <div className={`social-shell${hasTools ? ' has-navigation-tools' : ''}`}>
     <a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className="social-sidebar">
-      <NavLink className="brand" to="/" aria-label="LibrIA, mural"><span className="brand-icon"><BookOpen size={21} /></span><span>Libr<span>IA</span></span></NavLink>
-      <p className="sidebar-caption">Historias que nos conectan</p>
-      <button className="mobile-nav-toggle" type="button" aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
-      <nav id="main-navigation" className={`social-nav${menuOpen ? ' social-nav--open' : ''}`} aria-label="Navegación principal" onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }} onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector('.mobile-nav-toggle')?.focus() } }}>
-        <NavLink to="/" end><Home size={22} /><span>Mural</span></NavLink>
-        <NavLink to="/books"><Compass size={22} /><span>Explorar libros</span></NavLink>
-        <NavLink to="/library"><Library size={22} /><span>Biblioteca</span></NavLink>
-        <NavLink to="/events"><CalendarDays size={22} /><span>Eventos</span></NavLink>
-        <NavLink to="/messages"><MessageCircle size={22} /><span>Mensajes</span></NavLink>
-        <NavLink to="/notifications"><Bell size={22} /><span>Notificaciones</span></NavLink>
-        <NavLink to="/profile?tab=analysis"><BrainCircuit size={22} /><span>Tu ADN lector</span></NavLink>
-        {groupAccess && <NavLink to="/insights"><BarChart3 size={22} /><span>LibrIA Insights</span></NavLink>}
-        <NavLink to="/recommendations"><Sparkles size={22} /><span>Recomendaciones IA</span></NavLink>
-        <NavLink to="/profile"><UserRound size={22} /><span>Mi perfil</span></NavLink>
-        {user.role === 'admin' && <NavLink to="/admin/profiles"><Settings2 size={22} /><span>Gestionar perfiles</span></NavLink>}
-        {user.role === 'admin' && <NavLink to="/admin/etl"><Database size={22} /><span>Carga de datos</span></NavLink>}
+      <Link className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /></Link>
+      <button className="mobile-nav-toggle" type="button" aria-label={menuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'} aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
+      <div className={`sidebar-navigation${menuOpen ? ' sidebar-navigation--open' : ''}`} onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }} onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector('.mobile-nav-toggle')?.focus() } }}>
+      <nav id="main-navigation" className="social-nav" aria-label="Navegación principal">
+        <NavLink to="/" end className="navigation-galaxy-link"><Home size={22} /><span>Mural</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/profile" className="navigation-galaxy-link"><UserRound size={22} /><span>Mi perfil</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/books" className="navigation-galaxy-link"><NavigationIcon variant="book" /><span>Explorar libros</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/events" className="navigation-galaxy-link"><CalendarDays size={22} /><span>Eventos</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/recommendations" className="navigation-galaxy-link"><NavigationIcon variant="wand" /><span>Recomendaciones IA</span><NavigationGalaxy /></NavLink>
+        <NavLink to="/settings" className="navigation-galaxy-link"><Settings2 size={22} /><span>Configuración</span><NavigationGalaxy /></NavLink>
       </nav>
-      <div className="sidebar-account"><NavLink to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></NavLink><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
+      <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
+      </div>
     </aside>
-    <main id="main-content" className="social-main" tabIndex={-1}><Outlet /></main>
+    <div className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined}>
+      {magicalBackground && <MagicalBackground />}
+      <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
+        <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
+        <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
+        {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>
+          <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>
+          <nav className="navigation-tools-menu" aria-label="Herramientas disponibles">
+            {groupAccess && <NavLink to="/insights"><BarChart3 size={19} aria-hidden="true" />LibrIA Insights</NavLink>}
+            {user.role === 'admin' && <><NavLink to="/admin/profiles"><Settings2 size={19} aria-hidden="true" />Gestionar perfiles</NavLink><NavLink to="/admin/etl"><Database size={19} aria-hidden="true" />Carga de datos</NavLink></>}
+          </nav>
+        </details>}
+      </nav></header>
+      <main id="main-content" className="social-main" tabIndex={-1}><Outlet /></main>
+    </div>
   </div>
 }

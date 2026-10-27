@@ -15,6 +15,22 @@ uvicorn app.main:app --reload
 
 API: `http://localhost:8000`; documentación interactiva: `http://localhost:8000/docs`.
 
+Las búsquedas usan Google Books y activan Open Library automáticamente ante fallos,
+respuestas incompletas o ausencia de resultados útiles en español. Open Library se
+consulta por páginas de tres obras, verificando el idioma de la edición elegida.
+Sus resultados se conservan en la caché existente y se incorporan al catálogo solo
+al abrir una ficha o agregar esa edición. No requiere migraciones ni otra API key.
+
+El cliente se identifica como `LibrIAverse/0.1` y limita las solicitudes de Open Library
+a una por segundo en el proceso del backend. Para uso regular, configura un contacto
+real en `OPEN_LIBRARY_CONTACT` y registra la aplicación según las
+[condiciones oficiales](https://openlibrary.org/developers/api). No se realiza ninguna
+recolección masiva. Si se despliega con varios procesos o réplicas, debe centralizarse
+el limitador antes de incrementar el tráfico. Los endpoints mantienen compatibilidad;
+la paginación adicional acepta `provider=open_library&page=2`, separada del
+`start_index` de Google Books. `has_more` indica páginas adicionales confirmadas;
+los fallos ofrecen reintentar y conservan los resultados disponibles.
+
 ## Endpoints disponibles
 
 - `POST /api/auth/register`: crea siempre una cuenta `lector`, hash Argon2 y token.

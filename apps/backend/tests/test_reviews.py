@@ -66,6 +66,50 @@ class ReviewTest(unittest.TestCase):
         self.assertEqual(self.db.scalar(select(ReviewRevision.rating).where(ReviewRevision.review_id == uuid.UUID(item["id"]))), None)
         self.assertEqual(self.client.get(f"/api/reviews/{item['id']}").status_code, 200)
 
+    def test_quarter_ratings_persist_in_review_revision_and_responses(self):
+        from decimal import Decimal
+        result = self.create(rating=0.25, dimension_ratings={'spicy': 1.5, 'world_building': 3.75})
+        self.assertEqual(result.status_code, 201, result.text)
+        item = result.json()
+        self.assertEqual(item['rating'], 0.25)
+        self.assertEqual(item['dimension_ratings'], {'spicy': 1.5, 'world_building': 3.75})
+        review_id = uuid.UUID(item['id'])
+        self.assertEqual(self.db.get(Review, review_id).rating, Decimal('0.25'))
+        self.assertEqual(self.db.scalar(select(ReviewRevision.rating).where(ReviewRevision.review_id == review_id)), Decimal('0.25'))
+        updated = self.update(item, rating=3.75, dimension_ratings={'comedy': 4.25})
+        self.assertEqual(updated.status_code, 200, updated.text)
+        self.assertEqual(self.client.get(f"/api/reviews/{review_id}").json()['rating'], 3.75)
+        self.assertEqual(self.db.scalars(select(ReviewRevision.rating).where(ReviewRevision.review_id == review_id)
+                                         .order_by(ReviewRevision.revision_number)).all(), [Decimal('0.25'), Decimal('3.75')])
+        self.assertEqual(self.update(item, rating=0.1).status_code, 422)
+        cleared = self.update(item, rating=None, dimension_ratings={})
+        self.assertEqual(cleared.status_code, 200, cleared.text)
+        self.assertIsNone(cleared.json()['rating'])
+        self.assertEqual(cleared.json()['dimension_ratings'], {})
+
+    def test_quarter_rating_is_included_in_etl_sum_average_and_distribution(self):
+        import json
+        from decimal import Decimal
+        from datetime import timedelta
+        created = self.create(rating=0.25)
+        self.assertEqual(created.status_code, 201, created.text)
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        prepared = transform(*extract(self.connection, today, today + timedelta(days=1)))
+        valuations = prepared[7]
+        item = next(row for row in valuations if row['work_id'] == self.work.id)
+        self.assertEqual(item['rating_sum'], Decimal('0.25'))
+        self.assertEqual(item['rating_average'], Decimal('0.25'))
+        self.assertEqual(json.loads(item['distribution'])['0.25'], 1)
+        run_id = uuid.uuid4()
+        self.connection.execute(text('''INSERT INTO analytics.ejecuciones_etl
+            (id,status,started_at,source_cutoff_at,transform_version)
+            VALUES (:id,'running',now(),:cutoff,'quarter-rating-test')'''),
+            {'id': run_id, 'cutoff': today + timedelta(days=1)})
+        publish(self.connection, run_id, prepared)
+        total = self.connection.execute(text('''SELECT rating_sum FROM analytics.preparacion_valoraciones_obras
+            WHERE etl_run_id=:run AND work_id=:work'''), {'run': run_id, 'work': self.work.id}).scalar_one()
+        self.assertEqual(total, Decimal('0.25'))
+
     def test_unique_per_profile_work_even_with_different_edition(self):
         self.assertEqual(self.create().status_code, 201)
         self.assertEqual(self.create(edition_id=str(self.second_edition.id)).status_code, 409)

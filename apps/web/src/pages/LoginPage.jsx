@@ -32,7 +32,7 @@ export default function LoginPage() {
   }
   return <main className="auth-page">
     <form className="auth-card" onSubmit={submit}>
-      <h1>Bienvenida a LibrIA</h1>
+      <h1>Bienvenida a LibrIAverse</h1>
       <label>Correo<input name="email" type="email" autoComplete="email" required /></label>
       <label>Contraseña<input name="password" type="password" autoComplete="current-password" required /></label>
       {(error || googleError) && <p className="form-error" role="alert">{error || googleError}</p>}

@@ -7,6 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:profile-modals": "node --experimental-websocket tests/profile-edit-modals.mjs",
+    "test:navigation": "node --experimental-websocket tests/main-navigation.mjs",
+    "test:themes": "node --experimental-websocket tests/themes.mjs",
+    "test:magical-background": "node --experimental-websocket tests/magical-background.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
