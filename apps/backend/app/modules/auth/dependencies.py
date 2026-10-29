@@ -1,45 +1,51 @@
 """Dependencias de autenticación reutilizables por módulos protegidos."""
 
-import uuid
 from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.security import decode_access_token
 from app.modules.auth.repository import AuthRepository
+from app.modules.auth.sessions import SessionValidationError, validate_access_session
 from app.modules.users.models import User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
-    unauthorized = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado", headers={"WWW-Authenticate": "Bearer"})
+    unauthorized = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail={"code": "session_invalid", "message": "Sesión inválida o expirada"},
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     if not credentials:
         raise unauthorized
-    subject = decode_access_token(credentials.credentials)
     try:
-        user_id = uuid.UUID(subject) if subject else None
-    except ValueError:
+        auth_session = validate_access_session(db, credentials.credentials)
+    except SessionValidationError as exc:
+        unauthorized.detail = {"code": exc.code, "message": "Sesión inválida o expirada"}
         raise unauthorized from None
-    user = AuthRepository(db).get_user_by_id(user_id) if user_id else None
+    user = AuthRepository(db).get_user_by_id(auth_session.user_id)
     if not user:
         raise unauthorized
+    request.state.auth_session = auth_session
     return user
 
 
 def get_optional_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ) -> User | None:
     if not credentials:
         return None
-    subject = decode_access_token(credentials.credentials)
     try:
-        user_id = uuid.UUID(subject) if subject else None
-    except ValueError:
+        auth_session = validate_access_session(db, credentials.credentials)
+    except SessionValidationError:
         return None
-    return AuthRepository(db).get_user_by_id(user_id) if user_id else None
+    request.state.auth_session = auth_session
+    return AuthRepository(db).get_user_by_id(auth_session.user_id)

@@ -4,35 +4,39 @@ import unicodedata
 
 
 EDITION_SUFFIX = re.compile(
-    r"\s*(?:[.,\-:|]\s*)?(?:ed(?:icion)?\.?\s+(?:coleccionista|especial|ilustrada|limitada|bolsillo)|nueva\s+presentacion)\b.*$",
+    r"\s*(?:[.,\-:|]\s*)?(?:ed(?:icion)?\.?\s+(?:coleccionista|especial|ilustrada|limitada|bolsillo|tapa\s+(?:dura|blanda)|rustica)|nueva\s+presentacion)\b.*$",
     re.IGNORECASE,
 )
 EDITION_PARENTHESIS = re.compile(
-    r"\s*\((?:ed(?:icion)?\.?\s+(?:minalima|coleccionista|especial|ilustrada|limitada|bolsillo|espanola))\)\s*",
+    r"\s*\((?:ne|nueva\s+edicion|ed(?:icion)?\.?\s+(?:minalima|coleccionista|especial|ilustrada|limitada|bolsillo|espanola|tapa\s+(?:dura|blanda)))\)\s*",
     re.IGNORECASE,
 )
 
 
 def canonical_book_title(title):
     """Normalize typography and explicit edition labels, preserving volume/subtitle."""
-    value = unicodedata.normalize("NFKD", title or "")
+    value = unicodedata.normalize("NFKD", title if isinstance(title, str) else "")
     value = "".join(character for character in value if not unicodedata.combining(character)).casefold().strip()
     value = EDITION_PARENTHESIS.sub(" ", value)
+    # Providers often repeat the first volume as a separate '#1' subtitle.
+    # Do not remove other numbers, named volumes, or meaningful subtitles.
+    value = re.sub(r"\s*[:.,-]?\s*#\s*1\s*$", "", value)
     value = EDITION_SUFFIX.sub("", value)
     return re.sub(r"[\W_]+", " ", value, flags=re.UNICODE).strip()
 
 
 def canonical_title_variants(title):
     """Extract each title from bilingual provider labels separated with a slash."""
-    variants = {canonical_book_title(part) for part in re.split(r"\s+/\s+", title or "")}
+    value = title if isinstance(title, str) else ""
+    variants = {canonical_book_title(part) for part in re.split(r"\s+/+\s*|\s*/+\s+", value)}
     variants.discard("")
     return variants
 
 
 def bibliographic_title(info):
     """Preserve meaningful subtitles even when a provider sends a separate field."""
-    title = info.get("title") or ""
-    subtitle = info.get("subtitle") or ""
+    title = info.get("title") if isinstance(info.get("title"), str) else ""
+    subtitle = info.get("subtitle") if isinstance(info.get("subtitle"), str) else ""
     normalized = canonical_book_title(subtitle)
     if normalized and normalized not in canonical_book_title(title):
         return title + ": " + subtitle
@@ -69,8 +73,22 @@ def identity_matches(left_title, left_authors, right_title, right_authors):
     """Known, complete author sets and an explicit title variant are required."""
     left = canonical_work_key(left_title, left_authors)
     right = canonical_work_key(right_title, right_authors)
-    return bool(left and right and left.split("::", 1)[1] == right.split("::", 1)[1]
+    return bool(left and right and work_form(left_title) == work_form(right_title)
+                and left.split("::", 1)[1] == right.split("::", 1)[1]
                 and canonical_title_variants(left_title) & canonical_title_variants(right_title))
+
+
+def work_form(title):
+    """Adaptations and companion books are not editions of the original novel."""
+    value = unicodedata.normalize("NFKD", title if isinstance(title, str) else "")
+    value = "".join(c for c in value if not unicodedata.combining(c)).casefold()
+    patterns = {
+        "coloring": r"\b(?:libro (?:para|de) colorear|coloring book)\b",
+        "graphic": r"\b(?:adaptacion grafica|novela grafica|graphic (?:novel|adaptation))\b",
+        "summary": r"\b(?:resumen de|summary of)\b",
+        "study": r"\b(?:guia de (?:lectura|estudio)|study guide|cuaderno de actividades|workbook)\b",
+    }
+    return frozenset(kind for kind, pattern in patterns.items() if re.search(pattern, value))
 
 
 def duplicate_candidate(left_title, left_authors, right_title, right_authors):

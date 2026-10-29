@@ -107,6 +107,14 @@ class DailyRunTest(unittest.TestCase):
     def tearDown(self):
         with engine.begin() as connection:
             params = {"day": self.day}
+            connection.execute(text("""UPDATE ia.recomendaciones_ia
+                SET is_current=true,invalidated_at=NULL,invalidated_by_etl_run_id=NULL
+                WHERE invalidated_by_etl_run_id IN
+                  (SELECT id FROM analytics.ejecuciones_etl WHERE business_date=:day)"""), params)
+            connection.execute(text("""DELETE FROM ia.reader_profile_etl_states
+                WHERE etl_run_id IN (SELECT id FROM analytics.ejecuciones_etl WHERE business_date=:day)"""), params)
+            connection.execute(text("""DELETE FROM ia.reader_profile_versions
+                WHERE etl_run_id IN (SELECT id FROM analytics.ejecuciones_etl WHERE business_date=:day)"""), params)
             for table in ("validaciones_etl", "indicadores_personales", "hechos_publicaciones", "hechos_lectura", "hechos_resenas", "preparacion_valoraciones_obras", "catalogo_obras"):
                 connection.execute(text(f"DELETE FROM analytics.{table} WHERE etl_run_id IN (SELECT id FROM analytics.ejecuciones_etl WHERE business_date=:day)"), params)
             connection.execute(text("DELETE FROM analytics.ejecuciones_etl WHERE business_date=:day"), params)

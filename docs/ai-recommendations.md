@@ -1,5 +1,7 @@
 # Recomendaciones personales con Ollama
 
+> Archivo histórico anterior a etapa 6. No describe rutas ni comandos activos.
+
 La versión actual `reader-books-v4-analytics-social` consume proyecciones de
 analytics e incorpora descubrimiento social y colaborativo con controles de
 privacidad. Detalles en [Motor de datos e inteligencia](analytics-pipelines.md).

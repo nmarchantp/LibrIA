@@ -15,8 +15,11 @@ dist/
 *.tsbuildinfo
 npm-debug.log*
 
-# Docker
+# Docker y configuración local
 .env
+.env.backup*
+**/.env.backup*
+/backups/
 .docker/
 **/.DS_Store
 
@@ -29,4 +32,5 @@ Thumbs.db
 # Registros y archivos temporales
 *.log
 tmp/
+.tmp/
 temp/

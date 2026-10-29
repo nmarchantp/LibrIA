@@ -6,12 +6,13 @@
 .social-page-column[data-magical-background="enabled"] .social-main { position:relative; z-index:1; }
 .social-page-column[data-magical-background="enabled"] .header-greeting { z-index:1; }
 .profile-starfield { position:absolute; inset:0; z-index:0; overflow:clip; pointer-events:none; user-select:none; background:radial-gradient(ellipse at bottom,color-mix(in srgb,var(--primary) 12%,var(--paper)) 0%,var(--paper) 100%); }
-.profile-starfield-layer { position:absolute; inset:0 0 -600px; pointer-events:none; background-size:600px 600px; background-repeat:repeat; animation:profile-starfield-rise var(--starfield-duration) linear infinite; }
+.profile-starfield-layer { position:absolute; inset:0 0 -600px; pointer-events:none; background-size:600px 600px; background-repeat:repeat; will-change:transform; animation:profile-starfield-rise var(--starfield-duration) linear infinite; }
 .profile-starfield-layer--fine { opacity:.28; }
 .profile-starfield-layer--medium { opacity:.4; }
 .profile-starfield-layer--large { opacity:.55; }
 @keyframes profile-starfield-rise { from { transform:translateY(-600px); } to { transform:translateY(0); } }
-@media(prefers-reduced-motion:reduce) { .profile-starfield-layer { animation:none; } }
+.profile-starfield[data-motion="enabled"] .profile-starfield-layer { animation:profile-starfield-rise var(--starfield-duration) linear infinite !important; animation-play-state:running !important; }
+.profile-starfield[data-motion="disabled"] .profile-starfield-layer { animation-play-state:paused !important; }
 .profile-starfield-layer--fine { --starfield-duration:50s; background-image:
   radial-gradient(circle at 25.05% 40.55%,var(--primary) 0 0.65px,transparent 1.25px),
   radial-gradient(circle at 72.5% 66.2%,var(--primary) 0 0.65px,transparent 1.25px),

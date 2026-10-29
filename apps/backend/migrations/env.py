@@ -8,12 +8,14 @@ from app.core.database import Base
 from app.modules.auth.models import AuthAccount  # noqa: F401
 from app.modules.users.models import User  # noqa: F401
 from app.modules.books import models as book_models  # noqa: F401
+from app.modules.books import catalog_models  # noqa: F401
 from app.modules.library import models as library_models  # noqa: F401
 from app.modules.social import models as social_models  # noqa: F401
 from app.modules.users import verification_models  # noqa: F401
 from app.modules.users import profile_models  # noqa: F401
 from app.modules.users import identity_models  # noqa: F401
 from app.modules.users import preference_models  # noqa: F401
+from app.modules.analytics import models as analytics_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

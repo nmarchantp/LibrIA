@@ -1,0 +1,310 @@
+{
+  "scope": "synthetic_only_no_database_no_network",
+  "legacy_grouping": "actual equivalent_work_ids with a read-only session double",
+  "metrics": "test-only oracle of audited semantics, not executed PostgreSQL",
+  "proposed": "confirmed-link contract oracle; no production resolver implemented",
+  "scenarios": [
+    {
+      "scenario": "title_author_only",
+      "legacy": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [
+          "r1",
+          "r2"
+        ],
+        "average": "3",
+        "ratings_count": 2,
+        "reading_stats": {
+          "finished": 1,
+          "reading": 1,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1",
+          "u2"
+        ],
+        "reading_review_associations": [
+          [
+            "l1",
+            "r1"
+          ],
+          [
+            "l2",
+            "r2"
+          ]
+        ]
+      },
+      "confirmed_contract": {
+        "works": [
+          "A"
+        ],
+        "review_ids": [
+          "r1"
+        ],
+        "average": "5",
+        "ratings_count": 1,
+        "reading_stats": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1"
+        ],
+        "reading_review_associations": [
+          [
+            "l1",
+            "r1"
+          ]
+        ]
+      },
+      "changed_fields": [
+        "works",
+        "review_ids",
+        "average",
+        "ratings_count",
+        "reading_stats",
+        "library_users",
+        "reading_review_associations"
+      ]
+    },
+    {
+      "scenario": "confirmed_translation",
+      "legacy": {
+        "works": [
+          "A"
+        ],
+        "review_ids": [],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1"
+        ],
+        "reading_review_associations": []
+      },
+      "confirmed_contract": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [
+          "r1"
+        ],
+        "average": "4",
+        "ratings_count": 1,
+        "reading_stats": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1"
+        ],
+        "reading_review_associations": [
+          [
+            "l1",
+            "r1"
+          ]
+        ]
+      },
+      "changed_fields": [
+        "works",
+        "review_ids",
+        "average",
+        "ratings_count",
+        "reading_review_associations"
+      ]
+    },
+    {
+      "scenario": "transitive_title_bridge",
+      "legacy": {
+        "works": [
+          "A",
+          "B",
+          "C"
+        ],
+        "review_ids": [
+          "r1"
+        ],
+        "average": "2",
+        "ratings_count": 1,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "confirmed_contract": {
+        "works": [
+          "A"
+        ],
+        "review_ids": [],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "changed_fields": [
+        "works",
+        "review_ids",
+        "average",
+        "ratings_count"
+      ]
+    },
+    {
+      "scenario": "latest_private_review",
+      "legacy": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [
+          "r1"
+        ],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "confirmed_contract": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "changed_fields": [
+        "review_ids"
+      ]
+    },
+    {
+      "scenario": "overlapping_reader",
+      "legacy": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [
+          "r1",
+          "r2"
+        ],
+        "average": "4",
+        "ratings_count": 1,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 1,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1"
+        ],
+        "reading_review_associations": [
+          [
+            "l1",
+            "r1"
+          ],
+          [
+            "l2",
+            "r2"
+          ]
+        ]
+      },
+      "confirmed_contract": {
+        "works": [
+          "A",
+          "B"
+        ],
+        "review_ids": [
+          "r2"
+        ],
+        "average": "4",
+        "ratings_count": 1,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 1,
+          "abandoned": 0
+        },
+        "library_users": [
+          "u1"
+        ],
+        "reading_review_associations": [
+          [
+            "l1",
+            "r2"
+          ],
+          [
+            "l2",
+            "r2"
+          ]
+        ]
+      },
+      "changed_fields": [
+        "review_ids",
+        "reading_review_associations"
+      ]
+    },
+    {
+      "scenario": "unknown_author",
+      "legacy": {
+        "works": [
+          "A"
+        ],
+        "review_ids": [],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "confirmed_contract": {
+        "works": [
+          "A"
+        ],
+        "review_ids": [],
+        "average": null,
+        "ratings_count": 0,
+        "reading_stats": {
+          "finished": 0,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_users": [],
+        "reading_review_associations": []
+      },
+      "changed_fields": []
+    }
+  ]
+}

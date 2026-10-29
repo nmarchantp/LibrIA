@@ -7,6 +7,12 @@ from app.modules.users.models import User
 
 
 def public_rating(db, work_ids):
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        rows = current_reviews(db, work_ids, public=True)
+        ratings = [r.rating for r in rows if r.rating is not None and 0.25 <= r.rating <= 5]
+        return (sum(ratings) / len(ratings) if ratings else None, len(ratings))
     # Resolve historical duplicate work records without counting a reader twice.
     # Rank before filtering visibility so an older public review cannot reveal a
     # rating after the reader's latest review has become private.
@@ -22,6 +28,9 @@ def public_rating(db, work_ids):
 
 
 def reading_statistics(db, work_ids):
+    from app.modules.books.canonical import enabled, canonical_members
+    if enabled():
+        work_ids = set().union(*(canonical_members(db, key) for key in work_ids))
     # Reading attempts are history, not additional readers. The latest attempt
     # across existing equivalent works represents each active library member.
     attempts = select(

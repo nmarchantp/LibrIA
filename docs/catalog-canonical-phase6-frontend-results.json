@@ -1,0 +1,30 @@
+{
+  "branch": "Nicole",
+  "persistent_database_access": false,
+  "browser": {
+    "engine": "Chrome headless",
+    "http": "fully mocked isolated fixture",
+    "command": "node --experimental-websocket tests/catalog-preview.mjs",
+    "success": true,
+    "scenarios": ["effective admin permission on reader account", "admin role without permission rejected", "preview flag disabled", "internal search", "source and target selection", "comparison", "preview", "provider-independent error recovery", "stale result cleared", "no execution button or execution/Gemini requests"]
+  },
+  "regressions": [
+    {"command": "node tests/library-selection.mjs", "success": true},
+    {"command": "node tests/reading-optional-edition.mjs", "success": true}
+  ],
+  "build": {
+    "command": "npm.cmd run build",
+    "success": true,
+    "modules": 1714,
+    "javascript_kb": 508.95,
+    "javascript_gzip_kb": 151.28,
+    "warning": "chunk exceeds 500 kB"
+  },
+  "effective_flags": {
+    "catalog_discovery_enabled": false,
+    "catalog_editionless_enabled": false,
+    "catalog_canonical_enabled": false,
+    "catalog_admin_preview_enabled": false,
+    "catalog_admin_merge_enabled": false
+  }
+}

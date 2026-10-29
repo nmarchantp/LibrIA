@@ -1,6 +1,7 @@
 """Hash de contraseñas y creación/verificación de tokens JWT."""
 
 from datetime import datetime, timedelta, timezone
+import uuid
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -21,19 +22,51 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return password_hash.verify(password, hashed_password)
 
 
-def create_access_token(subject: str) -> str:
-    """Firma un JWT de duración limitada usando el id como subject."""
+def create_access_token(subject: str, session_id: str | uuid.UUID, *, now: datetime | None = None) -> str:
+    """Firma un access JWT corto y ligado a una sesión revocable."""
     settings = get_settings()
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    return jwt.encode({"sub": subject, "exp": expires_at}, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    issued_at = now or datetime.now(timezone.utc)
+    expires_at = issued_at + timedelta(minutes=settings.access_token_expire_minutes)
+    return jwt.encode(
+        {"sub": subject, "sid": str(session_id), "typ": "access", "jti": str(uuid.uuid4()),
+         "iat": issued_at, "exp": expires_at},
+        settings.jwt_secret,
+        algorithm=settings.jwt_algorithm,
+    )
+
+
+def create_refresh_token(subject: str, session_id: str | uuid.UUID, generation: int,
+                         expires_at: datetime, *, now: datetime | None = None) -> str:
+    """Firma la credencial rotativa; sólo su hash se persiste."""
+    settings = get_settings()
+    issued_at = now or datetime.now(timezone.utc)
+    return jwt.encode(
+        {"sub": subject, "sid": str(session_id), "typ": "refresh", "rgn": generation,
+         "jti": str(uuid.uuid4()), "iat": issued_at, "exp": expires_at},
+        settings.jwt_secret,
+        algorithm=settings.jwt_algorithm,
+    )
+
+
+def decode_token_claims(token: str, token_type: str) -> dict | None:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["sub", "sid", "typ", "jti", "iat", "exp"]},
+        )
+        if payload.get("typ") != token_type:
+            return None
+        uuid.UUID(str(payload["sub"]))
+        uuid.UUID(str(payload["sid"]))
+        return payload
+    except (InvalidTokenError, ValueError, TypeError):
+        return None
 
 
 def decode_access_token(token: str) -> str | None:
     """Retorna el subject si la firma y expiración son válidas."""
-    settings = get_settings()
-    try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm],
-                             options={"require": ["sub", "exp"]})
-        return payload.get("sub")
-    except InvalidTokenError:
-        return None
+    payload = decode_token_claims(token, "access")
+    return payload.get("sub") if payload else None

@@ -4,17 +4,19 @@ from datetime import datetime, timezone
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.database import get_db
+from app.modules.analytics.persistence import enqueue_reading_event_analysis
 from app.modules.auth.dependencies import get_current_user
 from app.modules.books.identity import canonical_work_key
 from app.modules.books.models import CatalogSource, Edition, Work
 from app.modules.books.service import equivalent_work_ids
 from app.modules.library.models import LibraryEntry, Reading, ReadingProgress, ReadingEvent
-from app.modules.library.schemas import LibraryBookCreate, ReadingEventCreate, ReadingEventResponse, ReadingState, ReadingTotalUpdate, ReadingNotebookUpdate
+from app.modules.library.schemas import LibraryBookCreate, ReadingEventCreate, ReadingEventResponse, ReadingState, ReadingTotalUpdate, ReadingNotebookUpdate, ReadingEditionUpdate
 from app.modules.social.router import as_reading_response
 from app.modules.users.models import User
 
@@ -24,6 +26,9 @@ router = APIRouter(prefix="/readings", tags=["readings"])
 @router.get("/me", response_model=list[ReadingState])
 def my_readings(user: Annotated[User, Depends(get_current_user)],
                 db: Annotated[Session, Depends(get_db)]) -> list[ReadingState]:
+    if get_settings().catalog_discovery_enabled:
+        from app.modules.books.library_view import library_states
+        return library_states(db, user.id)
     rows = db.execute(select(Reading, CatalogSource.external_id, Edition.title)
                       .join(LibraryEntry, Reading.library_entry_id == LibraryEntry.id)
                       .join(Edition, Reading.edition_id == Edition.id)
@@ -45,6 +50,29 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
 
 
 def resolve_book(db: Session, data: LibraryBookCreate) -> tuple[Work, Edition]:
+    if get_settings().catalog_discovery_enabled:
+        # Reading events may resolve existing selections, never import a catalog.
+        from app.modules.books.canonical import resolve_canonical_work
+        try:
+            key = uuid.UUID(data.book_ref)
+        except ValueError:
+            key = None
+        work = db.get(Work, key) if key else None
+        edition = db.get(Edition, data.edition_id) if data.edition_id else db.get(Edition, key) if key else None
+        if edition is None and work is None:
+            external_id = data.book_ref.removeprefix("openlibrary:").removeprefix("googlebooks:")
+            source = db.scalar(select(CatalogSource).where(CatalogSource.external_id.in_([data.book_ref, external_id]),
+                CatalogSource.provider.in_(["open-library"] if data.book_ref.startswith("openlibrary:") else ["google-books", "libria-feed"])))
+            edition = db.get(Edition, source.edition_id) if source else None
+        if edition is None:
+            if work and get_settings().catalog_editionless_enabled and not data.edition_id:
+                return work, None
+            raise HTTPException(409, "Agrega primero una edición a tu biblioteca.")
+        if data.edition_id and work and edition.work_id != work.id:
+            raise HTTPException(422, "La edición seleccionada no pertenece a la obra")
+        if work and resolve_canonical_work(db, work.id).canonical_work_id != resolve_canonical_work(db, edition.work_id).canonical_work_id:
+            raise HTTPException(422, "La edición seleccionada no pertenece a la obra")
+        return db.get(Work, edition.work_id), edition
     if data.book_ref.startswith('openlibrary:'):
         from app.modules.books.open_library_catalog import ensure_edition
         edition = ensure_edition(db, data.book_ref)
@@ -89,7 +117,14 @@ def resolve_book(db: Session, data: LibraryBookCreate) -> tuple[Work, Edition]:
 
 @router.post("/library", response_model=ReadingState)
 def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_current_user)],
-                   db: Annotated[Session, Depends(get_db)]) -> ReadingState:
+                   db: Annotated[Session, Depends(get_db)],
+                   idempotency_key: Annotated[str | None, Header(min_length=1, max_length=200)] = None) -> ReadingState:
+    if get_settings().catalog_discovery_enabled:
+        from app.modules.books.facade import public_addition
+        from app.modules.books.library_view import reading_state
+        actor_id = user.id
+        result = public_addition(db, data, actor_id, idempotency_key)
+        return reading_state(db, db.get(Reading, uuid.UUID(result.reading_id)))
     db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
     if user.role == "libreria":
         raise HTTPException(status_code=403, detail="Una librería no tiene biblioteca personal")
@@ -122,6 +157,13 @@ def add_to_library(data: LibraryBookCreate, user: Annotated[User, Depends(get_cu
 @router.post("/events", response_model=ReadingEventResponse, status_code=status.HTTP_201_CREATED)
 def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends(get_current_user)],
                          db: Annotated[Session, Depends(get_db)]) -> ReadingEventResponse:
+    if get_settings().catalog_editionless_enabled:
+        from app.modules.books.policy import execute_catalog_command
+        from app.modules.library.commands import record_event
+        actor_id = user.id
+        return execute_catalog_command(db, lambda: record_event(db, actor_id, data))
+    if data.page_count is None:
+        raise HTTPException(422, "Indica el total de páginas del intento")
     # Serializa comandos del mismo titular, incluso cuando aún no hay biblioteca.
     db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
     if user.role == "libreria":
@@ -138,8 +180,10 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
             raise HTTPException(status_code=409, detail="El total de páginas no puede cambiar durante un intento")
     else:
         work, edition = resolve_book(db, data)
-        entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
-                          LibraryEntry.work_id.in_(equivalent_work_ids(db, work.id))))
+        work_ids = {work.id} if get_settings().catalog_discovery_enabled else equivalent_work_ids(db, work.id)
+        entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id, LibraryEntry.work_id.in_(work_ids)))
+        if get_settings().catalog_discovery_enabled and (entry is None or entry.archived_at is not None):
+            raise HTTPException(409, "Agrega primero esta edición a tu biblioteca.")
         if entry is not None and entry.work_id != work.id:
             work = db.get(Work, entry.work_id)
             edition = db.scalar(select(Edition).where(Edition.work_id == work.id).order_by(Edition.created_at, Edition.id))
@@ -205,6 +249,17 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
                           is_public=public, reason=data.correction_reason if data.event == "correction" else
                           data.abandonment_reason if data.event == "abandon" else None, created_at=now)
     db.add(event)
+    db.flush()
+    if data.event in {"finish", "abandon"}:
+        settings = get_settings()
+        enqueue_reading_event_analysis(
+            db,
+            reading_event_id=event.id,
+            provider=settings.ai_provider,
+            model=settings.gemini_model,
+            prompt_version=settings.reading_analysis_prompt_version,
+            delay_minutes=settings.reading_analysis_delay_minutes,
+        )
     db.commit()
     db.refresh(event)
     return ReadingEventResponse(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, event_id=event.id, status=reading.status,
@@ -217,6 +272,11 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
 def update_total_pages(reading_id: uuid.UUID, data: ReadingTotalUpdate,
                        user: Annotated[User, Depends(get_current_user)],
                        db: Annotated[Session, Depends(get_db)]):
+    if get_settings().catalog_editionless_enabled:
+        from app.modules.books.policy import execute_catalog_command
+        from app.modules.library.commands import set_total
+        actor_id = user.id
+        return execute_catalog_command(db, lambda: set_total(db, actor_id, reading_id, data.total_pages))
     reading = db.scalar(select(Reading).join(LibraryEntry, LibraryEntry.id == Reading.library_entry_id)
                         .where(Reading.id == reading_id, LibraryEntry.user_id == user.id).with_for_update())
     if reading is None:
@@ -230,6 +290,20 @@ def update_total_pages(reading_id: uuid.UUID, data: ReadingTotalUpdate,
     return {"reading_id": reading.id, "total_pages": reading.total_pages,
             "current_page": reading.current_page,
             "progress_percent": round(reading.current_page * 100 / reading.total_pages)}
+
+
+@router.patch("/{reading_id}/edition", response_model=ReadingState)
+def select_reading_edition(reading_id: uuid.UUID, data: "ReadingEditionUpdate",
+                           user: Annotated[User, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
+    if not get_settings().catalog_editionless_enabled:
+        raise HTTPException(404, "Selección posterior de edición no habilitada")
+    from app.modules.books.policy import execute_catalog_command
+    from app.modules.books.library_view import reading_state
+    from app.modules.library.commands import select_edition
+    actor_id = user.id
+    def command():
+        return reading_state(db, select_edition(db, actor_id, reading_id, data.edition_id))
+    return execute_catalog_command(db, command)
 
 
 @router.patch("/{reading_id}/notebook")
@@ -248,6 +322,17 @@ def update_notebook(reading_id: uuid.UUID, data: ReadingNotebookUpdate,
 @router.delete('/library/{work_id}', status_code=204)
 def remove_from_library(work_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
                         db: Annotated[Session, Depends(get_db)]):
+    from app.modules.books.canonical import enabled, canonical_members
+    if enabled():
+        db.scalar(select(User).where(User.id == user.id).with_for_update())
+        entries = db.scalars(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
+            LibraryEntry.work_id.in_(canonical_members(db, work_id)), LibraryEntry.archived_at.is_(None)).with_for_update()).all()
+        if not entries:
+            raise HTTPException(404, "Libro propio no encontrado")
+        for entry in entries:
+            entry.archived_at = datetime.now(timezone.utc)
+        db.commit()
+        return
     entry = db.scalar(select(LibraryEntry).where(LibraryEntry.user_id == user.id,
                        LibraryEntry.work_id == work_id, LibraryEntry.archived_at.is_(None)).with_for_update())
     if entry is None:
@@ -268,3 +353,16 @@ def reading_history(reading_id: uuid.UUID, user: Annotated[User, Depends(get_cur
     return [{"id": event.id, "event": event.kind, "previous_page": event.previous_page,
              "page": event.page, "total_pages": event.total_pages, "reason": event.reason,
              "is_public": event.is_public, "created_at": event.created_at} for event in events]
+
+
+@router.get("/library/{work_id}/attempts", response_model=list[ReadingState])
+def library_attempts(work_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
+                     db: Annotated[Session, Depends(get_db)]):
+    if not get_settings().catalog_editionless_enabled:
+        raise HTTPException(404, "Historial de intentos no habilitado")
+    from app.modules.books.library_view import reading_state
+    from app.modules.books.canonical import enabled, canonical_members
+    work_ids = canonical_members(db, work_id) if enabled() else {work_id}
+    rows = db.scalars(select(Reading).join(LibraryEntry, LibraryEntry.id == Reading.library_entry_id).where(
+        LibraryEntry.user_id == user.id, LibraryEntry.work_id.in_(work_ids)).order_by(Reading.created_at.desc(), Reading.id.desc())).all()
+    return [reading_state(db, reading) for reading in rows]

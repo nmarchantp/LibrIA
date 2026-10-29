@@ -63,6 +63,16 @@ Para habilitar el primer administrador, registra su cuenta normal y ejecuta desd
 python -m scripts.grant_admin --email admin@ejemplo.com
 ```
 
+La instalación autorizada crea además la cuenta estable
+`demo.admin@example.com` y le asigna diez lecturas terminadas, valoradas y reseñadas.
+La contraseña corresponde a `LIBRIA_DEMO_PASSWORD` en el `.env` local. La carga es
+idempotente: reutiliza el catálogo existente y no reemplaza lecturas ni reseñas
+creadas después. También puede repetirse manualmente con:
+
+```powershell
+python -m scripts.seed_default_admin
+```
+
 Para ejecutar las pruebas del backend en desarrollo, instala `requirements-dev.txt` y ejecuta `python -m unittest discover -s tests`.
 
 El [ingreso con Google](../../docs/google-login.md) complementa el acceso con correo y contraseña. Incluye configuración de OAuth, vinculación de cuentas y comprobación manual.
@@ -75,7 +85,18 @@ El [ETL diario](../../docs/etl-daily.md) procesa una sola vez cada día cerrado 
 
 En esa pantalla, **Ejecutar ETL ahora** inicia una carga manual real de los últimos 30 días, incluyendo hoy. Requiere permiso administrativo; registra extracción, limpieza, carga y conciliación en `analytics`, por separado de los cierres diarios. Las solicitudes son idempotentes por UUID y se recuperan si se interrumpe la API. Aplicar primero `alembic upgrade head` (migración `0018_manual_etl`). Ver [demostración y consultas de comprobación](../../docs/etl-daily.md#ejecución-manual-desde-la-web).
 
-**Mis análisis / ADN lector** y **Pulso de la comunidad** consultan los datos limpios e interpretan sus indicadores con **Ollama local**, sin clave ni envío a un proveedor externo. Aplicar la migración `0019_ai_interpretations`, iniciar Ollama y descargar `qwen3:1.7b`. El panel grupal requiere capacidad de autor o membresía editorial/librería y publica únicamente agregados con umbrales mínimos. `python -m scripts.seed_group_demo` prepara una cohorte ficticia repetible; después ejecutar el ETL manual desde la web. Ver [contrato, configuración y demostración](../../docs/ai-interpretations.md).
+**Mis análisis / ADN lector** y las recomendaciones nuevas usan resultados
+persistidos de la cola Gemini. El análisis individual nace solo de finalizar o
+abandonar una lectura. Las interpretaciones clásicas de indicadores y el Pulso
+grupal conservan resultados históricos, pero su generación está deshabilitada
+hasta disponer de contratos Gemini específicos. Ver
+[etapa 6](../../docs/gemini-stage6-production-readiness.md).
+
+La migración `0054_gemini_ledger_dna` incorpora contabilidad y reservas por llamada,
+presupuestos acumulados entre intentos y ADN lector independiente. Debe aplicarse
+antes de iniciar el backend/worker actualizado. Ver [implementación, pruebas y
+limitaciones](../../docs/gemini-optimization-2026-10-28.md); los costos locales son
+equivalentes de tarifa y no acreditan cargos de Google.
 
 Primero aplica las migraciones y levanta la API. `run.cmd` inicia el generador continuo de publicaciones, que crea un post cada 20 segundos y lo guarda en las tablas transaccionales mediante `POST /api/posts`. El generador asegura las cuentas demo de forma idempotente y publica reseñas como lector, además de publicaciones y eventos como perfiles profesionales u organizaciones. Solo funciona con `APP_ENV=development` y necesita `LIBRIA_DEMO_PASSWORD` en `apps/backend/.env`; el instalador la genera automáticamente.
 

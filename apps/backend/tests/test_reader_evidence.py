@@ -4,7 +4,7 @@ import unittest
 import uuid
 from unittest.mock import MagicMock
 from sqlalchemy import select, text
-import test_ai_recommendations as fixtures
+from tests import test_ai_recommendations as fixtures
 from app.modules.analytics.reader_evidence import extract_personal, publish_personal, personal_samples
 from app.modules.analytics.insights import personal_evidence
 from app.modules.library.models import Reading

@@ -29,17 +29,18 @@ class Reading(EditableMixin, Base):
     __table_args__ = (
         ForeignKeyConstraint(["library_entry_id", "work_id"], ["app.entradas_biblioteca.id", "app.entradas_biblioteca.work_id"], ondelete="RESTRICT", name="fk_lecturas_biblioteca_obra"),
         ForeignKeyConstraint(["edition_id", "work_id"], ["app.ediciones.id", "app.ediciones.work_id"], ondelete="RESTRICT", name="fk_lecturas_edicion_obra"),
+        UniqueConstraint("id", "work_id", name="uq_lecturas_id_work"),
         CheckConstraint("status IN ('pending', 'reading', 'finished', 'abandoned')", name="ck_lecturas_status"),
         CheckConstraint("current_page >= 0 AND (total_pages IS NULL OR (total_pages > 0 AND current_page <= total_pages))", name="ck_lecturas_pages"),
-        CheckConstraint("(status = 'pending' AND current_page = 0 AND started_at IS NULL) OR (status <> 'pending' AND total_pages IS NOT NULL AND started_at IS NOT NULL)", name="ck_lecturas_started"),
-        CheckConstraint("(status = 'finished' AND finished_at IS NOT NULL AND current_page = total_pages AND finished_at >= started_at) OR (status <> 'finished' AND finished_at IS NULL)", name="ck_lecturas_finished"),
+        CheckConstraint("(status = 'pending' AND current_page = 0 AND started_at IS NULL) OR (status <> 'pending' AND started_at IS NOT NULL)", name="ck_lecturas_started"),
+        CheckConstraint("(status = 'finished' AND finished_at IS NOT NULL AND (total_pages IS NULL OR current_page = total_pages) AND finished_at >= started_at) OR (status <> 'finished' AND finished_at IS NULL)", name="ck_lecturas_finished"),
         CheckConstraint("(status = 'abandoned' AND abandoned_at IS NOT NULL AND abandoned_at >= started_at) OR (status <> 'abandoned' AND abandoned_at IS NULL AND abandonment_reason IS NULL)", name="ck_lecturas_abandoned"),
         Index("ix_lecturas_biblioteca_created", "library_entry_id", "created_at"),
         {"schema": "app"},
     )
     library_entry_id: Mapped[uuid.UUID] = mapped_column()
     work_id: Mapped[uuid.UUID] = mapped_column()
-    edition_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    edition_id: Mapped[uuid.UUID | None] = mapped_column(index=True)
     status: Mapped[str] = mapped_column(Text, server_default="pending")
     current_page: Mapped[int] = mapped_column(Integer, server_default="0")
     total_pages: Mapped[int | None] = mapped_column(Integer)
@@ -82,7 +83,25 @@ class ReadingEvent(EntityMixin, Base):
     kind: Mapped[str] = mapped_column(Text)
     previous_page: Mapped[int] = mapped_column(Integer)
     page: Mapped[int] = mapped_column(Integer)
-    total_pages: Mapped[int] = mapped_column(Integer)
+    total_pages: Mapped[int | None] = mapped_column(Integer)
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
     reason: Mapped[str | None] = mapped_column(Text)
     reflection: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True))
+
+
+class ReadingEditionSelection(EntityMixin, Base):
+    __tablename__ = "selecciones_edicion_lectura"
+    __table_args__ = (
+        ForeignKeyConstraint(["edition_id", "work_id"], ["app.ediciones.id", "app.ediciones.work_id"], ondelete="RESTRICT"),
+        ForeignKeyConstraint(["reading_id", "work_id"], ["app.lecturas.id", "app.lecturas.work_id"], ondelete="RESTRICT"),
+        UniqueConstraint("reading_id"),
+        CheckConstraint("jsonb_typeof(before_state)='object' AND jsonb_typeof(after_state)='object'"),
+        Index("ix_seleccion_edicion_actor", "actor_user_id", "created_at"),
+        {"schema": "app"},
+    )
+    reading_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.lecturas.id", ondelete="RESTRICT"))
+    actor_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"))
+    work_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.obras.id", ondelete="RESTRICT"))
+    edition_id: Mapped[uuid.UUID] = mapped_column()
+    before_state: Mapped[dict] = mapped_column(JSONB)
+    after_state: Mapped[dict] = mapped_column(JSONB)

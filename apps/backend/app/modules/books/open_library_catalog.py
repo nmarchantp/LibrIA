@@ -64,6 +64,8 @@ def present(db, item, match_work=True):
 
 
 def ensure_edition(db, reference):
+    from app.modules.books.policy import reject_legacy_writer
+    reject_legacy_writer()
     edition_id = open_library.key(reference.removeprefix('openlibrary:'), 'M')
     if not edition_id:
         raise HTTPException(404, 'Edición no encontrada')
@@ -84,6 +86,8 @@ def ensure_edition(db, reference):
 
 
 def store_selected(db, item):
+    from app.modules.books.policy import reject_legacy_writer
+    reject_legacy_writer()
     info = item['volumeInfo']
     edition_id = item['openLibrary']['editionKey']
     db.execute(select(func.pg_advisory_xact_lock(func.hashtext('catalog:open-library:' + edition_id))))

@@ -2,102 +2,97 @@ import { useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import BookCover from '../components/BookCover'
+import AiUsageBar from '../components/AiUsageBar'
 import ActionStatus from '../components/ActionStatus'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../api/client'
 import { normalizeGoogleBook } from '../services/booksService'
 
-// Reuse in-flight requests during StrictMode remounts, isolated by session.
 const pending = new Map()
-function loadRecommendations(token, provenance) {
-  const key = `${token}:${provenance}`
-  if (!pending.has(key)) {
-    const headers = { Authorization: `Bearer ${token}` }
-    const job = apiRequest(`/analytics/me/recommendations?provenance=${provenance}`, { headers })
-      .then(data => data.status === 'needs_generation' ? apiRequest('/analytics/me/recommendations', {
-        method: 'POST', headers, body: JSON.stringify({ provenance }),
-      }) : data).finally(() => pending.delete(key))
-    pending.set(key, job)
+function readState(token) {
+  if (!pending.has(token)) {
+    pending.set(token, apiRequest('/analytics/me/recommendations/state', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).finally(() => pending.delete(token)))
   }
-  return pending.get(key)
+  return pending.get(token)
 }
 
-function ReaderRecommendations() {
+export default function RecommendationsPage() {
   const { user } = useAuth()
-  const provenance = 'unclassified'
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
-  const [moreLoading, setMoreLoading] = useState(false)
-  const [moreError, setMoreError] = useState('')
+  const [requesting, setRequesting] = useState(false)
+
+  async function requestRecommendations() {
+    setRequesting(true); setError('')
+    try {
+      const token = localStorage.getItem('libria_token')
+      await apiRequest('/analytics/me/recommendations/sync', {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` },
+      })
+      if (token === localStorage.getItem('libria_token')) setAttempt(value => value + 1)
+    } catch {
+      setError('No se pudieron solicitar tus recomendaciones. Vuelve a intentarlo.')
+    } finally { setRequesting(false) }
+  }
+
   useEffect(() => {
     let active = true
-    setData(null)
-    setError('')
-    setLoading(true)
     const token = localStorage.getItem('libria_token')
+    setLoading(true); setError('')
     if (!user || !token) { setLoading(false); return () => { active = false } }
-    loadRecommendations(token, provenance).then(result => {
+    readState(token).then(result => {
       if (active && token === localStorage.getItem('libria_token')) setData(result)
-    }).catch(cause => {
-      if (!active) return
-      setError(cause.status === 503 ? 'Ollama no está disponible. Inicia el modelo local y reintenta.'
-        : cause.status === 409 ? 'Tus recomendaciones se están generando. Espera unos segundos y reintenta.'
-        : cause.status === 429 ? 'Espera un minuto antes de generar una selección nueva.'
-        : 'No se pudieron generar tus recomendaciones. Puedes reintentar.')
-    }).finally(() => { if (active) setLoading(false) })
+    }).catch(() => { if (active) setError('No se pudo consultar el estado de tus recomendaciones.') })
+      .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [user, provenance, attempt])
+  }, [user, attempt])
 
-  async function requestMore() {
-    setMoreLoading(true); setMoreError('')
-    const token = localStorage.getItem('libria_token')
-    try {
-      const result = await apiRequest('/analytics/me/recommendations', {
-        method:'POST', headers:{Authorization:`Bearer ${token}`},
-        body:JSON.stringify({provenance,exclude_ids:(data?.items || []).map(item => String(item.volume.id))}),
-      })
-      if (token !== localStorage.getItem('libria_token')) return
-      setData(current => {
-        if (result.status === 'no_positive_ratings' || result.status === 'locked') return result
-        const seen = new Set(current.items.map(item => String(item.volume.id)))
-        return {...result, status:result.status === 'no_candidates' ? current.status : result.status,
-          items:[...current.items,...result.items.filter(item => !seen.has(String(item.volume.id)))]}
-      })
-    } catch(cause) {
-      if(token !== localStorage.getItem('libria_token')) return
-      setMoreError(cause.status===429 ? 'Has pedido varias tandas seguidas. Espera un minuto y vuelve a intentarlo.'
-        : cause.status===409 ? 'Tu perfil o tus recomendaciones se están actualizando. Espera unos segundos y reintenta.'
-        : 'No se pudieron obtener más opciones. Tus recomendaciones anteriores se conservan.')
-    } finally { if(token === localStorage.getItem('libria_token')) setMoreLoading(false) }
-  }
+  const items = data?.items || []
+  const pendingState = ['pending', 'processing'].includes(data?.status)
+  const outdated = data?.status === 'outdated'
+  const budgetBlocked = data?.status === 'budget_exhausted' || data?.generation_status === 'budget_exhausted'
+  const generationStatus = data?.generation_status || data?.status
+  const hasActiveJob = Boolean(data?.job_id) && ['pending', 'processing'].includes(generationStatus)
+  const failed = generationStatus === 'failed'
+  const canRequest = !budgetBlocked && !hasActiveJob && ['pending', 'outdated', 'failed'].includes(data?.status)
+  const cutoff = data?.source_cutoff_at ? new Date(data.source_cutoff_at).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' }) : null
+
+  useEffect(() => {
+    if (!hasActiveJob) return undefined
+    const timer = window.setInterval(() => setAttempt(value => value + 1), 5000)
+    return () => window.clearInterval(timer)
+  }, [hasActiveJob])
 
   return <section className="page-width page community-page">
     <span className="kicker">PARA TI</span><h1 className="page-title">LibrIA te recomienda</h1>
-    <p className="page-lead">Ollama analiza los libros que valoraste con 4 o 5 estrellas, tus reseñas y tus apreciaciones para seleccionar nuevas lecturas.</p>
-    <ActionStatus busy={loading} message={loading ? 'Consultando tu biblioteca y preparando recomendaciones… La primera generación puede tardar unos minutos.' : !moreLoading && data?.status === 'ready' ? 'Consulta completada. Tus recomendaciones están listas.' : ''} />
-    {error && <><p className="notice" role="alert">{error}</p><button className="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></>}
-    {data?.status === 'locked' && <><p className="notice">Necesitas registrar al menos {data.minimum_books} libros para usar Recomendaciones IA. Tienes {data.book_count}; te faltan {data.missing_books}.</p><p>Cuentan libros distintos en cualquier estado. Una relectura no cuenta como otro libro.</p><Link className="button primary" to="/books">Explorar y agregar libros</Link> <button className="button" onClick={() => setAttempt(value => value + 1)}>Actualizar disponibilidad</button></>}
-    {data?.status === 'no_positive_ratings' && <p className="notice">Valora al menos un libro de tu biblioteca con 4 o 5 estrellas para recibir recomendaciones basadas en lo que te gustó. No se asume que terminar un libro significa que te gustó.</p>}
-    {data?.status === 'ready' && <p>Selección basada en {data.positive_books_count} libro(s) bien valorados de tu biblioteca. Puedes pedir otras opciones sin perder las anteriores.</p>}
-    {data?.status === 'no_candidates' && <p>No hay libros nuevos disponibles para recomendarte. Explora y amplía el catálogo.</p>}
+    <AiUsageBar />
+    <p className="page-lead">Basta con un libro marcado como terminado y valorado con al menos 4 estrellas. Esa lectura y su valoración deben estar incluidas en la última actualización de datos para solicitar recomendaciones.</p>
+    <ActionStatus busy={loading || hasActiveJob || requesting} message={requesting ? 'Registrando tu solicitud…' : loading ? 'Consultando tus recomendaciones guardadas…' : hasActiveJob ? generationStatus === 'processing' ? 'Gemini está preparando tus recomendaciones. Puede tardar más de un minuto. Aparecerán aquí automáticamente; puedes salir y volver después.' : 'Tu solicitud está en cola. No necesitas repetirla; esta página se actualizará automáticamente.' : pendingState ? 'Tus datos están preparados. Pulsa «Solicitar recomendaciones» para que Gemini elija libros para ti.' : ''} />
+    {error && <><p className="notice" role="alert">{error}</p><button className="button" onClick={() => setAttempt(value => value + 1)}>Reintentar consulta</button></>}
+    {data?.status === 'locked' && <><p className="notice">Necesitas registrar al menos {data.minimum_books} libros. Tienes {data.book_count}; te faltan {data.missing_books}.</p><Link className="button primary" to="/books">Explorar y agregar libros</Link></>}
+    {data?.status === 'waiting_for_etl' && <p className="notice">Tus datos aún no están preparados para la IA. Espera la actualización nocturna. Cuando termine, pulsa «Volver a comprobar mis datos».</p>}
+    {data?.status === 'no_positive_ratings' && <div className="notice">
+      <p>En la última actualización{cutoff ? `, con datos hasta el ${cutoff},` : ''} no se encontró ningún libro tuyo terminado y valorado con al menos 4 estrellas.</p>
+      <p>Si ya terminaste y valoraste un libro después de ese corte, no necesitas agregar más libros ni volver a valorarlo. Espera la actualización nocturna. Después vuelve a comprobar tus datos; cuando estén preparados aparecerá «Solicitar recomendaciones».</p>
+    </div>}
+    {budgetBlocked && <p className="notice">El presupuesto mensual de IA está agotado. No se enviarán nuevas solicitudes hasta el siguiente periodo o una revisión administrativa.</p>}
+    {failed && !budgetBlocked && <p className="notice" role="alert">No se pudieron completar tus recomendaciones. Pulsa «Reintentar recomendaciones». Si ya se alcanzó el límite de intentos, un administrador deberá revisar el problema.</p>}
+    {canRequest && <button className="button primary" disabled={loading || requesting} onClick={requestRecommendations}>{failed ? 'Reintentar recomendaciones' : 'Solicitar recomendaciones'}</button>}
+    {!hasActiveJob && data && <div><button className="button" disabled={loading || requesting} onClick={() => setAttempt(value => value + 1)}>Volver a comprobar mis datos</button><p className="demo-notice">Este botón consulta la última actualización disponible. No actualiza tus datos ni envía una solicitud a Gemini.</p></div>}
+    {outdated && <p className="notice">Estas recomendaciones pertenecen a una versión anterior de tu perfil. La nueva versión está {budgetBlocked ? 'bloqueada por presupuesto' : 'pendiente'} y no se presenta como actual.</p>}
+    {data?.status === 'ready' && <p>Selección actual basada en {data.positive_books_count} lectura(s) valorada(s) de tu último perfil preparado.</p>}
     <div className="recommendation-grid">
-      {(data?.items || []).map(item => {
+      {items.map(item => {
         const book = normalizeGoogleBook(item.volume)
-        return <Link className="recommendation-card" to={`/books/${encodeURIComponent(book.id)}`} key={book.id}>
+        return <Link className="recommendation-card" to={`/books/${encodeURIComponent(book.id)}`} key={item.work_id || book.id}>
           <BookCover book={book} /><h2>{book.title}</h2><p>{book.author}</p><p>{item.reason}</p>
         </Link>
       })}
     </div>
-    <ActionStatus busy={moreLoading} message={moreLoading ? 'Ollama está buscando otras opciones según tus libros favoritos…' : ''} error={moreError} />
-    {data?.status === 'ready' && data.has_more && <button className="button primary" disabled={loading || moreLoading} onClick={requestMore}>{moreLoading ? 'Buscando más opciones…' : moreError ? 'Reintentar más recomendaciones' : 'Recomendarme más opciones'}</button>}
-    {data?.status === 'ready' && !data.has_more && <p role="status">Ya viste las opciones disponibles en el catálogo actual. A medida que se incorporen más libros, habrá nuevas alternativas.</p>}
-    {data?.status === 'ready' && <p className="demo-notice"><Sparkles size={17} /> Selección de Ollama · {data.model}. Son sugerencias basadas en registros; no garantizan tus gustos.</p>}
+    {(data?.status === 'ready' || outdated) && <p className="demo-notice"><Sparkles size={17} /> Resultado persistido de Gemini · {data.model}. Son sugerencias justificadas, no garantías de gusto.</p>}
   </section>
-}
-
-export default function RecommendationsPage() {
-  const {user} = useAuth()
-  return <ReaderRecommendations key={user?.id} />
 }

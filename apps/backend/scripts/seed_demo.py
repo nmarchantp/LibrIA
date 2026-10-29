@@ -21,11 +21,14 @@ def stable_id(key):
     return uuid.uuid5(NAMESPACE, key)
 
 
-def seed(db, password):
+def seed(db, password, keys=None):
     if len(password) < 8:
         raise ValueError("Configura LIBRIA_DEMO_PASSWORD de al menos 8 caracteres")
     accounts = []
-    for entry in MANIFEST["accounts"]:
+    entries = MANIFEST["accounts"]
+    if keys is not None:
+        entries = [entry for entry in entries if entry["key"] in set(keys)]
+    for entry in entries:
         key = entry["key"]
         user_id, profile_id = stable_id(f"user:{key}"), stable_id(f"profile:{key}")
         account = db.scalar(select(AuthAccount).where(AuthAccount.email == entry["email"]))
