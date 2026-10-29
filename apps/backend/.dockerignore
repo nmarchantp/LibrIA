@@ -1,0 +1,18 @@
+# Local environments and generated Python artifacts never belong in images.
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+
+# Local configuration can contain database, JWT, SMTP, OAuth and Gemini secrets.
+.env
+.env.*
+!.env.example
+
+# Development-only output and editor metadata.
+*.log
+.coverage
+htmlcov
+.idea
+.vscode

@@ -1,11 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-git pull --ff-only
-if errorlevel 1 (
-  echo No se pudo actualizar el repositorio. Revisa Git antes de continuar.
-  exit /b 1
-)
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\run-local.ps1" -PreflightOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\setup-windows-safe.ps1"
 if errorlevel 1 exit /b 1
-echo Repositorio y entorno local listos. Ejecuta run.cmd para iniciar LibrIA.
+echo Dependencias y configuracion local revisadas sin migrar ni iniciar servicios.
+echo Este comando no ejecuta git pull. Ejecuta run.cmd para iniciar LibrIA.

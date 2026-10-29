@@ -1,4 +1,4 @@
-"""Completion -> private experience -> ETL -> owner-only Ollama evidence."""
+"""Completion -> private experience -> ETL -> owner-only evidence."""
 from datetime import datetime, timedelta, timezone
 import json
 import unittest
@@ -13,7 +13,6 @@ from app.main import app
 from app.modules.auth.dependencies import get_current_user
 from app.modules.analytics.etl import extract, transform, publish
 from app.modules.analytics.insights import personal_evidence
-from app.modules.analytics.interpretation_provider import generate_interpretation
 from app.modules.users.models import User
 from app.modules.users.identities import create_personal_profile
 
@@ -117,17 +116,7 @@ class ReadingReflectionTest(unittest.TestCase):
         self.assertFalse(any(r["user_id"] == self.user.id for r in prepared[-1]))
         self.assertTrue(any(r["user_id"] == self.user.id and r["event_kind"] == "finish" for r in prepared[1]))
 
-    def test_ollama_receives_self_reports_only_for_individual_analysis(self):
-        evidence = {"metrics": {"Q01": {"value": 1}}, "qualitative": [self.reflection]}
-        narrative = {"title": "Experiencias declaradas", "summary": "Tu reflexión expresa emociones sobre la lectura.",
-            "observations": [{"metric": "Q01", "interpretation": "Declaraste esperanza y nostalgia ante este libro."}],
-            "suggestions": [], "limitations": ["Una experiencia no define tu personalidad."]}
-        from unittest.mock import AsyncMock
-        with patch("app.modules.analytics.interpretation_provider.request_book", new_callable=AsyncMock, return_value=narrative) as provider:
-            generate_interpretation(evidence, "personal")
-            payload = provider.call_args.args[0]
-            self.assertIn("PRIVATE", payload["messages"][1]["content"])
-        with patch("app.modules.analytics.interpretation_provider.request_book", new_callable=AsyncMock, return_value=narrative) as provider:
-            generate_interpretation(evidence, "group")
-            payload = provider.call_args.args[0]
-            self.assertNotIn("PRIVATE", payload["messages"][1]["content"])
+    def test_private_reflections_never_enter_group_evidence(self):
+        from app.modules.analytics.insights import aggregate_evidence
+        group = aggregate_evidence([], [], {"source":"daily"}, "unclassified")
+        self.assertIsNone(group)

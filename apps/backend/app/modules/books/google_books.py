@@ -8,6 +8,7 @@ import httpx
 from fastapi import HTTPException
 
 from app.core.config import get_settings
+from app.modules.books.policy import provider_remaining
 
 logger = logging.getLogger(__name__)
 MESSAGES = {
@@ -63,7 +64,7 @@ def google_request(path="", query=None, *, start_index=0, pages=1):
     if key:
         params["key"] = key
     started = time.monotonic()
-    deadline = started + 15
+    deadline = started + provider_remaining(15)
     waited = 0
     unique = {}
     partial = False

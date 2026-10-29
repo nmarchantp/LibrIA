@@ -1,5 +1,7 @@
 # ETL diario de LibrIA
 
+> El ETL sigue vigente; las referencias históricas a generación local no describen el proveedor activo.
+
 Entrega: 2026-10-10. Transformación: `daily-v1`. El catálogo completo permanece como hoja de ruta; esta entrega implementa los indicadores diarios que tienen fuentes verificables. Los hechos e indicadores personales en `analytics` son privados: no son un conjunto anonimizado para consumo grupal.
 
 **Ampliación actual:** [reseñas normalizadas](reviews.md) incorpora `daily-v2` para los siguientes cierres: S02 por primera publicación, `hechos_resenas` al corte y preparación técnica restringida de S01. Los cierres existentes `daily-v1` se conservan sin reejecutarlos. La afirmación de reseñas pendientes en el alcance original siguiente corresponde a la etapa inicial; el nuevo contrato y sus escenarios están implementados. El consumo grupal continúa deshabilitado.
@@ -79,6 +81,8 @@ Referencias técnicas: [bloqueos asesores de PostgreSQL](https://www.postgresql.
 El administrador abre `/admin/etl` y pulsa **Ejecutar ETL ahora**. `POST /api/analytics/admin/etl/run` exige permiso administrativo de cuenta y recibe `{ "request_id": "UUID" }`. Responde 202 y persiste la solicitud antes de iniciar el trabajo en segundo plano. Repetir el mismo identificador consulta esa ejecución y no vuelve a cargar. Una nueva solicitud mientras otro ETL está activo responde 409.
 
 Cada ejecución manual procesa desde la medianoche local de hace 29 días hasta el instante de solicitud, en UTC: incluye el día actual y usa el mismo extractor, transformador, validaciones y publicador del ETL diario. La revisión de reseñas respeta el corte. El origen no se modifica. Los estados de origen sin historial versionado no se reconstruyen retrospectivamente.
+
+La publicación manual prepara los perfiles de IA de **todos los usuarios**, igual que la nocturna. `requested_by` registra al administrador que la solicitó; no restringe los perfiles a esa cuenta. Los perfiles lectores usan evidencia acumulada al corte, mientras los hechos de actividad conservan el intervalo indicado. Los lectores pueden solicitar su propio ADN y análisis por libro desde `Actualizar estado`, sin permiso administrativo. Cada consulta conserva sus filtros de propietario y los límites de consumo; `force=true` y ejecutar el ETL requieren administración. El ETL prepara datos y no invoca Gemini.
 
 La solicitud tiene `run_kind='manual'`, `business_date=NULL`, `requested_by` y `phase`: `queued`, `extracting`, `transforming`, `loading`, `completed` o `failed`. La pantalla actualiza cada dos segundos mientras hay un proceso activo y muestra intervalo, identificador, filas extraídas/cargadas/excluidas y reglas de validación. Una ejecución rápida puede pasar por las etapas entre dos consultas; el resultado final conserva sus cantidades, sin demoras artificiales.
 

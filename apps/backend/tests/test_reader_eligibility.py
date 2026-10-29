@@ -50,17 +50,21 @@ class ReaderEligibilityTest(unittest.TestCase):
         for _ in range(10):
             self.add_book(self.other)
         with patch("app.modules.analytics.insights_router.personal_evidence") as evidence, \
-             patch("app.modules.analytics.insights_router.recommendations") as recommend:
+             patch("app.modules.analytics.insights_router.recommendation_state") as recommend:
             for path in ("/api/analytics/me/insights", "/api/analytics/me/recommendations"):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.json()["status"], "locked")
                 self.assertEqual(response.json()["book_count"], 9)
                 self.assertEqual(response.json()["missing_books"], 1)
-            for path in ("/api/analytics/me/interpretation", "/api/analytics/me/recommendations"):
-                response = self.client.post(path, json={})
-                self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json()["detail"]["code"], "minimum_reader_books")
+            response = self.client.post("/api/analytics/me/interpretation", json={})
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.json()["detail"]["code"], "minimum_reader_books")
+            # Stage 6 retires the manual recommendation trigger for every user.
+            self.assertEqual(
+                self.client.post("/api/analytics/me/recommendations", json={}).status_code,
+                405,
+            )
             evidence.assert_not_called()
             recommend.assert_not_called()
 

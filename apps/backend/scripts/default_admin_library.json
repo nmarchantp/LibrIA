@@ -1,0 +1,98 @@
+{
+  "version": "default-admin-library-v1",
+  "namespace": "c862cf71-d4dc-47ed-bce4-6e433a0bbc74",
+  "books": [
+    {
+      "key": "harry-potter-piedra-filosofal",
+      "title": "Harry Potter y la piedra filosofal",
+      "author": "J. K. Rowling",
+      "pages": 256,
+      "categories": ["Fantasía", "Literatura juvenil"],
+      "rating": 5,
+      "review": "Una aventura entrañable, llena de asombro y amistad. El inicio de Hogwarts sigue siendo una lectura muy especial."
+    },
+    {
+      "key": "harry-potter-camara-secretos",
+      "title": "Harry Potter y la cámara de los secretos",
+      "author": "J. K. Rowling",
+      "pages": 288,
+      "categories": ["Fantasía", "Literatura juvenil"],
+      "rating": 4.5,
+      "review": "Una continuación más oscura, con un misterio bien construido y una atmósfera que amplía muy bien el mundo mágico."
+    },
+    {
+      "key": "una-corte-rosas-espinas",
+      "title": "Una corte de rosas y espinas",
+      "author": "Sarah J. Maas",
+      "pages": 456,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 4.75,
+      "review": "La mezcla de romance, peligro y fantasía crea una historia absorbente. Destacan la ambientación y la evolución de sus vínculos."
+    },
+    {
+      "key": "asesino-brujas",
+      "title": "Asesino de brujas",
+      "aliases": ["Asesino de brujas - vol. 1: La bruja blanca"],
+      "author": "Shelby Mahurin",
+      "pages": 480,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 4,
+      "review": "Una fantasía entretenida, sostenida por el choque entre sus protagonistas y un conflicto que mantiene el ritmo hasta el final."
+    },
+    {
+      "key": "erase-una-vez-corazon-roto",
+      "title": "Érase una vez un corazón roto",
+      "author": "Stephanie Garber",
+      "pages": 416,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 5,
+      "review": "Una historia encantadora y melancólica, con magia de cuento, promesas peligrosas y personajes difíciles de olvidar."
+    },
+    {
+      "key": "verity",
+      "title": "Verity",
+      "aliases": ["Verity. La sombra de un engaño"],
+      "author": "Colleen Hoover",
+      "pages": 336,
+      "categories": ["Suspenso", "Romance"],
+      "rating": 4.25,
+      "review": "Un suspenso incómodo y adictivo que juega constantemente con la percepción. Su ambigüedad deja mucho para conversar."
+    },
+    {
+      "key": "reino-malditos",
+      "title": "El reino de los malditos",
+      "author": "Kerri Maniscalco",
+      "pages": 416,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 4,
+      "review": "Misterio, magia oscura y tensión romántica se combinan en una lectura ágil, con una ambientación especialmente atractiva."
+    },
+    {
+      "key": "caraval",
+      "title": "Caraval",
+      "author": "Stephanie Garber",
+      "pages": 432,
+      "categories": ["Fantasía", "Literatura juvenil"],
+      "rating": 4.75,
+      "review": "Un juego deslumbrante en el que cuesta distinguir la ilusión de la verdad. La atmósfera y los giros hacen que sea difícil soltarlo."
+    },
+    {
+      "key": "de-sangre-cenizas",
+      "title": "De sangre y cenizas",
+      "author": "Jennifer L. Armentrout",
+      "pages": 672,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 4.5,
+      "review": "Una fantasía romántica intensa, con secretos, acción y una protagonista que empieza a cuestionar todo lo que conoce."
+    },
+    {
+      "key": "trono-caidos",
+      "title": "El trono de los caídos",
+      "author": "Kerri Maniscalco",
+      "pages": 544,
+      "categories": ["Fantasía", "Romance"],
+      "rating": 4.25,
+      "review": "Una historia seductora de intrigas y tentaciones, con buena química entre sus protagonistas y un mundo fantástico muy vistoso."
+    }
+  ]
+}

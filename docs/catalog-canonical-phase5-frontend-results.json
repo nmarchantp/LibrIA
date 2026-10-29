@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-29",
+  "source_changes": false,
+  "library_selection_regression": true,
+  "optional_edition_state_regression": true,
+  "vite_build": true,
+  "modules": 1713,
+  "javascript_kb": 505.63,
+  "javascript_gzip_kb": 150.26,
+  "warning": "Main chunk exceeds 500 kB",
+  "browser_automation_executed": false,
+  "real_providers_used": false,
+  "features_activated": false,
+  "persistent_database_used": false
+}

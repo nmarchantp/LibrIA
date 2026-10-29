@@ -1,5 +1,7 @@
 # Motor de Análisis Literario e Identidad Lectora Adaptativa
 
+> Contrato histórico. La operación vigente está documentada en `gemini-stage6-production-readiness.md`.
+
 La [arquitectura de pipelines vigente](analytics-pipelines.md) sustituye el acceso
 transaccional directo del motor: la extracción pertenece al ETL y ambos análisis
 leen proyecciones persistidas en analytics con trazabilidad por ejecución.

@@ -1,0 +1,20 @@
+{
+  "scope": "local_frontend_no_persistent_database",
+  "date": "2026-10-28",
+  "checks": {
+    "library_selection_regression": true,
+    "optional_edition_state_and_selection": true,
+    "targeted_eslint_eight_source_files": true,
+    "vite_build": true,
+    "browser_automation_executed": false,
+    "real_providers_used": false
+  },
+  "build": {
+    "modules": 1713,
+    "javascript_kb": 505.63,
+    "javascript_gzip_kb": 150.26,
+    "warning": "Main chunk exceeds 500 kB"
+  },
+  "features_activated": false,
+  "persistent_database_used": false
+}

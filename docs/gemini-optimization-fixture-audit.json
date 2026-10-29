@@ -1,0 +1,124 @@
+﻿{
+  "by_operation_and_status": [
+    {
+      "job_kind": "recommendation",
+      "prompt_version": "recommendations-fixture-next",
+      "status": "completed",
+      "error_code": null,
+      "jobs": 1,
+      "attempts": 1,
+      "calls": 1,
+      "input_tokens": 100,
+      "candidate_tokens": 20,
+      "reasoning_tokens": 0,
+      "recorded_cost": "0.00008000",
+      "metadata_cost": "0.000080000000000000000000",
+      "min_calls": 1,
+      "max_calls": 1,
+      "max_input_attempt": 100,
+      "max_output_attempt": 20,
+      "fragments": 0
+    },
+    {
+      "job_kind": "recommendation",
+      "prompt_version": "recommendations-v5-es",
+      "status": "completed",
+      "error_code": null,
+      "jobs": 1,
+      "attempts": 1,
+      "calls": 2,
+      "input_tokens": 200,
+      "candidate_tokens": 40,
+      "reasoning_tokens": 0,
+      "recorded_cost": "0.00016000",
+      "metadata_cost": "0.00016000000000000000",
+      "min_calls": 2,
+      "max_calls": 2,
+      "max_input_attempt": 200,
+      "max_output_attempt": 40,
+      "fragments": 1
+    }
+  ],
+  "jobs": [
+    {
+      "job_kind": "recommendation",
+      "attempts": 1,
+      "status": "completed",
+      "jobs": 2
+    }
+  ],
+  "published_traces": [
+    {
+      "job_kind": "recommendation",
+      "analyses": 3,
+      "with_request_ids": 3
+    }
+  ],
+  "per_job": [
+    {
+      "job_kind": "recommendation",
+      "prompt_version": "recommendations-fixture-next",
+      "status": "completed",
+      "error_code": null,
+      "attempts": 1,
+      "calls": 1,
+      "input_tokens": 100,
+      "candidate_tokens": 20,
+      "reasoning_tokens": 0,
+      "metadata_cost": "0.000080000000000000000000",
+      "recorded_cost": "0.00008000"
+    },
+    {
+      "job_kind": "recommendation",
+      "prompt_version": "recommendations-v5-es",
+      "status": "completed",
+      "error_code": null,
+      "attempts": 1,
+      "calls": 2,
+      "input_tokens": 200,
+      "candidate_tokens": 40,
+      "reasoning_tokens": 0,
+      "metadata_cost": "0.00016000000000000000",
+      "recorded_cost": "0.00016000"
+    }
+  ],
+  "accounting": {
+    "ledger_available": true,
+    "cost_basis": "local paid-rate equivalent; not a confirmed Google charge",
+    "legacy": "Attempt aggregates may mix unknown reservations and observations; never treat missing metadata as verified zero."
+  },
+  "per_call_phase": [
+    {
+      "phase": "dna_chunk",
+      "state": "measured",
+      "calls": 1,
+      "input_tokens": "100",
+      "visible_output_tokens": "20",
+      "reasoning_tokens": "0",
+      "total_tokens": "120",
+      "observed_cost": "0.00008000",
+      "unresolved_reservation": null
+    },
+    {
+      "phase": "recommendations",
+      "state": "measured",
+      "calls": 2,
+      "input_tokens": "200",
+      "visible_output_tokens": "40",
+      "reasoning_tokens": "0",
+      "total_tokens": "240",
+      "observed_cost": "0.00016000",
+      "unresolved_reservation": null
+    }
+  ],
+  "monthly_budget": {
+    "limit": "10.0",
+    "spent": "0.00024000",
+    "legacy_unverified": "0",
+    "measured": "0.00024000",
+    "pending_reconciliation": "0E-8",
+    "in_flight": 0,
+    "committed": "0.00024000",
+    "exhausted": false
+  }
+}

@@ -64,7 +64,8 @@ def validate_edition(db, work_id, edition_id):
         raise HTTPException(status_code=404, detail="Obra no encontrada")
     if edition_id:
         edition = db.get(Edition, edition_id)
-        if edition is None or edition.work_id not in equivalent_work_ids(db, work_id):
+        from app.modules.books.canonical import enabled
+        if edition is None or (edition.work_id != work_id if enabled() else edition.work_id not in equivalent_work_ids(db, work_id)):
             raise HTTPException(status_code=422, detail="La edición debe pertenecer a la obra")
 
 
@@ -91,6 +92,14 @@ def own_reviews(response: Response, user: CurrentUser, db: Database, work_id: uu
 def book_reviews(book_ref: str, response: Response, db: Database,
                  offset: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=50)):
     response.headers["Cache-Control"] = "no-store"
+    from app.modules.books.canonical import enabled, reference_work
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        work_id = reference_work(db,book_ref)
+        if work_id is None:
+            return {'items':[],'has_more':False}
+        reviews = current_reviews(db,{work_id},public=True)[offset:offset+limit+1]
+        return {'items':[as_review_response(db,r) for r in reviews[:limit]], 'has_more':len(reviews)>limit}
     try:
         internal_work_id = uuid.UUID(book_ref)
     except ValueError:
@@ -105,6 +114,10 @@ def book_reviews(book_ref: str, response: Response, db: Database,
     reviews = db.scalars(select(Review).where(Review.work_id.in_(equivalent_work_ids(db, work_id)), Review.status == "published")
                          .order_by(Review.published_at.desc(), Review.id.desc())
                          .offset(offset).limit(limit + 1)).all()
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        reviews = current_reviews(db, {work_id}, public=True)[offset:offset + limit + 1]
     return {"items": [as_review_response(db, review) for review in reviews[:limit]],
             "has_more": len(reviews) > limit}
 
@@ -161,6 +174,11 @@ def public_review(review_id: uuid.UUID, response: Response, db: Database):
     review = db.scalar(select(Review).where(Review.id == review_id, Review.status == "published"))
     if review is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        if review.id not in {r.id for r in current_reviews(db, {review.work_id}, public=True)}:
+            raise HTTPException(404, "Reseña histórica no vigente")
     return as_review_response(db, review)
 
 

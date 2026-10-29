@@ -1,4 +1,4 @@
-import { CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
+import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -24,14 +24,14 @@ function HeaderShortcut({ to, label, icon: Icon }) {
 }
 
 export default function Layout() {
-  const { user, logout } = useAuth()
-  const { magicalBackground } = useTheme()
+  const { user, access, logout } = useAuth()
+  const { magicalBackground, magicalBackgroundMotion } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [headerScrolled, setHeaderScrolled] = useState(() => window.scrollY > 8)
   const toolsRef = useRef(null)
   const { pathname, search } = useLocation()
-  const hasTools = groupAccess || user.role === 'admin'
+  const hasTools = groupAccess || access?.admin
   useEffect(() => {
     const updateHeader = () => setHeaderScrolled(window.scrollY > 8)
     updateHeader()
@@ -74,8 +74,8 @@ export default function Layout() {
       <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
       </div>
     </aside>
-    <div className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined}>
-      {magicalBackground && <MagicalBackground />}
+    <div className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined} data-starfield-motion={magicalBackgroundMotion ? 'enabled' : 'disabled'}>
+      {magicalBackground && <MagicalBackground motionEnabled={magicalBackgroundMotion} />}
       <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
         <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
@@ -83,7 +83,8 @@ export default function Layout() {
           <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>
           <nav className="navigation-tools-menu" aria-label="Herramientas disponibles">
             {groupAccess && <NavLink to="/insights"><BarChart3 size={19} aria-hidden="true" />LibrIA Insights</NavLink>}
-            {user.role === 'admin' && <><NavLink to="/admin/profiles"><Settings2 size={19} aria-hidden="true" />Gestionar perfiles</NavLink><NavLink to="/admin/etl"><Database size={19} aria-hidden="true" />Carga de datos</NavLink></>}
+            {access?.admin && <><NavLink to="/admin/profiles"><Settings2 size={19} aria-hidden="true" />Gestionar perfiles</NavLink><NavLink to="/admin/etl"><Database size={19} aria-hidden="true" />Carga de datos</NavLink></>}
+            {access?.catalog_preview && <NavLink to="/admin/catalog"><BookOpen size={19} aria-hidden="true" />Gestionar libros</NavLink>}
           </nav>
         </details>}
       </nav></header>

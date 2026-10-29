@@ -26,6 +26,9 @@ def parse(value):
 
 
 def ensure(db, model, key, **values):
+    if get_settings().catalog_discovery_enabled and model in {Work, Edition, CatalogSource}:
+        from app.modules.books.policy import require_disposable_fixture
+        require_disposable_fixture(db)
     entity_id = stable_id(key)
     existing = db.get(model, entity_id)
     if existing is not None:
@@ -43,6 +46,9 @@ def ensure(db, model, key, **values):
 
 
 def seed_scenarios(db, password):
+    if get_settings().catalog_discovery_enabled:
+        from app.modules.books.policy import require_disposable_fixture
+        require_disposable_fixture(db)
     seed(db, password)
     reader_id = account_id("user:lector")
     author_id = account_id("user:autor")

@@ -94,7 +94,7 @@ export default function AdminEtlPage() {
     {!data && !error && <ActionStatus busy message="Cargando estado del ETL…" />}
     {data && <>
       <article className="etl-manual">
-        <div className="etl-heading"><div><h2>Ejecutar ETL ahora</h2><p>Extrae los datos de los últimos 30 días, incluyendo hoy, valida y limpia las filas, y carga una instantánea real en el esquema analytics.</p></div>
+        <div className="etl-heading"><div><h2>Ejecutar ETL ahora</h2><p>Ejecuta el proceso completo para todos los usuarios con corte a la hora actual: valida y carga los datos de los últimos 30 días, y prepara los perfiles lectores acumulados para la IA. Las consultas a Gemini se solicitan por separado.</p></div>
           <button className="button primary" disabled={running} onClick={executeEtl}><Play size={17} />{running ? 'ETL en ejecución…' : 'Ejecutar ETL ahora'}</button></div>
         <p>Esta carga manual queda registrada por separado. El cierre diario sigue programado a las 00:00. Los análisis personales utilizan la última carga disponible.</p>
         {manualError && <p className="etl-warning" role="alert">{manualError}</p>}

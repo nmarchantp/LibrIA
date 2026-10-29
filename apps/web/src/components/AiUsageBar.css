@@ -1,0 +1,4 @@
+.ai-usage { margin: 1.25rem 0; padding: 1rem 1.25rem; border: 1px solid var(--border, #9288a655); border-radius: 16px; background: var(--surface, #ffffff0a); }
+.ai-usage p { margin: .5rem 0; }
+.ai-usage progress { display: block; width: 100%; height: 14px; accent-color: var(--primary, #9063d8); }
+.ai-usage small { display: block; margin-top: .5rem; opacity: .8; line-height: 1.5; }

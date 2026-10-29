@@ -14,7 +14,7 @@ from app.modules.library.schemas import ReadingReflection
 from pydantic import ValidationError
 
 ZONE = ZoneInfo("America/Santiago")
-VERSION = "daily-v4-personal"
+VERSION = "daily-v5-editionless"
 LOCK_KEY = 963470014
 
 
@@ -39,7 +39,7 @@ def extract(connection, start, cutoff):
         FROM app.eventos_lectura ev
         JOIN app.lecturas r ON r.id = ev.reading_id
         JOIN app.entradas_biblioteca le ON le.id = r.library_entry_id
-        JOIN app.ediciones ed ON ed.id = r.edition_id
+        LEFT JOIN app.ediciones ed ON ed.id = r.edition_id
         LEFT JOIN app.procedencia_demo p ON p.entity_type = 'event' AND p.entity_id = ev.id
         WHERE ev.created_at >= :start AND ev.created_at < :cutoff ORDER BY ev.created_at, ev.id"""), params).mappings().all()
     posts = connection.execute(text("""SELECT po.*, pr.kind AS profile_kind,
@@ -66,6 +66,10 @@ def extract(connection, start, cutoff):
         LEFT JOIN app.ediciones ed ON ed.id=rv.edition_id
         LEFT JOIN app.procedencia_demo prov ON prov.entity_type='review' AND prov.entity_id=r.id
         WHERE r.created_at < :cutoff ORDER BY r.id"""), params).mappings().all()
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import normalize_extract
+        return normalize_extract(connection, works, events, posts, entries, reviews)
     return works, events, posts, entries, reviews
 
 
@@ -79,14 +83,14 @@ def transform(works, events, posts, entries, reviews=()):
     metrics = defaultdict(Counter)
     for event in events:
         pages = event["total_pages"]
-        if (event["work_id"] not in valid_work_ids or event["work_id"] != event["edition_work"]
+        if (event.get("identity_mismatch") or event["work_id"] not in valid_work_ids or (event["edition_id"] is not None and event["work_id"] != event["edition_work"])
                 or event["work_id"] != event["library_work"] or event["actor_user_id"] != event["user_id"]):
             rules["event_identity_mismatch"] += 1
             continue
         kind = event["kind"]
         if (kind not in {"start", "progress", "correction", "finish", "abandon"}
-                or pages <= 0 or not 0 <= event["page"] <= pages
-                or not 0 <= event["previous_page"] <= pages or pages != event["reading_total"]):
+                or event["page"] < 0 or event["previous_page"] < 0
+                or (pages is not None and (pages <= 0 or event["page"] > pages or event["previous_page"] > pages))):
             rules["event_invalid_pages"] += 1
             continue
         started = event["started_at"]
@@ -94,7 +98,7 @@ def transform(works, events, posts, entries, reviews=()):
             rules["event_invalid_date"] += 1
             continue
         if ((kind == "start" and (event["page"] != 0 or event["previous_page"] != 0 or event["created_at"] != started))
-                or (kind == "finish" and (event["page"] != pages or event["finished_at"] != event["created_at"]))
+                or (kind == "finish" and ((pages is not None and event["page"] != pages) or event["finished_at"] != event["created_at"]))
                 or (kind == "abandon" and event["abandoned_at"] != event["created_at"])
                 or (kind == "progress" and event["page"] <= event["previous_page"])
                 or (kind == "correction" and (event["page"] >= event["previous_page"] or event["is_public"]))):
@@ -151,7 +155,7 @@ def transform(works, events, posts, entries, reviews=()):
     clean_reviews = []
     valuation_groups = defaultdict(list)
     for review in reviews:
-        if (review["work_id"] not in valid_work_ids or review["profile_kind"] != "personal"
+        if (review.get("identity_mismatch") or review["work_id"] not in valid_work_ids or review["profile_kind"] != "personal"
                 or review["created_by_user_id"] != review["owner_user_id"]
                 or (review["edition_id"] and review["edition_work"] != review["work_id"])):
             rules["review_invalid_identity"] += 1
@@ -198,9 +202,14 @@ def transform(works, events, posts, entries, reviews=()):
 
 
 def publish(connection, run_id, prepared, personal=None):
+    from app.modules.books.canonical import enabled, identity_snapshot
+    snapshot = identity_snapshot(connection) if enabled() else None
+    version = snapshot.version if snapshot else None
+    if version:
+        connection.execute(text("UPDATE analytics.ejecuciones_etl SET identity_version=:version WHERE id=:id"), {"version": version, "id": run_id})
     catalog, events, posts, indicators, rules, summary, reviews, valuations, reflections = prepared
     publish_personal(connection, run_id, personal or [])
-    summary = {**summary, "personal_evidence_rows": len(personal or [])}
+    summary = {**summary, "personal_evidence_rows": len(personal or []), **({"identity_version": version, "identity_projection": snapshot.provenance()} if version else {})}
     statements = (
         (reflections, """INSERT INTO analytics.hechos_reflexiones
             (etl_run_id,source_id,user_id,work_id,occurred_at,provenance,reflection)
@@ -251,6 +260,11 @@ def publish(connection, run_id, prepared, personal=None):
     with Session(bind=connection,join_transaction_mode='create_savepoint') as db:
         refresh_pending(db)
         db.commit()
+    # Daily and administrator-requested manual runs prepare every reader.
+    # No provider or recommendation job runs here.
+    from app.modules.analytics.recommendation_profiles import build_nightly_reader_profiles
+    profile_summary = build_nightly_reader_profiles(connection, run_id)
+    summary = {**summary, "recommendation_profiles": profile_summary}
     connection.execute(text("""UPDATE analytics.ejecuciones_etl SET status='succeeded',
         phase='completed', finished_at=now(), error_code=NULL, summary=CAST(:summary AS jsonb) WHERE id=:id"""),
                        {"id": run_id, "summary": json.dumps(summary)})

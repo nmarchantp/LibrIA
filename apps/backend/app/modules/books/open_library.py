@@ -11,6 +11,7 @@ import time
 import httpx
 from fastapi import HTTPException
 from app.core.config import get_settings
+from app.modules.books.policy import provider_remaining, provider_sleep
 from app.modules.books.google_books import retry_after
 
 logger = logging.getLogger(__name__)
@@ -28,15 +29,17 @@ def request_json(path, params=None):
         for attempt in range(2):
             pause = max(0, 1.05 - (time.monotonic() - _last_request))
             if pause:
-                time.sleep(pause)
+                provider_sleep(pause)
             _last_request = time.monotonic()
             try:
-                response = client.get('https://openlibrary.org' + path, params=params)
+                remaining = provider_remaining(12)
+                response = client.get('https://openlibrary.org' + path, params=params,
+                                      timeout=httpx.Timeout(remaining, connect=min(3, remaining)))
                 delay = retry_after(response)
                 if response.status_code in {429, 500, 502, 503, 504} and attempt == 0:
                     if delay is not None and delay > 2:
                         response.raise_for_status()
-                    time.sleep(max(0.5, delay or 0))
+                    provider_sleep(max(0.5, delay or 0))
                     continue
                 response.raise_for_status()
                 data = response.json()
@@ -47,7 +50,7 @@ def request_json(path, params=None):
                 status = error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None
                 logger.warning('Open Library lookup failed status=%s type=%s attempt=%s', status, type(error).__name__, attempt + 1)
                 if isinstance(error, httpx.RequestError) and attempt == 0:
-                    time.sleep(0.5)
+                    provider_sleep(0.5)
                     continue
                 raise HTTPException(502, {'code': 'open_library_unavailable', 'message': 'La búsqueda externa está temporalmente limitada. Inténtalo más tarde.'}) from None
 
