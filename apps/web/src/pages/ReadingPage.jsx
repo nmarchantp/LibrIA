@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 import { Navigate, Link, useParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
+import { useUnsavedSessionWarning } from '../hooks/useUnsavedSessionWarning'
 import './ReadingPage.css'
 
 const emotions = { alegria: 'Alegría', tristeza: 'Tristeza', esperanza: 'Esperanza', nostalgia: 'Nostalgia', asombro: 'Asombro', tension: 'Tensión', enojo: 'Enojo', calma: 'Calma', indiferencia: 'Indiferencia' }
 const aspects = { personajes: 'Personajes', historia: 'Historia', estilo: 'Estilo de escritura', ritmo: 'Ritmo', final: 'Final', temas: 'Temas del libro' }
+const reviewSnapshot = (rating, review, spoiler) => JSON.stringify([rating === '' ? null : Number(rating), review, Boolean(spoiler)])
 
 export default function ReadingPage() {
   const { id } = useParams()
@@ -18,6 +20,7 @@ export default function ReadingPage() {
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewLoadError, setReviewLoadError] = useState('')
   const [isSpoiler, setIsSpoiler] = useState(false)
+  const [reviewBaseline, setReviewBaseline] = useState(reviewSnapshot('', '', false))
   const workId = book?.workId
   useEffect(() => {
     if (!workId) return
@@ -33,6 +36,7 @@ export default function ReadingPage() {
         setReview(item?.body || '')
         setRating(item?.rating ?? '')
         setIsSpoiler(item?.is_spoiler || false)
+        setReviewBaseline(reviewSnapshot(item?.rating ?? '', item?.body || '', item?.is_spoiler || false))
         setReviewLoadError('')
       }).catch(() => { if (active) setReviewLoadError('No se pudo recuperar tu reseña. Recarga antes de guardar.') })
       .finally(() => { if (active) setReviewLoading(false) })
@@ -50,6 +54,7 @@ export default function ReadingPage() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  useUnsavedSessionWarning(!reviewLoading && reviewSnapshot(rating, review, isSpoiler) !== reviewBaseline)
   if (loading) return <p role="status">Cargando biblioteca…</p>
   if (loadError) return <p role="alert">{loadError}</p>
   if (!book) return <Navigate to="/library" replace />
@@ -84,6 +89,7 @@ export default function ReadingPage() {
         method: existingReview ? 'PUT' : 'POST', headers: { Authorization: 'Bearer ' + token }, body: JSON.stringify(payload) })
       if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga antes de continuar.')
       setExistingReview(result)
+      setReviewBaseline(reviewSnapshot(result.rating ?? '', result.body || '', result.is_spoiler || false))
       return result
     })
   }
@@ -92,7 +98,7 @@ export default function ReadingPage() {
     const action = event.nativeEvent.submitter?.value
     if (!action) return
     const extra = {
-      page_count: pageCount,
+      page_count: pageCount || null,
       share,
       ...(['progress', 'correction'].includes(action) ? { current_page: Number(page) } : {}),
       ...(action === 'correction' ? { correction_reason: correctionReason.trim() } : {}),
@@ -136,9 +142,9 @@ export default function ReadingPage() {
     <form className="experience-form" onSubmit={submitEvent}>
       <h2>Avance de lectura</h2>
       <p>Estado: {book.status}. Página registrada: {book.currentPage || 0}{book.pageCount ? ` de ${book.pageCount}` : ''}.</p>
-      {book.status === 'Pendiente' && <p>Indica el total de páginas. Puedes empezar, registrar un avance o terminar; al registrar un avance o terminar se guardará primero el inicio de esta lectura.</p>}
+      {book.status === 'Pendiente' && <p>{book.editionOptional ? 'Puedes leer sin edición ni total de páginas. El total que declares pertenece a esta lectura.' : 'Indica el total de páginas.'} Al registrar un avance o terminar se guardará primero el inicio de esta lectura.</p>}
       <p>Inicio, avance y finalización son públicos. El abandono solo se comparte si lo eliges; los motivos permanecen privados.</p>
-      <label>Total de páginas de esta edición<input type="number" min="1" max="100000" disabled={Boolean(book.readingId && book.status === 'Leyendo')} value={pageCount || ''} onChange={event => setTotalPages({ id, value: event.target.value })} required /></label>
+      <label>Total de páginas de esta lectura{book.editionOptional ? ' (opcional)' : ''}<input type="number" min="1" max="100000" disabled={Boolean(book.readingId && book.status === 'Leyendo')} value={pageCount || ''} onChange={event => setTotalPages({ id, value: event.target.value })} required={!book.editionOptional} /></label>
       <label>Página actual (de {pageCount || '?'})<input type="number" min="0" max={pageCount || undefined} value={page} onChange={event => setPage(event.target.value)} /></label>
       {pageCount > 0 && Number(page) === pageCount && <p>Llegaste a la última página: selecciona «Terminar libro».</p>}
       <label>Motivo de corrección (privado)<textarea rows="2" maxLength="1000" value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label>
@@ -146,7 +152,7 @@ export default function ReadingPage() {
       <label><input type="checkbox" checked={share} onChange={event => setShare(event.target.checked)} />Compartir el abandono en el mural</label>
       {canRecord && <fieldset className="reading-reflection" disabled={busy}>
         <legend>Al terminar: ¿qué te dejó este libro?</legend>
-        <p>Opcional y privado. Se guarda al seleccionar «Terminar libro». Después del ETL, Ollama usará lo que expresas para interpretar cualitativamente tu ADN lector.</p>
+        <p>Opcional y privado. Se guarda al seleccionar «Terminar libro». Tras la consolidación, puede enviarse a Gemini bajo la política de privacidad aprobada para interpretar esta experiencia.</p>
         <p>¿Qué emociones te produjo? Puedes elegir varias.</p>
         <div className="reflection-options">{Object.entries(emotions).map(([value, label]) => <label key={value}><input type="checkbox" checked={selectedEmotions.includes(value)} onChange={event => setSelectedEmotions(current => event.target.checked ? [...current, value] : current.filter(item => item !== value))} />{label}</label>)}</div>
         <label>¿Cómo valorarías la experiencia?<select value={sentiment} onChange={event => setSentiment(event.target.value)}><option value="">Sin indicar</option><option value="positivo">Positiva</option><option value="mixto">Mixta</option><option value="negativo">Negativa</option></select></label>
@@ -157,7 +163,7 @@ export default function ReadingPage() {
       {book.reflection && <div className="reading-reflection"><h3>Tu reflexión privada</h3><p>{book.reflection.emotions.map(value => emotions[value]).join(' · ')}</p><p>{book.reflection.aspects.map(value => aspects[value]).join(' · ')}</p>{book.reflection.sentiment && <p>Experiencia: {({ positivo: 'Positiva', mixto: 'Mixta', negativo: 'Negativa' })[book.reflection.sentiment]}</p>}<p>{book.reflection.reflection}</p><small>Disponible para tu análisis después de la próxima carga del ETL.</small></div>}
       <div className="reading-actions">
         <button className="button" type="submit" value="start" disabled={busy || (book.readingId && book.status === 'Leyendo')}>Empezar libro</button>
-        <button className="button" type="submit" value="progress" disabled={busy || !canRecord || !page || Number(page) <= (book.currentPage || 0) || Number(page) >= pageCount}>Registrar avance</button>
+        <button className="button" type="submit" value="progress" disabled={busy || !canRecord || !page || Number(page) <= (book.currentPage || 0) || (pageCount > 0 && Number(page) >= pageCount)}>Registrar avance</button>
         <button className="button" type="submit" value="correction" disabled={busy || !book.readingId || book.status !== 'Leyendo' || page === '' || !correctionReason.trim()}>Corregir página hacia atrás</button>
         <button className="button" type="submit" value="finish" disabled={busy || !canRecord}>Terminar libro</button>
         <button className="button" type="submit" value="abandon" disabled={busy || !book.readingId || book.status !== 'Leyendo'}>Abandonar libro</button>

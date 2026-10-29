@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { BookOpenText, CheckCircle2, CircleAlert, CircleHelp, Heart, LoaderCircle, Quote, RefreshCw, Sparkles, ThumbsUp } from 'lucide-react'
 import { useLibrary } from '../context/LibraryContext'
 import BookCover from './BookCover'
@@ -16,15 +15,7 @@ const groups = [
 const certainty = { consolidado: 'Experiencia consolidada', provisional: 'Primeras impresiones', insuficiente: 'Evidencia insuficiente' }
 const sentiments = { positivo: 'Positivo', negativo: 'Negativo', mixto: 'Mixto' }
 const abandonment = { externo: 'Motivos externos a la obra', obra: 'Opinión sobre la obra', mixto: 'Motivos mixtos' }
-// Messages shown while Ollama works, chosen by elapsed seconds.
-const waitingMessages = [
-  [0, 'Estamos explorando tu afinidad con esta obra, espera un momento…'],
-  [8, 'Hojeando tu valoración y tus notas de lectura…'],
-  [18, 'Subrayando los pasajes que más te marcaron…'],
-  [30, 'Conectando emociones, personajes y ritmo de la historia…'],
-  [45, 'Escribiendo el último capítulo de tu análisis…'],
-  [70, 'Esta lectura está tomando más de lo habitual. Puedes seguir en tu libro; el análisis aparecerá aquí al terminar.'],
-]
+// Messages shown while a durable provider job is processing.
 const sourcesOf = claim => [...new Set(claim.evidence_ids.map(id => sourceLabels[id.split(':')[0]] || 'Registro propio'))].join(' · ')
 
 function StatusBar({ analysis, working, failed, message, error }) {
@@ -42,14 +33,8 @@ function StatusBar({ analysis, working, failed, message, error }) {
   </div>
 }
 
-function WaitingFindings() {
-  const [seconds, setSeconds] = useState(0)
-  useEffect(() => {
-    const started = Date.now()
-    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000)
-    return () => clearInterval(timer)
-  }, [])
-  const text = waitingMessages.findLast(([from]) => seconds >= from)[1]
+function WaitingFindings({ processing }) {
+  const text = processing ? 'Análisis en curso. El resultado aparecerá automáticamente cuando esté listo.' : 'Tu solicitud está pendiente. Puedes consultar arriba cuándo podrá comenzar.'
   return <div className="bx-waiting" role="status" aria-live="polite">
     <BookOpenText className="bx-waiting-icon" size={26} aria-hidden="true" />
     <p key={text}>{text}</p>
@@ -76,24 +61,37 @@ function FindingCard({ claim, label, icon: Icon }) {
   </article>
 }
 
-export default function BookExperience({ workId, data, analysis, working, failed, message, error, notice, onRefresh, submitting, information, setInformation, onFeedback }) {
+export default function BookExperience({ workId, data, analysis, working, failed, message, error, notice, onRefresh, refreshDisabled, refreshLabel, submitting, information, setInformation, onFeedback }) {
   const { getBook } = useLibrary()
   const book = getBook(workId)
   const content = analysis?.content
+  if (content?.experience_summary) return <section className="book-experience-view" aria-label="Análisis personal persistido">
+    <header className="dna-header"><div><span className="dna-kicker">Solo esta lectura</span><h2>Tu experiencia con este libro</h2><p>Análisis privado de tu valoración, reseña y notas al terminar o abandonar esta lectura.</p></div>
+      <button type="button" className="dna-refresh" disabled={refreshDisabled} onClick={onRefresh}><RefreshCw size={15} aria-hidden="true" />{refreshLabel}</button></header>
+    <StatusBar analysis={analysis} working={working} failed={failed} message={message} error={error} />
+    {notice && <p className="dna-notice" role="status">{notice}</p>}
+    <article className="dna-card bx-result"><WorkHeading book={book} /><blockquote className="bx-quote"><Quote size={16} aria-hidden="true" /><p>{content.experience_summary}</p></blockquote>
+      {[['valued_elements','Elementos valorados'],['friction_points','Puntos de fricción'],['themes_and_interests','Temas e intereses'],['emotional_response','Respuestas expresadas'],['rating_observations','Observaciones de valoración']].map(([key,label]) => content[key]?.length > 0 && <section key={key}><h3>{label}</h3><ul>{content[key].map((item,index)=><li key={index}>{item}</li>)}</ul></section>)}
+      <details className="bx-evidence"><summary>Evidencias y metadatos</summary><p>Evento: {content.event_kind === 'finish' ? 'finalización' : 'abandono'}</p><p>Modelo: {analysis.model}</p><p>{content.evidence_ids.length} referencia(s) validadas.</p></details>
+    </article>
+    <article className="dna-card bx-feedback"><form onSubmit={event => { event.preventDefault(); onFeedback('correct') }}><h3>¿Hay algo que corregir?</h3><textarea maxLength={3000} rows={4} disabled={submitting} value={information} onChange={event => setInformation(event.target.value)} /><div className="bx-feedback-actions"><button className="button primary" disabled={working || !information.trim()}>Guardar corrección</button><button className="button secondary" type="button" disabled={working} onClick={() => onFeedback('confirm')}>Me representa</button><button className="button secondary" type="button" disabled={working} onClick={() => onFeedback('reject')}>No me representa</button></div></form></article>
+  </section>
   const findings = content ? groups.flatMap(([key, label, icon]) => (content[key] || []).map((claim, index) => ({ claim, label, icon, key: `${key}-${index}` }))) : []
   return <section className="book-experience-view" aria-label="Análisis personal de esta obra">
     <header className="dna-header">
       <div><span className="dna-kicker">Solo este libro</span><h2>Tu experiencia con este libro</h2><p>Interpretación privada de tu valoración y tus aportes sobre esta obra.</p></div>
-      <button type="button" className="dna-refresh" disabled={working} onClick={onRefresh}><RefreshCw size={15} aria-hidden="true" />{working ? 'Procesando…' : failed ? 'Reintentar análisis' : 'Actualizar análisis'}</button>
+      <button type="button" className="dna-refresh" disabled={refreshDisabled} onClick={onRefresh}><RefreshCw size={15} aria-hidden="true" />{refreshLabel}</button>
     </header>
-    {data?.status === 'awaiting_rating' && <p className="dna-notice">Valora este libro para ver su análisis individual aquí.</p>}
+    {data?.status === 'awaiting_terminal_event' && <p className="dna-notice">Primero marca esta lectura como terminada o abandonada. Completa tu valoración, reseña y notas, y luego pulsa «Solicitar análisis».</p>}
+    {data?.status === 'obsolete' && <p className="dna-notice">Tu análisis anterior necesita actualizarse. Pulsa «Solicitar análisis» para preparar una nueva versión.</p>}
+    {data?.status === 'budget_exhausted' && <p className="dna-notice">El presupuesto mensual está agotado. El evento permanece registrado sin crear solicitudes adicionales.</p>}
     <StatusBar analysis={analysis} working={working} failed={failed} message={message} error={error} />
     {notice && <p className="dna-notice" role="status">{notice}</p>}
     {working && analysis && <p className="dna-muted">Mientras se procesa la actualización, puedes consultar la última versión válida.</p>}
     {/* A newly rated book has no previous version yet, so the wait gets its own card. */}
     {working && data && !content && <article className="dna-card bx-result">
       <WorkHeading book={book} />
-      <WaitingFindings />
+      <WaitingFindings processing={(data?.job?.status || data?.status) === 'processing'} />
     </article>}
     {content && <article className="dna-card bx-result">
       <WorkHeading book={book}>

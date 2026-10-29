@@ -9,6 +9,13 @@ from app.modules.books.models import Author, CatalogSource, Edition, Work, WorkA
 
 
 def equivalent_work_ids(db, work_id):
+    from app.modules.books.canonical import enabled, canonical_members
+    if enabled():
+        return set(canonical_members(db, work_id))
+    return legacy_equivalent_work_ids(db, work_id)
+
+
+def legacy_equivalent_work_ids(db, work_id):
     """Logical grouping only, using source-level, known author evidence.
 
     An anonymous edition in a contaminated Work cannot inherit its author's
@@ -137,6 +144,8 @@ def consolidate_equivalent_works(db, work_id, *, reviewed=False):
     """
     if not reviewed:
         return work_id
+    from app.modules.books.policy import reject_legacy_writer
+    reject_legacy_writer()
     work_ids = equivalent_work_ids(db, work_id)
     if len(work_ids) < 2:
         return work_id

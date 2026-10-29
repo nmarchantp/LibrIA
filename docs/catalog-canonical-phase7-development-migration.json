@@ -1,0 +1,12 @@
+{
+  "database": "local development libria",
+  "previous_revision": "0054_gemini_ledger_dna",
+  "head": "0060_admin_merges",
+  "backup": "C:\\nmarchant\\DUOC\\LibrIA\\backups\\catalog-phase7-20261029T131700Z.dump",
+  "backup_sha256": "25dcb5976c03dfc9cbf2b9d93759f21d81972233d69b0a310236ca7d48124c7b",
+  "backup_bytes": 2843275,
+  "backup_format_validated": true,
+  "backup_restore_executed": false,
+  "historical_tables": 71,
+  "historical_rows_preserved": true
+}

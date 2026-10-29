@@ -32,6 +32,9 @@ async function navigate(path) {
 }
 try {
   await send('Page.enable')
+  // Do not inherit the host OS accessibility preference for the duration
+  // assertion. Reduced motion is tested explicitly later in this file.
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
   const init = await send('Page.addScriptToEvaluateOnNewDocument', { source: `localStorage.removeItem('${key}')` })
   await send('Page.navigate', { url: fixture })
   await until(`document.querySelectorAll('.profile-starfield').length===1`)
@@ -49,6 +52,7 @@ try {
 
   const ids = await evaluate(`import('/src/theme/themes.js').then(m=>m.themes.map(t=>t.id))`)
   await navigate('/settings?tab=personalization')
+  await until(`document.querySelectorAll('.theme-option').length===9&&Boolean(document.querySelector('.visual-effects-switch input'))`)
   for (const id of ids) {
     await evaluate(`document.querySelector('[data-theme-option="${id}"]').click()`)
     const theme = await evaluate(`localStorage.getItem('libria_theme')`)
@@ -62,11 +66,13 @@ try {
     assert.equal(await evaluate(`document.querySelectorAll('.profile-starfield').length`), 0)
     assert.equal(await evaluate(`document.documentElement.dataset.theme`), id)
     await navigate('/settings?tab=personalization')
+    await until(`Boolean(document.querySelector('.visual-effects-switch input'))`)
     await evaluate(`document.querySelector('.visual-effects-switch input').click()`)
     await until(`document.querySelectorAll('.profile-starfield').length===1&&localStorage.getItem('${key}')==='true'`)
     await send('Page.navigate', { url: fixture })
     await until(`document.querySelectorAll('.profile-starfield').length===1`)
     await navigate('/settings?tab=personalization')
+    await until(`Boolean(document.querySelector('.visual-effects-switch input'))`)
   }
   console.log('PASS independent theme/preference storage, immediate toggle, full unmount and enabled/disabled persistence in nine themes')
 
@@ -82,7 +88,7 @@ try {
     await until(`document.querySelectorAll('.profile-starfield').length===1`)
   }
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  assert.equal(await evaluate(`[...document.querySelectorAll('.profile-starfield-layer')].every(e=>getComputedStyle(e).animationName==='none')`), true)
+  assert.equal(await evaluate(`[...document.querySelectorAll('.profile-starfield-layer')].every(e=>getComputedStyle(e).animationName==='profile-starfield-rise')`), true, 'The explicit visual preference overrides the global reduced-motion fallback when motion is enabled')
   await navigate('/profile')
   await evaluate(`document.querySelector('.reader-edit-button').click()`)
   await until(`Boolean(document.querySelector('dialog[open]'))`)

@@ -1,0 +1,17 @@
+[
+  {
+    "additional_unrelated_works": 0,
+    "preview_ms": 109.09,
+    "execute_ms": 114.869
+  },
+  {
+    "additional_unrelated_works": 100,
+    "preview_ms": 91.052,
+    "execute_ms": 102.525
+  },
+  {
+    "additional_unrelated_works": 1000,
+    "preview_ms": 85.11,
+    "execute_ms": 122.638
+  }
+]

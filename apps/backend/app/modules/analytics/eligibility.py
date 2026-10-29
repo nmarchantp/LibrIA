@@ -12,6 +12,13 @@ def reader_eligibility(db, user_id):
         LibraryEntry.user_id == user_id, LibraryEntry.archived_at.is_(None),
         LibraryEntry.id.not_in([entity_id for kind, entity_id in demo if kind == "library"]),
         LibraryEntry.work_id.not_in([entity_id for kind, entity_id in demo if kind == "obras"])))
+    from app.modules.books.canonical import enabled, identity_snapshot
+    if enabled():
+        snapshot = identity_snapshot(db)
+        ids = db.scalars(select(LibraryEntry.work_id).where(LibraryEntry.user_id == user_id, LibraryEntry.archived_at.is_(None),
+            LibraryEntry.id.not_in([key for kind,key in demo if kind=='library']),
+            LibraryEntry.work_id.not_in([key for kind,key in demo if kind in {'obras','work'}]))).all()
+        count = len({snapshot.root(key) for key in ids})
     return {"eligible": count >= MIN_READER_BOOKS, "book_count": count,
             "minimum_books": MIN_READER_BOOKS, "missing_books": max(0, MIN_READER_BOOKS - count)}
 

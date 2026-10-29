@@ -1,0 +1,35 @@
+{
+  "merge": {
+    "operation_id": "9887b116-ef1c-45ec-a25e-3449e0f65d7b",
+    "source_work_id": "62a32e55-efcf-4e47-b9a5-f3c5cb532db8",
+    "canonical_work_id": "b1fe805b-46a1-4e36-8f75-015ecf939350",
+    "status": "merged",
+    "historical_records_preserved": true
+  },
+  "reversal_preview": {
+    "kind": "reversal",
+    "version": 2,
+    "operation_id": "9887b116-ef1c-45ec-a25e-3449e0f65d7b",
+    "source_work_id": "62a32e55-efcf-4e47-b9a5-f3c5cb532db8",
+    "target_work_id": "b1fe805b-46a1-4e36-8f75-015ecf939350",
+    "changes": [],
+    "blockers": [],
+    "can_execute": true,
+    "policy": "Conservar cada registro posterior con su UUID y atribuci\u00f3n f\u00edsica actual; no reasignar silenciosamente",
+    "provenance": [],
+    "ambiguous_attributions": [],
+    "preview_id": "40d43fc8-741e-469a-80d2-39285304cc44",
+    "fingerprint": "049c95b539cddb03f5abac54837337a0922d3dcd5036051fed021733ccddae16",
+    "expires_at": "2026-10-29T13:56:20.634325+00:00"
+  },
+  "reversal": {
+    "operation_id": "2af7e16d-a80c-4123-ae4e-378435e47432",
+    "reverses_operation_id": "9887b116-ef1c-45ec-a25e-3449e0f65d7b",
+    "status": "reversed",
+    "historical_records_preserved": true
+  },
+  "reading_ids": [
+    "4bb23933-4afd-47e7-b061-584ffd59f8ba",
+    "0cf3ba07-5694-490d-b8b9-f23941fc5cc5"
+  ]
+}

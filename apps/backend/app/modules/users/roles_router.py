@@ -30,6 +30,15 @@ from app.modules.users.identities import personal_profile, publication_role
 router = APIRouter(prefix="/roles", tags=["roles"])
 
 
+@router.get('/access')
+def effective_access(user: Annotated[User, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
+    from app.core.config import get_settings
+    admin = db.get(AccountPermission,(user.id,'admin')) is not None
+    return dict(admin=admin,catalog_manage=admin and get_settings().catalog_admin_preview_enabled and get_settings().catalog_discovery_enabled,
+                catalog_preview=admin and get_settings().catalog_admin_preview_enabled,
+                catalog_merge=admin and get_settings().catalog_admin_merge_enabled)
+
+
 def get_admin(user: Annotated[User, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]) -> User:
     if db.get(AccountPermission, (user.id, "admin")) is None:
         raise HTTPException(status_code=403, detail="Se requiere una cuenta administradora")

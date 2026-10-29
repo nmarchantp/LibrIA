@@ -1,0 +1,82 @@
+name: libria-stage7-audit
+
+x-backend: &backend
+  build:
+    context: ./apps/backend
+  environment:
+    APP_ENV: test
+    DATABASE_URL: postgresql+psycopg://stage7:stage7-fictitious@db:5432/libria_stage7
+    FRONTEND_ORIGINS: http://localhost:18087
+    JWT_SECRET: stage7-fictitious-jwt-secret-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    ANALYTICS_SCHEDULER_ENABLED: "false"
+    PROJECTION_SCHEDULER_ENABLED: "false"
+    AI_PROVIDER: gemini
+    GEMINI_API_KEY: ""
+    GEMINI_MODEL: gemini-3.5-flash-lite
+    GEMINI_WORKER_ENABLED: "false"
+    GEMINI_PAID_SERVICE_CONFIRMED: "false"
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: libria_stage7
+      POSTGRES_USER: stage7
+      POSTGRES_PASSWORD: stage7-fictitious
+    volumes:
+      - stage7_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stage7 -d libria_stage7"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  migrate:
+    <<: *backend
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  scheduler:
+    <<: *backend
+    command: ["python", "-m", "scripts.run_scheduler"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  gemini-worker:
+    <<: *backend
+    command: ["python", "-m", "scripts.run_gemini_worker", "--once"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  web:
+    build:
+      context: ./apps/web
+      target: production
+      args:
+        VITE_API_URL: /api
+    ports:
+      - "127.0.0.1:18087:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  stage7_postgres:

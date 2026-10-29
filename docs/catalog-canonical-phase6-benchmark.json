@@ -1,0 +1,29 @@
+{
+  "scope": "synthetic_disposable_pg_mocked_providers_global_lock_preserved",
+  "measurements": [
+    {
+      "concurrency": 1,
+      "commands": 8,
+      "elapsed_seconds": 0.4755,
+      "throughput_per_second": 16.83,
+      "median_ms": 58.9,
+      "max_ms": 64.11
+    },
+    {
+      "concurrency": 2,
+      "commands": 8,
+      "elapsed_seconds": 0.2873,
+      "throughput_per_second": 27.85,
+      "median_ms": 65.25,
+      "max_ms": 92.85
+    },
+    {
+      "concurrency": 4,
+      "commands": 8,
+      "elapsed_seconds": 0.3321,
+      "throughput_per_second": 24.09,
+      "median_ms": 149.13,
+      "max_ms": 198.12
+    }
+  ]
+}

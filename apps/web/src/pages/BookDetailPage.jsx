@@ -35,7 +35,7 @@ function ReaderAvatar({ reader }) {
 export default function BookDetailPage() {
   const { id } = useParams()
   const editionsRef = useRef(null)
-  const { getBook, addBook } = useLibrary()
+  const { getBook, addBook, selectReadingEdition } = useLibrary()
   const [loading, setLoading] = useState(true)
   const [detailBook, setDetailBook] = useState(null)
   const [statusError, setStatusError] = useState('')
@@ -86,11 +86,11 @@ export default function BookDetailPage() {
     const edition = detailBook?.editions?.find(item => item.id === editionId)
     if (!edition) return
     setDetailBook(current => ({
-      ...current, editionId: edition.id, externalId: edition.externalId,
+      ...current, editionId: edition.id, editionExplicit: true, externalId: edition.externalId,
       title: edition.title || current.title, originalTitle: edition.originalTitle || edition.title || current.originalTitle,
       language: edition.language || current.language,
       publisher: edition.publisher || 'Editorial desconocida', publishedDate: edition.publishedDate || '',
-      pageCount: edition.pageCount || null, printType: edition.format || 'BOOK',
+      pageCount: edition.pageCount || null, printType: edition.format || '',
       isbn: edition.isbn13 || edition.isbn10 || '', image: edition.coverUrl || null,
     }))
   }
@@ -103,8 +103,17 @@ export default function BookDetailPage() {
     finally { setAdding(false) }
   }
 
+  const saveEdition = async () => {
+    setAdding(true); setStatusError('')
+    try { await selectReadingEdition(libraryBook, detailBook.editionId) }
+    catch (cause) { setStatusError(cause.message || 'No se pudo seleccionar la edición.') }
+    finally { setAdding(false) }
+  }
+
   if (loading) return <section className="page-width page"><div className="detail-loading" role="status">Cargando información del libro…</div></section>
   if (!book) return <Navigate to="/books" replace />
+  if (detailBook?.workId && /^[0-9a-f-]{36}$/i.test(id) && detailBook.workId!==id && !detailBook.editionExplicit)
+    return <Navigate to={`/books/${detailBook.workId}`} replace />
 
   const editions = book.editions ?? []
   const stats = book.readingStats ?? { finished: 0, reading: 0, abandoned: 0, readerPreview: [] }
@@ -144,7 +153,12 @@ export default function BookDetailPage() {
     <div className="detail-actions">
       {libraryBook?.readingId
         ? <Link className="detail-library-action" to={`/library/${encodeURIComponent(book.id)}`}><span className="detail-action-surface"><BookOpen aria-hidden="true" />Ver en mi biblioteca<ArrowUpRight aria-hidden="true" /></span></Link>
-        : <button className="detail-library-action" type="button" onClick={addToLibrary} disabled={adding}><span className="detail-action-surface"><BookOpen aria-hidden="true" />{adding ? 'Agregando…' : 'Agregar a biblioteca'}<ArrowUpRight aria-hidden="true" /></span></button>}
+        : <button className="detail-library-action" type="button" onClick={addToLibrary} disabled={adding || (book.catalogFlow === 'discovery-v1' && !book.editionId && !book.selectionReference && !(book.editionOptional && book.workId))}><span className="detail-action-surface"><BookOpen aria-hidden="true" />{adding ? 'Agregando…' : book.editionOptional && !book.editionExplicit ? 'Agregar obra sin edición' : book.catalogFlow === 'discovery-v1' ? 'Agregar esta edición' : 'Agregar a biblioteca'}<ArrowUpRight aria-hidden="true" /></span></button>}
+        {libraryBook?.editionOptional && !libraryBook.editionId && detailBook?.editionExplicit && <button type="button" className="button secondary" disabled={adding} onClick={saveEdition}>Seleccionar esta edición para mi lectura</button>}
+        {!libraryBook && book.editionOptional && book.selectionReference && <button type="button" className="button secondary" disabled={adding} onClick={async () => {
+          setAdding(true); setStatusError('')
+          try { await addBook({ ...book, editionExplicit: true }) } catch (cause) { setStatusError(cause.message) } finally { setAdding(false) }
+        }}>Agregar esta edición</button>}
     </div>
     {statusError && <p className="detail-error" role="alert">{statusError}</p>}
     </div>

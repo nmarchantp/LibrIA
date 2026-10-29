@@ -1,5 +1,7 @@
 # Interpretaciones individuales y grupales con Ollama
 
+> Archivo histórico. Sus instrucciones de instalación y generación no deben ejecutarse en etapa 6.
+
 Entrega: 2026-10-10. Proveedor elegido: **Ollama local**, modelo configurable `qwen3:1.7b`. Los indicadores no se envían a un proveedor externo. El backend consulta la API de Ollama por loopback; el navegador conversa únicamente con LibrIA. No se requiere una clave de API.
 
 ## Pantallas y permisos

@@ -42,6 +42,16 @@ def genre_distribution(category_lists):
 
 
 def most_read_genres(db, user_id):
+    from app.modules.books.canonical import enabled, identity_snapshot
+    if enabled():
+        snapshot = identity_snapshot(db)
+        rows = db.scalars(select(Reading).join(LibraryEntry, Reading.library_entry_id == LibraryEntry.id)
+            .where(LibraryEntry.user_id == user_id, LibraryEntry.archived_at.is_(None))
+            .order_by(Reading.created_at.desc(), Reading.id.desc())).all()
+        latest = {}
+        for reading in rows:
+            latest.setdefault(snapshot.root(reading.work_id), reading)
+        return genre_distribution([db.get(Work, key).categories for key, reading in latest.items() if reading.status == "finished"])
     # Select the current attempt BEFORE filtering finished; a past completion must
     # not count when the current library state is pending/reading/abandoned.
     latest = (select(Reading.work_id, Reading.status)

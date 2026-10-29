@@ -3,17 +3,11 @@ import { books as initialBooks } from '../data'
 import { apiRequest } from '../api/client'
 import { useAuth } from './AuthContext'
 import { normalizeGoogleBook } from '../services/booksService'
+import { librarySelection } from '../services/librarySelection'
+import { withReading, eventPageCount } from '../services/readingState'
 
 const LibraryContext = createContext(null)
 const catalogBooks = initialBooks.map(book => ({ ...book, status: 'Pendiente', progress: 0 }))
-const statusLabels = { pending: 'Pendiente', reading: 'Leyendo', finished: 'Terminado', abandoned: 'Abandonado' }
-const withReading = (book, reading) => reading ? {
-  ...book, status: statusLabels[reading.status] || book.status,
-  progress: reading.progress_percent, currentPage: reading.current_page, pageCount: reading.total_pages ?? book.pageCount, readingId: reading.reading_id,
-  workId: reading.work_id, editionId: reading.edition_id,
-  reflection: reading.reflection, startedAt: reading.started_at, finishedAt: reading.finished_at,
-  notebook: reading.notebook || {},
-} : book
 
 export function LibraryProvider({ children }) {
   const { user } = useAuth()
@@ -21,9 +15,17 @@ export function LibraryProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const readings = useRef({})
+  const additionKeys = useRef(new Map())
+  const [identityRefresh,setIdentityRefresh] = useState(0)
+  useEffect(()=>{
+    const refresh=()=>setIdentityRefresh(value=>value+1)
+    window.addEventListener('libria:catalog-identity-changed',refresh)
+    return ()=>window.removeEventListener('libria:catalog-identity-changed',refresh)
+  },[])
   useEffect(() => {
     let active = true
     readings.current = {}
+    additionKeys.current.clear()
     setBooks([])
     setLoading(Boolean(user?.id))
     setLoadError('')
@@ -45,12 +47,11 @@ export function LibraryProvider({ children }) {
         .finally(() => { if (active) setLoading(false) })
     }
     return () => { active = false }
-  }, [user?.id])
+  }, [user?.id,identityRefresh])
   const recordEvent = async (book, event, extra = {}) => {
     const token = localStorage.getItem('libria_token')
     if (!token) throw new Error('Inicia sesión para registrar una lectura.')
-    const pageCount = Number(extra.page_count || book.pageCount)
-    if (!Number.isInteger(pageCount) || pageCount < 1) throw new Error('Indica el total de páginas del libro.')
+    const pageCount = eventPageCount(book, extra)
     if (book.status === 'Pendiente' && ['progress', 'finish'].includes(event)) {
       const started = await recordEvent(book, 'start', { page_count: pageCount })
       return recordEvent({ ...book, status: 'Leyendo', readingId: started.reading_id, pageCount, currentPage: 0 }, event, extra)
@@ -64,6 +65,7 @@ export function LibraryProvider({ children }) {
     readings.current[String(book.id)] = {
       reading_id: result.reading_id, book_ref: String(book.id), book_title: book.originalTitle || book.title, status: result.status,
       work_id: result.work_id, edition_id: result.edition_id,
+      edition_optional: Boolean(book.editionOptional),
       progress_percent: result.progress_percent, current_page: result.current_page, total_pages: result.total_pages,
       reflection: result.reflection,
       started_at: result.started_at, finished_at: result.finished_at, notebook: book.notebook || {},
@@ -81,7 +83,7 @@ export function LibraryProvider({ children }) {
     const book = books.find(item => String(item.id) === String(id))
     if (!book) throw new Error('Agrega primero el libro a tu biblioteca.')
     if (book.status === status) return
-    if ((status === 'Leyendo' || status === 'Terminado') && !book.pageCount) {
+    if ((status === 'Leyendo' || status === 'Terminado') && !book.pageCount && !book.editionOptional) {
       throw new Error('Indica primero el total de páginas en Registrar avance.')
     }
     if (status === 'Leyendo') return recordEvent(book, 'start')
@@ -109,18 +111,22 @@ export function LibraryProvider({ children }) {
     if (!book) return
     const token = localStorage.getItem('libria_token')
     if (!token) throw new Error('Inicia sesion para agregar libros.')
+    const selection = librarySelection(book)
+    const signature = JSON.stringify(selection)
+    if (!additionKeys.current.has(signature)) additionKeys.current.set(signature, crypto.randomUUID())
     const reading = await apiRequest('/readings/library', {
-      method: 'POST', headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_ref: String(book.id), book_title: book.originalTitle || book.title, edition_id: book.editionId || null, page_count: book.pageCount || null }),
+      method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Idempotency-Key': additionKeys.current.get(signature) },
+      body: signature,
     })
     if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
-    readings.current[String(book.id)] = reading
-    setBooks(current => current.some(item => String(item.id) === String(book.id))
-      ? current.map(item => String(item.id) === String(book.id) ? withReading({ ...item, ...book }, reading) : item)
-      : [...current, withReading(book, reading)])
+    const restored = reading.catalog_volume ? { ...book, ...normalizeGoogleBook(reading.catalog_volume) } : book
+    readings.current[String(restored.id)] = reading
+    setBooks(current => current.some(item => item.workId === reading.work_id || String(item.id) === String(restored.id))
+      ? current.map(item => item.workId === reading.work_id || String(item.id) === String(restored.id) ? withReading({ ...item, ...restored }, reading) : item)
+      : [...current, withReading(restored, reading)])
     return reading
   }, [])
-  const getBook = useCallback((id) => books.find(book => [book.id, book.workId, book.externalId, book.rawVolume?.id]
+  const getBook = useCallback((id) => books.find(book => [book.id, book.workId, book.canonicalWorkId, book.externalId, book.rawVolume?.id, ...(book.references || [])]
     .some(reference => reference != null && String(reference) === String(id)))
     ?? catalogBooks.find(book => String(book.id) === String(id)), [books])
   const removeBook = async book => {
@@ -128,7 +134,18 @@ export function LibraryProvider({ children }) {
     delete readings.current[String(book.id)]
     setBooks(current => current.filter(item => item.workId !== book.workId))
   }
-  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, updateTotalPages, recordEvent, addBook, removeBook, getBook }}>{children}</LibraryContext.Provider>
+  const selectReadingEdition = async (book, editionId) => {
+    const token = localStorage.getItem('libria_token')
+    const reading = await apiRequest(`/readings/${book.readingId}/edition`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ edition_id: editionId }),
+    })
+    if (token !== localStorage.getItem('libria_token')) throw new Error('La sesión cambió. Recarga tu biblioteca.')
+    const restored = withReading(normalizeGoogleBook(reading.catalog_volume), reading)
+    readings.current[String(restored.id)] = reading
+    setBooks(current => current.map(item => item.readingId === reading.reading_id ? restored : item))
+    return reading
+  }
+  return <LibraryContext.Provider value={{ books, loading, loadError, updateStatus, updateTotalPages, recordEvent, addBook, removeBook, getBook, selectReadingEdition }}>{children}</LibraryContext.Provider>
 }
 
 // Este archivo exporta deliberadamente el proveedor y su hook de acceso.

@@ -1,0 +1,54 @@
+{
+  "flags": {
+    "catalog_discovery_enabled": true,
+    "catalog_editionless_enabled": true,
+    "catalog_canonical_enabled": true,
+    "catalog_admin_preview_enabled": true,
+    "catalog_admin_merge_enabled": true
+  },
+  "marker": "3b5e6851ffb6",
+  "head": "0060_admin_merges",
+  "catalog_works": 485,
+  "test_works": 2,
+  "test_library_entries": 2,
+  "readings": [
+    {
+      "id": "0b4b91c9-8b43-4f85-9f95-853346148187",
+      "work_id": "35cd4be3-4f1d-43a7-b3d7-270b223e8518",
+      "edition_id": "1d16945d-a80c-4206-8faf-9864e341815d",
+      "current_page": 5,
+      "total_pages": 120
+    },
+    {
+      "id": "aa327bf3-6aff-4e75-a902-af0dd032f0e9",
+      "work_id": "eed983ca-b5b9-477e-97e3-8c0015d718f1",
+      "edition_id": "35513f5e-41d6-4839-b1e8-59e2d494b2a0",
+      "current_page": 6,
+      "total_pages": 240
+    }
+  ],
+  "test_reviews": 2,
+  "test_ai_jobs": 0,
+  "test_ai_analyses": 0,
+  "active_test_redirects": 0,
+  "unrelated_redirects": 0,
+  "test_operations": [
+    {
+      "id": "26a44148-7060-47ae-96b0-7fb9d8fec64e",
+      "kind": "merge"
+    },
+    {
+      "id": "c2e0ae77-e265-401d-a823-310484641f6e",
+      "kind": "reversal"
+    },
+    {
+      "id": "94b581d8-c8a6-4a71-b06f-50524c9a0a1c",
+      "kind": "merge"
+    },
+    {
+      "id": "0e9a1af0-d013-4e7e-aa61-27476b252c01",
+      "kind": "reversal"
+    }
+  ],
+  "success": true
+}

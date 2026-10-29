@@ -1,5 +1,7 @@
 # Motor de datos e inteligencia
 
+> Parte de las rutas históricas de IA de este documento fueron sustituidas en etapa 6.
+
 El análisis individual del libro valorado y el ADN global son privados y distintos.
 LibrIA Insights es exclusivo de autores y miembros de librerías/editoriales no
 rechazadas ni suspendidas. Ser administrador, lector o influencer por sí solo no

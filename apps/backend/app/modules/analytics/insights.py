@@ -1,17 +1,14 @@
 """Evidence from analytics only; owner isolation and bounded aggregate releases."""
 import hashlib
 import json
-import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import text
 
-from app.core.config import get_settings
 from app.modules.analytics.reader_evidence import personal_samples
 from app.modules.analytics.etl import ZONE, day_bounds
-from app.modules.analytics.interpretation_provider import PROMPT_VERSION, ProviderError, generate_interpretation, validate_interpretation, provider_ready
 
 MIN_GROUP = 10
 MIN_CONTRIBUTORS = 5
@@ -57,6 +54,10 @@ def source_runs(db):
         ORDER BY source_cutoff_at DESC, finished_at DESC LIMIT 1""")).mappings().first()
     if latest is None:
         return [], None
+    from app.modules.books.canonical import enabled, identity_version
+    identity = identity_version(db) if enabled() else None
+    if identity and db.execute(text('SELECT identity_version FROM analytics.ejecuciones_etl WHERE id=:id'), {'id':latest['id']}).scalar() != identity:
+        return [], None
     if latest["run_kind"] == "manual":
         runs = [latest]
         start = latest["period_start"]
@@ -66,6 +67,10 @@ def source_runs(db):
             AND business_date BETWEEN :first AND :last ORDER BY business_date"""),
             {"first": first, "last": latest["business_date"]}).mappings().all()
         start = day_bounds(first)[0]
+    if identity:
+        versions = db.execute(text('SELECT identity_version FROM analytics.ejecuciones_etl WHERE id=ANY(:ids)'), {'ids':[r['id'] for r in runs]}).scalars().all()
+        if any(version != identity for version in versions):
+            return [], None
     period = {"start": start.isoformat(), "cutoff": latest["source_cutoff_at"].isoformat(),
               "source": latest["run_kind"], "daily_closures": len(runs) if latest["run_kind"] == "daily" else None}
     return [run["id"] for run in runs], {"period": period, "latest_id": latest["id"]}
@@ -176,54 +181,17 @@ def group_evidence(db, provenance):
 
 
 def cache_params(evidence, scope, user_id):
-    settings = get_settings()
     fingerprint = hashlib.sha256(json.dumps(evidence, sort_keys=True).encode()).hexdigest()
-    return {"scope": scope, "subject": str(user_id) if scope == "personal" else "group", "hash": fingerprint,
-            "provider": "ollama", "model": settings.ai_model, "version": PROMPT_VERSION}
+    return {"scope": scope, "subject": str(user_id) if scope == "personal" else "group", "hash": fingerprint}
 
 
 def cached_interpretation(db, evidence, scope, user_id):
     params = cache_params(evidence, scope, user_id)
     row = db.execute(text("""SELECT id, content, created_at, provider, model FROM ia.interpretaciones_ia
-        WHERE scope=:scope AND subject_key=:subject AND data_hash=:hash AND provider=:provider
-            AND model=:model AND prompt_version=:version"""), params).mappings().first()
+        WHERE scope=:scope AND subject_key=:subject AND data_hash=:hash
+        ORDER BY created_at DESC LIMIT 1"""), params).mappings().first()
     return dict(row) if row else None
 
 
 def interpret(db, evidence, scope, user_id):
-    cached = cached_interpretation(db, evidence, scope, user_id)
-    if cached:
-        return cached
-    if not provider_ready():
-        raise HTTPException(status_code=503, detail="Inicia Ollama y descarga el modelo configurado en el servidor")
-    params = cache_params(evidence, scope, user_id)
-    lock_key = int.from_bytes(hashlib.sha256((scope + params["subject"]).encode()).digest()[:8], "big", signed=True)
-    if not db.execute(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": lock_key}).scalar_one():
-        raise HTTPException(status_code=409, detail="Ya se está generando esta interpretación")
-    cached = cached_interpretation(db, evidence, scope, user_id)
-    if cached:
-        return cached
-    recent = db.execute(text("""SELECT 1 FROM ia.interpretaciones_ia
-        WHERE scope=:scope AND subject_key=:subject AND created_at > now() - interval '1 minute' LIMIT 1"""), params).first()
-    if recent:
-        raise HTTPException(status_code=429, detail="Espera un minuto antes de generar una interpretación nueva")
-    try:
-        content = validate_interpretation(generate_interpretation(evidence, scope), evidence["metrics"])
-        if scope == "personal" and evidence.get("qualitative") and not any(item["metric"] == "Q01" for item in content["observations"]):
-            raise ValueError("Missing qualitative interpretation")
-        if scope == "personal" and evidence.get("reader_contributions") and not any(item["metric"] == "Q02" for item in content["observations"]):
-            raise ValueError("Missing reader contribution interpretation")
-    except ProviderError as error:
-        db.rollback()
-        if str(error)=='profile_priority':
-            raise HTTPException(409,'El ADN tiene prioridad. Espera a que termine antes de solicitar Insights.') from None
-        raise HTTPException(status_code=502, detail="No se pudo obtener una interpretación válida. Puedes reintentar.") from None
-    except ValueError:
-        db.rollback()
-        raise HTTPException(status_code=502, detail="No se pudo obtener una interpretación válida. Puedes reintentar.") from None
-    db.execute(text("""INSERT INTO ia.interpretaciones_ia
-        (id, scope, subject_key, owner_user_id, data_hash, provider, model, prompt_version, content)
-        VALUES (:id, :scope, :subject, :owner, :hash, :provider, :model, :version, CAST(:content AS jsonb))"""),
-        {**params, "id": uuid.uuid4(), "owner": user_id if scope == "personal" else None, "content": json.dumps(content)})
-    db.commit()
-    return cached_interpretation(db, evidence, scope, user_id)
+    raise HTTPException(status_code=501, detail="Esta interpretación aún no tiene contrato Gemini aprobado")

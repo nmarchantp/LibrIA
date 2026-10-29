@@ -13,7 +13,7 @@ from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -22,13 +22,48 @@ from app.core.database import get_db
 from app.core.exceptions import EmailAlreadyRegisteredError, InvalidCredentialsError
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.repository import AuthRepository
-from app.modules.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, GoogleEmailRequest, GoogleEmailConfirm
+from app.modules.auth.schemas import (GoogleEmailConfirm, GoogleEmailRequest, LoginRequest,
+                                      RegisterRequest, SessionStatus, TokenResponse)
+from app.modules.auth.sessions import (SessionValidationError, record_activity, revoke_session,
+                                       rotate_refresh_token)
 from app.modules.auth.email_verification import request_code, confirm_code
 from app.modules.auth.service import AuthService
 from app.modules.users.models import User
 from app.modules.users.schemas import UserResponse
+from app.modules.analytics.recommendation_sync import safe_sync_recommendations
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    settings = get_settings()
+    response.set_cookie(
+        settings.session_refresh_cookie_name,
+        token,
+        max_age=settings.session_absolute_hours * 3600,
+        httponly=True,
+        secure=settings.secure_session_cookie,
+        samesite="lax",
+        path=f"{settings.api_prefix}/auth",
+    )
+    response.headers["Cache-Control"] = "no-store"
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    settings = get_settings()
+    response.delete_cookie(
+        settings.session_refresh_cookie_name,
+        httponly=True,
+        secure=settings.secure_session_cookie,
+        samesite="lax",
+        path=f"{settings.api_prefix}/auth",
+    )
+
+
+def _require_trusted_origin(request: Request) -> None:
+    origin = request.headers.get("origin")
+    if origin is not None and origin not in get_settings().cors_origins:
+        raise HTTPException(403, "Origen no autorizado")
 
 
 def build_google_authorization_url(client_id: str | None = None, redirect_uri: str | None = None,
@@ -59,17 +94,24 @@ def get_auth_service(db: Annotated[Session, Depends(get_db)]) -> AuthService:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(data: RegisterRequest, service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse:
+def register(data: RegisterRequest, response: Response,
+             service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse:
     try:
-        return service.register(data)
+        result = service.register(data)
+        _set_refresh_cookie(response, result.refresh_token)
+        return result
     except EmailAlreadyRegisteredError:
         raise HTTPException(status_code=409, detail="El correo ya está registrado") from None
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse:
+def login(data: LoginRequest, response: Response,
+          service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse:
     try:
-        return service.login(data)
+        result = service.login(data)
+        _set_refresh_cookie(response, result.refresh_token)
+        safe_sync_recommendations(service.repository.db, result.user.id)
+        return result
     except InvalidCredentialsError:
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos") from None
 
@@ -77,6 +119,65 @@ def login(data: LoginRequest, service: Annotated[AuthService, Depends(get_auth_s
 @router.get("/me", response_model=UserResponse)
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
     return UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(request: Request, response: Response,
+            db: Annotated[Session, Depends(get_db)]) -> TokenResponse:
+    _require_trusted_origin(request)
+    settings = get_settings()
+    token = request.cookies.get(settings.session_refresh_cookie_name, "")
+    try:
+        grant = rotate_refresh_token(db, token)
+    except SessionValidationError as exc:
+        _clear_refresh_cookie(response)
+        raise HTTPException(401, {"code": exc.code, "message": "No fue posible renovar la sesión"}) from None
+    user = AuthRepository(db).get_user_by_id(grant.session.user_id)
+    if user is None:
+        _clear_refresh_cookie(response)
+        raise HTTPException(401, {"code": "session_invalid", "message": "Sesión inválida"})
+    result = service_token_response(user, grant)
+    _set_refresh_cookie(response, grant.refresh_token)
+    return result
+
+
+def service_token_response(user: User, grant) -> TokenResponse:
+    public = UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name,
+                          role=user.role, avatar_url=user.avatar_url, biography=user.biography,
+                          created_at=user.created_at)
+    return TokenResponse(access_token=grant.access_token, refresh_token=grant.refresh_token,
+                         session_id=grant.session.id,
+                         inactivity_expires_at=grant.session.inactivity_expires_at,
+                         absolute_expires_at=grant.session.absolute_expires_at, user=public)
+
+
+@router.get("/session", response_model=SessionStatus)
+def session_status(request: Request, user: Annotated[User, Depends(get_current_user)]) -> SessionStatus:
+    auth_session = request.state.auth_session
+    return SessionStatus(session_id=auth_session.id,
+                         inactivity_expires_at=auth_session.inactivity_expires_at,
+                         absolute_expires_at=auth_session.absolute_expires_at)
+
+
+@router.post("/activity", response_model=SessionStatus)
+def user_activity(request: Request, user: Annotated[User, Depends(get_current_user)],
+                  db: Annotated[Session, Depends(get_db)]) -> SessionStatus:
+    auth_session = record_activity(db, request.state.auth_session.id)
+    recommendation_status = safe_sync_recommendations(db, user.id)
+    return SessionStatus(session_id=auth_session.id,
+                         inactivity_expires_at=auth_session.inactivity_expires_at,
+                         absolute_expires_at=auth_session.absolute_expires_at,
+                         recommendation_status=recommendation_status)
+
+
+@router.post("/logout", status_code=204)
+def logout(request: Request, response: Response, user: Annotated[User, Depends(get_current_user)],
+           db: Annotated[Session, Depends(get_db)]) -> Response:
+    _require_trusted_origin(request)
+    revoke_session(db, request.state.auth_session.id)
+    _clear_refresh_cookie(response)
+    response.status_code = 204
+    return response
 
 
 @router.get("/google/login")
@@ -161,8 +262,7 @@ def google_result(error: str | None = None, linking: bool = False) -> RedirectRe
 @router.post("/google/session", response_model=TokenResponse)
 def google_session(request: Request, service: Annotated[AuthService, Depends(get_auth_service)]):
     settings = get_settings()
-    if request.headers.get("origin") not in settings.cors_origins:
-        raise HTTPException(403, "Origen no autorizado")
+    _require_trusted_origin(request)
     try:
         claims = jwt.decode(request.cookies.get("libria_google_session", ""), settings.jwt_secret,
                             algorithms=["HS256"], audience="google-session",
@@ -172,7 +272,10 @@ def google_session(request: Request, service: Annotated[AuthService, Depends(get
             raise ValueError("Unknown user")
     except (PyJWTError, ValueError, TypeError):
         raise HTTPException(401, "La sesión de Google expiró; vuelve a intentarlo") from None
-    result = JSONResponse(content=json.loads(service._token_response(user).model_dump_json()))
+    token_response = service._token_response(user)
+    safe_sync_recommendations(service.repository.db, user.id)
+    result = JSONResponse(content=json.loads(token_response.model_dump_json()))
+    _set_refresh_cookie(result, token_response.refresh_token)
     result.delete_cookie("libria_google_session", path=f"{settings.api_prefix}/auth/google")
     result.headers["Cache-Control"] = "no-store"
     return result
@@ -237,7 +340,7 @@ def google_callback(request: Request, service: Annotated[AuthService, Depends(ge
                 raise InvalidCredentialsError
             service.google_link(link_user_id, claims)
         else:
-            session = service.google_login(claims)
+            google_user = service.authenticate_google(claims)
     except (urllib.error.URLError, TimeoutError, ValueError, PyJWTError):
         return google_result("failed", linking)
     except (InvalidCredentialsError, EmailAlreadyRegisteredError):
@@ -245,7 +348,7 @@ def google_callback(request: Request, service: Annotated[AuthService, Depends(ge
     if linking:
         return google_result(linking=True)
     result = google_result()
-    handoff = jwt.encode({"sub": str(session.user.id), "aud": "google-session",
+    handoff = jwt.encode({"sub": str(google_user.id), "aud": "google-session",
                           "exp": datetime.now(timezone.utc) + timedelta(seconds=60)},
                          settings.jwt_secret, algorithm="HS256")
     result.set_cookie("libria_google_session", handoff, max_age=60, httponly=True,

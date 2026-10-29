@@ -1,0 +1,27 @@
+{
+  "branch": "Nicole",
+  "build": {
+    "command": "npm.cmd run build",
+    "success": true,
+    "modules": 1714,
+    "javascript_kb": 513.48,
+    "javascript_gzip_kb": 152.70,
+    "warning": "chunk exceeds 500 kB"
+  },
+  "regressions": [
+    {"command": "node tests/library-selection.mjs", "success": true},
+    {"command": "node tests/reading-optional-edition.mjs", "success": true}
+  ],
+  "permission_browser_fixture": {
+    "command": "node --experimental-websocket tests/catalog-preview.mjs",
+    "success": true,
+    "http_mocked": true,
+    "checks": ["effective permission", "role-only denial", "flag disabled", "search", "compare", "preview", "error recovery", "execution controls absent when merge capability is absent"]
+  },
+  "real_development_browser": {
+    "command": "node --experimental-websocket tests/catalog-merge-development.mjs --reuse",
+    "success": true,
+    "http_mocked": false,
+    "report": "catalog-canonical-phase7-browser-results.json"
+  }
+}

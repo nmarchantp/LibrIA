@@ -50,7 +50,16 @@ try {
       const {getProfileBanner}=await import('/src/theme/profileBanners.js');
       return {colors:themes.find(t=>t.id==='${id}').colors,vars,colorScheme:root.colorScheme,appearance,banner:getProfileBanner('${id}')}
     })()`)
-    for (const key of ['colors', 'vars', 'colorScheme', 'banner']) assert.deepEqual(actual[key], baseline[id][key], `${id}: ${key}`)
+    assert.deepEqual(actual.colors, baseline[id].colors, `${id}: colors`)
+    // The baseline protects every original palette variable. New component
+    // tokens may be added without rewriting an unrelated historical fixture.
+    const originalVars = Object.fromEntries(Object.keys(baseline[id].vars).map(key => [key, actual.vars[key]]))
+    assert.deepEqual(originalVars, baseline[id].vars, `${id}: original vars`)
+    for (const key of ['--rating-star-color', '--genre-fantasy', '--genre-romance', '--genre-neutral']) {
+      assert.ok(actual.vars[key], `${id}: missing ${key}`)
+    }
+    assert.deepEqual(actual.colorScheme, baseline[id].colorScheme, `${id}: colorScheme`)
+    assert.deepEqual(actual.banner, baseline[id].banner, `${id}: banner`)
     for (const [selector, expected] of Object.entries(baseline[id].appearance)) {
       // SVGs paint with explicit fill/stroke, not their transitioning inherited
       // color/border-color. Compare the stable properties captured before edits.
