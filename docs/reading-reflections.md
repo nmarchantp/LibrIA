@@ -1,5 +1,7 @@
 # Reflexión cualitativa al finalizar una lectura
 
+> La captura sigue vigente; las referencias históricas al proveedor local no son instrucciones operativas.
+
 Al seleccionar Terminado desde la biblioteca o la ficha se abre la experiencia de lectura. Antes de confirmar «Terminar libro», el titular puede elegir emociones, aspectos destacados, una experiencia positiva/mixta/negativa y un texto libre de hasta 1500 caracteres. Todo es opcional; no se exige una reflexión para terminar. Si se envía una, debe contener al menos una apreciación. Los valores se validan contra un catálogo cerrado, los textos se recortan y las selecciones duplicadas se eliminan.
 
 La reflexión se guarda en `app.eventos_lectura.reflection`, exclusivamente en el evento `finish`, en la misma transacción que la finalización. Está vinculada al intento de lectura y a su titular. Se devuelve solamente al titular en sus estados de biblioteca y en la respuesta al finalizar. No aparece en reseñas públicas, el mural, comentarios ni análisis comerciales. Las reflexiones se guardan al terminar; por ahora no hay edición posterior de esa reflexión.

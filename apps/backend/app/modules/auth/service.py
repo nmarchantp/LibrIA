@@ -3,9 +3,10 @@
 from pydantic import EmailStr, TypeAdapter, ValidationError
 
 from app.core.exceptions import EmailAlreadyRegisteredError, InvalidCredentialsError
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import hash_password, verify_password
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import LoginRequest, RegisterRequest, TokenResponse
+from app.modules.auth.sessions import create_session
 from app.modules.users.schemas import UserResponse
 
 
@@ -37,10 +38,13 @@ class AuthService:
         return subject
 
     def google_login(self, claims: dict) -> TokenResponse:
+        return self._token_response(self.authenticate_google(claims))
+
+    def authenticate_google(self, claims: dict):
         account = self.repository.get_account_by_google_subject(self._google_subject(claims))
         if not account or not account.google_email_verified_at:
             raise InvalidCredentialsError
-        return self._token_response(account.user)
+        return account.user
 
     def google_link(self, user_id, claims: dict) -> None:
         subject = self._google_subject(claims)
@@ -55,10 +59,17 @@ class AuthService:
             raise InvalidCredentialsError
         self.repository.link_google(user.auth_account, subject)
 
-    @staticmethod
-    def _token_response(user) -> TokenResponse:
+    def _token_response(self, user) -> TokenResponse:
         public_user = UserResponse(
             id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role,
             avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at,
         )
-        return TokenResponse(access_token=create_access_token(str(user.id)), user=public_user)
+        grant = create_session(self.repository.db, user.id)
+        return TokenResponse(
+            access_token=grant.access_token,
+            refresh_token=grant.refresh_token,
+            session_id=grant.session.id,
+            inactivity_expires_at=grant.session.inactivity_expires_at,
+            absolute_expires_at=grant.session.absolute_expires_at,
+            user=public_user,
+        )

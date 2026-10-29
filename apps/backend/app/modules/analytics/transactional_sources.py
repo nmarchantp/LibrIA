@@ -3,6 +3,10 @@ from sqlalchemy import text
 
 
 def extract_book_context(db, owner, work):
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.analytics.canonical_views import book_context
+        return book_context(db, owner, work)
     from app.modules.analytics.adaptive_ai import owned_entry, has_rating, feedback_sources, hash_data
     entry = owned_entry(db, owner, work)
     readings = db.execute(text("""SELECT r.* FROM app.lecturas r WHERE r.library_entry_id=:entry

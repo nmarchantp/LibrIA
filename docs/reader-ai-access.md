@@ -1,5 +1,7 @@
 # Acceso al ADN lector y a Recomendaciones IA
 
+> Reglas de acceso vigentes; las referencias históricas al proveedor local quedaron desactivadas en etapa 6.
+
 La [especificación de identidad lectora adaptativa](adaptive-reader-ai.md) añade
 análisis por libro y perfil global bajo `/api/me/ai` sin un mínimo de diez obras.
 El requisito siguiente se conserva para las rutas de interpretación numérica

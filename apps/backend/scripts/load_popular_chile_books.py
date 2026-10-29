@@ -41,6 +41,10 @@ POPULAR_CHILE = [
 
 
 def main():
+    from app.core.config import get_settings
+    if get_settings().catalog_discovery_enabled:
+        from scripts.import_catalog import main as authorized_import
+        return authorized_import(default_queries=[f'"{title}" {author}' for title, author in POPULAR_CHILE])
     with SessionLocal() as db:
         before = {"users": db.scalar(text("SELECT count(*) FROM app.usuarios")),
                   "profiles": db.scalar(text("SELECT count(*) FROM app.perfiles")),

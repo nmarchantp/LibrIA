@@ -7,9 +7,11 @@ MAX_TEXT = 18000
 
 
 def extract_personal(connection, cutoff):
+    from app.modules.books.canonical import enabled
+    statuses = "'draft','published','hidden'" if enabled() else "'draft','published'"
     # Notebooks have no revision history: never pretend today's edit existed at
     # an earlier cutoff. Reviews do have revisions and can be reconstructed.
-    rows = connection.execute(text("""
+    rows = connection.execute(text(f"""
         SELECT le.user_id, r.work_id, r.id AS source_id, 'notebook' AS source_kind,
             r.updated_at AS source_at,
             jsonb_build_object('title', w.title, 'notebook', r.notebook) AS payload
@@ -31,7 +33,7 @@ def extract_personal(connection, cutoff):
             WHERE rv.review_id=r.id AND rv.recorded_at < :cutoff
             ORDER BY rv.revision_number DESC LIMIT 1) v ON true
         WHERE p.kind='personal' AND p.owner_user_id=r.created_by_user_id
-          AND v.status IN ('draft','published')
+          AND v.status IN ({statuses})
           AND NOT EXISTS (SELECT 1 FROM app.procedencia_demo d WHERE
             (d.entity_type='review' AND d.entity_id=r.id) OR
             (d.entity_type='obras' AND d.entity_id=r.work_id))
@@ -54,7 +56,18 @@ def extract_personal(connection, cutoff):
     for row in rows:
         key = (row['source_kind'], row['source_id'])
         counts[key] = counts.get(key, 0) + 1
-    return [dict(row) for row in rows if counts[(row['source_kind'], row['source_id'])] == 1]
+    result = [dict(row) for row in rows if counts[(row['source_kind'], row['source_id'])] == 1]
+    from app.modules.books.canonical import enabled, identity_snapshot
+    if enabled():
+        from app.modules.books.consistency import current_records,review_preferences
+        snapshot = identity_snapshot(connection)
+        result = [{**r, "physical_work_id": r["work_id"], "work_id": snapshot.root(r["work_id"])} for r in result]
+        # Keep latest hidden/draft as a privacy barrier, not an older published revision.
+        # This extraction already reconstructs each review as of the cutoff.
+        reviews = [r for r in result if r["source_kind"] == "review"]
+        selected = current_records(reviews, work=lambda r:r["work_id"], reader=lambda r:r["user_id"], timestamp=lambda r:r["source_at"], identifier=lambda r:r["source_id"],preferred=review_preferences(connection,snapshot,by_owner=True))
+        result = [r for r in result if r["source_kind"] != "review"] + [r for r in selected if r["payload"].get("status") != "hidden"]
+    return result
 
 
 def publish_personal(connection, run_id, rows):

@@ -8,6 +8,10 @@ from sqlalchemy import text
 
 
 def main():
+    from app.core.config import get_settings
+    if get_settings().catalog_discovery_enabled:
+        from scripts.import_catalog import main as authorized_import
+        return authorized_import()
     parser=argparse.ArgumentParser()
     parser.add_argument('--query',action='append',default=[],help='Google Books query; repeat for several queries')
     parser.add_argument('--refresh-known',action='store_true',help='Refresh searches previously registered in LibrIA')

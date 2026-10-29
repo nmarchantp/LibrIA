@@ -9,10 +9,15 @@ import AdaptiveAnalysis from '../components/AdaptiveAnalysis'
 import BookReviews from '../components/BookReviews'
 import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
+import { useUnsavedSessionWarning } from '../hooks/useUnsavedSessionWarning'
 import './LibraryBookPage.css'
 
 const tabs = [['rating', 'Valoración', Star], ['notebook', 'Cuaderno', NotebookPen], ['notes', 'Notas', StickyNote], ['theories', 'Teorías', Lightbulb], ['community', 'Comunidad', Users]]
 const formatReadingDate = value => value ? new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Añadir'
+const notebookSnapshot = value => JSON.stringify({ characters: value.characters || '', places: value.places || '', summary: value.summary || '' })
+const ratingSnapshot = (ratings, comment, visibility) => JSON.stringify([
+  Object.fromEntries(Object.entries(ratings).filter(([, value]) => value != null).sort()), comment, visibility,
+])
 
 function WallComposer({ type, book }) {
   const isNote = type === 'note'
@@ -20,6 +25,7 @@ function WallComposer({ type, book }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  useUnsavedSessionWarning(Boolean(body.trim()))
   const publish = async event => {
     event.preventDefault()
     setBusy('Publicando en tu muro…'); setError(''); setMessage('')
@@ -58,6 +64,10 @@ export default function LibraryBookPage() {
   const [reviewVisibility, setReviewVisibility] = useState('public')
   const [activeTab, setActiveTab] = useState('rating')
   const [notebook, setNotebook] = useState({ characters: '', places: '', summary: '' })
+  const [notebookBaseline, setNotebookBaseline] = useState(notebookSnapshot({}))
+  const [ratingBaseline, setRatingBaseline] = useState(ratingSnapshot({}, '', 'public'))
+  const [attempts, setAttempts] = useState([])
+  const [historyError, setHistoryError] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -65,7 +75,17 @@ export default function LibraryBookPage() {
   useEffect(() => { setPage(book?.currentPage ?? 0) }, [book?.readingId, book?.currentPage])
   useEffect(() => { setTotal(book?.pageCount ?? '') }, [book?.readingId, book?.pageCount])
   useEffect(() => {
-    setNotebook({ characters: '', places: '', summary: '', ...(book?.notebook || {}) })
+    if (!book?.editionOptional || !book?.workId) return
+    let active = true
+    apiRequest(`/readings/library/${book.workId}/attempts`, { headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
+      .then(rows => { if (active) { setAttempts(rows); setHistoryError('') } })
+      .catch(() => { if (active) setHistoryError('No se pudo cargar el historial de intentos.') })
+    return () => { active = false }
+  }, [book?.editionOptional, book?.workId, book?.readingId, book?.status, book?.currentPage])
+  useEffect(() => {
+    const loaded = { characters: '', places: '', summary: '', ...(book?.notebook || {}) }
+    setNotebook(loaded)
+    setNotebookBaseline(notebookSnapshot(loaded))
   }, [book?.readingId, book?.notebook])
 
   useEffect(() => {
@@ -79,9 +99,15 @@ export default function LibraryBookPage() {
         setComment(review.body || '')
         setReviewVisibility(review.status === 'published' ? 'public' : 'private')
         setRatings(current => ({ ...current, ...review.dimension_ratings, general: review.rating ?? null }))
+        const loadedRatings = { ...Object.fromEntries(ratingDimensions.map(([key]) => [key, null])),
+          ...review.dimension_ratings, general: review.rating ?? null }
+        setRatingBaseline(ratingSnapshot(loadedRatings, review.body || '', review.status === 'published' ? 'public' : 'private'))
       }).catch(() => { if (active) setError('No se pudo recuperar tu valoración.') })
     return () => { active = false }
   }, [book?.workId])
+
+  useUnsavedSessionWarning(ratingSnapshot(ratings, comment, reviewVisibility) !== ratingBaseline)
+  useUnsavedSessionWarning(notebookSnapshot(notebook) !== notebookBaseline)
 
   if (loading) return <section className="page-width page"><p role="status">Cargando tu libro…</p></section>
   if (loadError) return <section className="page-width page"><p role="alert">{loadError}</p></section>
@@ -89,22 +115,23 @@ export default function LibraryBookPage() {
 
   const nextPage = Number(page)
   const pageCount = Number(total)
+  const unknownTotal = book.editionOptional && total === ''
   const savedPage = Number(book.currentPage || 0)
-  const totalChanged = pageCount !== Number(book.pageCount)
+  const totalChanged = !unknownTotal && pageCount !== Number(book.pageCount)
   const pageChanged = nextPage !== savedPage
   const progressError = page === '' || !Number.isInteger(nextPage) || nextPage < 0
     ? 'La página actual debe ser un número entero mayor o igual a cero.'
-    : total === '' || !Number.isInteger(pageCount) || pageCount < 1 || pageCount > 100000
-      ? 'El total de tu edición debe ser un número entero entre 1 y 100000.'
-      : pageCount < Math.max(savedPage, nextPage)
-        ? 'El total de tu edición no puede ser menor que la página actual registrada o indicada.'
+    : !unknownTotal && (total === '' || !Number.isInteger(pageCount) || pageCount < 1 || pageCount > 100000)
+      ? 'El total de esta lectura debe ser un número entero entre 1 y 100000.'
+      : !unknownTotal && pageCount < Math.max(savedPage, nextPage)
+        ? 'El total de esta lectura no puede ser menor que la página registrada o indicada.'
         : nextPage < savedPage
           ? 'Este registro solo permite avanzar: la página no puede ser menor que la ya registrada.'
           : pageChanged && !['Pendiente', 'Leyendo'].includes(book.status)
             ? 'Esta lectura está cerrada. Puedes ajustar el total de tu edición, pero no registrar nuevos avances.'
             : ''
-  const progress = progressError ? 0 : Math.min(100, Math.round(nextPage * 100 / pageCount))
-  const remaining = progressError ? null : pageCount - nextPage
+  const progress = progressError || unknownTotal ? null : Math.min(100, Math.round(nextPage * 100 / pageCount))
+  const remaining = progressError || unknownTotal ? null : pageCount - nextPage
   const genres = [...new Set([...(book.categories || []), ...(book.tropes || [])].map(item => typeof item === 'string' ? item : item?.name).filter(Boolean))]
 
   const saveProgress = async event => {
@@ -121,8 +148,8 @@ export default function LibraryBookPage() {
         totalSaved = true
       }
       if (pageChanged) {
-        if (nextPage === pageCount) await recordEvent(currentBook, 'finish', { page_count: pageCount })
-        else await recordEvent(currentBook, 'progress', { current_page: nextPage, page_count: pageCount })
+        if (!unknownTotal && nextPage === pageCount) await recordEvent(currentBook, 'finish', { page_count: pageCount })
+        else await recordEvent(currentBook, 'progress', { current_page: nextPage, page_count: unknownTotal ? null : pageCount })
       }
       setMessage('Avance guardado.')
     } catch (cause) {
@@ -145,6 +172,7 @@ export default function LibraryBookPage() {
         body: JSON.stringify(payload),
       })
       setExistingReview(saved)
+      setRatingBaseline(ratingSnapshot(ratings, comment, reviewVisibility))
       setMessage(reviewVisibility === 'public' ? 'Tu valoración quedó visible para la comunidad.' : 'Tu valoración quedó guardada de forma privada.')
     } catch { setError('No se pudo guardar la valoración.') }
     finally { setBusy(false) }
@@ -158,6 +186,7 @@ export default function LibraryBookPage() {
         method: 'PATCH', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },
         body: JSON.stringify(notebook),
       })
+      setNotebookBaseline(notebookSnapshot(notebook))
       setMessage('Tu cuaderno quedó guardado.')
     } catch { setError('No se pudo guardar el cuaderno.') }
     finally { setBusy(false) }
@@ -168,7 +197,9 @@ export default function LibraryBookPage() {
     try {
       await apiRequest(`/reviews/${existingReview.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
       setExistingReview(null); setComment('')
-      setRatings(Object.fromEntries(ratingDimensions.map(([key]) => [key, null])))
+      const emptyRatings = Object.fromEntries(ratingDimensions.map(([key]) => [key, null]))
+      setRatings(emptyRatings)
+      setRatingBaseline(ratingSnapshot(emptyRatings, '', 'public'))
       setMessage('Reseña y valoración eliminadas. Tu perfil se actualizará sin esa evidencia.')
     } catch { setError('No se pudo eliminar tu reseña.') }
     finally { setBusy(false) }
@@ -197,22 +228,38 @@ export default function LibraryBookPage() {
         </div>
         <form className="compact-progress-editor" aria-labelledby="reading-progress-title" aria-busy={Boolean(busy)} onSubmit={saveProgress}>
           <div className="compact-progress-visual">
-            <div className="compact-progress-heading"><h2 id="reading-progress-title"><BookOpen aria-hidden="true" />Tu progreso de lectura</h2><strong>{progressError ? '—' : `${progress}%`}</strong></div>
-            <progress className="compact-progress-bar" value={progress} max="100" aria-label="Porcentaje leído" />
-            <div className="compact-progress-caption"><p aria-live="polite">{progressError ? 'Revisa los datos de tu edición.' : `${nextPage} de ${pageCount} páginas`}</p>
+            <div className="compact-progress-heading"><h2 id="reading-progress-title"><BookOpen aria-hidden="true" />Tu progreso de lectura</h2><strong>{progress == null ? 'Sin total conocido' : `${progress}%`}</strong></div>
+            {progress != null && <progress className="compact-progress-bar" value={progress} max="100" aria-label="Porcentaje leído" />}
+            <div className="compact-progress-caption"><p aria-live="polite">{progressError ? 'Revisa los datos de tu lectura.' : unknownTotal ? `Página ${nextPage}; total desconocido` : `${nextPage} de ${pageCount} páginas`}</p>
               {book.status === 'Terminado' && <span className="reading-completed">¡Libro completado!<PartyPopper aria-hidden="true" /></span>}
             </div>
-            {!progressError && book.status !== 'Terminado' && <p className="compact-progress-remaining">Te quedan {remaining} páginas.</p>}
+            {!progressError && remaining != null && book.status !== 'Terminado' && <p className="compact-progress-remaining">Te quedan {remaining} páginas.</p>}
           </div>
           <div className="compact-progress-controls">
             <div className="compact-progress-fields">
               <label><span><BookOpen aria-hidden="true" />Página actual</span><input type="number" min="0" max={pageCount > 0 ? pageCount : undefined} step="1" required value={page} onChange={event => setPage(event.target.value)} disabled={Boolean(busy)} aria-describedby={progressError ? 'reading-progress-error' : undefined} /></label>
-              <label><span><FileText aria-hidden="true" />Total de tu edición</span><input type="number" min="1" max="100000" step="1" required value={total} onChange={event => setTotal(event.target.value)} disabled={Boolean(busy)} aria-describedby={progressError ? 'reading-progress-error' : undefined} /></label>
+              <label><span><FileText aria-hidden="true" />Total de esta lectura{book.editionOptional ? ' (opcional)' : ''}</span><input type="number" min="1" max="100000" step="1" required={!book.editionOptional} value={total} onChange={event => setTotal(event.target.value)} disabled={Boolean(busy)} aria-describedby={progressError ? 'reading-progress-error' : undefined} /></label>
             </div>
             <button className="button primary reading-save-progress" type="submit" title="Guardar avance" aria-label="Guardar avance" aria-busy={busy === 'Guardando avance de lectura…'} disabled={Boolean(busy) || Boolean(progressError) || (!totalChanged && !pageChanged)}><Save aria-hidden="true" /></button>
           </div>
           {progressError && <p className="compact-progress-error" id="reading-progress-error" role="status">{progressError}</p>}
         </form>
+        {book.editionOptional && ['Pendiente', 'Leyendo'].includes(book.status) && <button type="button" className="button secondary" disabled={Boolean(busy)} onClick={async () => {
+          setBusy('Finalizando lectura…'); setError(''); setMessage('')
+          try { await recordEvent(book, 'finish'); setMessage('Lectura finalizada.') }
+          catch (cause) { setError(cause.message || 'No se pudo finalizar la lectura.') }
+          finally { setBusy(false) }
+        }}>Finalizar lectura</button>}
+        {book.editionOptional && <details className="reading-attempt-history"><summary>Historial de intentos de lectura</summary>
+          {historyError && <p role="alert">{historyError}</p>}
+          <ul>{attempts.map(attempt => <li key={attempt.reading_id}>
+            {({ pending: 'Pendiente', reading: 'Leyendo', finished: 'Terminado', abandoned: 'Abandonado' })[attempt.status]}
+            {' · '}{attempt.started_at ? formatReadingDate(attempt.started_at) : 'Sin iniciar'}
+            {attempt.finished_at ? ` · Fin: ${formatReadingDate(attempt.finished_at)}` : ''}
+            {` · Página ${attempt.current_page}${attempt.total_pages == null ? '; total desconocido' : ` de ${attempt.total_pages}`}`}
+            {attempt.edition_id ? ' · Con edición seleccionada' : ' · Sin edición seleccionada'}
+          </li>)}</ul>
+        </details>}
       </div>
       <div className="reading-tropes"><h2><Tags aria-hidden="true" />Tropes y géneros</h2><div className="reading-genre-chips">{genres.length ? genres.map(genre => <span key={genre}>{genre}</span>) : <p>Sin géneros ni tropos informados.</p>}</div></div>
     </section>

@@ -115,5 +115,10 @@ class LocalOriginsTest(unittest.TestCase):
         self.assertEqual(Settings(frontend_origins='http://localhost:9999').cors_origins, ['http://localhost:9999'])
 
     def test_production_origin_is_not_expanded(self):
-        settings = Settings(app_env='production', jwt_secret='x' * 64, frontend_origins='https://libria.example')
+        settings = Settings(
+            app_env='production',
+            jwt_secret='x' * 64,
+            frontend_origins='https://libria.example',
+            gemini_free_test_mode=False,
+        )
         self.assertEqual(settings.cors_origins, ['https://libria.example'])

@@ -14,14 +14,13 @@ const errorMessage = (status, group) => ({
   422: 'Todavía no hay datos suficientes para esta interpretación.',
   429: 'Espera un minuto antes de generar otra interpretación.',
   502: 'La IA no pudo completar una interpretación válida de tus aportes. Vuelve a intentarlo.',
-  503: 'El modelo local no está disponible. Inicia Ollama en el servidor y vuelve a actualizar.',
+  501: 'Esta interpretación clásica aún no tiene un contrato Gemini aprobado.',
 }[status] || 'No se pudo obtener la interpretación. Puedes volver a intentarlo.')
 
 export default function AnalysisPanel({ group = false }) {
   const [data, setData] = useState(null)
   const [provenance, setProvenance] = useState('unclassified')
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const [completed, setCompleted] = useState('')
   const [refresh, setRefresh] = useState(0)
@@ -39,20 +38,6 @@ export default function AnalysisPanel({ group = false }) {
     return () => { active = false }
   }, [base, group, provenance, refresh])
 
-  async function generate() {
-    setGenerating(true)
-    setCompleted('')
-    setError('')
-    try {
-      const result = await apiRequest(`${base}/interpretation`, {
-        method: 'POST', headers: headers(), body: JSON.stringify({ provenance }),
-      })
-      setData(current => ({ ...current, interpretation: result }))
-      setCompleted('Interpretación completada. Tu análisis está listo.')
-    } catch (err) { setError(errorMessage(err.status, group)) }
-    finally { setGenerating(false) }
-  }
-
   const evidence = data?.evidence
   const interpretation = data?.interpretation
   const content = interpretation?.content
@@ -61,10 +46,10 @@ export default function AnalysisPanel({ group = false }) {
     <span className="kicker">{group ? 'AUTORES · EDITORIALES · LIBRERÍAS' : 'MIS ANÁLISIS'}</span>
     <h1 className="page-title">{group ? 'Pulso de la comunidad' : 'Tu ADN lector'}</h1>
     <p className="page-lead">{group ? 'Una interpretación de la actividad agregada para orientar iniciativas de lectura.' : 'Una interpretación de tus registros de lectura, basada en los datos preparados por el ETL.'}</p>
-    <div className="insights-toolbar"><label>Datos que deseas consultar<select value={provenance} disabled={generating} onChange={event => setProvenance(event.target.value)}>
+    <div className="insights-toolbar"><label>Datos que deseas consultar<select value={provenance} disabled={loading} onChange={event => setProvenance(event.target.value)}>
       {Object.entries(provenanceLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-    </select></label><button className="button secondary" disabled={loading || generating} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={17} /> Actualizar datos</button></div>
-    <ActionStatus busy={loading || generating} message={loading ? 'Consultando tus datos…' : generating ? 'Ollama está analizando tus registros. La primera ejecución puede tardar unos minutos…' : error ? '' : completed} error={error} floating />
+    </select></label><button className="button secondary" disabled={loading} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={17} /> Actualizar datos</button></div>
+    <ActionStatus busy={loading} message={loading ? 'Consultando datos y resultados persistidos…' : error ? '' : completed} error={error} floating />
     {data && !evidence && <article className="analysis-card"><BrainCircuit /><h2>{group ? 'Todavía no podemos publicar este conjunto' : 'Todavía no hay registros analíticos propios'}</h2>
       <p>{group ? `El resumen requiere al menos ${data.minimum_participants} participantes de la misma procedencia. Los grupos pequeños no se muestran.` : 'Registra actividad y espera una nueva carga del ETL. No se generan datos de ejemplo.'}</p></article>}
     {evidence && <>
@@ -84,14 +69,12 @@ export default function AnalysisPanel({ group = false }) {
           {Object.entries(item.notebook || {}).map(([key, value]) => value && <p key={key} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}><strong>{{ characters: 'Personajes', places: 'Sitios', summary: 'Resumen' }[key]}: </strong>{value}</p>)}
         </article>)}
       </details>}
-      <article className="analysis-card insights-interpretation"><div className="insights-title"><h2><Sparkles size={22} /> Interpretación con IA local</h2><button className="button primary" disabled={generating || !data.ai_ready} onClick={generate}>{generating ? 'Interpretando…' : content ? 'Consultar interpretación' : 'Generar interpretación'}</button></div>
-        {!data.ai_ready && <p className="notice">El modelo local todavía no está disponible en el servidor.</p>}
-        {generating && <p role="status">Ollama está interpretando los indicadores. La primera ejecución puede tardar mientras carga el modelo.</p>}
-        {!content && !generating && <p>Genera una interpretación de {group ? 'este resumen agregado' : 'tus indicadores'}. Los datos se procesan en este equipo.</p>}
+      <article className="analysis-card insights-interpretation"><div className="insights-title"><h2><Sparkles size={22} /> Interpretación persistida</h2></div>
+        {!content && <p className="notice">La interpretación {group ? 'grupal' : 'clásica personal'} todavía no tiene equivalente Gemini aprobado. Los indicadores ETL siguen disponibles y no se envían al proveedor.</p>}
         {content && <><h3>{content.title}</h3><p>{content.summary}</p>
           <ul className="insights-observations">{content.observations.map((item, index) => <li key={index}><strong>{evidence.metrics[item.metric]?.label}: {evidence.metrics[item.metric]?.value}</strong><p>{item.interpretation}</p></li>)}</ul>
           {content.suggestions.length > 0 && <><h3>{group ? 'Iniciativas que puedes explorar' : 'Sugerencias para tus próximas lecturas'}</h3><ul>{content.suggestions.map((item, index) => <li key={index}>{item}</li>)}</ul></>}
-          <small>Generada el {formatDate(interpretation.created_at)} con Ollama · {interpretation.model}. La IA puede equivocarse; las cifras mostradas provienen del ETL.</small>
+          <small>Resultado histórico generado el {formatDate(interpretation.created_at)} · {interpretation.provider} · {interpretation.model}. No se regenera desde esta pantalla.</small>
         </>}
       </article>
       <details className="insights-limits"><summary>Alcance de esta interpretación</summary><ul>{[...new Set([...evidence.limitations, ...(content?.limitations || [])])].map((item, index) => <li key={index}>{item}</li>)}</ul>

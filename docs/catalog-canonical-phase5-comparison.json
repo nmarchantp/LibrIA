@@ -1,0 +1,109 @@
+{
+  "scope": "synthetic_owned_postgresql_http_and_etl",
+  "classification": "expected_change",
+  "scenarios": {
+    "same_title_author_without_confirmation": {
+      "legacy": {
+        "groups": [
+          "A",
+          "B"
+        ],
+        "public_reviews": 2,
+        "rating": "1",
+        "rated_readers": 1,
+        "statistics": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_memberships": 2,
+        "profile_books": 1,
+        "profile_work_ids": [
+          "A"
+        ],
+        "etl_finished_attempts": 2,
+        "etl_review_work_ids": [
+          "A",
+          "B"
+        ]
+      },
+      "confirmed": {
+        "groups": [
+          "A"
+        ],
+        "public_reviews": 1,
+        "rating": "5",
+        "rated_readers": 1,
+        "statistics": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_memberships": 2,
+        "profile_books": 1,
+        "profile_work_ids": [
+          "A"
+        ],
+        "etl_finished_attempts": 2,
+        "etl_review_work_ids": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    "confirmed_redirect_same_reader_low_latest_rating": {
+      "legacy": {
+        "groups": [
+          "A",
+          "B"
+        ],
+        "public_reviews": 2,
+        "rating": "1",
+        "rated_readers": 1,
+        "statistics": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_memberships": 1,
+        "profile_books": 1,
+        "profile_work_ids": [
+          "A"
+        ],
+        "etl_finished_attempts": 2,
+        "etl_review_work_ids": [
+          "A",
+          "B"
+        ]
+      },
+      "confirmed": {
+        "groups": [
+          "A",
+          "B"
+        ],
+        "public_reviews": 1,
+        "rating": "1",
+        "rated_readers": 1,
+        "statistics": {
+          "finished": 1,
+          "reading": 0,
+          "abandoned": 0
+        },
+        "library_memberships": 1,
+        "profile_books": 0,
+        "profile_work_ids": [],
+        "etl_finished_attempts": 2,
+        "etl_review_work_ids": [
+          "B"
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Title/author coincidence splits without confirmed evidence; both physical works and reviews remain.",
+    "Confirmed redirect selects latest review before visibility and rating filters; rereads stay separate.",
+    "Phase 3 library already used confirmed grouping, unlike legacy reviews; unchanged counts are expected.",
+    "No anonymized persistent dataset was authorized or accessed."
+  ],
+  "comparison_sha256": "1f00dc63ef64003b622a70ee4148a1ab26b92043fd673c35953f0b1dc1f567f8"
+}

@@ -127,7 +127,9 @@ def build_indicators(readers,catalog,cutoff):
 def community_release(db):
     day=datetime.now(timezone.utc).astimezone(ZONE).date()
     cached=db.execute(text('SELECT payload FROM analytics.community_releases WHERE release_date=:day'),{'day':day}).scalar()
-    if cached is not None:
+    from app.modules.books.canonical import enabled, identity_snapshot
+    snapshot = identity_snapshot(db) if enabled() else None
+    if cached is not None and cached.get('identity_version') == (snapshot.version if snapshot else None):
         return cached
     from app.modules.analytics.projections import refresh_pending
     refresh_pending(db)
@@ -135,13 +137,20 @@ def community_release(db):
       JOIN analytics.projection_runs r ON r.id=c.run_id''')).all()
     catalog={str(r['work_id']):{'title':r['payload']['editions'][0]['metadata']['title'],'categories':r['payload']['categories']}
              for r in db.execute(text('SELECT * FROM analytics.catalog_current')).mappings()}
+    if snapshot:
+        catalog = {str(r['id']):{'title':r['title'],'categories':r['categories'] or []} for r in db.execute(text('SELECT id,title,categories FROM app.obras')).mappings()
+                   if snapshot.root(r['id']) == r['id']}
     cutoff=datetime.combine(day,datetime.min.time(),ZONE).astimezone(timezone.utc)
     payload=build_indicators(rows,catalog,cutoff)
+    if snapshot:
+        payload['identity_version'] = snapshot.version
     # Do not cache an empty/small cohort; later ETL additions can make it eligible.
     if payload['status']=='ready':
         db.execute(text('''INSERT INTO analytics.community_releases(release_date,payload,source_run_ids)
           VALUES(:day,CAST(:payload AS jsonb),ARRAY(SELECT run_id FROM analytics.reader_current))
           ON CONFLICT DO NOTHING'''),{'day':day,'payload':json.dumps(payload)})
-        payload=db.execute(text('SELECT payload FROM analytics.community_releases WHERE release_date=:day'),{'day':day}).scalar_one()
+        stored=db.execute(text('SELECT payload FROM analytics.community_releases WHERE release_date=:day'),{'day':day}).scalar_one()
+        if stored.get('identity_version') == (snapshot.version if snapshot else None):
+            payload=stored
     db.commit()
     return payload

@@ -14,6 +14,7 @@ import MessagesPage from './pages/MessagesPage'
 import NotificationsPage from './pages/NotificationsPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import AdminGate from './components/AdminGate'
+import AdminCatalogPage from './pages/AdminCatalogPage'
 import AdminProfilesPage from './pages/AdminProfilesPage'
 import AdminEtlPage from './pages/AdminEtlPage'
 import GroupInsightsPage from './pages/GroupInsightsPage'
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="/profiles/:profileId" element={<CommunityProfilePage />} />
       <Route element={<AdminGate />}><Route path="/admin/profiles" element={<AdminProfilesPage />} /></Route>
       <Route element={<AdminGate />}><Route path="/admin/etl" element={<AdminEtlPage />} /></Route>
+      <Route element={<AdminGate />}><Route path="/admin/catalog" element={<AdminCatalogPage />} /></Route>
       <Route path="/books" element={<BooksPage />} />
       <Route path="/books/:id" element={<BookDetailPage />} />
       <Route path="/library" element={<Navigate to="/profile?tab=library" replace />} />

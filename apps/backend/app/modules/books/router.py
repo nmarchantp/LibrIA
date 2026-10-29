@@ -10,6 +10,7 @@ from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from app.core.database import get_db
+from app.core.config import get_settings
 from app.modules.books.google_books import google_request, safe_volume_info, valid_volume
 from app.modules.books import open_library
 from app.modules.books.open_library_catalog import ensure_edition, present as present_open_library
@@ -36,6 +37,8 @@ def publication_sort_key(value):
 
 
 def store_volume(db, item, complete=False):
+    from app.modules.books.policy import reject_legacy_writer
+    reject_legacy_writer()
     external_id = item.get("id")
     info = safe_volume_info(item)
     if not external_id or not isinstance(info, dict):
@@ -147,6 +150,11 @@ def is_spanish(value):
 
 
 def source_payload(db, source):
+    editorial = db.scalar(select(CatalogSource).where(CatalogSource.edition_id == source.edition_id,
+        CatalogSource.provider == 'libria-editorial'))
+    if editorial:
+        return {**(source.payload or {}), "id": source.external_id,
+                "volumeInfo": {**((source.payload or {}).get('volumeInfo') or {}), **editorial.payload['volumeInfo']}}
     if source.payload:
         return source.payload
     edition = db.get(Edition, source.edition_id)
@@ -161,8 +169,38 @@ def source_payload(db, source):
         "imageLinks": {"thumbnail": edition.cover_url} if edition.cover_url else {}}}
 
 
-def work_payload(db, work_id, preferred_source=None, include_reading_stats=False):
-    work_ids = equivalent_work_ids(db, work_id) or {work_id}
+def work_payload(db, work_id, preferred_source=None, include_reading_stats=False, preferred_edition_id=None):
+    canonical_mode = get_settings().catalog_discovery_enabled
+    if canonical_mode:
+        from app.modules.books.canonical import canonical_members, resolve_canonical_work
+        work_id = resolve_canonical_work(db, work_id).canonical_work_id
+        work_ids = canonical_members(db, work_id)
+    else:
+        work_ids = equivalent_work_ids(db, work_id) or {work_id}
+    if get_settings().catalog_editionless_enabled and not preferred_source and not preferred_edition_id:
+        work = db.get(Work, work_id)
+        editions = db.scalars(select(Edition).where(Edition.work_id.in_(work_ids)).order_by(Edition.created_at, Edition.id)).all()
+        cover = next((edition.cover_url for edition in editions if edition.cover_url), None)
+        if not cover:
+            for source in db.scalars(select(CatalogSource).where(CatalogSource.edition_id.in_([e.id for e in editions])).order_by(CatalogSource.id)):
+                images = safe_volume_info(source.payload or {}).get("imageLinks") or {}
+                cover = images.get("thumbnail") or images.get("smallThumbnail")
+                if cover:
+                    break
+        members = db.scalars(select(Work).where(Work.id.in_(work_ids)).order_by(Work.created_at, Work.id)).all()
+        description = work.description or next((member.description for member in members if member.description), None)
+        average, count = public_rating(db, work_ids)
+        return {"id": str(work_id), "volumeInfo": {"title": work.title, "description": description,
+            "imageLinks": {"thumbnail": cover} if cover else {},
+            "categories": work.categories or [], "authors": db.scalars(select(Author.name).join(WorkAuthor,
+                Author.id == WorkAuthor.author_id).where(WorkAuthor.work_id == work_id)).all()},
+            "libria": {"workId": str(work_id), "editionId": None, "editionOptional": True,
+                "catalogOrigin": "libria", "catalogFlow": "discovery-v1", "editionCount": len(editions),
+                "averageRating": float(average) if average is not None else None, "ratingsCount": count,
+                "readingStats": reading_statistics(db, work_ids),
+                "editions": [{"id": str(e.id), "title": e.title, "language": e.language,
+                    "pageCount": e.page_count, "publisher": e.publisher_name, "coverUrl": e.cover_url,
+                    "format": e.format, "isbn10": e.isbn10, "isbn13": e.isbn13} for e in editions]}}
     all_rows = db.execute(select(CatalogSource, Edition).join(Edition, CatalogSource.edition_id == Edition.id)
         .where(Edition.work_id.in_(work_ids))).all()
     priority = {"google-books": 0, "open-library": 1, "libria-feed": 2}
@@ -171,12 +209,25 @@ def work_payload(db, work_id, preferred_source=None, include_reading_stats=False
         chosen.setdefault(edition.id, (source, edition))
     rows = list(chosen.values())
     if not rows:
+        if canonical_mode:
+            work = db.get(Work, work_id)
+            editions = db.scalars(select(Edition).where(Edition.work_id.in_(work_ids)).order_by(Edition.created_at, Edition.id)).all()
+            edition = next((e for e in editions if e.id == preferred_edition_id), None) or (editions[0] if editions else None)
+            return {"id": str(work_id), "volumeInfo": {"title": edition.title if edition else work.title,
+                    "description": work.description, "categories": work.categories or [],
+                    "authors": db.scalars(select(Author.name).join(WorkAuthor, Author.id == WorkAuthor.author_id).where(WorkAuthor.work_id == work_id)).all()},
+                    "libria": {"workId": str(work_id), "editionId": str(edition.id) if edition else None,
+                    "catalogOrigin": "libria", "catalogFlow": "discovery-v1", "editionCount": len(editions),
+                    "editions": [{"id": str(e.id), "title": e.title, "language": e.language,
+                                  "pageCount": e.page_count, "publisher": e.publisher_name} for e in editions]}}
         return None
     localized = next(((source, edition) for source, edition in rows
                       if is_spanish(edition.language)), None)
     preferred = next(((source, edition) for source, edition in rows
                       if source.external_id == preferred_source), None)
-    source, edition = (preferred if preferred and is_spanish(preferred[1].language) else None) or localized or preferred or rows[0]
+    if canonical_mode and preferred_edition_id:
+        preferred = next(((source, edition) for source, edition in rows if edition.id == preferred_edition_id), preferred)
+    source, edition = (preferred if preferred and (canonical_mode or is_spanish(preferred[1].language)) else None) or localized or preferred or rows[0]
     payload = source_payload(db, source)
     editions = [{"id": str(row_edition.id), "externalId": ('openlibrary:' if row_source.provider == 'open-library' else '') + row_source.external_id,
                  "title": row_edition.title, "language": row_edition.language,
@@ -193,7 +244,8 @@ def work_payload(db, work_id, preferred_source=None, include_reading_stats=False
     reading_stats = reading_statistics(db, work_ids) if include_reading_stats else None
     return {**payload, "id": str(work_id), "libria": {**payload.get('libria', {}), "workId": str(work_id),
             "editionId": str(edition.id), "externalId": ('openlibrary:' if source.provider == 'open-library' else '') + source.external_id,
-            "catalogOrigin": {"google-books": "google_books", "open-library": "open_library"}.get(source.provider, "libria"),
+            **({"catalogFlow": "discovery-v1", "editionOptional": get_settings().catalog_editionless_enabled} if canonical_mode else {}),
+            "catalogOrigin": "libria", "sourceProvider": source.provider,
             "editionCount": len({row_edition.id for _, row_edition in rows}), "editions": editions,
             "firstPublicationDate": first_publication_date,
             "originalPublicationVerified": first_publication_date is not None,
@@ -231,9 +283,25 @@ def local_works(db, query, search_by, limit=40):
     works = {}
     for source, edition in rows:
         works.setdefault(edition.work_id, source.external_id)
+    if get_settings().catalog_editionless_enabled:
+        statement = select(Work.id)
+        if query:
+            pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            author_match = select(WorkAuthor.work_id).join(Author, WorkAuthor.author_id == Author.id).where(Author.name.ilike(pattern, escape="\\"))
+            if search_by == "isbn":
+                statement = statement.where(Work.id.in_(select(Edition.work_id).where(or_(Edition.isbn10 == query, Edition.isbn13 == query))))
+            else:
+                statement = statement.where(Work.id.in_(author_match) if search_by == "author" else
+                    or_(Work.title.ilike(pattern, escape="\\"), Work.id.in_(author_match)) if search_by == "all" else Work.title.ilike(pattern, escape="\\"))
+        for key in db.scalars(statement.order_by(Work.title, Work.id).limit(1000)):
+            works[key] = None  # a work result never selects the first edition
     items, seen = [], set()
     for work_id, external_id in works.items():
-        group = equivalent_work_ids(db, work_id) or {work_id}
+        if get_settings().catalog_discovery_enabled:
+            from app.modules.books.canonical import canonical_members
+            group = canonical_members(db, work_id)
+        else:
+            group = equivalent_work_ids(db, work_id) or {work_id}
         if group & seen:
             continue
         seen.update(group)
@@ -297,6 +365,9 @@ def search_books(response: Response, db: Annotated[Session, Depends(get_db)], q:
                  page: int = Query(default=1, ge=1, le=1000)):
     response.headers["Cache-Control"] = "no-store"
     query = q.strip()
+    if get_settings().catalog_discovery_enabled:
+        from app.modules.books.discovery import search
+        return search(db, query, search_by, provider, refresh, start_index, page)
     google_query = ({"author": "inauthor:", "isbn": "isbn:"}.get(search_by, "") + query)
     key = "es-only-v4:" + search_by + ":" + query.casefold() + ":" + provider + ":" + str(page if provider == "open_library" else start_index)
     consolidate_catalog_matches(db, query, search_by)
@@ -382,6 +453,9 @@ def search_books(response: Response, db: Annotated[Session, Depends(get_db)], q:
 @router.get("/{volume_id}")
 def get_book(volume_id: str, response: Response, db: Annotated[Session, Depends(get_db)]):
     response.headers["Cache-Control"] = "no-store"
+    if get_settings().catalog_discovery_enabled:
+        from app.modules.books.discovery import detail
+        return detail(db, volume_id)
     if volume_id.startswith("openlibrary:"):
         edition = ensure_edition(db, volume_id)
         db.commit()

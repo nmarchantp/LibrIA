@@ -5,6 +5,13 @@ const localUrl = new URL(configuredUrl, window.location.origin)
 if (import.meta.env.DEV && localUrl.protocol === 'http:' && localUrl.hostname === 'localhost') localUrl.hostname = '127.0.0.1'
 export const API_URL = localUrl.href.replace(/\/$/, '')
 
+let authSession = null
+
+export function configureAuthSession(handlers) {
+  authSession = handlers
+  return () => { if (authSession === handlers) authSession = null }
+}
+
 export function apiUrl(path) {
   return `${API_URL}${path}`
 }
@@ -21,11 +28,24 @@ export async function apiRequest(path, options = {}) {
     error.code = 'backend_connection'
     throw error
   }
+  if (response.status === 401 && !options.__sessionRetry && authSession &&
+      !['/auth/login', '/auth/register', '/auth/refresh', '/auth/google/session'].includes(path)) {
+    try {
+      const token = await authSession.refresh()
+      if (token) {
+        return apiRequest(path, { ...options, __sessionRetry: true,
+          headers: { ...headers, Authorization: `Bearer ${token}` } })
+      }
+    } catch {
+      // The original 401 is converted below; the session owner clears state.
+    }
+  }
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const error = new Error(typeof payload?.detail === 'string' ? payload.detail : payload?.detail?.message || 'No fue posible completar la solicitud')
     error.code = payload?.detail?.code
     error.status = response.status
+    if (response.status === 401 && authSession) authSession.unauthorized(error)
     throw error
   }
   const data = response.status === 204 ? null : await response.json()

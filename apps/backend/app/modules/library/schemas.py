@@ -9,12 +9,21 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from app.modules.social.schemas import PostResponse
 
 
+class ExternalBookReference(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider: Literal["google-books", "open-library"]
+    reference_type: Literal["volume", "edition"]
+    external_id: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+
+
 class LibraryBookCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     book_ref: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     book_title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     page_count: int | None = Field(default=None, ge=1, le=100000)
     edition_id: uuid.UUID | None = None
+    external_reference: ExternalBookReference | None = None
+    edition_selected: bool = False
 
 
 class ReadingReflection(BaseModel):
@@ -37,7 +46,7 @@ class ReadingEventCreate(LibraryBookCreate):
     reflection: ReadingReflection | None = None
     reading_id: uuid.UUID | None = None
     share: bool = False
-    page_count: int = Field(ge=1, le=100000)
+    page_count: int | None = Field(default=None, ge=1, le=100000)
     event: Literal["start", "progress", "correction", "finish", "abandon"]
     current_page: int | None = Field(default=None, ge=0)
     abandonment_reason: str | None = Field(default=None, max_length=1000)
@@ -62,12 +71,12 @@ class ReadingEventResponse(BaseModel):
     reflection: dict | None = None
     reading_id: uuid.UUID
     work_id: uuid.UUID
-    edition_id: uuid.UUID
+    edition_id: uuid.UUID | None
     event_id: uuid.UUID
     current_page: int
-    total_pages: int
+    total_pages: int | None
     status: str
-    progress_percent: int
+    progress_percent: int | None
     post: PostResponse | None = None
 
 
@@ -76,13 +85,14 @@ class ReadingState(BaseModel):
     catalog_volume: dict | None = None
     reading_id: uuid.UUID
     work_id: uuid.UUID
-    edition_id: uuid.UUID
+    edition_id: uuid.UUID | None
     book_ref: str
     book_title: str
     status: str
     current_page: int
     total_pages: int | None
-    progress_percent: int
+    progress_percent: int | None
+    edition_optional: bool = False
     started_at: datetime | None = None
     finished_at: datetime | None = None
     notebook: dict = Field(default_factory=dict)
@@ -91,6 +101,11 @@ class ReadingState(BaseModel):
 class ReadingTotalUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     total_pages: int = Field(ge=1, le=100000)
+
+
+class ReadingEditionUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    edition_id: uuid.UUID
 
 
 class ReadingNotebookUpdate(BaseModel):

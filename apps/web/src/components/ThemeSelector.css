@@ -17,6 +17,12 @@
 .visual-effects-setting { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:16px; }
 .visual-effects-setting label { color:var(--ink); font-weight:700; cursor:pointer; }
 .visual-effects-setting p { margin:6px 0 0; }
+.visual-effects-motion { border-top:1px solid var(--line); }
+.visual-effects-motion p strong { display:block; margin-bottom:2px; color:var(--ink); }
+.visual-effects-motion p span { display:block; }
+.visual-effects-motion.is-disabled { opacity:.55; }
+.visual-effects-switch input:disabled { cursor:not-allowed; }
+.visual-effects-switch input:disabled + span { opacity:.6; }
 .visual-effects-switch { position:relative; flex:0 0 48px; width:48px; height:28px; }
 .visual-effects-switch input { position:absolute; inset:0; z-index:1; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
 .visual-effects-switch > span { display:block; width:100%; height:100%; border:1px solid var(--line); border-radius:999px; background:var(--secondary); }

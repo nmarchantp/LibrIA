@@ -1,0 +1,171 @@
+{
+  "version": 2,
+  "source": {
+    "requested_id": "c861d093-8446-4131-a785-a3892d1a8f28",
+    "canonical_id": "c861d093-8446-4131-a785-a3892d1a8f28",
+    "member_ids": [
+      "c861d093-8446-4131-a785-a3892d1a8f28"
+    ],
+    "works": [
+      {
+        "id": "c861d093-8446-4131-a785-a3892d1a8f28",
+        "title": "Optional edition 1931f4d64fee4732a46778aa121a360a",
+        "original_language": null,
+        "first_publication_date": null,
+        "series_title": null,
+        "volume_number": null
+      }
+    ],
+    "alternate_titles": [],
+    "authors": [
+      {
+        "work_id": "c861d093-8446-4131-a785-a3892d1a8f28",
+        "id": "8f339d61-6e3c-466e-8000-f206b358f1fe",
+        "name": "Shared synthetic author"
+      }
+    ],
+    "editions": [
+      {
+        "id": "aed887dc-779b-4317-9817-dd25e2ddbd95",
+        "work_id": "c861d093-8446-4131-a785-a3892d1a8f28",
+        "title": "Optional edition 1931f4d64fee4732a46778aa121a360a",
+        "language": "es",
+        "isbn10": null,
+        "isbn13": null,
+        "publisher_name": null,
+        "publication_date": null,
+        "publication_year": null,
+        "format": null,
+        "isbn_status": "absent"
+      }
+    ],
+    "references": [],
+    "sources": []
+  },
+  "target": {
+    "requested_id": "77684a61-71bc-4272-94f9-e2cbc4a5e486",
+    "canonical_id": "77684a61-71bc-4272-94f9-e2cbc4a5e486",
+    "member_ids": [
+      "77684a61-71bc-4272-94f9-e2cbc4a5e486"
+    ],
+    "works": [
+      {
+        "id": "77684a61-71bc-4272-94f9-e2cbc4a5e486",
+        "title": "Optional edition 1931f4d64fee4732a46778aa121a360a",
+        "original_language": null,
+        "first_publication_date": null,
+        "series_title": null,
+        "volume_number": null
+      }
+    ],
+    "alternate_titles": [],
+    "authors": [
+      {
+        "work_id": "77684a61-71bc-4272-94f9-e2cbc4a5e486",
+        "id": "8f339d61-6e3c-466e-8000-f206b358f1fe",
+        "name": "Shared synthetic author"
+      }
+    ],
+    "editions": [
+      {
+        "id": "2d1805d9-9d55-47e4-8ece-ac68afb68da3",
+        "work_id": "77684a61-71bc-4272-94f9-e2cbc4a5e486",
+        "title": "Optional edition 1931f4d64fee4732a46778aa121a360a",
+        "language": "es",
+        "isbn10": null,
+        "isbn13": null,
+        "publisher_name": null,
+        "publication_date": null,
+        "publication_year": null,
+        "format": null,
+        "isbn_status": "absent"
+      }
+    ],
+    "references": [],
+    "sources": []
+  },
+  "identity_version": "confirmed-v1:643d5437104296e21d906ecb15b2c96ad278f20cfc4af53b12bb6069bd853726",
+  "evidence": {
+    "confirmed_relationships": {},
+    "candidates": [
+      "matching_title_not_identity"
+    ],
+    "contradictions": [],
+    "automatic_merge_allowed": false
+  },
+  "conflicts": [],
+  "impact": {
+    "library_entries": 0,
+    "shared_libraries": 0,
+    "unique_readers": 0,
+    "active_library_entries": 0,
+    "archived_library_entries": 0,
+    "reading_attempts": 0,
+    "rereads": 0,
+    "editions": 2,
+    "reviews": 0,
+    "ratings": 0,
+    "review_states": {},
+    "reviews_without_body": [],
+    "stored_analytical_rows": {
+      "analytics.catalog_current": 0,
+      "analytics.catalogo_obras": 0,
+      "analytics.dirty_catalog": 2,
+      "analytics.dirty_readers": 0,
+      "analytics.evidencia_lectora_personal": 0,
+      "analytics.hechos_lectura": 0,
+      "analytics.hechos_publicaciones": 0,
+      "analytics.hechos_reflexiones": 0,
+      "analytics.hechos_resenas": 0,
+      "analytics.indicadores_personales": 0,
+      "analytics.interpretaciones_ia": 0,
+      "analytics.peer_releases": 0,
+      "analytics.preparacion_valoraciones_obras": 0,
+      "analytics.projection_runs": 0,
+      "analytics.reader_current": 0,
+      "analytics.recomendaciones_ia": 0,
+      "ia.analyses": 0,
+      "ia.evidence": 0,
+      "ia.feedback": 0,
+      "ia.interpretaciones_ia": 0,
+      "ia.jobs": 0,
+      "ia.reader_dna": 0,
+      "ia.reader_profile_etl_states": 0,
+      "ia.reader_profile_versions": 0,
+      "ia.recomendaciones_ia": 0
+    },
+    "invalidation": {
+      "reader_statistics": 0,
+      "reader_profiles": 0,
+      "recommendations": 0,
+      "catalog_projections": [
+        "c861d093-8446-4131-a785-a3892d1a8f28",
+        "77684a61-71bc-4272-94f9-e2cbc4a5e486"
+      ],
+      "etl": "Rebuild coherent canonical snapshot; preserve historical runs",
+      "global_identity_version": "All versioned caches become stale; do not call Gemini"
+    }
+  },
+  "decisions": [
+    "Confirm bibliographic evidence independently",
+    "Resolve shared memberships preserving attempts",
+    "Resolve each review collision explicitly without making private content public",
+    "Define reversible append-only execution and handling of subsequent activity"
+  ],
+  "expected_effects": {
+    "canonical_work_count_delta": -1,
+    "physical_work_count_delta": 0,
+    "retained_reading_attempts": 0,
+    "retained_review_histories": 0,
+    "projected_rereads": 0,
+    "effective_library_memberships": 0,
+    "current_review_slots": 0,
+    "rating_result": "No profile collisions",
+    "historical_uuid_policy": "Preserve all UUIDs and store confirmed redirects only in a future authorized phase"
+  },
+  "execution_available": false,
+  "preview_id": "d651d554-cef8-4aa7-b721-17bc0e65323f",
+  "fingerprint": "0055b0e4c26c7c53a7dc934dcaf69af0a0696e5ef952222ec3b0d8f783e08ce5",
+  "created_at": "2026-10-29T13:41:17.040822+00:00",
+  "expires_at": "2026-10-29T13:56:17.040822+00:00"
+}

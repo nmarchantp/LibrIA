@@ -1,5 +1,7 @@
 """Contratos de entrada y salida de Auth."""
 
+from datetime import datetime
+import uuid
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 from app.modules.users.schemas import UserResponse
@@ -29,3 +31,14 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+    session_id: uuid.UUID
+    inactivity_expires_at: datetime
+    absolute_expires_at: datetime
+    refresh_token: str = Field(exclude=True, repr=False)
+
+
+class SessionStatus(BaseModel):
+    session_id: uuid.UUID
+    inactivity_expires_at: datetime
+    absolute_expires_at: datetime
+    recommendation_status: str | None = None

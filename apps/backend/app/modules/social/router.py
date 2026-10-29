@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import ValidationError
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, or_, select, cast, Text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 from starlette.datastructures import UploadFile
@@ -95,9 +95,11 @@ def as_review_response(db: Session, review: Review) -> PostResponse:
 
 def as_reading_response(event: ReadingEvent, title: str, author: User,
                         book_ref: str | None = None, cover_url: str | None = None) -> PostResponse:
-    percent = round(event.page * 100 / event.total_pages)
+    percent = round(event.page * 100 / event.total_pages) if event.total_pages else None
     body = {"start": f'Comenzó a leer "{title}".', "progress": f'Llegó al {percent} % de "{title}".',
             "finish": f'Terminó "{title}".', "abandon": f'Abandonó "{title}".'}.get(event.kind, "")
+    if event.kind == "progress" and percent is None:
+        body = f'Llegó a la página {event.page} de "{title}".'
     return PostResponse(id=event.id, feed_item_type="reading_event", user_id=author.id,
                         author=author.display_name, author_role=author.role, source="reading", kind="progress",
                         title=None, body=body, book_ref=book_ref, book_title=title, book_cover_url=cover_url, rating=None,
@@ -245,10 +247,10 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
     shared_abandonment = select(shared_event.id).where(
         shared_event.reading_id == Reading.id, shared_event.kind == "abandon",
         shared_event.is_public).correlate(Reading).exists()
-    events = db.execute(select(ReadingEvent, Work.title, User, book_reference, Edition.cover_url)
+    events = db.execute(select(ReadingEvent, Work.title, User, func.coalesce(book_reference, cast(Reading.work_id, Text)), Edition.cover_url)
                         .join(Reading, Reading.id == ReadingEvent.reading_id)
                         .join(Work, Work.id == Reading.work_id)
-                        .join(Edition, Edition.id == Reading.edition_id)
+                        .outerjoin(Edition, Edition.id == Reading.edition_id)
                         .join(User, User.id == ReadingEvent.actor_user_id)
                         .where(ReadingEvent.is_public,
                                or_(Reading.status != "abandoned", shared_abandonment))
@@ -257,6 +259,10 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
                  for event, title, author, reference, cover in events)
     reviews = db.scalars(select(Review).where(Review.status == "published")
                          .order_by(Review.published_at.desc(), Review.id.desc()).limit(limit)).all()
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        reviews = current_reviews(db, public=True)[:limit]
     review_ids = [review.id for review in reviews]
     review_counts = dict(db.execute(select(ReviewLike.review_id, func.count())
                                    .where(ReviewLike.review_id.in_(review_ids)).group_by(ReviewLike.review_id)).all()) if review_ids else {}

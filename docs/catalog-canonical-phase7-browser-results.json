@@ -1,0 +1,28 @@
+{
+  "http_mocked": false,
+  "database": "local development libria",
+  "marker": "3b5e6851ffb6",
+  "steps": [
+    "Actual login with reader-role account and effective administrator permission",
+    "Created library memberships, selected editions, reading attempts, progress and two reviews through real REST",
+    "Compared, simulated, explicitly chose older review and destination metadata, then confirmed fusion in UI",
+    "Verified canonical detail, one membership, both reading attempts, selected public review, rating 5 and one active reader",
+    "Verified real public search returns canonical work and historical detail URL navigates to canonical URL",
+    "Simulated and confirmed controlled reversal in UI; verified original work identities, memberships and reviews"
+  ],
+  "public_search": {
+    "canonical_results": 1,
+    "partial": false,
+    "active_provider": "open_library"
+  },
+  "merge_operation_id": "94b581d8-c8a6-4a71-b06f-50524c9a0a1c",
+  "success": true,
+  "reading_ids": [
+    "0b4b91c9-8b43-4f85-9f95-853346148187",
+    "aa327bf3-6aff-4e75-a902-af0dd032f0e9"
+  ],
+  "review_ids": [
+    "4248b5ec-478d-4a81-abe0-4b69d49e26d6",
+    "e151e65b-a0a1-4a8e-b5c8-0a0cbfd52c45"
+  ]
+}

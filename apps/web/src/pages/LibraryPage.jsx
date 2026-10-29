@@ -31,7 +31,7 @@ export default function LibraryPage() {
   }, [notice])
   const changeStatus = async (book, status) => {
     setError('')
-    if (status === 'Terminado' || (status === 'Leyendo' && !book.pageCount)) {
+    if (status === 'Terminado' || (status === 'Leyendo' && !book.pageCount && !book.editionOptional)) {
       closeManagement()
       navigate(`/library/${encodeURIComponent(book.id)}`)
       return

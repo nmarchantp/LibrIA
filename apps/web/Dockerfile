@@ -15,6 +15,8 @@ CMD ["npm", "run", "dev"]
 
 # Construcción: convierte React en HTML, CSS y JavaScript optimizados en /app/dist.
 FROM dependencies AS build
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
 COPY . .
 RUN npm run build
 

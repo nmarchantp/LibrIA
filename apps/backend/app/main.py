@@ -1,9 +1,12 @@
-"""Punto de entrada del único servidor FastAPI de LibrIA."""
+"""Punto de entrada HTTP de LibrIA.
 
-import asyncio
-from contextlib import asynccontextmanager, suppress
+ETL, proyecciones y Gemini se ejecutan como procesos separados para que
+escalar la API no multiplique consumidores ni cierres nocturnos.
+"""
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from app.modules.books.canonical import CanonicalIdentityError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
@@ -15,33 +18,20 @@ from app.modules.users.identities_router import router as profiles_router
 from app.modules.users.preferences_router import router as preferences_router
 from app.modules.analytics.router import router as analytics_router
 from app.modules.analytics.insights_router import router as insights_router
-from app.modules.analytics.scheduler import daily_scheduler, manual_scheduler, projection_scheduler
 from app.modules.social.reviews_router import router as reviews_router
 from app.modules.books.router import router as books_router
+from app.modules.books.admin_router import router as catalog_admin_router
 from app.modules.analytics.adaptive_router import router as adaptive_router
 
 settings = get_settings()
 
-@asynccontextmanager
-async def lifespan(app):
-    task = asyncio.create_task(daily_scheduler()) if settings.analytics_scheduler_enabled else None
-    manual_task = asyncio.create_task(manual_scheduler())
-    projection_task = asyncio.create_task(projection_scheduler()) if settings.ai_worker_enabled else None
-    from app.modules.analytics.adaptive_worker import worker_loop
-    ai_task = asyncio.create_task(worker_loop(profile_only=False)) if settings.ai_worker_enabled else None
-    ai_profile_task = asyncio.create_task(worker_loop(profile_only=True)) if settings.ai_worker_enabled else None
-    try:
-        yield
-    finally:
-        for worker in (task, manual_task, projection_task, ai_task, ai_profile_task):
-            if worker is None:
-                continue
-            worker.cancel()
-            with suppress(asyncio.CancelledError):
-                await worker
+app = FastAPI(title=settings.app_name, version="0.1.0")
 
 
-app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+@app.exception_handler(CanonicalIdentityError)
+async def canonical_identity_failure(request, error):
+    return JSONResponse(status_code=404 if str(error).startswith("Unknown") else 409,
+                        content={"detail": {"code": "canonical_identity_invalid", "message": str(error)}})
 
 # Solo los orígenes configurados pueden consumir la API desde el navegador.
 app.add_middleware(
@@ -64,6 +54,7 @@ app.include_router(analytics_router, prefix=settings.api_prefix)
 app.include_router(insights_router, prefix=settings.api_prefix)
 app.include_router(reviews_router, prefix=settings.api_prefix)
 app.include_router(books_router, prefix=settings.api_prefix)
+app.include_router(catalog_admin_router, prefix=settings.api_prefix)
 app.include_router(adaptive_router, prefix=settings.api_prefix)
 
 
