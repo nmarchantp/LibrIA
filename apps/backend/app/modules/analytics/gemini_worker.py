@@ -32,7 +32,7 @@ from app.modules.analytics.gemini_context import (
 from app.modules.analytics.gemini_contracts import (
     ProfileChunkSummary, ProfileInterpretation, RecommendationGeneration,
     RecommendationTransportGeneration, recommendation_transport_json_schema,
-    ReadingAnalysis,
+    ReadingAnalysis, reading_transport_json_schema, normalize_reading_transport,
 )
 from app.modules.analytics.gemini_prompts import (
     CHUNK_SYSTEM, RECOMMENDATION_SYSTEM, REDUCE_SYSTEM, READING_SYSTEM,
@@ -235,6 +235,14 @@ def _release_global_slot(db: Session, settings: Settings, slot: int, started: fl
 
 def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequest,
             budget: AttemptBudget, settings: Settings):
+    if budget.job_id:
+        # Account lifecycle changes revoke access to queued work as well as HTTP
+        # sessions. Check before every provider call, including chunked jobs.
+        allowed = db.execute(text("""SELECT EXISTS(SELECT 1 FROM ia.jobs j
+          JOIN app.usuarios u ON u.id=j.owner_id WHERE j.id=:id
+          AND u.account_status='active' AND u.suspended_at IS NULL)"""), {"id": budget.job_id}).scalar_one()
+        if not allowed:
+            raise PermanentJobError('account_restricted')
     # UTF-8 bytes provide a deliberately conservative input reservation without
     # another network RPC. Include schema and system text, not just evidence.
     envelope = {"system": request.system_instruction, "user": request.user_content,
@@ -738,7 +746,7 @@ def _process_recommendation(db: Session, provider: AIProvider, job: dict[str, An
 
 def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any], list[EvidenceUnit]]:
     row = db.execute(text("""SELECT ev.id AS event_id,ev.kind,ev.reason,ev.reflection,ev.created_at AS event_at,
-      ev.page,ev.total_pages,r.id AS reading_id,r.status,r.notebook,r.abandonment_reason,
+      ev.page,ev.total_pages,r.current_page,r.total_pages AS reading_total_pages,r.id AS reading_id,r.status,r.notebook,r.abandonment_reason,
       r.started_at,r.finished_at,r.abandoned_at,r.work_id,r.edition_id,w.title,w.description,w.categories,
       ed.title AS edition_title,ed.language,ed.page_count,
       COALESCE((SELECT jsonb_agg(a.name ORDER BY wa.position,a.id) FROM app.obras_autores wa
@@ -755,7 +763,7 @@ def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any
         EvidenceUnit(f"event:{event}", "reading_event", event, work,
                      {key: row[key] for key in ("kind", "reason", "reflection", "event_at", "page", "total_pages")}),
         EvidenceUnit(f"reading:{reading}", "reading", reading, work,
-                     {key: row[key] for key in ("status", "abandonment_reason", "started_at", "finished_at", "abandoned_at")}),
+                     {key: row[key] for key in ("status", "current_page", "reading_total_pages", "abandonment_reason", "started_at", "finished_at", "abandoned_at")}),
         EvidenceUnit(f"metadata:{work}", "metadata", work, work,
                      {key: row[key] for key in ("title", "description", "categories", "authors", "edition_title", "language", "page_count")}),
     ]
@@ -787,11 +795,13 @@ def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any
         snapshot = identity_snapshot(db)
         root = snapshot.root(work)
         units = [replace(unit, work_id=root) for unit in units if unit.source_kind != 'review']
-        reviews = current_reviews(db, {work}, reader_id=job['owner_id'])
+        personal_profiles = set(db.execute(text("SELECT id FROM app.perfiles WHERE kind='personal' AND owner_user_id=:owner"),
+                                            {'owner':job['owner_id']}).scalars())
+        reviews = [r for r in current_reviews(db, {work}, reader_id=job['owner_id'])
+                   if r.author_profile_id in personal_profiles]
         for current in reviews:
-            if current.status != 'hidden':
-                units.append(EvidenceUnit(f'review:{current.id}:{current.revision_number}', 'review', current.id, root,
-                    {'body':current.body, 'rating':current.rating, 'dimension_ratings':current.dimension_ratings, 'status':current.status}))
+            units.append(EvidenceUnit(f'review:{current.id}:{current.revision_number}', 'review', current.id, root,
+                {'body':current.body, 'rating':current.rating, 'dimension_ratings':current.dimension_ratings, 'status':current.status}))
         work, identity = root, snapshot.version
     payload = {"event_kind": row["kind"], "reading_id": str(reading), "work_id": str(work),
                **({'identity_version':identity} if identity else {}),
@@ -806,25 +816,35 @@ def _event_summary(db, provider, job, system, payload, settings, allowed, budget
     if cached is not None:
         return _summary_request(system, payload, settings, allowed, event=True).validate(cached)
     result = _invoke(db, provider, _summary_request(system,payload,settings,allowed,event=True),budget,settings)
+    db.execute(text('SELECT reading_event_id FROM ia.reading_analysis_requests WHERE reading_event_id=:event FOR UPDATE'),
+               {'event':job['reading_event_id']})
+    if not db.execute(text('SELECT payload FROM ia.reading_analysis_snapshots WHERE job_id=:job'), {'job':job['id']}).scalar():
+        raise ObsoleteJob('withdrawn_evidence')
     _save_chunk(db,job['owner_id'],digest,result,job['model'],prompt)
     return result
 
 
 def _process_individual(db: Session, provider: AIProvider, job: dict[str, Any],
                         settings: Settings, budget: AttemptBudget) -> None:
-    payload, units = _individual_context(db, job)
-    source_hash = content_hash(payload)
-    db.execute(text('UPDATE ia.jobs SET evidence_hash=:hash WHERE id=:id'),
-               {'hash':source_hash,'id':job['id']})
-    db.commit()
-    if job.get('revision', 1) == 1:
-        existing = db.execute(text('''SELECT id FROM ia.analyses WHERE owner_id=:owner
-          AND reading_event_id=:event AND model=:model AND prompt_version=:prompt
-          AND data_hash=:hash AND provider='gemini' AND valid LIMIT 1'''),
-          {'owner':job['owner_id'],'event':job['reading_event_id'],'model':job['model'],
-           'prompt':job['prompt_version'],'hash':source_hash}).scalar()
-        if existing:
-            return
+    from app.modules.analytics.reading_analysis import context, fingerprint, reusable, IneligibleReading
+    snapshot = db.execute(text('SELECT payload FROM ia.reading_analysis_snapshots WHERE job_id=:job'),
+                          {'job':job['id']}).scalar()
+    if not snapshot:
+        raise ObsoleteJob('nightly_preparation_required')
+    try:
+        current, _ = context(db, job['owner_id'], job['reading_event_id'])
+    except IneligibleReading as error:
+        raise ObsoleteJob(str(error)) from error
+    if fingerprint(current) != job['evidence_hash']:
+        raise ObsoleteJob('obsolete_nightly_evidence')
+    if reusable(db, job['owner_id'], job['reading_event_id'], job['evidence_hash'], settings):
+        return
+    payload = snapshot
+    units = [EvidenceUnit(item['evidence_id'], item['source_kind'],
+              uuid.UUID(item['evidence_id'].split(':')[1]),
+              uuid.UUID(item['work_id']) if item.get('work_id') else None, item['content'])
+             for item in snapshot['evidence']]
+    source_hash = fingerprint(snapshot)
     if len(canonical_json(payload).encode('utf-8')) > settings.ai_context_token_budget - 3500:
         # The same complete fragmentation strategy is exposed to the model in a
         # single structured envelope. Refuse if even that envelope cannot fit;
@@ -834,7 +854,8 @@ def _process_individual(db: Session, provider: AIProvider, job: dict[str, Any],
         summaries = []
         for fragment in fragments:
             allowed_fragment = {item["evidence_id"] for item in fragment["evidence"]}
-            summaries.append(_event_summary(db, provider, job, CHUNK_SYSTEM, fragment,
+            summaries.append(_event_summary(db, provider, job,
+                                             CHUNK_SYSTEM.replace('reader profile', 'concrete reading experience'), fragment,
                                              settings, allowed_fragment, budget))
         while estimate_tokens({"fragment_summaries": summaries}) > max(100, (settings.ai_context_token_budget - 3500) // 8):
             groups, current = [], []
@@ -859,21 +880,40 @@ def _process_individual(db: Session, provider: AIProvider, job: dict[str, Any],
     allowed = set(evidence_index(units))
 
     def validate(value):
-        parsed = ReadingAnalysis.model_validate(value).model_dump()
+        parsed = ReadingAnalysis.model_validate(normalize_reading_transport(value)).model_dump()
         if parsed["event_kind"] != payload["event_kind"] or not set(parsed["evidence_ids"]).issubset(allowed):
             raise ValueError("Individual analysis has unsupported event or evidence")
+        expected = {('experience_summary', 0)} | {(field, index)
+            for field in ('valued_elements','friction_points','themes_and_interests','emotional_response','rating_observations')
+            for index in range(len(parsed[field]))}
+        citations = parsed['observation_evidence']
+        if {(item['field'],item['index']) for item in citations} != expected or len(citations) != len(expected):
+            raise ValueError('Individual observations require exact evidence references')
+        cited = set(parsed['evidence_ids'])
+        if any(not set(item['evidence_ids']).issubset(cited) for item in citations):
+            raise ValueError('Individual observation cites unsupported evidence')
         return parsed
 
     request = StructuredGenerationRequest(
         prompt_kind=PromptKind.BOOK_ANALYSIS, system_instruction=READING_SYSTEM,
-        user_content=canonical_json(payload), response_schema=ReadingAnalysis.model_json_schema(),
+        user_content=canonical_json(payload), response_schema=reading_transport_json_schema(
+            evidence_ids=sorted(allowed), event_kind=payload['event_kind']),
         validator=validate, timeout_seconds=settings.ai_timeout_seconds,
         max_output_tokens=settings.ai_output_token_budget,
     )
     result = _invoke(db, provider, request, budget, settings)
-    current_payload, _ = _individual_context(db, job)
-    if content_hash(current_payload) != source_hash:
-        raise TransientJobError("source_changed_during_generation")
+    # Serialize publication with source-change request triggers. A changed source
+    # leaves this immutable snapshot historical; book_state only calls it current
+    # when its hash matches. A withdrawn review forbids retaining new output.
+    db.execute(text('SELECT reading_event_id FROM ia.reading_analysis_requests WHERE reading_event_id=:event FOR UPDATE'),
+               {'event':job['reading_event_id']})
+    try:
+        context(db, job['owner_id'], job['reading_event_id'])
+    except IneligibleReading as error:
+        raise ObsoleteJob(str(error)) from error
+    if not db.execute(text('SELECT payload FROM ia.reading_analysis_snapshots WHERE job_id=:job'),
+                      {'job':job['id']}).scalar():
+        raise ObsoleteJob('withdrawn_evidence')
     locked = db.execute(text("SELECT status,attempts FROM ia.jobs WHERE id=:id FOR UPDATE"),
                         {"id": job["id"]}).mappings().one()
     if locked["status"] != "processing" or locked["attempts"] != job["attempts"]:
@@ -885,7 +925,7 @@ def _process_individual(db: Session, provider: AIProvider, job: dict[str, Any],
       (id,owner_id,target,version,data_hash,content,model,prompt_version,provider,job_id,reading_event_id)
       VALUES (:id,:owner,:target,COALESCE((SELECT max(version)+1 FROM ia.analyses
         WHERE owner_id=:owner AND target=:target),1),:hash,CAST(:content AS jsonb),:model,:prompt,'gemini',:job,:event)"""),
-      {"id": analysis_id, "owner": job["owner_id"], "target": job["target"],
+      {"id": analysis_id, "owner": job["owner_id"], "target": f"reading-event:{job['reading_event_id']}",
        "hash": source_hash, "content": canonical_json(stored), "model": job["model"],
        "prompt": job["prompt_version"], "job": job["id"], "event": job["reading_event_id"]})
     if payload.get('identity_version'):

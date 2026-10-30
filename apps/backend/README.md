@@ -121,3 +121,10 @@ FROM analytics.ejecuciones_etl
 WHERE business_date IS NOT NULL
 ORDER BY business_date DESC LIMIT 1;
 ```
+# Administración de cuentas
+
+La implementación, contratos, política de eliminación recuperable y resultados de pruebas están documentados en [Cuentas de usuario](../../docs/cuentas-usuario.md). Después de actualizar dependencias, aplica `python -m alembic upgrade head` antes de iniciar API y scheduler.
+
+# Análisis individual nocturno
+
+La migración 0069 registra solicitudes por evento, instantáneas de evidencia y deduplicación por huella. Una reseña textual propia y una lectura terminada o abandonada son obligatorias; el ETL automático de medianoche o el manual administrativo habilitan los trabajos. Agregar libros o pulsar actualizar no invoca Gemini. Véanse [reglas, estados y pruebas aisladas](../../docs/nightly-book-analysis.md). ADN lector y recomendaciones mantienen sus reglas.

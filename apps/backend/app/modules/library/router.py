@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.modules.analytics.persistence import enqueue_reading_event_analysis
 from app.modules.auth.dependencies import get_current_user
 from app.modules.books.identity import canonical_work_key
 from app.modules.books.models import CatalogSource, Edition, Work
@@ -250,16 +249,6 @@ def record_reading_event(data: ReadingEventCreate, user: Annotated[User, Depends
                           data.abandonment_reason if data.event == "abandon" else None, created_at=now)
     db.add(event)
     db.flush()
-    if data.event in {"finish", "abandon"}:
-        settings = get_settings()
-        enqueue_reading_event_analysis(
-            db,
-            reading_event_id=event.id,
-            provider=settings.ai_provider,
-            model=settings.gemini_model,
-            prompt_version=settings.reading_analysis_prompt_version,
-            delay_minutes=settings.reading_analysis_delay_minutes,
-        )
     db.commit()
     db.refresh(event)
     return ReadingEventResponse(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id, event_id=event.id, status=reading.status,

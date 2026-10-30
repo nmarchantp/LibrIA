@@ -83,7 +83,7 @@ export default function Layout() {
           <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>
           <nav className="navigation-tools-menu" aria-label="Herramientas disponibles">
             {groupAccess && <NavLink to="/insights"><BarChart3 size={19} aria-hidden="true" />LibrIA Insights</NavLink>}
-            {access?.admin && <><NavLink to="/admin/profiles"><Settings2 size={19} aria-hidden="true" />Gestionar perfiles</NavLink><NavLink to="/admin/etl"><Database size={19} aria-hidden="true" />Carga de datos</NavLink></>}
+            {access?.admin && <><NavLink to="/admin/profiles"><Settings2 size={19} aria-hidden="true" />Gestionar perfiles</NavLink><NavLink to="/admin/environment"><Settings2 size={19} aria-hidden="true" />Configurar aplicación</NavLink><NavLink to="/admin/etl"><Database size={19} aria-hidden="true" />Carga de datos</NavLink></>}
             {access?.catalog_preview && <NavLink to="/admin/catalog"><BookOpen size={19} aria-hidden="true" />Gestionar libros</NavLink>}
           </nav>
         </details>}

@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -13,6 +13,8 @@ class AuthAccount(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="CASCADE"), unique=True)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    security_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     password_hash: Mapped[str] = mapped_column(String(500))
     google_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
     google_email: Mapped[str | None] = mapped_column(String(320))

@@ -10,7 +10,9 @@ from app.modules.books.canonical import CanonicalIdentityError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.core.environment_admin import router as environment_admin_router
 from app.modules.auth.router import router as auth_router
+from app.modules.users.account_router import router as account_router
 from app.modules.social.router import profile_social_router, router as social_router
 from app.modules.users.roles_router import router as roles_router
 from app.modules.library.router import router as readings_router
@@ -44,9 +46,11 @@ app.add_middleware(
 
 # Todos los módulos se incorporan al mismo servidor bajo el prefijo /api.
 app.include_router(auth_router, prefix=settings.api_prefix)
+app.include_router(account_router, prefix=settings.api_prefix)
 app.include_router(social_router, prefix=settings.api_prefix)
 app.include_router(profile_social_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
+app.include_router(environment_admin_router, prefix=settings.api_prefix)
 app.include_router(readings_router, prefix=settings.api_prefix)
 app.include_router(profiles_router, prefix=settings.api_prefix)
 app.include_router(preferences_router, prefix=settings.api_prefix)

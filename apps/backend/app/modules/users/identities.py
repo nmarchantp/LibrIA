@@ -28,8 +28,8 @@ def personal_profile(db: Session, user: User) -> Profile:
 def publication_role(db: Session, profile: Profile) -> str:
     if profile.kind == "organization":
         return profile.organization_type
-    capabilities = set(db.scalars(select(ProfileCapability.capability).where(ProfileCapability.profile_id == profile.id)))
-    return "autor" if "autor" in capabilities else "influencer" if "influencer" in capabilities else "lector"
+    user = db.get(User, profile.owner_user_id)
+    return user.role if user else "lector"
 
 
 def require_actor(db: Session, user: User, profile_id: uuid.UUID,
@@ -40,10 +40,12 @@ def require_actor(db: Session, user: User, profile_id: uuid.UUID,
     if profile.kind == "personal":
         allowed = profile.owner_user_id == user.id
     else:
+        # Organizations remain historical/administrative relationships, not an
+        # alternative publishing identity selected by the account owner.
         member = db.get(ProfileMember, (profile.id, user.id))
-        allowed = member is not None and (not manage or member.permission == "admin")
+        allowed = manage and member is not None and member.permission == "admin"
     if not allowed:
         raise HTTPException(status_code=403, detail="No puedes actuar por este perfil")
-    if capability and (profile.kind != "personal" or db.get(ProfileCapability, (profile.id, capability)) is None):
+    if capability and (profile.kind != "personal" or user.role != capability):
         raise HTTPException(status_code=403, detail="El perfil no tiene la capacidad requerida")
     return profile

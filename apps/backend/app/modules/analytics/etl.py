@@ -265,6 +265,14 @@ def publish(connection, run_id, prepared, personal=None):
     from app.modules.analytics.recommendation_profiles import build_nightly_reader_profiles
     profile_summary = build_nightly_reader_profiles(connection, run_id)
     summary = {**summary, "recommendation_profiles": profile_summary}
+    analysis_cutoff = connection.execute(text('''SELECT source_cutoff_at FROM analytics.ejecuciones_etl
+      WHERE id=:id AND (business_date IS NOT NULL OR run_kind='manual')'''), {'id':run_id}).scalar()
+    if analysis_cutoff:
+        from app.modules.analytics.reading_analysis import prepare_nightly
+        with Session(bind=connection, join_transaction_mode='create_savepoint') as db:
+            summary['reading_analyses'] = prepare_nightly(db, analysis_cutoff, run_id)
+            db.commit()
+
     connection.execute(text("""UPDATE analytics.ejecuciones_etl SET status='succeeded',
         phase='completed', finished_at=now(), error_code=NULL, summary=CAST(:summary AS jsonb) WHERE id=:id"""),
                        {"id": run_id, "summary": json.dumps(summary)})
