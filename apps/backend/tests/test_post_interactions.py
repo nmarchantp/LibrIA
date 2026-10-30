@@ -66,6 +66,7 @@ class PostInteractionsTest(unittest.TestCase):
     def test_images_likes_follows_and_comments_work_for_reader(self):
         author = self.register("Autora")
         author_id = uuid.UUID(author["user"]["id"])
+        self.db.get(User, author_id).role = "autor"
         author_profile = self.db.scalar(select(Profile).where(Profile.owner_user_id == author_id))
         self.db.add(ProfileCapability(profile_id=author_profile.id, capability="autor"))
         self.db.flush()

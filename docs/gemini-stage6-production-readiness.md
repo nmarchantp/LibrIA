@@ -1,5 +1,8 @@
 # Etapa 6: preparación operativa Gemini
 
+Actualización del análisis individual: [contrato nocturno vigente](nightly-book-analysis.md).
+Las restantes secciones conservan el contexto de la etapa operativa original.
+
 Estado al 27 de octubre de 2026. Esta etapa no activa producción ni realiza
 solicitudes reales. El proveedor nuevo queda desactivado por defecto mediante
 `GEMINI_WORKER_ENABLED=false` y `GEMINI_PAID_SERVICE_CONFIRMED=false`.
@@ -28,7 +31,9 @@ para filas nuevas a `gemini`.
 | `GET /api/analytics/me/recommendations` | Lectura compatible | No llama al proveedor. |
 | `POST /api/analytics/me/recommendations` | Heredado deshabilitado | HTTP 405; no admite tandas manuales. |
 | `GET /api/me/ai/books/{work_id}` | Lectura | Último análisis persistido de evento terminal. |
-| `POST /api/me/ai/books/{work_id}/refresh` | Heredado deshabilitado | HTTP 405; un cierre o abandono crea el único job. |
+| `POST /api/me/ai/books/{work_id}/refresh` | Lectura de estado | Recupera PostgreSQL sin adelantar la preparación nocturna. |
+| `POST /api/me/ai/books/{work_id}/retry` | Recuperación limitada | Registra un reintento para el siguiente cierre; conserva intentos y costos. |
+| `GET /api/me/ai/books/{work_id}/history` | Lectura privada | Versiones permitidas de la misma experiencia. |
 | `GET /api/me/ai/profile` | Lectura | Perfil Gemini persistido ligado a recomendaciones. |
 | `POST /api/me/ai/profile/refresh` | Heredado deshabilitado | HTTP 405. |
 | `GET /api/me/ai/profile/history` | Lectura | Historial, incluido proveedor histórico. |
@@ -40,8 +45,9 @@ para filas nuevas a `gemini`.
 
 Login, sesión Google y actividad autenticada llaman la sincronización segura de
 recomendaciones. Una lectura de pantalla, un GET, un refresh del navegador o el
-montaje de React no crean trabajo. El análisis individual solo nace de un
-evento `finish`/`abandon` y respeta `READING_ANALYSIS_DELAY_MINUTES=30`.
+montaje de React no crean trabajo. El análisis individual exige un evento
+`finish`/`abandon` y una reseña textual válida. El ETL nocturno o manual administrativo habilita
+su trabajo; la ventana fija de treinta minutos ya no gobierna este flujo.
 
 ## Costes y límites
 

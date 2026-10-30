@@ -124,13 +124,13 @@ class LiteraryPreferencesTest(unittest.TestCase):
             self.assertEqual(self.mine(), before)
 
     def test_omission_empty_null_and_maximum_biography(self):
-        self.assertEqual(self.save({"biography": "x" * 200, "genre_ids": ["fantasia"], "trope_ids": ["magia"]}).status_code, 200)
-        self.assertEqual(self.save({"biography": "x" * 201}).status_code, 422)
+        self.assertEqual(self.save({"biography": "x" * 70, "genre_ids": ["fantasia"], "trope_ids": ["magia"]}).status_code, 200)
+        self.assertEqual(self.save({"biography": "x" * 71}).status_code, 422)
         self.save({"genre_ids": []})
         data = self.mine()
         self.assertEqual(data["genres"], [])
         self.assertEqual([x["id"] for x in data["tropes"]], ["magia"])
-        self.assertEqual(data["biography"], "x" * 200)
+        self.assertEqual(data["biography"], "x" * 70)
         self.assertEqual(self.save({}).json(), data)
         self.save({"biography": None, "trope_ids": []})
         self.assertIsNone(self.mine()["biography"])
@@ -154,14 +154,14 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.client.patch(self.path, json={"biography": "No"}).status_code, 401)
         self.assertEqual(self.client.get(f"/api/profiles/{uuid.uuid4()}", headers=self.headers).status_code, 404)
 
-    def test_admin_biography_workflow_unchanged(self):
+    def test_admin_biography_workflow_requires_reason_and_seventy_characters(self):
         admin_id = uuid.UUID(self.other["user"]["id"])
         self.db.get(User, admin_id).role = "admin"
         self.db.add(AccountPermission(user_id=admin_id, permission="admin"))
         self.db.commit()
-        biography = "a" * 300
+        biography = "a" * 70
         r = self.client.patch(f"/api/roles/profiles/{self.owner['user']['id']}", headers=self.auth(self.other),
-            json={"display_name": "Nombre administrativo", "biography": biography})
+            json={"display_name": "Nombre administrativo", "biography": biography, "reason": "Corrección administrativa solicitada"})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(self.mine()["biography"], biography)
         # Saving only tastes must preserve the existing longer administrator biography.

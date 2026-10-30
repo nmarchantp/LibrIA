@@ -78,6 +78,8 @@ class MockGemini:
                 "valued_elements": ["desarrollo"], "friction_points": [],
                 "themes_and_interests": ["conflicto"], "emotional_response": [],
                 "rating_observations": [], "evidence_ids": evidence[:3],
+                "observation_evidence": [{"field": field, "index": 0, "evidence_ids": evidence[:1]}
+                    for field in ('experience_summary', 'valued_elements', 'themes_and_interests')],
             }
         elif "recommendations" in properties:
             candidate = payload["verified_candidates"][0]
@@ -372,7 +374,19 @@ class Stage5DatabaseTest(unittest.TestCase):
           **({"abandonment_reason":"Ritmo incompatible"} if kind=="abandon" else {})})
         self.assertEqual(closed.status_code,201,closed.text)
         event=uuid.UUID(closed.json()["event_id"])
-        self.db.execute(text("UPDATE ia.jobs SET not_before=now() WHERE reading_event_id=:event"), {"event":event})
+        work = self.db.execute(text('SELECT work_id FROM app.lecturas WHERE id=:id'),
+                               {'id':uuid.UUID(started.json()['reading_id'])}).scalar_one()
+        self.db.execute(text("""INSERT INTO app.resenas(id,author_profile_id,created_by_user_id,work_id,body,rating,status)
+          SELECT :id,p.id,:owner,:work,'Me interesa la evolución de los personajes.',5,'draft'
+          FROM app.perfiles p WHERE p.owner_user_id=:owner AND p.kind='personal'
+          ON CONFLICT(author_profile_id,work_id) DO NOTHING"""), {'id':uuid.uuid4(),'owner':owner,'work':work})
+        run=uuid.uuid4(); type(self).run_counter += 1
+        self.db.execute(text("""INSERT INTO analytics.ejecuciones_etl
+          (id,status,started_at,finished_at,source_cutoff_at,transform_version,business_date,period_start)
+          VALUES(:id,'succeeded',now(),now(),now(),'mock-nightly',:day,now()-interval '1 day')"""),
+          {'id':run,'day':date(2052,1,1)+timedelta(days=type(self).run_counter)})
+        from app.modules.analytics.reading_analysis import prepare_nightly
+        prepare_nightly(self.db, datetime.now(timezone.utc)+timedelta(seconds=1),run,self.settings)
         self.db.commit()
         job=self.db.execute(text("SELECT * FROM ia.jobs WHERE reading_event_id=:event"),{"event":event}).mappings().one()
         return result,dict(job)

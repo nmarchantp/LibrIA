@@ -15,6 +15,7 @@ from app.modules.users import verification_models  # noqa: F401
 from app.modules.users import profile_models  # noqa: F401
 from app.modules.users import identity_models  # noqa: F401
 from app.modules.users import preference_models  # noqa: F401
+from app.modules.users import account_models  # noqa: F401
 from app.modules.analytics import models as analytics_models  # noqa: F401
 
 config = context.config

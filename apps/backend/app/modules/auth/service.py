@@ -46,7 +46,13 @@ class AuthService:
             raise InvalidCredentialsError
         return account.user
 
-    def google_link(self, user_id, claims: dict) -> None:
+    def google_link(self, user_id, claims: dict, *, expected_security_version=None) -> None:
+        if expected_security_version is not None:
+            from app.modules.users.account_service import lock_user
+            current = lock_user(self.repository.db, user_id)
+            self.repository.db.refresh(current.auth_account)
+            if current.auth_account.security_version != expected_security_version:
+                raise InvalidCredentialsError
         subject = self._google_subject(claims)
         user = self.repository.get_user_by_id(user_id)
         account = self.repository.get_account_by_google_subject(subject)
@@ -59,12 +65,14 @@ class AuthService:
             raise InvalidCredentialsError
         self.repository.link_google(user.auth_account, subject)
 
-    def _token_response(self, user) -> TokenResponse:
+    def _token_response(self, user, *, expected_security_version=None) -> TokenResponse:
+        from app.modules.users.account_service import require_active
+        require_active(user)
         public_user = UserResponse(
-            id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role,
+            id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name, role=user.role,
             avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at,
         )
-        grant = create_session(self.repository.db, user.id)
+        grant = create_session(self.repository.db, user.id, expected_security_version=expected_security_version)
         return TokenResponse(
             access_token=grant.access_token,
             refresh_token=grant.refresh_token,

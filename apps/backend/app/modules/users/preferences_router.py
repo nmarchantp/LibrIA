@@ -99,6 +99,9 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
         featured_id = previous_featured if previous_featured in selected_ids else None
     try:
         if "biography" in supplied:
+            from app.modules.users.account_service import audit
+            audit(db, owner, owner.id, "profile_updated", before={"biography": owner.biography},
+                  after={"biography": data.biography or None})
             owner.biography = data.biography or None
         if "genre_ids" in supplied:
             db.execute(delete(FavoriteGenre).where(FavoriteGenre.user_id == owner.id))

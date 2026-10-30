@@ -38,7 +38,7 @@ class AdminProfile(BaseModel):
     role: UserRole
     biography: str | None
     created_at: datetime
-    pending_role: Literal["influencer", "autor"] | None = None
+    pending_role: Literal["influencer", "autor", "libreria"] | None = None
 
 
 class AdminProfilePage(BaseModel):
@@ -49,7 +49,8 @@ class AdminProfilePage(BaseModel):
 class AdminProfileUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     display_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=100)]
-    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
+    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=70)] | None = None
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=10, max_length=1000)]
 
 
 class RoleRevocation(BaseModel):

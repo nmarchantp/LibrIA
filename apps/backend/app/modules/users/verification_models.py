@@ -12,7 +12,7 @@ from app.core.database import Base
 class VerificationRequest(Base):
     __tablename__ = "solicitudes_verificacion"
     __table_args__ = (
-        CheckConstraint("requested_role IN ('influencer', 'autor')", name="ck_solicitudes_verificacion_role"),
+        CheckConstraint("requested_role IN ('influencer', 'autor', 'libreria')", name="ck_solicitudes_verificacion_role"),
         CheckConstraint("status IN ('pending', 'approved', 'rejected')", name="ck_solicitudes_verificacion_status"),
         Index("uq_solicitudes_verificacion_pending_user", "user_id", unique=True,
               postgresql_where=text("status = 'pending'")),

@@ -1,0 +1,9 @@
+.environment-page { max-width: 1050px; margin: auto; padding-bottom: 40px; }
+.environment-page p, .environment-field small { color: var(--muted); line-height: 1.6; }
+.environment-panel { margin: 24px 0; padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.environment-panel fieldset { border: 0; padding: 0; margin: 24px 0; display: grid; gap: 18px; }
+.environment-panel label { display: grid; gap: 8px; }
+.environment-field span { font-size: 13px; overflow-wrap: anywhere; font-weight: 600; }
+.environment-panel input { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: inherit; background: var(--surface); }
+.environment-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.environment-panel [role=alert] { color: var(--error-text); }

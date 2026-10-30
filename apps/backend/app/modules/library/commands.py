@@ -135,12 +135,6 @@ def record_event(db, actor_id, data):
         reflection=data.reflection.model_dump() if data.reflection else None, created_at=now)
     db.add(event)
     db.flush()
-    if data.event in {"finish", "abandon"}:
-        from app.modules.analytics.persistence import enqueue_reading_event_analysis
-        settings = get_settings()
-        enqueue_reading_event_analysis(db, reading_event_id=event.id, provider=settings.ai_provider,
-            model=settings.gemini_model, prompt_version=settings.reading_analysis_prompt_version,
-            delay_minutes=settings.reading_analysis_delay_minutes)
     from app.modules.social.router import as_reading_response
     percent = round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else None
     return ReadingEventResponse(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id,

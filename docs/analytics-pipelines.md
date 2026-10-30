@@ -138,3 +138,8 @@ y se mantiene la última versión válida cuando Ollama no alcanza a terminar. E
 ETL no garantiza el rendimiento del modelo local. Los textos de IA requieren
 evaluación continua; validar estructura y referencias no garantiza cada inferencia
 semántica. No hay seguimiento de clics ni permanencia en el feed.
+# Actualización del análisis individual
+
+La preparación individual usa solicitudes e instantáneas nocturnas privadas según
+[este contrato](nightly-book-analysis.md). El worker existente procesa la evidencia
+autorizada por el cierre; las consultas ordinarias recuperan PostgreSQL.

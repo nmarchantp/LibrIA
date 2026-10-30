@@ -79,7 +79,7 @@ class IdentityTest(unittest.TestCase):
         self.actor = self.owner
         self.assertEqual(self.client.put(url, json={"permission": "editor"}).status_code, 200)
         self.actor = self.outsider
-        self.assertEqual(len(self.client.get("/api/profiles/me").json()), 2)
+        self.assertEqual(len(self.client.get("/api/profiles/me").json()), 1)
         self.assertEqual(self.client.put(url, json={"permission": "admin"}).status_code, 403)
 
     def test_last_administrator_cannot_be_demoted(self):
