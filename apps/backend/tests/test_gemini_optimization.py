@@ -297,7 +297,7 @@ class OptimizationDatabaseTest(unittest.TestCase):
         self.assertIn('narrative_preferences',response.json()['analysis']['content'])
         self.assertIsNone(response.json()['job'])
 
-    def test_pending_notebook_edits_extend_only_same_reading(self):
+    def test_pending_notebook_edits_wait_for_new_nightly_snapshot(self):
         result,first=self.seed_terminal_job(); _,second=self.seed_terminal_job(result=result)
         self.db.execute(text("UPDATE ia.jobs SET not_before=now()-interval '1 second'"));self.db.commit()
         reading=self.db.execute(text('SELECT reading_id FROM app.eventos_lectura WHERE id=:id'),{'id':first['reading_event_id']}).scalar_one()
@@ -306,7 +306,7 @@ class OptimizationDatabaseTest(unittest.TestCase):
                             {'id':reading,'body':json.dumps({'characters':str(version)})});self.db.commit()
         rows=self.db.execute(text('SELECT id,not_before>now() deferred FROM ia.jobs')).all()
         flags={r.id:r.deferred for r in rows}
-        self.assertTrue(flags[first['id']]);self.assertFalse(flags[second['id']])
+        self.assertFalse(flags[first['id']]);self.assertFalse(flags[second['id']])
 
     def test_distinct_events_are_not_merged(self):
         result,first=self.seed_terminal_job();_,second=self.seed_terminal_job(result=result)
@@ -315,13 +315,13 @@ class OptimizationDatabaseTest(unittest.TestCase):
         events=self.db.execute(text('SELECT reading_event_id FROM ia.analyses WHERE reading_event_id IS NOT NULL')).scalars().all()
         self.assertEqual(set(events),{first['reading_event_id'],second['reading_event_id']})
 
-    def test_same_event_result_is_reused_but_force_is_versioned(self):
+    def test_same_event_result_is_reused_even_after_revision_flag(self):
         _,job=self.seed_terminal_job();provider=MockGemini();self.run_mock(provider)
         self.db.execute(text("UPDATE ia.jobs SET status='pending',not_before=now() WHERE id=:id"),{'id':job['id']});self.db.commit()
         cached=MockGemini();self.run_mock(cached);self.assertEqual(cached.calls,[])
         self.db.execute(text("UPDATE ia.jobs SET status='pending',revision=2,not_before=now() WHERE id=:id"),{'id':job['id']});self.db.commit()
-        forced=MockGemini();self.run_mock(forced);self.assertEqual(len(forced.calls),1)
-        self.assertEqual(self.db.execute(text('SELECT count(*) FROM ia.analyses WHERE reading_event_id=:id'),{'id':job['reading_event_id']}).scalar_one(),2)
+        forced=MockGemini();self.run_mock(forced);self.assertEqual(len(forced.calls),0)
+        self.assertEqual(self.db.execute(text('SELECT count(*) FROM ia.analyses WHERE reading_event_id=:id'),{'id':job['reading_event_id']}).scalar_one(),1)
 
     def test_force_endpoint_preserves_contract_and_attempt_budget(self):
         result,job=self.seed_terminal_job();self.run_mock(MockGemini())
@@ -331,8 +331,9 @@ class OptimizationDatabaseTest(unittest.TestCase):
                              {'id':job['reading_event_id']}).scalar_one()
         response=self.client.post(f'/api/me/ai/books/{work}/refresh?force=true',headers=self.auth(result))
         self.assertEqual(response.status_code,202,response.text)
-        self.assertEqual(response.json()['status'],'pending')
-        self.assertEqual(response.json()['job']['revision'],2)
+        self.assertEqual(response.json()['status'],'completed')
+        self.assertEqual(response.json()['job']['attempts'],1)
         self.db.execute(text('UPDATE ia.jobs SET attempts=3 WHERE id=:id'),{'id':job['id']});self.db.commit()
         blocked=self.client.post(f'/api/me/ai/books/{work}/refresh?force=true',headers=self.auth(result))
-        self.assertEqual(blocked.status_code,409)
+        self.assertEqual(blocked.status_code,202)
+        self.assertEqual(blocked.json()['job']['attempts'],3)

@@ -40,7 +40,7 @@ Worker Gemini --> Gemini API --> validación Pydantic
 
 El ETL nocturno crea perfiles lectores versionados. Un login o una reanudación de actividad sincroniza, de forma deduplicada, el trabajo del último ETL con cambios. El worker guarda el resultado; consultar REST o React no vuelve a llamar a Gemini.
 
-Las recomendaciones usan solo lecturas terminadas con valoración general igual o superior a 4 y pueden incorporar dimensiones, reseñas, notebook, notas y teorías. El análisis individual se programa una vez por evento terminado o abandonado, incluida cada relectura, después de una ventana de consolidación configurable.
+Las recomendaciones usan solo lecturas terminadas con valoración general igual o superior a 4 y pueden incorporar dimensiones, reseñas, notebook, notas y teorías. El [análisis individual](docs/nightly-book-analysis.md) exige una reseña personal con texto y una lectura terminada o abandonada. El ETL automático de medianoche o una ejecución manual administrativa habilitan sus trabajos; PostgreSQL permite consultar inmediatamente resultados existentes y conservar versiones anteriores durante actualizaciones.
 
 Documentación técnica:
 

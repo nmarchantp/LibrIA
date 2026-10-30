@@ -4,6 +4,7 @@ import BookDetailPage from './pages/BookDetailPage'
 import BooksPage from './pages/BooksPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import RecoverAccountPage from './pages/RecoverAccountPage'
 import GoogleCallbackPage from './pages/GoogleCallbackPage'
 import ProfilePage from './pages/ProfilePage'
 import ReadingPage from './pages/ReadingPage'
@@ -14,6 +15,7 @@ import MessagesPage from './pages/MessagesPage'
 import NotificationsPage from './pages/NotificationsPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import AdminGate from './components/AdminGate'
+import AdminEnvironmentPage from './pages/AdminEnvironmentPage'
 import AdminCatalogPage from './pages/AdminCatalogPage'
 import AdminProfilesPage from './pages/AdminProfilesPage'
 import AdminEtlPage from './pages/AdminEtlPage'
@@ -28,6 +30,7 @@ export default function App() {
     <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
     <Route element={<SessionGate guest />}>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/recover-account" element={<RecoverAccountPage />} />
       <Route path="/register" element={<RegisterPage />} />
     </Route>
     <Route element={<SessionGate />}>
@@ -35,6 +38,7 @@ export default function App() {
       <Route index element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<SettingsPage />} />
+      <Route element={<AdminGate />}><Route path="/admin/environment" element={<AdminEnvironmentPage />} /></Route>
       <Route path="/profiles/:profileId" element={<CommunityProfilePage />} />
       <Route element={<AdminGate />}><Route path="/admin/profiles" element={<AdminProfilesPage />} /></Route>
       <Route element={<AdminGate />}><Route path="/admin/etl" element={<AdminEtlPage />} /></Route>

@@ -199,6 +199,7 @@ export function AuthProvider({ children }) {
   const expiresAt = session?.inactivity_expires_at ? Date.parse(session.inactivity_expires_at) : 0
   const warning = user && expiresAt > now && expiresAt - now <= WARNING_MS
   const value = { user, access, accessLoading: Boolean(user) && (accessLoading || accessUser !== user.id), loading, sessionError, session, retry: () => setAttempt(current => current + 1), logout,
+    endSession: clearLocalSession,
     login: data => authenticate('login', data), register: data => authenticate('register', data),
     googleLogin: () => authenticate('google') }
   return <AuthContext.Provider value={value}>

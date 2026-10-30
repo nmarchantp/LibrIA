@@ -19,7 +19,7 @@ const ratingSnapshot = (ratings, comment, visibility) => JSON.stringify([
   Object.fromEntries(Object.entries(ratings).filter(([, value]) => value != null).sort()), comment, visibility,
 ])
 
-function WallComposer({ type, book }) {
+function WallComposer({ type, book, onSaved }) {
   const isNote = type === 'note'
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
@@ -37,6 +37,7 @@ function WallComposer({ type, book }) {
           book_ref: String(book.id), book_title: book.originalTitle || book.title }),
       })
       setBody('')
+      onSaved?.()
       setMessage(`${isNote ? 'Nota' : 'Teoría'} publicada en tu muro.`)
     } catch { setError('No se pudo publicar. Inténtalo nuevamente.') }
     finally { setBusy(false) }
@@ -63,6 +64,7 @@ export default function LibraryBookPage() {
   const [existingReview, setExistingReview] = useState(null)
   const [reviewVisibility, setReviewVisibility] = useState('public')
   const [activeTab, setActiveTab] = useState('rating')
+  const [analysisRevision, setAnalysisRevision] = useState(0)
   const [notebook, setNotebook] = useState({ characters: '', places: '', summary: '' })
   const [notebookBaseline, setNotebookBaseline] = useState(notebookSnapshot({}))
   const [ratingBaseline, setRatingBaseline] = useState(ratingSnapshot({}, '', 'public'))
@@ -270,7 +272,7 @@ export default function LibraryBookPage() {
 
     <ActionStatus busy={Boolean(busy)} message={busy || message} error={error} floating />
 
-    {activeTab === 'rating' && <form className="rating-form" onSubmit={saveRating} aria-busy={Boolean(busy)}>
+    {activeTab === 'rating' && <form id="book-review-form" className="rating-form" onSubmit={saveRating} aria-busy={Boolean(busy)}>
       <section className="reading-tab-content library-ratings"><div className="book-review-layout">
       <section className="book-review-writing" aria-labelledby="book-review-title">
       <div className="review-heading"><h2 id="book-review-title">Reseña</h2><label>Visibilidad<select value={reviewVisibility} onChange={event => setReviewVisibility(event.target.value)}><option value="public">Pública</option><option value="private">Privada</option></select></label></div>
@@ -300,9 +302,9 @@ export default function LibraryBookPage() {
       </div>
     </form>}
 
-    {activeTab === 'notes' && <section className="reading-tab-content"><WallComposer type="note" book={book} /></section>}
-    {activeTab === 'theories' && <section className="reading-tab-content"><WallComposer type="theory" book={book} /></section>}
-    {existingReview?.rating ? <AdaptiveAnalysis scope="book" workId={book.workId} /> : <p className="notice">Valora este libro para ver aquí el análisis de tu experiencia con esta obra.</p>}
+    {activeTab === 'notes' && <section className="reading-tab-content"><WallComposer type="note" book={book} onSaved={() => setAnalysisRevision(value => value + 1)} /></section>}
+    {activeTab === 'theories' && <section className="reading-tab-content"><WallComposer type="theory" book={book} onSaved={() => setAnalysisRevision(value => value + 1)} /></section>}
+    <AdaptiveAnalysis evidenceRevision={`${existingReview?.id}:${existingReview?.revision_number}:${notebookBaseline}:${book.status}:${analysisRevision}`} scope="book" workId={book.workId} onWriteReview={() => { setActiveTab('rating'); requestAnimationFrame(() => document.getElementById('book-review-form')?.scrollIntoView({ behavior: 'smooth' })) }} />
     {activeTab === 'community' && <section className="reading-tab-content library-community" aria-labelledby="community-title">
       <div className="library-community-heading"><MessageCircle aria-hidden="true" /><div><span className="kicker">LECTORES</span><h2 id="community-title">Comunidad</h2><p>Valoraciones y comentarios de otras personas que leyeron este libro.</p></div></div>
       <BookReviews bookRef={book.workId || id} />

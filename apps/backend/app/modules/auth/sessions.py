@@ -55,7 +55,16 @@ def _revoke(db: Session, session: AuthSession, reason: str, now: datetime) -> No
         db.commit()
 
 
-def create_session(db: Session, user_id: uuid.UUID, *, now: datetime | None = None) -> SessionGrant:
+def create_session(db: Session, user_id: uuid.UUID, *, now: datetime | None = None,
+                   expected_security_version: int | None = None) -> SessionGrant:
+    from app.modules.users.account_service import lock_user, require_active
+    user = lock_user(db, user_id)
+    require_active(user)
+    if expected_security_version is not None:
+        db.refresh(user.auth_account)
+        if user.auth_account.security_version != expected_security_version:
+            from fastapi import HTTPException
+            raise HTTPException(401, "La autorización de Google fue revocada; vuelve a ingresar")
     settings = get_settings()
     current = now or utcnow()
     absolute = current + timedelta(hours=settings.session_absolute_hours)
@@ -88,6 +97,7 @@ def validate_access_session(db: Session, token: str, *, now: datetime | None = N
     session = db.get(AuthSession, uuid.UUID(claims["sid"]))
     if session is None or str(session.user_id) != claims["sub"]:
         raise SessionValidationError("session_invalid")
+    _require_account(db, session.user_id)
     reason = _expiry_reason(session, current)
     if reason:
         _revoke(db, session, reason, current)
@@ -100,6 +110,10 @@ def rotate_refresh_token(db: Session, token: str, *, now: datetime | None = None
     if claims is None:
         raise SessionValidationError("refresh_token_expired")
     current = now or utcnow()
+    # Same user -> session lock order as credential changes and suspensions.
+    from app.modules.users.account_service import lock_user
+    lock_user(db, uuid.UUID(claims["sub"]))
+    _require_account(db, uuid.UUID(claims["sub"]))
     session = db.scalar(
         select(AuthSession).where(AuthSession.id == uuid.UUID(claims["sid"])).with_for_update()
     )
@@ -124,6 +138,13 @@ def rotate_refresh_token(db: Session, token: str, *, now: datetime | None = None
     access = create_access_token(str(session.user_id), session.id, now=current)
     db.commit()
     return SessionGrant(session=session, access_token=access, refresh_token=refresh)
+
+
+def _require_account(db, user_id):
+    from app.modules.users.models import User
+    user = db.get(User, user_id, populate_existing=True)
+    if not user or user.account_status != "active" or user.suspended_at is not None:
+        raise SessionValidationError("account_restricted")
 
 
 def record_activity(db: Session, session_id: uuid.UUID, *, now: datetime | None = None) -> AuthSession:

@@ -4,13 +4,40 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from fastapi import HTTPException, Response
+from fastapi import Response
 
 from app.core.config import Settings
 from app.modules.analytics import adaptive_router as routes
 
 
 class PrivateAnalysisRefreshTest(unittest.TestCase):
+    def test_profile_recommendation_shapes_return_success_with_cors(self):
+        from fastapi import FastAPI
+        from fastapi.middleware.cors import CORSMiddleware
+        from fastapi.testclient import TestClient
+        from app.core.database import get_db
+        from app.modules.auth.dependencies import get_current_user
+        app = FastAPI()
+        app.add_middleware(CORSMiddleware, allow_origins=['http://localhost:5173'])
+        app.include_router(routes.router, prefix='/api')
+        app.dependency_overrides[get_db] = lambda: self.db
+        app.dependency_overrides[get_current_user] = lambda: self.owner
+        self.db.execute.return_value.mappings.return_value.first.return_value = None
+        self.db.execute.return_value.scalar.return_value = None
+        items = [{'work_id': str(self.work), 'title': 'Recomendación guardada'}]
+        for stored, expected in ((items, items), ({'recommendations': items}, items),
+                                 ([], []), (None, None)):
+            with self.subTest(stored=stored), \
+                 patch.object(routes, 'recommendation_state', return_value={'status': 'ready', 'recommendations': stored}) as state, \
+                 patch('app.modules.analytics.reader_dna.read_current_dna', return_value=None), \
+                 patch('app.modules.books.canonical.enabled', return_value=False), TestClient(app) as client:
+                response = client.get('/api/me/ai/profile', headers={'Origin': 'http://localhost:5173'})
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertEqual(response.headers['access-control-allow-origin'], 'http://localhost:5173')
+                self.assertEqual(response.json()['recommendations'], expected)
+                state.assert_called_once_with(self.db, self.owner.id, enqueue=False)
+        self.db.commit.assert_not_called()
+
     def setUp(self):
         self.owner = SimpleNamespace(id=uuid.uuid4())
         self.work = uuid.uuid4()
@@ -19,36 +46,26 @@ class PrivateAnalysisRefreshTest(unittest.TestCase):
         self.settings = Settings(_env_file=None)
 
     def refresh(self, analysis=None, force=False):
-        with patch.object(routes, 'owned_entry'), \
-             patch('app.modules.books.canonical.enabled', return_value=False), \
-             patch.object(routes, 'get_settings', return_value=self.settings), \
-             patch.object(routes, 'enqueue_reading_event_analysis', return_value=self.job), \
-             patch.object(routes, 'book_analysis', return_value={'analysis': analysis}):
-            self.db.execute.return_value.mappings.return_value.one.return_value = {
-                **self.job, 'status': 'pending',
-            }
+        status = 'completed' if analysis else 'waiting_nightly_processing'
+        with patch.object(routes, 'book_analysis', return_value={'analysis': analysis, 'status': status}):
             return routes.refresh_book(self.work, Response(), self.owner, self.db, force)
 
-    def test_completed_hidden_result_is_queued_again(self):
-        result = self.refresh()
-        self.assertEqual(result['status'], 'pending')
-        self.assertTrue(any("status='pending'" in str(call.args[0]) for call in self.db.execute.call_args_list))
-        self.db.commit.assert_called_once()
+    def test_completed_hidden_result_waits_for_nightly_preparation(self):
+        self.assertEqual(self.refresh()['status'], 'waiting_nightly_processing')
+        self.db.execute.assert_not_called()
+        self.db.commit.assert_not_called()
 
     def test_completed_visible_result_is_reused(self):
-        result = self.refresh(analysis={'id': uuid.uuid4()})
-        self.assertEqual(result['status'], 'completed')
-        self.assertFalse(any('UPDATE ia.jobs' in str(call.args[0]) for call in self.db.execute.call_args_list))
+        self.assertEqual(self.refresh(analysis={'id': uuid.uuid4()})['status'], 'completed')
+        self.db.execute.assert_not_called()
 
-    def test_reader_without_admin_permission_can_request_own_analysis(self):
+    def test_reader_without_admin_permission_can_consult_own_analysis(self):
         self.db.get.return_value = None
         self.assertEqual(self.refresh(analysis={'id': uuid.uuid4()})['status'], 'completed')
 
-    def test_reader_cannot_force_regeneration(self):
-        self.db.get.return_value = None
-        with self.assertRaises(HTTPException) as error:
-            self.refresh(force=True)
-        self.assertEqual(error.exception.status_code, 403)
+    def test_force_cannot_bypass_nightly_preparation(self):
+        self.assertEqual(self.refresh(force=True)['status'], 'waiting_nightly_processing')
+        self.db.execute.assert_not_called()
 
     def test_recommendation_button_requests_only_authenticated_owner_with_bounded_retry(self):
         from app.modules.analytics import insights_router
@@ -57,22 +74,17 @@ class PrivateAnalysisRefreshTest(unittest.TestCase):
         self.assertEqual(result['status'], 'pending')
         state.assert_called_once_with(self.db, self.owner.id, enqueue=True, retry_failed=True)
 
-    def test_hidden_result_does_not_bypass_attempt_limit(self):
+    def test_hidden_result_does_not_reset_attempt_limit(self):
         self.job['attempts'] = self.settings.ai_job_max_attempts
-        with self.assertRaises(HTTPException) as error:
-            self.refresh()
-        self.assertEqual(error.exception.status_code, 409)
+        self.refresh()
+        self.db.execute.assert_not_called()
         self.db.commit.assert_not_called()
 
-    def test_hidden_completed_result_is_reported_obsolete(self):
-        analysis = MagicMock()
-        analysis.get.return_value = None
-        rows = [analysis, {**self.job, 'error_code': None}]
-        self.db.execute.return_value.mappings.return_value.first.side_effect = rows
+    def test_book_route_delegates_canonical_policy_with_owner(self):
         with patch.object(routes, 'owned_entry'), \
              patch('app.modules.books.canonical.enabled', return_value=True), \
              patch('app.modules.books.canonical.canonical_members', return_value={self.work}), \
-             patch('app.modules.books.canonical.identity_version', return_value='current'):
+             patch('app.modules.analytics.reading_analysis.book_state', return_value={'status':'update_pending'}) as state:
             result = routes.book_analysis(self.work, Response(), self.owner, self.db)
-        self.assertEqual(result['status'], 'obsolete')
-        self.assertIsNone(result['analysis'])
+        self.assertEqual(result['status'], 'update_pending')
+        state.assert_called_once_with(self.db, self.owner.id, [self.work])

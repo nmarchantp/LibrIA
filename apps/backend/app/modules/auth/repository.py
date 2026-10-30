@@ -27,7 +27,11 @@ class AuthRepository:
         return self.db.scalar(select(AuthAccount).options(joinedload(AuthAccount.user)).where(AuthAccount.google_subject == subject))
 
     def link_google(self, account: AuthAccount, subject: str) -> User:
+        from app.modules.users.account_service import audit, lock_user, require_active
+        user = lock_user(self.db, account.user_id)
+        require_active(user)
         account.google_subject = subject
+        audit(self.db, user, user.id, "google_linked", after={"google_linked": True})
         try:
             self.db.commit()
         except IntegrityError:
@@ -43,6 +47,8 @@ class AuthRepository:
             self.db.flush()
             if role != "libreria":
                 create_personal_profile(self.db, user)
+            from app.modules.users.account_service import audit
+            audit(self.db, user, user.id, "account_registered", after={"role": role})
             self.db.commit()
         except IntegrityError:
             self.db.rollback()

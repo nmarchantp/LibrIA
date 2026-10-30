@@ -223,7 +223,6 @@ export default function HomePage() {
   const { books } = useLibrary()
   const { user } = useAuth()
   const [profiles, setProfiles] = useState([])
-  const [profileId, setProfileId] = useState('')
   const [profileError, setProfileError] = useState(false)
   useEffect(() => {
     let active = true
@@ -232,9 +231,8 @@ export default function HomePage() {
       .catch(() => { if (active) setProfileError(true) })
     return () => { active = false }
   }, [user.id, refreshKey])
-  const publishingProfiles = profiles.filter(profile => profile.kind === 'organization' || profile.capabilities.some(capability => ['autor', 'influencer'].includes(capability)) || (user.role === 'admin' && profile.kind === 'personal'))
-  const selectedProfile = publishingProfiles.find(profile => profile.id === profileId) || publishingProfiles[0]
-  const publishingRole = selectedProfile?.organization_type || (user.role === 'admin' ? 'admin' : selectedProfile?.capabilities.includes('autor') ? 'autor' : 'influencer')
+  const selectedProfile = user.role !== 'lector' ? profiles.find(profile => profile.kind === 'personal') : null
+  const publishingRole = user.role
   useEffect(() => {
     let active = true
     const refresh = () => {
@@ -264,7 +262,6 @@ export default function HomePage() {
   return <div className="mural-layout">
     <section className="mural-feed" aria-labelledby="mural-title"><header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
       {profileError && <p role="alert">No se pudieron cargar tus permisos de publicación.</p>}
-      {publishingProfiles.length > 1 && <label>Publicar como<select value={selectedProfile?.id || ''} onChange={event => setProfileId(event.target.value)}>{publishingProfiles.map(profile => <option key={profile.id} value={profile.id}>{profile.display_name}</option>)}</select></label>}
       {selectedProfile && <PostComposer key={selectedProfile.id} role={publishingRole} profileId={selectedProfile.id} onCreated={() => setRefreshKey(current => current + 1)} />}
       {feedError && <div className="demo-label">No se pudieron cargar las publicaciones.</div>}
       <nav className="feed-filters" aria-label="Filtrar mural">{filters.map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</nav>

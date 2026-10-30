@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, Ban, Barcode, BookOpen, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, CircleSlash2, Clock3, FileText, Globe2, Landmark, UserRound, Users } from 'lucide-react'
 import { Navigate, Link, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
+import { apiAssetUrl } from '../api/client'
 import BookReviews from '../components/BookReviews'
 import { useLibrary } from '../context/LibraryContext'
 import { getGoogleBookById } from '../services/booksService'
@@ -28,7 +29,7 @@ function RatingStars({ value }) {
 function ReaderAvatar({ reader }) {
   const initials = (reader.displayName || 'L').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase()
   return reader.avatarUrl
-    ? <img src={reader.avatarUrl} alt={reader.displayName} title={reader.displayName} />
+    ? <img src={apiAssetUrl(reader.avatarUrl)} alt={reader.displayName} title={reader.displayName} />
     : <span title={reader.displayName} aria-label={reader.displayName}>{initials}</span>
 }
 
@@ -155,10 +156,7 @@ export default function BookDetailPage() {
         ? <Link className="detail-library-action" to={`/library/${encodeURIComponent(book.id)}`}><span className="detail-action-surface"><BookOpen aria-hidden="true" />Ver en mi biblioteca<ArrowUpRight aria-hidden="true" /></span></Link>
         : <button className="detail-library-action" type="button" onClick={addToLibrary} disabled={adding || (book.catalogFlow === 'discovery-v1' && !book.editionId && !book.selectionReference && !(book.editionOptional && book.workId))}><span className="detail-action-surface"><BookOpen aria-hidden="true" />{adding ? 'Agregando…' : book.editionOptional && !book.editionExplicit ? 'Agregar obra sin edición' : book.catalogFlow === 'discovery-v1' ? 'Agregar esta edición' : 'Agregar a biblioteca'}<ArrowUpRight aria-hidden="true" /></span></button>}
         {libraryBook?.editionOptional && !libraryBook.editionId && detailBook?.editionExplicit && <button type="button" className="button secondary" disabled={adding} onClick={saveEdition}>Seleccionar esta edición para mi lectura</button>}
-        {!libraryBook && book.editionOptional && book.selectionReference && <button type="button" className="button secondary" disabled={adding} onClick={async () => {
-          setAdding(true); setStatusError('')
-          try { await addBook({ ...book, editionExplicit: true }) } catch (cause) { setStatusError(cause.message) } finally { setAdding(false) }
-        }}>Agregar esta edición</button>}
+
     </div>
     {statusError && <p className="detail-error" role="alert">{statusError}</p>}
     </div>

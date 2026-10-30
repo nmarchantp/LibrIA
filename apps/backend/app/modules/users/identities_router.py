@@ -42,8 +42,7 @@ def profile_response(db: Session, profile: Profile):
 
 @router.get("/me")
 def my_profiles(user: CurrentUser, db: SessionDB):
-    member_ids = select(ProfileMember.profile_id).where(ProfileMember.user_id == user.id)
-    profiles = db.scalars(select(Profile).where((Profile.owner_user_id == user.id) | Profile.id.in_(member_ids))
+    profiles = db.scalars(select(Profile).where(Profile.owner_user_id == user.id)
                          .order_by(Profile.created_at, Profile.id)).all()
     return [profile_response(db, profile) for profile in profiles]
 

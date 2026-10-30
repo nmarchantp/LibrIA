@@ -16,6 +16,10 @@ export function apiUrl(path) {
   return `${API_URL}${path}`
 }
 
+export function apiAssetUrl(value) {
+  return value?.startsWith('/') ? new URL(value, API_URL).href : value
+}
+
 export async function apiRequest(path, options = {}) {
   const headers = { ...options.headers }
   if (options.body != null && !(options.body instanceof FormData) && !headers['Content-Type']) headers['Content-Type'] = 'application/json'

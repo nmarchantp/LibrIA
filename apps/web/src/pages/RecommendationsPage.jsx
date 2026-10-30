@@ -56,9 +56,10 @@ export default function RecommendationsPage() {
   const outdated = data?.status === 'outdated'
   const budgetBlocked = data?.status === 'budget_exhausted' || data?.generation_status === 'budget_exhausted'
   const generationStatus = data?.generation_status || data?.status
-  const hasActiveJob = Boolean(data?.job_id) && ['pending', 'processing'].includes(generationStatus)
+  const generationPaused = data?.generation_enabled === false && generationStatus !== 'processing' && ['pending', 'outdated'].includes(data?.status)
+  const hasActiveJob = !generationPaused && Boolean(data?.job_id) && ['pending', 'processing'].includes(generationStatus)
   const failed = generationStatus === 'failed'
-  const canRequest = !budgetBlocked && !hasActiveJob && ['pending', 'outdated', 'failed'].includes(data?.status)
+  const canRequest = data?.generation_enabled !== false && !budgetBlocked && !hasActiveJob && ['pending', 'outdated', 'failed'].includes(data?.status)
   const cutoff = data?.source_cutoff_at ? new Date(data.source_cutoff_at).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' }) : null
 
   useEffect(() => {
@@ -70,8 +71,9 @@ export default function RecommendationsPage() {
   return <section className="page-width page community-page">
     <span className="kicker">PARA TI</span><h1 className="page-title">LibrIA te recomienda</h1>
     <AiUsageBar />
+    {generationPaused && <p className="notice" role="status">La generación está desactivada. Tu solicitud está guardada; un administrador debe habilitar el servicio para continuar. Esperar en esta pantalla no iniciará el análisis.</p>}
     <p className="page-lead">Basta con un libro marcado como terminado y valorado con al menos 4 estrellas. Esa lectura y su valoración deben estar incluidas en la última actualización de datos para solicitar recomendaciones.</p>
-    <ActionStatus busy={loading || hasActiveJob || requesting} message={requesting ? 'Registrando tu solicitud…' : loading ? 'Consultando tus recomendaciones guardadas…' : hasActiveJob ? generationStatus === 'processing' ? 'Gemini está preparando tus recomendaciones. Puede tardar más de un minuto. Aparecerán aquí automáticamente; puedes salir y volver después.' : 'Tu solicitud está en cola. No necesitas repetirla; esta página se actualizará automáticamente.' : pendingState ? 'Tus datos están preparados. Pulsa «Solicitar recomendaciones» para que Gemini elija libros para ti.' : ''} />
+    {!generationPaused && <ActionStatus busy={loading || hasActiveJob || requesting} message={requesting ? 'Registrando tu solicitud…' : loading ? 'Consultando tus recomendaciones guardadas…' : hasActiveJob ? generationStatus === 'processing' ? 'Gemini está preparando tus recomendaciones. Puede tardar más de un minuto. Aparecerán aquí automáticamente; puedes salir y volver después.' : 'Tu solicitud está en cola. No necesitas repetirla; esta página se actualizará automáticamente.' : pendingState ? 'Tus datos están preparados. Pulsa «Solicitar recomendaciones» para que Gemini elija libros para ti.' : ''} />}
     {error && <><p className="notice" role="alert">{error}</p><button className="button" onClick={() => setAttempt(value => value + 1)}>Reintentar consulta</button></>}
     {data?.status === 'locked' && <><p className="notice">Necesitas registrar al menos {data.minimum_books} libros. Tienes {data.book_count}; te faltan {data.missing_books}.</p><Link className="button primary" to="/books">Explorar y agregar libros</Link></>}
     {data?.status === 'waiting_for_etl' && <p className="notice">Tus datos aún no están preparados para la IA. Espera la actualización nocturna. Cuando termine, pulsa «Volver a comprobar mis datos».</p>}

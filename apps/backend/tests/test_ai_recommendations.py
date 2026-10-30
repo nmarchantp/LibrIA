@@ -97,7 +97,9 @@ class RecommendationCutoverTest(unittest.TestCase):
     def test_frontend_reads_state_without_generation_post(self):
         source=(ROOT / "web/src/pages/RecommendationsPage.jsx").read_text(encoding="utf-8")
         self.assertIn("/analytics/me/recommendations/state",source)
-        self.assertNotIn("method: 'POST'",source)
+        read = source[source.index('function readState'):source.index('export default function')]
+        self.assertNotIn("method: 'POST'",read)
+        self.assertNotIn("apiRequest('/analytics/me/recommendations',",source)
         self.assertNotIn("requestMore",source)
 
     def test_legacy_manual_endpoint_is_disabled(self):

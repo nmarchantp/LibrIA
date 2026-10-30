@@ -118,7 +118,7 @@ def login(data: LoginRequest, response: Response,
 
 @router.get("/me", response_model=UserResponse)
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
-    return UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
+    return UserResponse(id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -142,7 +142,7 @@ def refresh(request: Request, response: Response,
 
 
 def service_token_response(user: User, grant) -> TokenResponse:
-    public = UserResponse(id=user.id, email=user.auth_account.email, display_name=user.display_name,
+    public = UserResponse(id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name,
                           role=user.role, avatar_url=user.avatar_url, biography=user.biography,
                           created_at=user.created_at)
     return TokenResponse(access_token=grant.access_token, refresh_token=grant.refresh_token,
@@ -234,6 +234,7 @@ def google_link_start(user: Annotated[User, Depends(get_current_user)]):
     except ValueError as exc:
         raise HTTPException(503, str(exc)) from None
     context = jwt.encode({"sub": str(user.id), "state": state, "aud": "google-link",
+                          "sv": user.auth_account.security_version,
                           "email": user.auth_account.google_email,
                           "exp": datetime.now(timezone.utc) + timedelta(minutes=10)},
                          settings.jwt_secret, algorithm="HS256")
@@ -272,7 +273,7 @@ def google_session(request: Request, service: Annotated[AuthService, Depends(get
             raise ValueError("Unknown user")
     except (PyJWTError, ValueError, TypeError):
         raise HTTPException(401, "La sesión de Google expiró; vuelve a intentarlo") from None
-    token_response = service._token_response(user)
+    token_response = service._token_response(user, expected_security_version=claims.get("sv", 0))
     safe_sync_recommendations(service.repository.db, user.id)
     result = JSONResponse(content=json.loads(token_response.model_dump_json()))
     _set_refresh_cookie(result, token_response.refresh_token)
@@ -338,7 +339,7 @@ def google_callback(request: Request, service: Annotated[AuthService, Depends(ge
         if linking:
             if str(claims.get("email", "")).lower() != intent["email"]:
                 raise InvalidCredentialsError
-            service.google_link(link_user_id, claims)
+            service.google_link(link_user_id, claims, expected_security_version=intent.get("sv", 0))
         else:
             google_user = service.authenticate_google(claims)
     except (urllib.error.URLError, TimeoutError, ValueError, PyJWTError):
@@ -349,6 +350,7 @@ def google_callback(request: Request, service: Annotated[AuthService, Depends(ge
         return google_result(linking=True)
     result = google_result()
     handoff = jwt.encode({"sub": str(google_user.id), "aud": "google-session",
+                          "sv": google_user.auth_account.security_version,
                           "exp": datetime.now(timezone.utc) + timedelta(seconds=60)},
                          settings.jwt_secret, algorithm="HS256")
     result.set_cookie("libria_google_session", handoff, max_age=60, httponly=True,

@@ -37,6 +37,7 @@ export default function LoginPage() {
       <label>Contraseña<input name="password" type="password" autoComplete="current-password" required /></label>
       {(error || googleError) && <p className="form-error" role="alert">{error || googleError}</p>}
       <button className="button primary" disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>
+      <p><Link to="/recover-account">Restablecer contraseña o cancelar eliminación de cuenta</Link></p>
       <p className="auth-divider">o</p>
       <GoogleLoginButton />
       <p>Para usar Google, primero verifica tu correo y vincúlalo en Mi cuenta.</p>
