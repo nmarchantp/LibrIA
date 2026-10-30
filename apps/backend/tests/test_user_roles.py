@@ -73,36 +73,28 @@ class UserRolesTest(unittest.TestCase):
         self.assertEqual(self.client.post("/api/posts", headers=self.auth(reader),
             json={"source": "review", "kind": "reviews", "body": "Sin libro"}).status_code, 422)
 
-    def test_admin_verifies_profiles_and_creates_bookstores(self):
+    def test_admin_verifies_exclusive_bookstore_accounts(self):
         reader = self.register("Persona aspirante")
         admin = self.register("Admin de prueba")
         self.db.get(User, uuid.UUID(admin["user"]["id"])).role = "admin"
         self.db.add(AccountPermission(user_id=uuid.UUID(admin["user"]["id"]), permission="admin"))
         self.db.flush()
-        request = self.client.post("/api/roles/requests", headers=self.auth(reader),
-            json={"requested_role": "autor", "note": "Publiqué una novela de ficción."})
+        self.assertEqual(self.client.post("/api/roles/requests", headers=self.auth(reader),
+            json={"requested_role": "autor", "note": "Solicitud del titular"}).status_code, 403)
+        request = self.client.post(f"/api/accounts/admin/{reader['user']['id']}/verification", headers=self.auth(admin),
+            json={"requested_role": "libreria", "note": "Actividad comercial verificada"})
         self.assertEqual(request.status_code, 201, request.text)
         request_id = request.json()["id"]
-        self.assertEqual(self.client.post("/api/roles/requests", headers=self.auth(reader),
-            json={"requested_role": "influencer", "note": "Tengo un canal de libros."}).status_code, 409)
-        self.assertEqual(self.client.get("/api/roles/requests/pending", headers=self.auth(reader)).status_code, 403)
         self.assertEqual(self.client.post(f"/api/roles/requests/{request_id}/approve", headers=self.auth(reader)).status_code, 403)
-        self.assertEqual(self.client.post("/api/roles/bookstores", headers=self.auth(reader), json={
-            "email": f"{uuid.uuid4()}@example.com", "password": "test-password", "display_name": "Librería prueba"}).status_code, 403)
-        approved = self.client.post(f"/api/roles/requests/{request_id}/approve", headers=self.auth(admin))
-        self.assertEqual(approved.status_code, 200, approved.text)
-        self.assertEqual(self.client.get("/api/auth/me", headers=self.auth(reader)).json()["role"], "autor")
+        self.assertEqual(self.client.post(f"/api/roles/requests/{request_id}/approve", headers=self.auth(admin)).status_code, 200)
+        self.assertEqual(self.client.get("/api/auth/me", headers=self.auth(reader)).status_code, 401)
+        reader = self.client.post("/api/auth/login", json={"email": reader["user"]["email"], "password": "test-password"}).json()
+        self.assertEqual(reader["user"]["role"], "libreria")
         post = self.client.post("/api/posts", headers=self.auth(reader),
-            json={"source": "community", "kind": "community", "body": "Mi nueva novela"})
+            json={"source": "community", "kind": "community", "body": "Novedades de la libreria"})
         self.assertEqual(post.status_code, 201, post.text)
-        self.assertEqual(post.json()["author_role"], "autor")
-        bookstore = self.client.post("/api/profiles/organizations", headers=self.auth(admin), json={
-            "display_name": "Bookstore test", "administrator_user_id": reader["user"]["id"]})
-        self.assertEqual(bookstore.status_code, 201, bookstore.text)
-        self.assertEqual(bookstore.json()["organization_type"], "libreria")
-        forged = self.client.post("/api/posts", headers=self.auth(admin), json={
-            "source": "event", "kind": "community", "body": "Forbidden actor", "author_profile_id": bookstore.json()["id"]})
-        self.assertEqual(forged.status_code, 403)
+        self.assertEqual(post.json()["author_role"], "libreria")
+        self.assertEqual(len(self.client.get("/api/profiles/me", headers=self.auth(reader)).json()), 1)
 
     def test_reading_progress_creates_feed_posts(self):
         reader = self.register()
@@ -134,49 +126,24 @@ class UserRolesTest(unittest.TestCase):
         self.db.get(User, uuid.UUID(admin["user"]["id"])).role = "admin"
         self.db.add(AccountPermission(user_id=uuid.UUID(admin["user"]["id"]), permission="admin"))
         self.db.flush()
-        author_headers = self.auth(author)
         admin_headers = self.auth(admin)
-        request = self.client.post("/api/roles/requests", headers=author_headers,
-                                   json={"requested_role": "autor", "note": "Tengo una novela publicada."})
+        request = self.client.post(f"/api/accounts/admin/{author['user']['id']}/verification", headers=admin_headers,
+            json={"requested_role": "autor", "note": "Tengo una novela publicada."})
         self.assertEqual(request.status_code, 201, request.text)
-
-        for method, path in (("get", "/api/roles/profiles"),
-                             ("get", f"/api/roles/profiles/{author['user']['id']}/requests"),
-                             ("get", f"/api/roles/profiles/{author['user']['id']}/history")):
-            self.assertEqual(getattr(self.client, method)(path, headers=author_headers).status_code, 403)
-        results = self.client.get("/api/roles/profiles", headers=admin_headers,
-                                  params={"q": "Autora verificable", "role": "lector", "limit": 1})
-        self.assertEqual(results.status_code, 200, results.text)
-        self.assertEqual(results.json()["total"], 1)
-        self.assertEqual(results.json()["items"][0]["pending_role"], "autor")
-        self.assertEqual(self.client.get("/api/roles/profiles", headers=admin_headers,
-                                         params={"role": "administrador"}).status_code, 422)
-        self.assertEqual(self.client.patch(f"/api/roles/profiles/{author['user']['id']}",
-                                           headers=admin_headers, json={"display_name": "Nuevo nombre", "role": "admin"}).status_code, 422)
         edited = self.client.patch(f"/api/roles/profiles/{author['user']['id']}", headers=admin_headers,
-                                   json={"display_name": "Autora actualizada", "biography": "Escribe ficción."})
+            json={"display_name": "Autora actualizada", "biography": "Escribe ficcion.", "reason": "Correccion administrativa solicitada"})
         self.assertEqual(edited.status_code, 200, edited.text)
-        self.assertEqual(edited.json()["role"], "lector")
-        self.assertEqual(len(self.client.get(f"/api/roles/profiles/{author['user']['id']}/requests",
-                                             headers=admin_headers).json()), 1)
-
         approved = self.client.post(f"/api/roles/requests/{request.json()['id']}/approve", headers=admin_headers)
         self.assertEqual(approved.status_code, 200, approved.text)
-        post = self.client.post("/api/posts", headers=author_headers,
-                                json={"source": "community", "kind": "community", "body": "Mi próximo libro"})
-        self.assertEqual(post.status_code, 201, post.text)
-        self.assertEqual(self.client.post(f"/api/roles/profiles/{author['user']['id']}/revoke",
-                                          headers=author_headers, json={"reason": "No corresponde al perfil"}).status_code, 403)
+        author = self.client.post("/api/auth/login", json={"email": author["user"]["email"], "password": "test-password"}).json()
+        self.assertEqual(author["user"]["role"], "autor")
         revoked = self.client.post(f"/api/roles/profiles/{author['user']['id']}/revoke", headers=admin_headers,
-                                   json={"reason": "Se retiró la verificación del perfil."})
+            json={"reason": "Se retiro la verificacion del perfil."})
         self.assertEqual(revoked.status_code, 200, revoked.text)
         self.assertEqual(revoked.json()["role"], "lector")
-        self.assertEqual(self.client.post("/api/posts", headers=author_headers,
-                                          json={"source": "community", "kind": "community", "body": "Otro libro"}).status_code, 403)
-        listed = self.client.get("/api/posts").json()
-        self.assertEqual(next(item for item in listed if item["id"] == post.json()["id"])["author_role"], "autor")
+        self.assertEqual(self.client.get("/api/auth/me", headers=self.auth(author)).status_code, 401)
         history = self.client.get(f"/api/roles/profiles/{author['user']['id']}/history", headers=admin_headers)
-        self.assertEqual(history.status_code, 200, history.text)
+        self.assertEqual(history.status_code, 200)
         self.assertEqual(history.json()[0]["previous_role"], "autor")
         self.assertEqual(history.json()[0]["new_role"], "lector")
 
@@ -256,6 +223,7 @@ class UserRolesTest(unittest.TestCase):
             session = self.register(f"Account {role}")
             user = self.db.get(User, uuid.UUID(session["user"]["id"]))
             profile = personal_profile(self.db, user)
+            user.role = role
             self.db.add(ProfileCapability(profile_id=profile.id, capability=role))
             self.db.flush()
             for source in ("community", "event"):

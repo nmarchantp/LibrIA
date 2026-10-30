@@ -62,7 +62,9 @@ def _recommendation_compatibility(result: dict) -> dict:
 def current_recommendation_state(response: Response, user: CurrentUser, db: Database):
     """Read-only: never creates work and never invokes an AI provider."""
     response.headers["Cache-Control"] = "no-store"
-    return _recommendation_compatibility(recommendation_state(db, user.id, enqueue=False))
+    from app.modules.analytics.generation_runtime import generation_runtime
+    return {**_recommendation_compatibility(recommendation_state(db, user.id, enqueue=False)),
+            **generation_runtime(get_settings())}
 
 
 @router.post("/me/recommendations/sync")

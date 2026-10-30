@@ -178,6 +178,26 @@ class ReaderProfileETLState(Base):
     )
 
 
+class ReadingAnalysisRequest(Base):
+    __tablename__ = 'reading_analysis_requests'
+    __table_args__ = (Index('ix_reading_requests_pending', 'changed_at'),
+                      Index('ix_reading_requests_owner', 'owner_id', 'reading_event_id'), {'schema': 'ia'})
+    reading_event_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.eventos_lectura.id', ondelete='CASCADE'), primary_key=True)
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id', ondelete='CASCADE'))
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text('clock_timestamp()'))
+    prepared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(Text)
+
+
+class ReadingAnalysisSnapshot(Base):
+    __tablename__ = 'reading_analysis_snapshots'
+    __table_args__ = {'schema': 'ia'}
+    job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('ia.jobs.id', ondelete='CASCADE'), primary_key=True)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    prepared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text('clock_timestamp()'))
+    etl_run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('analytics.ejecuciones_etl.id'))
+
+
 class AIJob(Base):
     __tablename__ = "jobs"
     __table_args__ = (
@@ -216,6 +236,7 @@ class AIJob(Base):
             "provider",
             "model",
             "prompt_version",
+            "evidence_hash",
             unique=True,
             postgresql_where=text("job_kind = 'reading_event_analysis'"),
         ),

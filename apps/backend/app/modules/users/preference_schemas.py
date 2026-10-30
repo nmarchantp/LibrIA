@@ -87,7 +87,7 @@ class ReadingGenreStatistics(BaseModel):
 
 class PreferencesUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] | None = None
+    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=70)] | None = None
     genre_ids: list[Identifier] | None = Field(default=None, max_length=5)
     trope_ids: list[Identifier] | None = None
     intensities: list[IntensitySelection] | None = Field(default=None, max_length=5)

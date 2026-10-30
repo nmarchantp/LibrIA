@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import './AdminProfilesPage.css'
+import AdminAccountManagement from '../components/AdminAccountManagement'
 
 const PAGE_SIZE = 20
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
@@ -14,7 +15,7 @@ const permissions = {
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
 export default function AdminProfilesPage() {
-  const [tab, setTab] = useState('profiles')
+  const [tab, setTab] = useState('accounts')
   const [searchDraft, setSearchDraft] = useState('')
   const [query, setQuery] = useState('')
   const [role, setRole] = useState('')
@@ -28,7 +29,6 @@ export default function AdminProfilesPage() {
   const [reason, setReason] = useState('')
   const [requests, setRequests] = useState([])
   const [history, setHistory] = useState([])
-  const [bookstore, setBookstore] = useState({ display_name: '', administrator_user_id: '', organization_type: 'libreria' })
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -106,7 +106,7 @@ export default function AdminProfilesPage() {
   const saveProfile = async event => {
     event.preventDefault()
     const result = await mutate(`/roles/profiles/${selected.id}`, 'PATCH',
-      { display_name: name.trim(), biography: biography.trim() || null }, 'Datos del perfil actualizados.')
+      { display_name: name.trim(), biography: biography.trim() || null, reason }, 'Datos del perfil actualizados.')
     if (result) setSelected(result)
   }
   const revoke = async event => {
@@ -120,22 +120,18 @@ export default function AdminProfilesPage() {
       action === 'approve' ? 'Perfil verificado y habilitado para publicar.' : 'Solicitud rechazada.')
     if (result) setPending(current => current.filter(item => item.id !== request.id))
   }
-  const createBookstore = async event => {
-    event.preventDefault()
-    const result = await mutate('/profiles/organizations', 'POST', bookstore, 'Organizacion creada y asignada al responsable.')
-    if (result) setBookstore({ display_name: '', administrator_user_id: '', organization_type: 'libreria' })
-  }
+
 
   return <div className="admin-profiles page-width">
     <header className="admin-header"><span className="kicker">ADMINISTRACIÓN</span><h1>Mantenedor de perfiles</h1><p>Revisa las cuentas, verifica perfiles profesionales y crea librerías. Los permisos de publicación dependen del perfil vigente.</p></header>
-    <nav className="admin-tabs" aria-label="Secciones del mantenedor">
+    <nav className="admin-tabs" aria-label="Secciones del mantenedor"><button className={tab === 'accounts' ? 'active' : ''} onClick={() => setTab('accounts')}>Cuentas y seguridad</button>
       <button className={tab === 'profiles' ? 'active' : ''} onClick={() => setTab('profiles')}>Perfiles</button>
       <button className={tab === 'requests' ? 'active' : ''} onClick={() => setTab('requests')}>Solicitudes pendientes ({pending.length})</button>
-      <button className={tab === 'bookstore' ? 'active' : ''} onClick={() => setTab('bookstore')}>Crear librería</button>
     </nav>
     {error && <p className="admin-message error" role="alert">{error}</p>}
     {notice && <p className="admin-message" role="status">{notice}</p>}
 
+    {tab === 'accounts' && <AdminAccountManagement onChanged={() => setRefreshKey(v => v + 1)} />}
     {tab === 'profiles' && <>
       <form className="admin-filters" onSubmit={search}>
         <label>Buscar por nombre o correo<input value={searchDraft} onChange={event => setSearchDraft(event.target.value)} maxLength="100" placeholder="Nombre o correo" /></label>
@@ -159,7 +155,7 @@ export default function AdminProfilesPage() {
           <form className="admin-form" onSubmit={saveProfile}>
             <h3>Datos públicos</h3>
             <label>Nombre visible<input value={name} onChange={event => setName(event.target.value)} minLength="2" maxLength="100" required /></label>
-            <label>Biografía<textarea value={biography} onChange={event => setBiography(event.target.value)} maxLength="1000" rows="3" /></label>
+            <label>Biografía<textarea value={biography} onChange={event => setBiography(event.target.value)} maxLength="70" rows="3" /></label>
             <button className="button primary" disabled={busy || !name.trim()}>Guardar cambios</button>
           </form>
           {selected.pending_role && <p className="admin-inline-note">Tiene una solicitud pendiente para ser {roleLabels[selected.pending_role]}. Revísala en “Solicitudes pendientes”.</p>}
@@ -179,14 +175,6 @@ export default function AdminProfilesPage() {
       <p>{request.note}</p><div className="admin-request-actions"><button className="button primary" disabled={busy} onClick={() => decide(request, 'approve')}>Aprobar</button><button className="button" disabled={busy} onClick={() => decide(request, 'reject')}>Rechazar</button></div>
     </article>)}</section>}
 
-    {tab === 'bookstore' && <section className="admin-bookstore"><h2>Crear organizacion</h2><p>Asigna una cuenta personal existente como responsable. Cada miembro usa sus propias credenciales.</p>
-      <form className="admin-form" onSubmit={createBookstore}>
-        <label>Nombre visible<input value={bookstore.display_name} onChange={event => setBookstore(current => ({ ...current, display_name: event.target.value }))} minLength="2" maxLength="100" required /></label>
-        <label>Tipo<select value={bookstore.organization_type} onChange={event => setBookstore(current => ({ ...current, organization_type: event.target.value }))}><option value="libreria">Libreria</option><option value="editorial">Editorial</option></select></label>
-        <label>Responsable<select value={bookstore.administrator_user_id} onChange={event => setBookstore(current => ({ ...current, administrator_user_id: event.target.value }))} required><option value="">Selecciona una cuenta de los resultados</option>{profiles.filter(profile => profile.role !== 'libreria').map(profile => <option key={profile.id} value={profile.id}>{profile.display_name} ({profile.email})</option>)}</select></label>
-        <p>Usa la busqueda de perfiles para localizar al responsable antes de crear la organizacion.</p>
-        <button className="button primary" disabled={busy}>Crear organizacion</button>
-      </form>
-    </section>}
+
   </div>
 }

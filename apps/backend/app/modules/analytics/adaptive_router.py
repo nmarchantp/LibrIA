@@ -9,12 +9,10 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user
-from app.modules.users.identity_models import AccountPermission
 from app.modules.users.models import User
 from app.modules.analytics.adaptive_ai import latest, owned_entry, VERSION, PROFILE_VERSION
 from app.modules.analytics.recommendation_profiles import prepare_administrator_profile
 from app.modules.analytics.recommendation_sync import recommendation_state
-from app.modules.analytics.persistence import enqueue_reading_event_analysis
 
 router = APIRouter(prefix='/me/ai', tags=['private-reader-ai'])
 Owner = Annotated[User, Depends(get_current_user)]
@@ -51,98 +49,39 @@ def book_analysis(book_id: uuid.UUID, response: Response, user: Owner, db: Datab
     from app.modules.books.canonical import enabled, canonical_members, identity_version
     work_ids = list(canonical_members(db, book_id)) if enabled() else [book_id]
     response.headers['Cache-Control']='no-store'
-    analysis = db.execute(text('''SELECT a.* FROM ia.analyses a
-        JOIN ia.jobs j ON j.id=a.job_id
-        JOIN app.eventos_lectura ev ON ev.id=a.reading_event_id
-        JOIN app.lecturas r ON r.id=ev.reading_id
-        WHERE a.owner_id=:owner AND r.work_id=ANY(:works) AND a.provider='gemini'
-          AND j.job_kind='reading_event_analysis' AND a.valid
-        ORDER BY a.created_at DESC LIMIT 1'''), {'owner': user.id, 'works': work_ids}).mappings().first()
-    if enabled() and analysis and analysis.get('identity_version') != identity_version(db):
-        analysis = None
-    job = db.execute(text('''SELECT j.id,j.target,j.status,j.attempts,j.error_code,j.updated_at,j.not_before,j.locked_at,
-        j.prompt_version,j.model
-        FROM ia.jobs j JOIN app.eventos_lectura ev ON ev.id=j.reading_event_id
-        JOIN app.lecturas r ON r.id=ev.reading_id
-        WHERE j.owner_id=:owner AND r.work_id=ANY(:works) AND j.job_kind='reading_event_analysis'
-          AND j.provider='gemini' ORDER BY ev.created_at DESC,j.created_at DESC LIMIT 1'''),
-        {'owner': user.id, 'works': work_ids}).mappings().first()
-    evidence=[]
-    if analysis:
-        evidence=[dict(row) for row in db.execute(text('''SELECT e.source_key,e.source_kind,e.source_id,e.work_id,
-            w.title AS book_title FROM ia.evidence e LEFT JOIN app.obras w ON w.id=e.work_id
-            WHERE e.analysis_id=:analysis ORDER BY e.source_key'''), {'analysis':analysis['id']}).mappings().all()]
-    if job and job['status'] in {'pending', 'processing'}:
-        status = job['status']
-    elif analysis:
-        status = 'ready'
-    elif job and (job['status'] == 'completed' or str(job['error_code'] or '').startswith(('obsolete', 'reading_event_unavailable'))):
-        status = 'obsolete'
-    elif job and job['error_code'] == 'monthly_budget_exhausted':
-        status = 'budget_exhausted'
-    else:
-        status = job['status'] if job else 'awaiting_terminal_event'
-    return {'scope':'book','status':status,'analysis':dict(analysis) if analysis else None,
-            'job':dict(job) if job else None,'evidence':evidence}
+    from app.modules.analytics.reading_analysis import book_state
+    return book_state(db, user.id, work_ids)
 
 
 @router.post('/books/{book_id}/refresh', status_code=202)
 def refresh_book(book_id: uuid.UUID, response: Response, user: Owner, db: Database, force: bool = False):
-    owned_entry(db, user.id, book_id)
-    from app.modules.books.canonical import enabled, canonical_members
-    work_ids = list(canonical_members(db, book_id)) if enabled() else [book_id]
-    response.headers['Cache-Control'] = 'no-store'
-    if force and db.get(AccountPermission, (user.id, 'admin')) is None:
-        raise HTTPException(403, 'Se requiere una cuenta administradora')
-    event_id = db.execute(text('''SELECT ev.id FROM app.eventos_lectura ev
-        JOIN app.lecturas r ON r.id=ev.reading_id
-        JOIN app.entradas_biblioteca le ON le.id=r.library_entry_id
-        WHERE le.user_id=:owner AND r.work_id=ANY(:works)
-          AND ev.actor_user_id=:owner AND ev.kind IN ('finish','abandon')
-        ORDER BY ev.created_at DESC,ev.id DESC LIMIT 1'''),
-        {'owner': user.id, 'works': work_ids}).scalar()
-    if event_id is None:
-        raise HTTPException(409, 'Termina o abandona una lectura de este libro antes de analizarla')
-    settings = get_settings()
-    if force:
-        existing = db.execute(text('''SELECT status,attempts FROM ia.jobs WHERE reading_event_id=:event
-          AND provider=:provider AND model=:model AND prompt_version=:prompt'''),
-          {'event':event_id,'provider':settings.ai_provider,'model':settings.gemini_model,
-           'prompt':settings.reading_analysis_prompt_version}).mappings().first()
-        if existing and (existing['status']=='processing' or existing['attempts']>=settings.ai_job_max_attempts):
-            raise HTTPException(409,'El trabajo está en curso o alcanzó su límite acumulado de intentos')
-    job = enqueue_reading_event_analysis(
-        db,
-        reading_event_id=event_id,
-        provider=settings.ai_provider,
-        model=settings.gemini_model,
-        prompt_version=settings.reading_analysis_prompt_version,
-        delay_minutes=0,
-    )
-    if force and job['status'] == 'completed' and job['attempts'] < settings.ai_job_max_attempts:
-        job = db.execute(text("""UPDATE ia.jobs SET status='pending',revision=revision+1,
-          not_before=now(),error_code=NULL,updated_at=now() WHERE id=:id RETURNING *"""),
-          {'id':job['id']}).mappings().one()
-    elif job['status'] == 'failed' and job['attempts'] < settings.ai_job_max_attempts:
-        job = db.execute(text('''UPDATE ia.jobs SET status='pending',error_code=NULL,
-            not_before=now(),locked_at=NULL,updated_at=now() WHERE id=:id RETURNING *'''),
-            {'id': job['id']}).mappings().one()
-    elif job['status'] == 'completed':
-        # A completed job can have an invalidated or pre-canonical result. The
-        # worker checks the current evidence hash before reusing any analysis.
-        current = book_analysis(book_id, response, user, db)
-        if not current['analysis']:
-            if job['attempts'] >= settings.ai_job_max_attempts:
-                raise HTTPException(409, 'El análisis necesita actualizarse, pero alcanzó su límite de intentos')
-            job = db.execute(text("""UPDATE ia.jobs SET status='pending',not_before=now(),
-                error_code=NULL,locked_at=NULL,updated_at=now()
-                WHERE id=:id AND status='completed' RETURNING *"""),
-                {'id':job['id']}).mappings().one()
-    elif job['status'] == 'pending':
-        job = db.execute(text("UPDATE ia.jobs SET not_before=now(),updated_at=now() WHERE id=:id RETURNING *"),
-                         {'id': job['id']}).mappings().one()
+    # Refresh is a database read. Even administrators cannot bypass the nightly cut.
+    return book_analysis(book_id, response, user, db)
+
+
+@router.get('/books/{book_id}/history')
+def book_history(book_id: uuid.UUID, response: Response, user: Owner, db: Database,
+                 limit: int = Query(20, ge=1, le=100)):
+    state = book_analysis(book_id, response, user, db)
+    if state['status'] in {'requires_review', 'not_eligible'}:
+        return {'items': []}
+    rows = db.execute(text("""SELECT id,version,content,model,prompt_version,created_at,data_hash
+      FROM ia.analyses WHERE owner_id=:owner AND reading_event_id=:event AND valid
+      AND provider='gemini' ORDER BY created_at DESC LIMIT :limit"""),
+      {'owner':user.id,'event':state['reading_event_id'],'limit':limit}).mappings().all()
+    return {'items':[dict(row) for row in rows]}
+
+
+@router.post('/books/{book_id}/retry', status_code=202)
+def retry_book(book_id: uuid.UUID, response: Response, user: Owner, db: Database):
+    state = book_analysis(book_id, response, user, db)
+    if state['status'] != 'failed' or state.get('retry_exhausted'):
+        raise HTTPException(409, 'No hay un reintento disponible para esta lectura')
+    db.execute(text("""UPDATE ia.reading_analysis_requests SET changed_at=clock_timestamp(),
+      error_code='retry_requested' WHERE reading_event_id=:event AND owner_id=:owner"""),
+      {'event':state['reading_event_id'],'owner':user.id})
     db.commit()
-    return {'job_id': job['id'], 'status': job['status'], 'job': dict(job)}
+    return book_analysis(book_id, response, user, db)
 
 
 @router.get('/profile')
@@ -177,9 +116,14 @@ def profile(response: Response, user: Owner, db: Database):
         evidence=[dict(row) for row in db.execute(text('''SELECT e.source_key,e.source_kind,e.source_id,e.work_id,
             w.title AS book_title FROM ia.evidence e LEFT JOIN app.obras w ON w.id=e.work_id
             WHERE e.analysis_id=:analysis ORDER BY e.source_key'''),{'analysis':analysis['id']}).mappings().all()]
+    recommendations = state.get('recommendations')
+    if isinstance(recommendations, dict):
+        recommendations = recommendations.get('recommendations')
+    if not isinstance(recommendations, list):
+        recommendations = None
     result = {'scope':'profile','status':'ready' if dna else state['status'],
               'analysis': analysis,
-              'recommendations': (state.get('recommendations') or {}).get('recommendations'),
+              'recommendations': recommendations,
               'job': {'id':state.get('job_id'),'status':state.get('generation_status',state['status']),
                       'error_code':state.get('error_code')} if state.get('job_id') and not dna else None,
               'evidence': evidence, 'needs_refresh': False}

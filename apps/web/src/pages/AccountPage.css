@@ -30,3 +30,14 @@
   .settings-page .account-page > :is(.account-personal-info,.google-account-panel,.role-panel) { padding:20px 16px; }
   .settings-page .account-page .account-details { grid-template-columns:minmax(0,1fr); gap:14px; }
 }
+.account-management { display: grid; gap: 1.5rem; }
+.settings-page .account-management { grid-column: 1 / -1; min-width: 0; }
+.settings-page .account-management > section { padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); min-width: 0; }
+.admin-accounts { min-width: 0; overflow-wrap: anywhere; }
+.admin-accounts pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.account-management form { margin-block: 1rem; }
+.account-management fieldset { border: 0; padding: 0; display: grid; gap: .8rem; min-width: 0; }
+.account-management label { display: grid; gap: .4rem; margin-block: .6rem; }
+.account-management input, .account-management textarea { max-width: 100%; padding: .65rem; border: 1px solid var(--border, #ccc); border-radius: .5rem; background: var(--surface, white); color: inherit; }
+.account-avatar-preview { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; }
+.account-danger { border: 1px solid #b86c6c; border-radius: 1rem; padding: 1rem; }

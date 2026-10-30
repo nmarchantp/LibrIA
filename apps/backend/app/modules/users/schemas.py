@@ -9,6 +9,7 @@ from app.modules.users.roles import UserRole
 
 class UserResponse(BaseModel):
     id: uuid.UUID
+    username: str | None = None
     email: EmailStr
     display_name: str
     role: UserRole

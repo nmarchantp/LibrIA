@@ -38,7 +38,7 @@ export default function ProfileAboutCard({ biography, genres = [], editable = fa
   const availableGenres = [...(options || []), ...genres.filter(genre => !options?.some(option => option.id === genre.id))]
   async function save(event) {
     event.preventDefault()
-    if (busy || (isBiography ? length > 200 : genreIds.length > 5 || !options)) return
+    if (busy || (isBiography ? length > 70 : genreIds.length > 5 || !options)) return
     setBusy(true); setError('')
     try { await onSave(isBiography ? { biography: draft } : { genre_ids: genreIds }); setEditing(false); setMessage('Sobre mí guardado.') }
     catch (cause) { setError(cause.message || 'No se pudo guardar Sobre mí.') }
@@ -49,11 +49,11 @@ export default function ProfileAboutCard({ biography, genres = [], editable = fa
     {!isBiography && <p className="reader-card-description">Los géneros que más disfruto leer.</p>}
     {(isBiography ? <span className="reader-story-decoration-slot" data-decoration-slot="story-books-candles" aria-hidden="true" /> : <span className="reader-card-decoration" data-decoration-slot="genre-books-flowers" aria-hidden="true"><LibraryBig /><Sprout /></span>)}
     {isBiography ? <p className={biography ? 'reader-biography' : 'reader-module-empty'}>{biography || 'Aún no hay una biografía. Este espacio está reservado para una historia lectora.'}</p> : <PreferenceTags values={genres} empty="Aún no has elegido géneros que te representen." />}
-    <ProfileEditModal open={editable && editing} title={`Editar ${title}`} icon={isBiography ? <BookOpen /> : <LibraryBig />} description={isBiography ? 'Cuenta tu historia lectora en un máximo de 200 caracteres.' : 'Elige hasta cinco géneros que te representen.'}
-      dirty={initial !== JSON.stringify(isBiography ? draft : genreIds)} busy={busy} saveDisabled={isBiography ? length > 200 : genreIds.length > 5 || !options} onSubmit={save} onClose={() => { setEditing(false); setError('') }}>
+    <ProfileEditModal open={editable && editing} title={`Editar ${title}`} icon={isBiography ? <BookOpen /> : <LibraryBig />} description={isBiography ? 'Cuenta tu historia lectora en un máximo de 70 caracteres.' : 'Elige hasta cinco géneros que te representen.'}
+      dirty={initial !== JSON.stringify(isBiography ? draft : genreIds)} busy={busy} saveDisabled={isBiography ? length > 70 : genreIds.length > 5 || !options} onSubmit={save} onClose={() => { setEditing(false); setError('') }}>
       {isBiography && <><label htmlFor="profile-biography">Tu biografía</label>
       <textarea id="profile-biography" value={draft} rows={5} disabled={busy} onChange={event => setDraft(event.target.value)} aria-describedby="biography-count biography-visibility" />
-      <span id="biography-count" className={length > 200 ? 'reader-field-error' : 'reader-field-count'} aria-live="polite">{length}/200 caracteres</span></>}
+      <span id="biography-count" className={length > 70 ? 'reader-field-error' : 'reader-field-count'} aria-live="polite">{length}/70 caracteres</span></>}
       {!isBiography && !options && !catalogError && <p role="status">Cargando géneros…</p>}
       {!isBiography && catalogError && <div><p className="reader-field-error" role="alert">{catalogError}</p><button className="reader-edit-button" type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></div>}
       {!isBiography && options && <GenreSelector options={availableGenres} selected={genreIds} onToggle={toggleGenre} disabled={busy} />}

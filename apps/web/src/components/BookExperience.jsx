@@ -1,4 +1,5 @@
-import { BookOpenText, CheckCircle2, CircleAlert, CircleHelp, Heart, LoaderCircle, Quote, RefreshCw, Sparkles, ThumbsUp } from 'lucide-react'
+import { bookAnalysisMessages } from './bookAnalysisState'
+import { BookOpenText, CircleAlert, CircleHelp, Heart, Quote, RefreshCw, Sparkles, ThumbsUp } from 'lucide-react'
 import { useLibrary } from '../context/LibraryContext'
 import BookCover from './BookCover'
 import { formatAnalysisDate, sourceLabels } from './adaptiveAnalysisLabels'
@@ -17,21 +18,6 @@ const sentiments = { positivo: 'Positivo', negativo: 'Negativo', mixto: 'Mixto' 
 const abandonment = { externo: 'Motivos externos a la obra', obra: 'Opinión sobre la obra', mixto: 'Motivos mixtos' }
 // Messages shown while a durable provider job is processing.
 const sourcesOf = claim => [...new Set(claim.evidence_ids.map(id => sourceLabels[id.split(':')[0]] || 'Registro propio'))].join(' · ')
-
-function StatusBar({ analysis, working, failed, message, error }) {
-  const state = working ? 'working' : failed || error ? 'failed' : 'done'
-  const StateIcon = { working: LoaderCircle, failed: CircleAlert, done: CheckCircle2 }[state]
-  if (!working && !message && !error) return null
-  return <div className={`dna-status is-${state}`}>
-    <div className="dna-status-row">
-      <p role={state === 'failed' ? 'alert' : 'status'} aria-live={state === 'failed' ? 'assertive' : 'polite'}>
-        <StateIcon className={state === 'working' ? 'dna-spinner' : undefined} size={20} aria-hidden="true" />
-        <strong>{error || message}</strong>
-      </p>
-      {state === 'done' && analysis?.source_cutoff_at && <small className="bx-sync">Datos al {formatAnalysisDate(analysis.source_cutoff_at)}</small>}
-    </div>
-  </div>
-}
 
 function WaitingFindings({ processing }) {
   const text = processing ? 'Análisis en curso. El resultado aparecerá automáticamente cuando esté listo.' : 'Tu solicitud está pendiente. Puedes consultar arriba cuándo podrá comenzar.'
@@ -61,17 +47,53 @@ function FindingCard({ claim, label, icon: Icon }) {
   </article>
 }
 
-export default function BookExperience({ workId, data, analysis, working, failed, message, error, notice, onRefresh, refreshDisabled, refreshLabel, submitting, information, setInformation, onFeedback }) {
+function NightlyStatus({ data, onWriteReview, onRetry, submitting }) {
+  if (data?.retry_scheduled) {
+    return <aside className="dna-notice" role="status"><strong>La lechuza prepara otro intento</strong>
+      <p>La generación anterior falló. Tu reintento está guardado y se habilitará con la próxima actualización de datos, automática o iniciada por un administrador.</p>
+      {data.analysis && <small>Actualización pendiente · Tu interpretación anterior sigue disponible.</small>}
+    </aside>
+  }
+  if (data?.generation_enabled === false && data?.job?.status === 'pending' && data?.status !== 'completed') {
+    return <aside className="dna-notice" role="status"><strong>Tu lechuza espera la señal de partida</strong>
+      <p>Tu solicitud está guardada, pero la generación está desactivada. Un administrador debe habilitar el servicio para continuar.</p>
+      {data.analysis && <small>Actualización pendiente · Tu interpretación anterior sigue disponible.</small>}
+    </aside>
+  }
+  const [title, message] = bookAnalysisMessages[data?.status] || []
+  if (!title || data.status === 'completed') return null
+  return <aside className="dna-notice" role="status" aria-live="polite">
+    <strong>{title}</strong><p>{message}</p>
+    {data.needs_refresh && data.analysis && <small>Actualización pendiente · Interpretación de una versión anterior</small>}
+    {data.status === 'requires_review' && <a href="#book-review-form" onClick={onWriteReview}>Escribir reseña</a>}
+    {data.status === 'failed' && data.retry_exhausted && <p>Se alcanzó el límite de intentos. Contacta con soporte para revisar el problema.</p>}
+    {data.status === 'failed' && !data.retry_exhausted && <button className="button secondary" type="button" disabled={submitting} onClick={onRetry}>Programar reintento</button>}
+  </aside>
+}
+
+export default function BookExperience({ workId, data, analysis, working, error, notice, onRefresh, refreshDisabled, refreshLabel, submitting, information, setInformation, onFeedback, onWriteReview, onRetry, history, historyBusy, onLoadHistory }) {
   const { getBook } = useLibrary()
   const book = getBook(workId)
   const content = analysis?.content
+  const observationSources = (field, index = 0) => {
+    const ids = content?.observation_evidence?.find(item => item.field === field && item.index === index)?.evidence_ids || []
+    const labels = [...new Set(ids.map(id => sourceLabels[id.split(':')[0]] || 'Registro propio'))]
+    return labels.length > 0 ? <small>Fuente: {labels.join(' · ')}</small> : null
+  }
+  const historyView = analysis && <details className="bx-evidence"><summary onClick={() => { if (!history) onLoadHistory() }}>Versiones anteriores</summary>
+    {historyBusy && <p role="status">Consultando mensajes anteriores…</p>}
+    {history?.map(item => <article key={item.id}><small>{formatAnalysisDate(item.created_at)}</small><p>{item.content.experience_summary}</p></article>)}
+  </details>
   if (content?.experience_summary) return <section className="book-experience-view" aria-label="Análisis personal persistido">
     <header className="dna-header"><div><span className="dna-kicker">Solo esta lectura</span><h2>Tu experiencia con este libro</h2><p>Análisis privado de tu valoración, reseña y notas al terminar o abandonar esta lectura.</p></div>
       <button type="button" className="dna-refresh" disabled={refreshDisabled} onClick={onRefresh}><RefreshCw size={15} aria-hidden="true" />{refreshLabel}</button></header>
-    <StatusBar analysis={analysis} working={working} failed={failed} message={message} error={error} />
+    <NightlyStatus data={data} onWriteReview={onWriteReview} onRetry={onRetry} submitting={submitting} />
+    {error && <p role="alert">{error}</p>}
+    {historyView}
     {notice && <p className="dna-notice" role="status">{notice}</p>}
     <article className="dna-card bx-result"><WorkHeading book={book} /><blockquote className="bx-quote"><Quote size={16} aria-hidden="true" /><p>{content.experience_summary}</p></blockquote>
-      {[['valued_elements','Elementos valorados'],['friction_points','Puntos de fricción'],['themes_and_interests','Temas e intereses'],['emotional_response','Respuestas expresadas'],['rating_observations','Observaciones de valoración']].map(([key,label]) => content[key]?.length > 0 && <section key={key}><h3>{label}</h3><ul>{content[key].map((item,index)=><li key={index}>{item}</li>)}</ul></section>)}
+      {observationSources('experience_summary')}
+      {[['valued_elements','Elementos valorados'],['friction_points','Puntos de fricción'],['themes_and_interests','Temas e intereses'],['emotional_response','Respuestas expresadas'],['rating_observations','Observaciones de valoración']].map(([key,label]) => content[key]?.length > 0 && <section key={key}><h3>{label}</h3><ul>{content[key].map((item,index)=><li key={index}><p>{item}</p>{observationSources(key, index)}</li>)}</ul></section>)}
       <details className="bx-evidence"><summary>Evidencias y metadatos</summary><p>Evento: {content.event_kind === 'finish' ? 'finalización' : 'abandono'}</p><p>Modelo: {analysis.model}</p><p>{content.evidence_ids.length} referencia(s) validadas.</p></details>
     </article>
     <article className="dna-card bx-feedback"><form onSubmit={event => { event.preventDefault(); onFeedback('correct') }}><h3>¿Hay algo que corregir?</h3><textarea maxLength={3000} rows={4} disabled={submitting} value={information} onChange={event => setInformation(event.target.value)} /><div className="bx-feedback-actions"><button className="button primary" disabled={working || !information.trim()}>Guardar corrección</button><button className="button secondary" type="button" disabled={working} onClick={() => onFeedback('confirm')}>Me representa</button><button className="button secondary" type="button" disabled={working} onClick={() => onFeedback('reject')}>No me representa</button></div></form></article>
@@ -85,7 +107,9 @@ export default function BookExperience({ workId, data, analysis, working, failed
     {data?.status === 'awaiting_terminal_event' && <p className="dna-notice">Primero marca esta lectura como terminada o abandonada. Completa tu valoración, reseña y notas, y luego pulsa «Solicitar análisis».</p>}
     {data?.status === 'obsolete' && <p className="dna-notice">Tu análisis anterior necesita actualizarse. Pulsa «Solicitar análisis» para preparar una nueva versión.</p>}
     {data?.status === 'budget_exhausted' && <p className="dna-notice">El presupuesto mensual está agotado. El evento permanece registrado sin crear solicitudes adicionales.</p>}
-    <StatusBar analysis={analysis} working={working} failed={failed} message={message} error={error} />
+    <NightlyStatus data={data} onWriteReview={onWriteReview} onRetry={onRetry} submitting={submitting} />
+    {error && <p role="alert">{error}</p>}
+    {historyView}
     {notice && <p className="dna-notice" role="status">{notice}</p>}
     {working && analysis && <p className="dna-muted">Mientras se procesa la actualización, puedes consultar la última versión válida.</p>}
     {/* A newly rated book has no previous version yet, so the wait gets its own card. */}

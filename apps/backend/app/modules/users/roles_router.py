@@ -6,15 +6,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
 from app.core.database import get_db
-from app.core.exceptions import EmailAlreadyRegisteredError
-from app.core.security import hash_password
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import AuthAccount
-from app.modules.auth.repository import AuthRepository
 from app.modules.users.models import User
 from app.modules.users.profile_models import ProfileRoleChange
 from app.modules.users.role_schemas import (
@@ -24,8 +20,8 @@ from app.modules.users.role_schemas import (
 from app.modules.users.roles import UserRole
 from app.modules.users.schemas import UserResponse
 from app.modules.users.verification_models import VerificationRequest
-from app.modules.users.identity_models import AccountPermission, Profile, ProfileCapability
-from app.modules.users.identities import personal_profile, publication_role
+from app.modules.users.identity_models import AccountPermission, Profile
+from app.modules.users.identities import personal_profile
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
@@ -87,6 +83,9 @@ def list_profiles(admin: Annotated[User, Depends(get_admin)], db: Annotated[Sess
 def update_profile(user_id: uuid.UUID, data: AdminProfileUpdate,
                    admin: Annotated[User, Depends(get_admin)], db: Annotated[Session, Depends(get_db)]) -> AdminProfile:
     user = require_profile(db, user_id)
+    from app.modules.users.account_service import audit
+    audit(db, user, admin.id, "profile_updated", before={"display_name": user.display_name, "biography": user.biography},
+          after={"display_name": data.display_name, "biography": data.biography}, reason=data.reason, origin="admin")
     user.display_name = data.display_name
     user.biography = data.biography
     profile = db.scalar(select(Profile).where(Profile.owner_user_id == user.id))
@@ -102,21 +101,9 @@ def update_profile(user_id: uuid.UUID, data: AdminProfileUpdate,
 @router.post("/profiles/{user_id}/revoke", response_model=AdminProfile)
 def revoke_profile_role(user_id: uuid.UUID, data: RoleRevocation,
                         admin: Annotated[User, Depends(get_admin)], db: Annotated[Session, Depends(get_db)]) -> AdminProfile:
-    user = require_profile(db, user_id)
-    if user.role not in {"autor", "influencer"}:
-        raise HTTPException(status_code=409, detail="Solo se pueden revocar perfiles de autor o influencer")
-    previous_role = user.role
-    profile = personal_profile(db, user)
-    capability = db.get(ProfileCapability, (profile.id, previous_role))
-    if capability:
-        db.delete(capability)
-        db.flush()
-    user.role = publication_role(db, profile)
-    db.add(ProfileRoleChange(user_id=user.id, admin_user_id=admin.id,
-                             previous_role=previous_role, new_role=user.role, reason=data.reason,
-                             created_at=datetime.now(timezone.utc)))
+    from app.modules.users.account_service import assign_role
+    user = assign_role(db, require_profile(db, user_id), admin, "lector", data.reason)
     db.commit()
-    db.refresh(user)
     return profile_response(user, user.auth_account.email)
 
 
@@ -146,23 +133,7 @@ def profile_role_history(user_id: uuid.UUID, admin: Annotated[User, Depends(get_
 @router.post("/requests", response_model=VerificationResponse, status_code=status.HTTP_201_CREATED)
 def request_verification(data: VerificationCreate, user: Annotated[User, Depends(get_current_user)],
                          db: Annotated[Session, Depends(get_db)]) -> VerificationResponse:
-    profile = personal_profile(db, user)
-    if db.get(ProfileCapability, (profile.id, data.requested_role)):
-        raise HTTPException(status_code=409, detail="Ya tienes esta capacidad")
-    pending = db.scalar(select(VerificationRequest).where(
-        VerificationRequest.user_id == user.id, VerificationRequest.status == "pending",
-    ))
-    if pending:
-        raise HTTPException(status_code=409, detail="Ya tienes una solicitud pendiente")
-    request = VerificationRequest(user_id=user.id, requested_role=data.requested_role, note=data.note)
-    db.add(request)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Ya tienes una solicitud pendiente") from None
-    db.refresh(request)
-    return verification_response(request, user, user.auth_account.email)
+    raise HTTPException(403, "Solo un administrador puede solicitar cambios de tipo de perfil")
 
 
 @router.get("/requests/me", response_model=list[VerificationResponse])
@@ -193,18 +164,13 @@ def decide_request(request_id: uuid.UUID, admin: User, db: Session, approve: boo
         raise HTTPException(status_code=409, detail="La solicitud ya fue revisada")
     user = require_profile(db, request.user_id)
     if approve:
+        from app.modules.users.account_service import assign_role
+        assign_role(db, user, admin, request.requested_role, request.note, approved=True)
         profile = personal_profile(db, user)
-        if db.get(ProfileCapability, (profile.id, request.requested_role)):
-            raise HTTPException(status_code=409, detail="El perfil ya tiene esa capacidad")
-        previous_role = user.role
-        db.add(ProfileCapability(profile_id=profile.id, capability=request.requested_role))
-        db.flush()
-        if user.role != "admin":
-            user.role = publication_role(db, profile)
-        db.add(ProfileRoleChange(user_id=user.id, admin_user_id=admin.id,
-                                 previous_role=previous_role, new_role=user.role,
-                                 reason="Aprobación de solicitud de verificación",
-                                 created_at=datetime.now(timezone.utc)))
+        profile.verification_status = "verified"
+    from app.modules.users.account_service import audit
+    audit(db, user, admin.id, "professional_verification_approved" if approve else "professional_verification_rejected",
+          reason=request.note, origin="admin")
     request.status = "approved" if approve else "rejected"
     request.decided_at = datetime.now(timezone.utc)
     request.decided_by_user_id = admin.id
@@ -228,4 +194,4 @@ def reject_verification(request_id: uuid.UUID, admin: Annotated[User, Depends(ge
 @router.post("/bookstores", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_bookstore(data: BookstoreCreate, admin: Annotated[User, Depends(get_admin)],
                      db: Annotated[Session, Depends(get_db)]) -> UserResponse:
-    raise HTTPException(status_code=410, detail="Crea una organización con responsable personal en /profiles/organizations")
+    raise HTTPException(status_code=410, detail="Solicita la verificación del tipo exclusivo librería en /accounts/admin/{user_id}/verification")

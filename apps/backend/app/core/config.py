@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     ai_timeout_seconds: int = Field(default=180, ge=5, le=300)
     recommendation_prompt_version: str = "recommendations-v5-es"
     reader_dna_prompt_version: str = "reader-dna-v1-es"
-    reading_analysis_prompt_version: str = "reading-event-v2-es"
+    reading_analysis_prompt_version: str = "reading-event-v3-es"
     reading_analysis_delay_minutes: int = Field(default=30, ge=0, le=1440)
     ai_max_concurrent_requests: int = Field(default=2, ge=1, le=16)
     ai_requests_per_minute: int = Field(default=10, ge=1, le=600)
