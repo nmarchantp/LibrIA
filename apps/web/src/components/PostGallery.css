@@ -1,0 +1,45 @@
+/* Galería de imágenes de publicaciones: solo usa variables de theme/themes.css para respetar cada tema. */
+.post-gallery { display:grid; gap:8px; margin-top:14px; }
+.post-gallery-tile { position:relative; display:block; padding:0; border:0; border-radius:14px; background:var(--soft); overflow:hidden; cursor:zoom-in; }
+.post-gallery-tile img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .25s; }
+.post-gallery-tile:hover img { transform:scale(1.02); }
+.post-gallery-tile:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+
+/* Una sola imagen: completa, con su proporción original. */
+.post-gallery.count-1 .post-gallery-tile { display:flex; justify-content:center; }
+.post-gallery.count-1 .post-gallery-tile img { width:auto; max-width:100%; height:auto; max-height:560px; object-fit:contain; }
+.post-gallery.count-1 .post-gallery-tile:hover img { transform:none; }
+
+/* Varias imágenes: cuadrícula de dos columnas. */
+.post-gallery.count-2, .post-gallery.count-3, .post-gallery.count-4 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.post-gallery.count-2 .post-gallery-tile, .post-gallery.count-4 .post-gallery-tile { aspect-ratio:1; }
+.post-gallery.count-3 .post-gallery-tile { aspect-ratio:1; }
+.post-gallery.count-3 .post-gallery-tile:first-child { grid-row:span 2; aspect-ratio:auto; }
+.post-gallery-more { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:2px; background:rgb(0 0 0 / 52%); color:#fff; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.post-gallery-more strong { font:34px/1 'DM Serif Display',serif; letter-spacing:0; }
+
+/* Visor a pantalla completa. */
+.post-lightbox { width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:0; border:0; background:transparent; }
+.post-lightbox::backdrop { background:rgb(10 8 14 / 88%); }
+.post-lightbox-frame { position:relative; display:grid; grid-template-rows:minmax(0,1fr) auto; place-items:center; gap:12px; height:100%; padding:56px 72px 20px; box-sizing:border-box; pointer-events:none; }
+.post-lightbox-frame > * { pointer-events:auto; }
+.post-lightbox figure { display:grid; justify-items:center; gap:10px; min-height:0; max-height:100%; margin:0; }
+.post-lightbox figure img { min-height:0; max-width:100%; max-height:calc(100vh - 190px); border-radius:10px; object-fit:contain; }
+.post-lightbox figcaption { color:#fff; font-size:13px; font-variant-numeric:tabular-nums; }
+.post-lightbox-close, .post-lightbox-nav { position:absolute; display:grid; place-items:center; padding:0; border:0; border-radius:50%; background:rgb(255 255 255 / 14%); color:#fff; cursor:pointer; }
+.post-lightbox-close:hover, .post-lightbox-nav:hover { background:rgb(255 255 255 / 26%); }
+.post-lightbox-close:focus-visible, .post-lightbox-nav:focus-visible, .post-lightbox-thumbs button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.post-lightbox-close { top:14px; right:16px; width:42px; height:42px; }
+.post-lightbox-nav { top:50%; width:48px; height:48px; transform:translateY(-50%); }
+.post-lightbox-nav.is-prev { left:14px; }
+.post-lightbox-nav.is-next { right:14px; }
+.post-lightbox-thumbs { display:flex; gap:8px; max-width:100%; padding:4px; overflow-x:auto; }
+.post-lightbox-thumbs button { width:54px; height:54px; flex-shrink:0; padding:0; border:2px solid transparent; border-radius:8px; background:none; opacity:.55; overflow:hidden; cursor:pointer; }
+.post-lightbox-thumbs button.active { border-color:#fff; opacity:1; }
+.post-lightbox-thumbs img { width:100%; height:100%; object-fit:cover; }
+
+@media(max-width:560px) {
+  .post-lightbox-frame { padding:56px 12px 16px; }
+  .post-lightbox-nav { top:auto; bottom:84px; transform:none; width:42px; height:42px; }
+}
+@media(prefers-reduced-motion:reduce) { .post-gallery-tile img { transition:none; } }

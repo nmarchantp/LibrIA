@@ -1,81 +1,21 @@
 import RatingStar from '../components/RatingStar'
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, BookOpen, Heart, MessageCircle, UserRoundCheck, UserRoundPlus, X } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Heart, MessageCircle, UserRoundCheck, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiRequest, apiUrl } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import { useAuth } from '../context/AuthContext'
 import BookCover from '../components/BookCover'
+import SpoilerShield from '../components/SpoilerShield'
+import PostComposer from '../components/PostComposer'
+import FormattedText from '../components/FormattedText'
+import PostGallery from '../components/PostGallery'
 import './HomePage.css'
 
 const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
+const publicationLabels = { news: 'Anuncio', promotion: 'Promoción', launch: 'Lanzamiento', institutional: 'Institucional', event: 'Evento', note: 'Nota', theory: 'Teoría' }
 const roleColors = { lector: 'var(--secondary)', influencer: 'var(--soft)', autor: 'var(--secondary)', libreria: 'var(--soft)', editorial: 'var(--secondary)', admin: 'var(--secondary)' }
-const composerCopy = {
-  influencer: { heading: 'Comparte con tu comunidad', hint: 'Publica recomendaciones, lecturas conjuntas o conversaciones sobre libros.', placeholder: '¿Qué recomendarías hoy?' },
-  autor: { heading: 'Comparte tu trabajo', hint: 'Publica novedades de tus obras o anuncia un encuentro con lectores.', placeholder: '¿Qué hay de nuevo en tu escritura?' },
-  libreria: { heading: 'Publica desde tu librería', hint: 'Comparte promociones, novedades o un evento de tu librería.', placeholder: 'Cuéntale a la comunidad sobre tus libros o actividades.' },
-  editorial: { heading: 'Publica desde tu editorial', hint: 'Comparte novedades, promociones y eventos.', placeholder: 'Escribe una novedad editorial.' },
-  admin: { heading: 'Publica como administrador', hint: 'Comparte anuncios y eventos para la comunidad.', placeholder: 'Escribe un anuncio para la comunidad.' },
-}
-
-function PostComposer({ role, profileId, onCreated }) {
-  const { retry } = useAuth()
-  const copy = composerCopy[role]
-  const [source, setSource] = useState('community')
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [images, setImages] = useState([])
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [imageError, setImageError] = useState('')
-  const selectImages = event => {
-    const selected = Array.from(event.target.files || [])
-    const totalSize = selected.reduce((sum, image) => sum + image.size, 0)
-    if (selected.length > 10) setImageError('Puedes adjuntar hasta 10 imágenes.')
-    else if (selected.some(image => !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(image.type))) setImageError('Usa imágenes JPEG, PNG, GIF o WebP.')
-    else if (selected.some(image => image.size > 5 * 1024 * 1024) || totalSize > 25 * 1024 * 1024) setImageError('Cada imagen puede pesar hasta 5 MB y el total hasta 25 MB.')
-    else { setImages(selected); setImageError('') }
-    event.target.value = ''
-  }
-  const submit = async event => {
-    event.preventDefault()
-    setBusy(true)
-    setError('')
-    try {
-      const token = localStorage.getItem('libria_token')
-      const form = new FormData()
-      const publication = { source: source === 'event' ? 'event' : 'community', publication_type: source === 'community' ? 'free' : source,
-        author_profile_id: profileId, kind: 'community', title: title.trim(), body: body.trim() }
-      Object.entries(publication).forEach(([key, value]) => form.append(key, value))
-      images.forEach(image => form.append('images', image))
-      await apiRequest('/posts', { method: 'POST', headers: { Authorization: `Bearer ${token}` },
-        body: form })
-      setTitle('')
-      setBody('')
-      setImages([])
-      onCreated()
-    } catch (cause) {
-      if (cause.status === 403) retry()
-      setError(cause.status === 403 ? 'Tu perfil ya no tiene permiso para este tipo de publicación.' : 'No se pudo publicar. Inténtalo de nuevo.')
-    } finally {
-      setBusy(false)
-    }
-  }
-  return <form className="post-composer" onSubmit={submit}>
-    <h2>{copy.heading}</h2><p className="composer-hint">{copy.hint}</p>
-    <label>Tipo<select value={source} onChange={event => setSource(event.target.value)}><option value="community">Publicación</option><option value="event">Evento</option><option value="promotion">Promoción</option></select></label>
-    <label>Título<input value={title} onChange={event => setTitle(event.target.value)} maxLength="200" placeholder="Título opcional" /></label>
-    <label>Comentario breve (máximo 500 caracteres)<textarea value={body} onChange={event => setBody(event.target.value)} maxLength="500" rows="3" required placeholder={copy.placeholder} /></label>
-    <small className="composer-counter">{body.length}/500</small>
-    <label>Imágenes (hasta 10)<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple onChange={selectImages} /></label>
-    {images.length > 0 && <ul className="selected-images">{images.map((image, index) => <li key={`${image.name}-${index}`}><span>{image.name}</span><button type="button" aria-label={`Quitar ${image.name}`} onClick={() => setImages(current => current.filter((_, itemIndex) => itemIndex !== index))}><X size={15} /></button></li>)}</ul>}
-    {imageError && <p className="comment-error" role="alert">{imageError}</p>}
-    {error && <p className="comment-error" role="alert">{error}</p>}
-    <button className="button primary" disabled={busy || !body.trim() || Boolean(imageError)}>{busy ? 'Publicando...' : 'Publicar'}</button>
-  </form>
-}
-
 function FeedCard({ post }) {
   const { getBook } = useLibrary()
   const libraryBook = post.bookId ? getBook(post.bookId) : null
@@ -176,15 +116,15 @@ function FeedCard({ post }) {
   }
 
   return <article className="feed-card">
-    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{post.publicationType === 'note' ? 'Nota' : post.publicationType === 'theory' ? 'Teoría' : post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación'}</span></header>
+    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación')}</span></header>
     {post.title && <h2>{post.title}</h2>}
     {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <RatingStar key={i} size={16} fraction={post.rating - i} />)}<span>{post.rating}/5</span></div>}
     {post.bookTitle && !post.title && <h2>{post.bookTitle}</h2>}
-    {post.isSpoiler ? <details><summary>Contiene spoilers · Mostrar reseña</summary><p className="post-text">{post.text}</p>{post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la reseña de ${post.author}`} loading="lazy" />)}</div>}</details> : <><p className="post-text">{post.text}</p>
-    {post.images.length > 0 && <div className="post-images">{post.images.map(image => <img key={image} src={apiUrl(image)} alt={`Imagen de la publicación de ${post.author}`} loading="lazy" />)}</div>}</>}
+    {post.isSpoiler ? <SpoilerShield><FormattedText className="post-text" text={post.text} /><PostGallery images={post.images.map(image => apiUrl(image))} alt={`Imagen de la reseña de ${post.author}`} /></SpoilerShield> : <><FormattedText className="post-text" text={post.text} />
+    <PostGallery images={post.images.map(image => apiUrl(image))} alt={`Imagen de la publicación de ${post.author}`} /></>}
     {post.type === 'progress' && post.progressPercent !== null && <div className="progress-label"><span>Progreso de lectura</span><strong>{post.progressPercent} %</strong></div>}
     {post.quote && <blockquote className="post-quote">“{post.quote}”<span>Desde el cuaderno de la autora</span></blockquote>}
-    {book && <BookContainer className="post-book" {...(book.id ? { to: '/books/' + book.id } : {})}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'LECTURA COMPARTIDA' : 'EN ESTA RESEÑA'}</small><h3>{book.title}</h3>{book.author && <p>{book.author}</p>}{post.progressPercent !== null && post.type === 'progress' && <div className="progress"><span style={{ width: post.progressPercent + '%' }} /></div>}</div>{book.id && <ArrowUpRight size={18} />}</BookContainer>}
+    {book && <BookContainer className="post-book" {...(book.id ? { to: '/books/' + book.id } : {})}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'LECTURA COMPARTIDA' : post.type === 'reviews' ? 'EN ESTA RESEÑA' : 'OBRA ENLAZADA'}</small><h3>{book.title}</h3>{book.author && <p>{book.author}</p>}{post.progressPercent !== null && post.type === 'progress' && <div className="progress"><span style={{ width: post.progressPercent + '%' }} /></div>}</div>{book.id && <ArrowUpRight size={18} />}</BookContainer>}
     {post.feedItemType !== 'reading_event' && <div className="post-actions">
       <button type="button" aria-pressed={liked} disabled={interactionBusy} onClick={toggleLike}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> Me gusta <span>{likeCount}</span></button>
       {post.authorProfileId && <button type="button" aria-pressed={following} disabled={interactionBusy} onClick={toggleFollow}>{following ? <UserRoundCheck size={17} /> : <UserRoundPlus size={17} />}{following ? 'Siguiendo' : 'Seguir perfil'}</button>}

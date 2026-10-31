@@ -1,12 +1,15 @@
 import { ratingDimensions } from '../data/ratingDimensions'
 import RatingControl from '../components/RatingControl'
 import { useEffect, useId, useState } from 'react'
-import { BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, FileText, Flag, Lightbulb, MessageCircle, NotebookPen, PartyPopper, Save, Star, StickyNote, Tags, Users } from 'lucide-react'
+import { BookOpen, BookOpenCheck, CalendarDays, ChevronLeft, Eye, FileText, Flag, Lightbulb, MessageCircle, NotebookPen, PartyPopper, Save, Star, StickyNote, Tags, TriangleAlert, Users } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
 import ActionStatus from '../components/ActionStatus'
 import AdaptiveAnalysis from '../components/AdaptiveAnalysis'
 import BookReviews from '../components/BookReviews'
+import RatingStar from '../components/RatingStar'
+import SpoilerShield from '../components/SpoilerShield'
+import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import { useUnsavedSessionWarning } from '../hooks/useUnsavedSessionWarning'
@@ -15,9 +18,36 @@ import './LibraryBookPage.css'
 const tabs = [['rating', 'Valoración', Star], ['notebook', 'Cuaderno', NotebookPen], ['notes', 'Notas', StickyNote], ['theories', 'Teorías', Lightbulb], ['community', 'Comunidad', Users]]
 const formatReadingDate = value => value ? new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Añadir'
 const notebookSnapshot = value => JSON.stringify({ characters: value.characters || '', places: value.places || '', summary: value.summary || '' })
-const ratingSnapshot = (ratings, comment, visibility) => JSON.stringify([
-  Object.fromEntries(Object.entries(ratings).filter(([, value]) => value != null).sort()), comment, visibility,
+const ratingSnapshot = (ratings, comment, visibility, spoiler = false) => JSON.stringify([
+  Object.fromEntries(Object.entries(ratings).filter(([, value]) => value != null).sort()), comment, visibility, spoiler,
 ])
+// The backend only moves readings forward: a closed reading restarts as a new attempt.
+const statusOptions = [['Pendiente', 'pending'], ['Leyendo', 'reading'], ['Terminado', 'finished'], ['Abandonado', 'abandoned']]
+const statusConfirmations = {
+  Leyendo: 'Empezarás una nueva lectura (relectura) desde la página 0. La lectura anterior se conserva en tu historial.',
+  Terminado: 'Tu progreso quedará en 100 % y esta lectura se cerrará.',
+  Abandonado: 'Esta lectura se cerrará en la página actual. Más adelante podrás retomarla como una nueva lectura.',
+}
+
+function ReviewPreview({ user, book, rating, text, isSpoiler, visibility }) {
+  const initials = (user?.display_name || '').trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase()
+  const body = <p className="post-text">{text}</p>
+  return <section className="review-preview" aria-labelledby="review-preview-title">
+    <header className="review-preview-heading">
+      <h3 id="review-preview-title"><Eye aria-hidden="true" />Vista previa: cómo la verán otros lectores en el mural</h3>
+      <span className={`review-preview-badge is-${visibility}`}>{visibility === 'public' ? 'Pública' : 'Privada'}</span>
+    </header>
+    {visibility === 'private' && <p className="review-preview-note">Tu reseña es privada y no aparecerá en el mural. Así se vería si la haces pública.</p>}
+    <article className="review-preview-card">
+      <div className="review-preview-author">
+        <span className="person-avatar" aria-hidden="true">{initials}</span>
+        <div><strong>{user?.display_name}</strong><small>Sobre {book.title} · Hoy</small></div>
+        {rating ? <span className="review-preview-stars" role="img" aria-label={`${rating} de 5 estrellas`}>{Array.from({ length: 5 }, (_, index) => <RatingStar key={index} size={15} fraction={rating - index} />)}</span> : null}
+      </div>
+      {isSpoiler ? <SpoilerShield>{body}</SpoilerShield> : body}
+    </article>
+  </section>
+}
 
 function WallComposer({ type, book, onSaved }) {
   const isNote = type === 'note'
@@ -55,7 +85,8 @@ function WallComposer({ type, book, onSaved }) {
 export default function LibraryBookPage() {
   const bookDetailsTooltipId = useId()
   const { id } = useParams()
-  const { getBook, loading, loadError, recordEvent, updateTotalPages } = useLibrary()
+  const { user } = useAuth()
+  const { getBook, loading, loadError, recordEvent, updateStatus, updateTotalPages } = useLibrary()
   const book = getBook(id)
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
@@ -63,6 +94,8 @@ export default function LibraryBookPage() {
   const [comment, setComment] = useState('')
   const [existingReview, setExistingReview] = useState(null)
   const [reviewVisibility, setReviewVisibility] = useState('public')
+  const [isSpoiler, setIsSpoiler] = useState(false)
+  const [statusConfirm, setStatusConfirm] = useState(null)
   const [activeTab, setActiveTab] = useState('rating')
   const [analysisRevision, setAnalysisRevision] = useState(0)
   const [notebook, setNotebook] = useState({ characters: '', places: '', summary: '' })
@@ -100,15 +133,16 @@ export default function LibraryBookPage() {
         setExistingReview(review)
         setComment(review.body || '')
         setReviewVisibility(review.status === 'published' ? 'public' : 'private')
+        setIsSpoiler(Boolean(review.is_spoiler))
         setRatings(current => ({ ...current, ...review.dimension_ratings, general: review.rating ?? null }))
         const loadedRatings = { ...Object.fromEntries(ratingDimensions.map(([key]) => [key, null])),
           ...review.dimension_ratings, general: review.rating ?? null }
-        setRatingBaseline(ratingSnapshot(loadedRatings, review.body || '', review.status === 'published' ? 'public' : 'private'))
+        setRatingBaseline(ratingSnapshot(loadedRatings, review.body || '', review.status === 'published' ? 'public' : 'private', Boolean(review.is_spoiler)))
       }).catch(() => { if (active) setError('No se pudo recuperar tu valoración.') })
     return () => { active = false }
   }, [book?.workId])
 
-  useUnsavedSessionWarning(ratingSnapshot(ratings, comment, reviewVisibility) !== ratingBaseline)
+  useUnsavedSessionWarning(ratingSnapshot(ratings, comment, reviewVisibility, isSpoiler) !== ratingBaseline)
   useUnsavedSessionWarning(notebookSnapshot(notebook) !== notebookBaseline)
 
   if (loading) return <section className="page-width page"><p role="status">Cargando tu libro…</p></section>
@@ -167,14 +201,14 @@ export default function LibraryBookPage() {
       const dimensionRatings = Object.fromEntries(Object.entries(ratings).filter(([key, value]) => key !== 'general' && value))
       const targetStatus = reviewVisibility === 'public' ? 'published' : existingReview?.published_at ? 'hidden' : 'draft'
       const payload = { edition_id: book.editionId || null, rating: ratings.general || null,
-        dimension_ratings: dimensionRatings, body: comment.trim(), is_spoiler: false, status: targetStatus,
+        dimension_ratings: dimensionRatings, body: comment.trim(), is_spoiler: isSpoiler, status: targetStatus,
         ...(!existingReview ? { work_id: book.workId } : {}) }
       const saved = await apiRequest(existingReview ? `/reviews/${existingReview.id}` : '/reviews', {
         method: existingReview ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },
         body: JSON.stringify(payload),
       })
       setExistingReview(saved)
-      setRatingBaseline(ratingSnapshot(ratings, comment, reviewVisibility))
+      setRatingBaseline(ratingSnapshot(ratings, comment, reviewVisibility, isSpoiler))
       setMessage(reviewVisibility === 'public' ? 'Tu valoración quedó visible para la comunidad.' : 'Tu valoración quedó guardada de forma privada.')
     } catch { setError('No se pudo guardar la valoración.') }
     finally { setBusy(false) }
@@ -198,13 +232,39 @@ export default function LibraryBookPage() {
     setBusy('Eliminando tu reseña y valoración…'); setError(''); setMessage('')
     try {
       await apiRequest(`/reviews/${existingReview.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
-      setExistingReview(null); setComment('')
+      setExistingReview(null); setComment(''); setIsSpoiler(false)
       const emptyRatings = Object.fromEntries(ratingDimensions.map(([key]) => [key, null]))
       setRatings(emptyRatings)
       setRatingBaseline(ratingSnapshot(emptyRatings, '', 'public'))
       setMessage('Reseña y valoración eliminadas. Tu perfil se actualizará sin esa evidencia.')
     } catch { setError('No se pudo eliminar tu reseña.') }
     finally { setBusy(false) }
+  }
+
+  const statusBlock = target => {
+    if (target === book.status) return ''
+    if (target === 'Pendiente') return 'Una lectura ya iniciada no puede volver a pendiente.'
+    if (target === 'Abandonado' && book.status !== 'Leyendo') return 'Solo puedes abandonar un libro que estás leyendo.'
+    if (!book.pageCount && !book.editionOptional) return 'Indica primero el total de páginas en tu progreso de lectura.'
+    return ''
+  }
+  const changeStatus = async target => {
+    setStatusConfirm(null)
+    setBusy('Actualizando el estado de tu lectura…'); setError(''); setMessage('')
+    try {
+      if (target === 'Abandonado') await recordEvent(book, 'abandon')
+      else await updateStatus(book.id, target)
+      setMessage(`Estado actualizado: ${target}.`)
+    } catch (cause) { setError(cause.message || 'No se pudo cambiar el estado de la lectura.') }
+    finally { setBusy(false) }
+  }
+  const selectStatus = target => {
+    if (busy || target === book.status) return
+    const blocked = statusBlock(target)
+    if (blocked) { setMessage(''); setError(blocked); return }
+    const needsConfirm = target !== 'Leyendo' || ['Terminado', 'Abandonado'].includes(book.status)
+    if (needsConfirm) setStatusConfirm(target)
+    else changeStatus(target)
   }
 
   return <section className="page-width page library-book-page">
@@ -221,7 +281,20 @@ export default function LibraryBookPage() {
       <div className="reading-overview-cover"><BookCover book={book} large /></div>
       <div className="reading-overview-main">
         <div className="reading-overview-top">
-          <div className="reading-book-copy"><h1>{book.title}</h1><p>{book.author || 'Autor desconocido'}</p></div>
+          <div className="reading-book-copy"><h1>{book.title}</h1><p>{book.author || 'Autor desconocido'}</p>
+            <div className="reading-status-picker" role="group" aria-label="Cambiar estado de la lectura">
+              <span>Cambiar estado:</span>
+              {statusOptions.map(([option, slug]) => {
+                const blocked = statusBlock(option)
+                return <button type="button" key={option} className={`reading-status-chip is-${slug}${book.status === option ? ' active' : ''}`}
+                  aria-pressed={book.status === option} aria-disabled={Boolean(busy) || Boolean(blocked)} title={blocked || undefined} onClick={() => selectStatus(option)}>{option}</button>
+              })}
+            </div>
+            {statusConfirm && <div className="reading-status-confirm" role="alertdialog" aria-labelledby="reading-status-confirm-text">
+              <p id="reading-status-confirm-text"><strong>¿Cambiar a “{statusConfirm}”?</strong> {statusConfirmations[statusConfirm]}</p>
+              <div><button type="button" className="button primary" autoFocus onClick={() => changeStatus(statusConfirm)}>Confirmar</button><button type="button" className="button secondary" onClick={() => setStatusConfirm(null)}>Cancelar</button></div>
+            </div>}
+          </div>
           <section className="reading-status-strip" aria-label="Estado de la lectura">
             <div><BookOpenCheck aria-hidden="true" /><span>Estado</span><strong>{book.status}</strong></div>
             <div><CalendarDays aria-hidden="true" /><span>Inicio</span><strong>{book.startedAt ? formatReadingDate(book.startedAt) : '—'}</strong></div>
@@ -275,8 +348,13 @@ export default function LibraryBookPage() {
     {activeTab === 'rating' && <form id="book-review-form" className="rating-form" onSubmit={saveRating} aria-busy={Boolean(busy)}>
       <section className="reading-tab-content library-ratings"><div className="book-review-layout">
       <section className="book-review-writing" aria-labelledby="book-review-title">
-      <div className="review-heading"><h2 id="book-review-title">Reseña</h2><label>Visibilidad<select value={reviewVisibility} onChange={event => setReviewVisibility(event.target.value)}><option value="public">Pública</option><option value="private">Privada</option></select></label></div>
+      <div className="review-heading"><h2 id="book-review-title">Reseña</h2></div>
       <textarea className="reading-review-textarea" aria-label="Texto de tu reseña" rows="6" maxLength="3000" required value={comment} onChange={event => setComment(event.target.value)} placeholder="¿Qué te ha parecido? Esta reseña puede ser pública o privada, según tus preferencias." />
+      <div className="review-options">
+        <label className="review-spoiler"><input type="checkbox" checked={isSpoiler} onChange={event => setIsSpoiler(event.target.checked)} aria-describedby="review-spoiler-hint" />
+          <span><strong>Mi reseña contiene spoilers<TriangleAlert aria-hidden="true" /></strong><small id="review-spoiler-hint">Se difuminará en el mural para no arruinar la trama a otros lectores.</small></span></label>
+        <label className="review-visibility">Visibilidad<select value={reviewVisibility} onChange={event => setReviewVisibility(event.target.value)}><option value="public">Pública (mural)</option><option value="private">Privada</option></select></label>
+      </div>
       </section>
       <section className="book-review-ratings" aria-labelledby="book-ratings-title">
       <div className="reading-section-title"><h2 id="book-ratings-title">Valoración</h2></div>
@@ -287,6 +365,7 @@ export default function LibraryBookPage() {
       <button className="button primary reading-save-review" disabled={busy || !comment.trim()}>{busy === 'Guardando valoración y reseña…' ? 'Guardando…' : existingReview ? 'Guardar valoración' : 'Crear valoración'}</button>
       {existingReview && <button className="button secondary" type="button" disabled={Boolean(busy)} onClick={deleteReview}>Eliminar mi reseña y valoración</button>}
       </div>
+      {comment.trim() && <ReviewPreview user={user} book={book} rating={ratings.general} text={comment.trim()} isSpoiler={isSpoiler} visibility={reviewVisibility} />}
       </form>}
 
     {activeTab === 'notebook' && <form className="notebook-form" onSubmit={saveNotebook} aria-busy={Boolean(busy)}>
