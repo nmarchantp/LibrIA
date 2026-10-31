@@ -1,5 +1,6 @@
 import { ratingDimensionLabels as dimensionLabels } from '../data/ratingDimensions'
 import RatingStar from './RatingStar'
+import SpoilerShield from './SpoilerShield'
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import './BookReviews.css'
@@ -43,7 +44,7 @@ export default function BookReviews({ bookRef }) {
       {Object.keys(review.dimension_ratings || {}).length > 0 && <div className="book-review-dimensions">
         {Object.entries(review.dimension_ratings).map(([key, value]) => <span key={key}><strong>{dimensionLabels[key] || key}</strong> {value}/5</span>)}
       </div>}
-      {review.is_spoiler ? <details><summary>Contiene spoilers · Mostrar reseña</summary><p>{review.body}</p></details> : <p>{review.body}</p>}
+      {review.is_spoiler ? <SpoilerShield><p>{review.body}</p></SpoilerShield> : <p>{review.body}</p>}
     </article>)}
     {loading && <p role="status">Cargando reseñas…</p>}
     {error && <p role="alert">{error}</p>}
