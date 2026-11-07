@@ -1,0 +1,9 @@
+Tool: built-in image_gen. Two separate edits.
+Reference: apps/web/public/images/story-books-candles-plain.png
+Transparent backgrounds: true
+
+Output: apps/web/public/images/story-books-coffee.png
+Prompt: Edit the reference watercolor book illustration. Remove the small bare flame/candle from atop the books completely. Move the existing glass jar candle from beside the stack onto the top book: a clearly drawn glass jar containing wax and one glowing flame resting on the book. Place a ceramic mug of steaming coffee beside the stack at bottom right, where the jar used to be. Exactly one jar candle, on top of books; exactly one coffee mug, beside books. Keep four antique plum/brown books, gold details, delicate watercolor texture and cozy hand drawn outlines. No flowers, leaves or plants. Transparent background, no text. Compact portrait composition fully inside frame.
+
+Output: apps/web/public/images/story-books-cat.png
+Prompt: Create a matching decorative variant of the reference watercolor book illustration. A cozy sleeping charcoal gray cat curled up ON TOP of the four stacked antique plum and brown books, its tail draping slightly over the top book. Remove ALL candles, flames, candle jars and candle glow. Only cat, book stack and a few tiny gold sparkles. Preserve reference hand drawn delicate dark outlines, warm watercolor texture, antique gold book details and cozy fantasy aesthetic. No flowers or plants, no text, no background, genuinely transparent background. Compact portrait composition, all objects fully inside frame. The cat must be clearly recognizable sitting on books.

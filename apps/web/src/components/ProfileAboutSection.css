@@ -4,6 +4,8 @@
 .reader-about-intro { display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
 .reader-about-intro>svg { flex:0 0 32px; width:32px; height:48px; color:var(--accent-text); opacity:.6; }
 .reader-about-intro .reader-about-title { margin:0 0 10px; font-size:clamp(30px,3vw,40px); line-height:1.1; letter-spacing:-.025em; }
+.reader-about-section .reader-about-intro .reader-about-edit-toggle { box-sizing:border-box; flex:0 0 28px; width:28px; min-width:28px; max-width:28px; height:28px; min-height:28px; max-height:28px; margin-top:5px; padding:0; border-radius:50%; }
+.reader-about-edit-toggle[aria-pressed="true"] { border-color:var(--accent-text); background:var(--soft); }
 .reader-about-intro p { max-width:66ch; margin:0; color:var(--muted); font-size:14px; line-height:1.75; }
 .reader-about-section .reader-about-grid {
   display:grid;
@@ -12,6 +14,13 @@
   align-items:stretch;
   gap:22px;
 }
+.reader-about-section .reader-story.reader-story-no-image { padding-right:26px; }
+.reader-story-image-options>div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
+.reader-story-image-options label { display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; padding:12px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); font-size:12px; text-align:center; cursor:pointer; }
+.reader-story-image-options label:has(input:checked) { border-color:var(--accent-text); background:var(--soft); }
+.reader-story-image-options input { accent-color:var(--accent-text); }
+.reader-story-image-options img,.reader-story-no-image-preview { width:100%; height:80px; object-fit:contain; }
+.reader-story-no-image-preview { display:grid; place-items:center; color:var(--muted); }
 .reader-about-grid>.reader-story { grid-area:history; }
 .reader-about-grid>.reader-favorite-genres { grid-area:genres; }
 .reader-about-grid>.reader-tastes { grid-area:tropes; }
@@ -26,10 +35,17 @@
 .reader-about-section .reader-edit-button span { display:inline; }
 .reader-about-section .reader-personal-card p { font-size:14px; line-height:1.75; }
 .reader-about-section .reader-personal-card .reader-card-description { margin:-8px 0 20px; color:var(--muted); font-size:13px; line-height:1.65; }
-.reader-about-section .reader-story .reader-biography { padding:2px clamp(18px,6%,44px) 12px 0; font:18px/1.85 'DM Serif Display',serif; color:var(--ink); }
+.reader-about-section .reader-story .reader-biography { position:relative; margin:0; padding:14px 18px; min-height:140px; border:0; border-radius:12px; background:transparent; font:italic 18px/1.65 'DM Serif Display',serif; color:var(--ink); }
 .reader-about-section .reader-story:not(.is-editing) { min-height:210px; }
-/* Dedicated slots for future transparent illustrations; never intercept input. */
-.reader-story-decoration-slot { position:absolute; right:18px; bottom:18px; width:60px; height:105px; pointer-events:none; }
+.reader-about-section .reader-story { overflow:hidden; padding-right:clamp(150px,33%,205px); }
+.reader-story:not(.reader-story-no-image)::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent 58%,color-mix(in srgb,var(--secondary) 12%,transparent) 72%,color-mix(in srgb,var(--secondary) 38%,transparent) 88%,color-mix(in srgb,var(--secondary) 52%,transparent) 100%); pointer-events:none; z-index:0; }
+.reader-about-section .reader-story .reader-card-heading { position:relative; z-index:1; }
+/* Bleed the artwork through the rounded edge so it belongs to the card. */
+.reader-story-decoration-slot { position:absolute; right:-38px; bottom:-42px; width:clamp(185px,42%,260px); height:auto; pointer-events:none; z-index:0; }
+.reader-about-section .reader-story .reader-biography,.reader-about-section .reader-story>.reader-module-empty,.reader-about-section .reader-story>.reader-save-status { position:relative; z-index:1; }
+.reader-about-section .reader-story-cat { padding-right:clamp(170px,37%,230px); }
+.reader-story-cat .reader-story-decoration-slot { width:clamp(205px,46%,285px); right:-62px; }
+.reader-about-section .reader-story>.reader-module-empty { position:relative; padding:14px; border:0; border-radius:12px; background:transparent; }
 .reader-featured-decoration-slot { position:absolute; right:18px; bottom:18px; width:55px; height:75px; pointer-events:none; }
 .reader-card-decoration { position:absolute; right:18px; bottom:18px; display:flex; align-items:flex-end; color:var(--accent-text); opacity:.24; pointer-events:none; z-index:-1; }
 .reader-card-decoration svg:first-child { width:37px; height:37px; stroke-width:1; }
@@ -72,6 +88,7 @@
   .reader-about-section .reader-personal-card { padding:24px; }
   .reader-about-section .reader-story:not(.is-editing),.reader-about-section .reader-reading-tastes:not(.is-editing) { min-height:0; }
   .reader-about-section .reader-story .reader-biography { max-width:none; padding-right:20px; }
+  .reader-about-section .reader-story { padding-right:clamp(150px,33%,205px); }
 }
 @media(max-width:480px) {
   .reader-about-section { padding-top:24px; }
@@ -82,6 +99,11 @@
   .reader-about-section .reader-personal-card { padding:21px 18px; border-radius:18px; }
   .reader-about-section .reader-personal-card h2 { font-size:21px; gap:8px; }
   .reader-about-section .reader-card-heading { gap:8px; }
+  .reader-about-section .reader-story { padding-right:120px; }
+  .reader-story-decoration-slot { width:165px; right:-35px; bottom:-32px; }
+  .reader-story-cat .reader-story-decoration-slot { width:180px; right:-50px; }
+  .reader-about-section .reader-story-cat { padding-right:140px; }
+  .reader-about-section .reader-story .reader-biography { padding:12px; font-size:16px; }
   .reader-about-section .reader-personal-card h2 svg { width:21px; height:24px; }
   .reader-about-section .reader-taste-tags { gap:8px; }
   .reader-about-section .reader-taste-tags li,.reader-about-section .reader-favorite-genres .reader-taste-tags li { padding:8px 12px; font-size:13px; }

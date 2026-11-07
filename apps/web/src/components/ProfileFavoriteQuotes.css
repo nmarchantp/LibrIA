@@ -1,0 +1,23 @@
+.reader-favorite-quotes { position:relative; overflow:hidden; }
+.reader-favorite-quotes .reader-card-heading { align-items:flex-start; }
+.reader-favorite-quotes .reader-card-heading h2 { font-size:19px; }
+.reader-favorite-quotes .reader-edit-button { border-radius:999px; }
+.reader-quotes-carousel { display:flex; align-items:center; gap:4px; min-height:160px; padding:16px 5px; margin-top:14px; border-radius:14px; background:linear-gradient(120deg,var(--soft),var(--secondary)); }
+.reader-quotes-carousel>button { display:grid; place-items:center; flex:0 0 28px; width:28px; height:32px; padding:0; border:0; border-radius:50%; background:var(--surface); color:var(--accent-text); cursor:pointer; }
+.reader-quotes-carousel>button:disabled { opacity:.3; cursor:default; }
+.reader-quote-slide { min-width:0; flex:1; text-align:center; }
+.reader-quote-slide blockquote { margin:0; color:var(--ink); font:italic 18px/1.5 'DM Serif Display',serif; overflow-wrap:anywhere; white-space:pre-wrap; }
+.reader-quote-slide blockquote svg { display:inline; color:var(--accent-text); fill:currentColor; vertical-align:middle; }
+.reader-quote-position { display:block; margin-top:8px; color:var(--muted); font-size:10px; }
+.reader-quote-dots { position:relative; display:flex; justify-content:center; padding-top:8px; }
+.reader-quote-dots button { display:grid; place-items:center; width:24px; height:28px; padding:0; border:0; background:transparent; cursor:pointer; }
+.reader-quote-dots button::after { content:''; width:8px; height:8px; border-radius:50%; background:var(--line); }
+.reader-quote-dots button[aria-current]::after { background:var(--accent-text); }
+.reader-quotes-empty { display:grid; justify-items:center; gap:12px; padding:22px 12px; margin-top:14px; border-radius:14px; background:var(--soft); text-align:center; color:var(--accent-text); }
+.reader-quotes-flower { position:absolute; bottom:8px; right:6px; opacity:.22; color:var(--accent-text); pointer-events:none; }
+.reader-quote-field { display:grid; gap:6px; }
+.reader-quote-field label { color:var(--ink); font-size:13px; font-weight:600; }
+.reader-quote-field textarea { min-height:85px; }
+.reader-quote-field input { width:100%; min-width:0; box-sizing:border-box; padding:10px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font:inherit; font-size:13px; }
+.reader-quote-position { overflow-wrap:anywhere; white-space:pre-wrap; }
+.reader-favorite-quotes button:focus-visible { outline:2px solid var(--accent-text); outline-offset:3px; }

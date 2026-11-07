@@ -1,0 +1,6 @@
+Tool: built-in image_gen
+Input: apps/web/public/images/story-books-cat.png
+Output: apps/web/public/images/story-books-cat-candle.png
+Transparent background: true
+
+Edit this exact transparent watercolor illustration. Keep the sleeping charcoal gray cat curled on top of the four antique plum and brown books, with the same cat face, pose, book details, colors and delicate hand drawn watercolor style. Add one glowing candle inside a clear glass jar beside the bottom right of the stack, resting at the base, and several small magical golden star sparkles around the cat and books. The candle must be beside the stack, never on or obscuring the cat. Preserve transparent background and portrait composition, all objects fully inside frame. No flowers, no text, no other objects.

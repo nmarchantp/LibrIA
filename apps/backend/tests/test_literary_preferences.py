@@ -53,6 +53,36 @@ class LiteraryPreferencesTest(unittest.TestCase):
     def save(self, payload):
         return self.client.patch(self.path, headers=self.headers, json=payload)
 
+    def test_favorite_quotes_persist_and_stay_account_scoped(self):
+        quotes = ["Primera frase", "Segunda frase", "Tercera frase", "Cuarta frase"]
+        response = self.save({"favorite_quotes": quotes})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(self.client.get(self.path, headers=self.headers).json()["favorite_quotes"], quotes)
+        self.assertEqual(self.client.get(self.path, headers=self.auth(self.other)).json()["favorite_quotes"], [])
+        self.assertEqual(self.save({"biography": "Mi historia"}).json()["favorite_quotes"], quotes)
+        for invalid in [quotes + ["Quinta"], [" "], ["a" * 301], None]:
+            self.assertEqual(self.save({"favorite_quotes": invalid}).status_code, 422)
+        self.assertEqual(self.save({"favorite_quotes": []}).json()["favorite_quotes"], [])
+
+    def test_favorite_quote_sources(self):
+        quotes = [{"text": " Una frase ", "source": " Un libro · Un personaje "}]
+        expected = [{"text": "Una frase", "source": "Un libro · Un personaje"}]
+        response = self.save({"favorite_quotes": quotes})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["favorite_quotes"], expected)
+        self.assertEqual(self.client.get(self.path, headers=self.headers).json()["favorite_quotes"], expected)
+        self.assertEqual(self.save({"favorite_quotes": [{"text": "Cita", "source": "a" * 151}]}).status_code, 422)
+
+    def test_story_illustration_saved_and_visible_to_community(self):
+        for option in ["books", "cat", "none", "flowers"]:
+            response = self.save({"story_illustration": option})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(self.mine()["story_illustration"], option)
+            public = self.client.get(f"/api/profiles/{self.mine()['profile_id']}", headers=self.auth(self.other))
+            self.assertEqual(public.json()["story_illustration"], option)
+        self.assertEqual(self.save({"story_illustration": "invalid"}).status_code, 422)
+        self.assertEqual(self.save({"story_illustration": None}).status_code, 422)
+
     def mine(self):
         r = self.client.get(self.path, headers=self.headers)
         self.assertEqual(r.status_code, 200, r.text)
@@ -104,7 +134,7 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.mine()["biography"], "Entre libros")
         public = self.client.get(f"/api/profiles/{mine['profile_id']}", headers=self.auth(self.other))
         self.assertEqual(public.status_code, 200, public.text)
-        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id"})
+        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration"})
         self.assertEqual(public.json()["genres"], mine["genres"])
         self.assertEqual(public.json()["tropes"], mine["tropes"])
         self.assertNotEqual(mine["profile_id"], self.owner["user"]["id"])

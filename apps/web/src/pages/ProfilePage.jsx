@@ -34,6 +34,7 @@ function ProfileActivity({ userId }) {
 export default function ProfilePage() {
   const { user } = useAuth()
   const preferences = useLiteraryPreferences()
+  const [editMode, setEditMode] = useState(false)
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
   const tab = ['about', 'activity', 'library', 'analysis'].includes(requested) ? requested : 'about'
@@ -53,7 +54,7 @@ export default function ProfilePage() {
       activeContent = <ProfileActivity userId={user.id} />
       break
     default:
-      activeContent = <ProfileAboutSection key={user.id} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+      activeContent = <ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
   }
 
   return <div className="profile-page page-width reader-profile">
@@ -62,6 +63,6 @@ export default function ProfilePage() {
       <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
       <div key={tab} className="profile-content reader-profile-content">{activeContent}</div>
     </div>
-    <ProfilePersonalColumn key={user.id} preferences={preferences.data} />
+    <ProfilePersonalColumn key={user.id} editMode={editMode && tab === 'about'} />
   </div>
 }
