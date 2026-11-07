@@ -1,0 +1,55 @@
+/* Shared field focus. Keep native geometry and validation styles intact. */
+:root {
+  --field-focus-border: color-mix(in srgb, var(--primary) 65%, var(--line));
+  --field-focus-ring: color-mix(in srgb, var(--primary) 55%, var(--ink));
+}
+
+/* Exclude non-text controls: their native/custom keyboard indicators remain. */
+:root :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), textarea, select, [contenteditable="true"]):not(:disabled, [aria-disabled="true"]) {
+  transition: border-color 180ms ease;
+}
+
+:root :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), textarea, select, [contenteditable="true"]):not(:disabled, [aria-disabled="true"]):focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Do not replace error/warning borders. The keyboard outline is independent. */
+:root :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), textarea, select, [contenteditable="true"]):not(:disabled, [aria-disabled="true"], [aria-invalid="true"], :user-invalid, .is-invalid, .is-warning):focus {
+  border-color: var(--field-focus-border);
+}
+
+:root :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), textarea, select, [contenteditable="true"]):not(:disabled, [aria-disabled="true"]):focus-visible {
+  outline: 2px solid var(--field-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Inset outlines share the field edge instead of drawing a second contour.
+   Borderless children delegate focus to their visible field shell, once. */
+:root :is(.search-box, .catalog-search-input, .composer-editor, .composer-book-search, .composer-dropzone) {
+  transition: border-color 180ms ease;
+}
+
+:root :is(.search-box, .catalog-search-input, .composer-editor, .composer-book-search, .composer-dropzone):has(:is(input, textarea):enabled:not([aria-disabled="true"], [aria-invalid="true"], :user-invalid, .is-invalid, .is-warning):focus) {
+  border-color: var(--field-focus-border);
+}
+
+:root :is(.search-box, .catalog-search-input, .composer-editor, .composer-book-search, .composer-dropzone):has(:is(input, textarea):enabled:not([aria-disabled="true"]):focus-visible) {
+  outline: 2px solid var(--field-focus-ring);
+  outline-offset: -2px;
+}
+
+:root :is(.search-box, .catalog-search-input, .composer-editor, .composer-book-search, .composer-dropzone) :is(input, textarea):focus {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root :is(input, textarea, select, [contenteditable="true"], .search-box, .catalog-search-input, .composer-editor, .composer-book-search, .composer-dropzone) {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  :root { --field-focus-border: Highlight; --field-focus-ring: Highlight; }
+}

@@ -46,30 +46,43 @@
 .navigation-tools { position:relative; }
 .navigation-tools>summary { list-style:none; }
 .navigation-tools>summary::-webkit-details-marker { display:none; }
+.navigation-tools > summary > svg { stroke:var(--primary); stroke-width:1.5; }
+.navigation-tools > summary > svg circle { fill:var(--secondary); }
 .navigation-tools[open]>summary { background:var(--soft); color:var(--ink); }
 .navigation-tools[open]>summary>.global-header-tooltip { visibility:hidden; }
 .navigation-tools-menu { position:absolute; top:calc(100% + 10px); right:0; width:238px; max-width:calc(100vw - 24px); display:grid; gap:4px; padding:8px; border:1px solid var(--line); border-radius:14px; background:var(--surface); box-shadow:var(--shadow); }
 .navigation-tools-menu a { display:flex; align-items:center; gap:9px; padding:12px 10px; border-radius:8px; color:var(--ink); font-size:13px; }
 .navigation-tools-menu a:hover,.navigation-tools-menu a.active { background:var(--soft); }
+.mobile-nav-backdrop,.mobile-drawer-heading { display:none; }
 @media(max-width:700px) {
   .social-page-column { --main-gutter:14px; --main-top-space:28px; }
-  .social-shell { --header-actions-width:86px; }
-  .social-shell.has-navigation-tools { --header-actions-width:132px; }
-  .social-shell .social-sidebar { position:sticky; top:0; z-index:40; flex-direction:row; align-items:center; height:68px; padding:10px 12px; gap:4px; }
-  .social-shell .social-sidebar .brand-link { width:clamp(110px,34vw,170px); max-width:170px; margin:0; }
-  .social-shell .mobile-nav-toggle { flex-shrink:0; justify-content:center; width:40px; height:44px; min-height:44px; padding:0; margin-left:auto; margin-right:calc(var(--header-actions-width) + 4px); }
+  .social-shell { --header-actions-width:132px; }
+  .social-shell.has-navigation-tools { --header-actions-width:176px; }
+  .social-shell .social-sidebar { position:sticky; top:0; z-index:40; flex-direction:row; align-items:center; height:68px; padding:10px calc(16px + var(--header-actions-width)) 10px 12px; gap:4px; box-sizing:border-box; background:var(--surface); }
+  .social-shell .social-sidebar .brand-link { flex:1 1 auto; min-width:0; width:auto; max-width:170px; margin:0; }
+  .social-shell .mobile-nav-toggle { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; min-height:44px; padding:0; margin:0; border:1px solid transparent; border-radius:50%; background:transparent; color:var(--primary); transition:background 150ms ease,color 150ms ease; }
+  .mobile-nav-toggle:hover { background:var(--soft); }
+  .mobile-nav-toggle:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
+  .mobile-nav-toggle svg { stroke:var(--primary); stroke-width:1.5; }
   .social-shell .mobile-nav-toggle span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-  .sidebar-navigation { display:none; position:absolute; top:100%; left:0; right:0; max-height:calc(100dvh - 68px); overflow-y:auto; padding:14px 16px 18px; border-bottom:1px solid var(--line); background:var(--surface); box-shadow:0 16px 24px var(--shadow-color); }
-  .sidebar-navigation--open { display:flex; }
-  .sidebar-navigation .social-nav { display:grid; grid-template-columns:minmax(0,1fr); max-height:none; overflow:visible; padding:0; border:0; box-shadow:none; gap:4px; }
+  .social-sidebar.mobile-menu-open { z-index:60; }
+  .mobile-nav-backdrop { display:block; position:fixed; inset:0; z-index:1; border:0; padding:0; background:color-mix(in srgb,var(--ink) 35%,transparent); opacity:0; visibility:hidden; transition:opacity 180ms ease,visibility 180ms; touch-action:none; }
+  .mobile-nav-backdrop--open { opacity:1; visibility:visible; }
+  .sidebar-navigation { display:flex; position:fixed; z-index:2; inset:0 0 0 auto; box-sizing:border-box; width:min(340px,calc(100% - 24px)); height:100dvh; max-height:100dvh; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; padding:14px 16px max(18px,env(safe-area-inset-bottom)); border-left:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow); transform:translateX(100%); visibility:hidden; transition:transform 200ms ease,visibility 0s linear 200ms; }
+  .sidebar-navigation--open { transform:translateX(0); visibility:visible; transition-delay:0s; }
+  .mobile-drawer-heading { display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:12px; margin-bottom:16px; color:var(--ink); font-weight:600; }
+  .mobile-drawer-heading button { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; padding:0; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); cursor:pointer; }
+  .sidebar-navigation .social-nav { display:grid; grid-template-columns:minmax(0,1fr); flex-shrink:0; max-height:none; overflow:visible; padding:0; border:0; box-shadow:none; gap:4px; }
   .sidebar-navigation .social-nav a { flex-direction:row; justify-content:flex-start; flex:none; }
-  .sidebar-navigation .sidebar-account { margin:14px 0 0; padding:16px 10px 0; border-top:1px solid var(--line); }
+  .sidebar-navigation .sidebar-account { margin:14px 0 0; padding:16px 10px 0; flex-shrink:0; overflow-wrap:anywhere; border-top:1px solid var(--line); }
   .sidebar-navigation .sidebar-account .account-link { display:flex; }
   .sidebar-navigation .logout-button { font-size:12px; padding:16px 0 0; }
   .social-shell .social-topbar { position:relative; top:auto; z-index:auto; width:100%; margin:0; min-height:68px; padding:10px var(--main-gutter); border:0; background:transparent; backdrop-filter:none; }
   .social-topbar::before { content:none; }
   .header-greeting { padding-right:0; }
-  .global-header-actions { position:fixed; top:0; right:var(--main-gutter); z-index:45; height:68px; gap:6px; }
-  .social-topbar.is-scrolled .global-header-actions::before { content:""; position:absolute; inset:0 -8px; z-index:-1; pointer-events:none; background:color-mix(in srgb,var(--paper) 72%,transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
-  .global-header-action { width:40px; height:44px; }
+  .global-header-actions { position:fixed; top:0; right:12px; z-index:45; height:68px; gap:0; }
+  /* Mobile keeps one opaque header surface, including while scrolling. */
+  .social-topbar.is-scrolled .global-header-actions::before { content:none; }
+  .global-header-action { box-sizing:border-box; width:44px; height:44px; }
+  @media(prefers-reduced-motion:reduce) { .sidebar-navigation,.mobile-nav-backdrop { transition:none; } }
 }

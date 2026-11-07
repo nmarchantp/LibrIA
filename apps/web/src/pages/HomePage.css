@@ -64,7 +64,6 @@
   resize: vertical;
   font-size: 13px;
 }
-.comment-form textarea:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .comment-form .button { justify-self: start; }
 .comment-form .button:disabled { opacity: .55; cursor: not-allowed; }
 .comment-error { margin: 0; color: var(--error-text); font-size: 12px; }
