@@ -5,7 +5,7 @@ import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLibrary } from '../context/LibraryContext'
 import BookCover from '../components/BookCover'
-import PostComposer from '../components/PostComposer'
+import PublicationComposerLauncher from '../components/PublicationComposerLauncher'
 import MuralCarousel from '../components/MuralCarousel'
 import MuralActivityCard from '../components/MuralActivityCard'
 import MuralActivityDialog from '../components/MuralActivityDialog'
@@ -103,7 +103,6 @@ function MuralContent() {
     <header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
     {profileError && <p role="alert">{profileError}</p>}
     {savedMessage&&<p role="status">{savedMessage}</p>}
-    {selectedProfile && !category && <PostComposer key={selectedProfile.id} role={user.role} profileId={selectedProfile.id} onCreated={() => setRefresh(value => value + 1)} />}
     <div className="mural-navigation">
       <nav ref={navigation} className="mural-audiences" aria-label="Secciones del mural">{[{ id: 'contacts', title: 'Contactos' }, { id: 'community', title: 'Comunidad' }, ...publicationCategories].map(item => <button key={item.id} aria-pressed={activeTab === item.id} onClick={() => item.id === 'contacts' || item.id === 'community' ? chooseAudience(item.id) : viewAll(item.id)}>{item.title}</button>)}</nav>
       <button className="mural-refresh" aria-label="Actualizar mural" disabled={feed.loading || feed.busy} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={18} /></button>
@@ -118,10 +117,12 @@ function MuralContent() {
       {feed.data.next_cursor && <button className="mural-load-more" disabled={feed.busy} onClick={feed.loadMore}>{feed.busy ? 'Cargando…' : feed.moreError ? 'Reintentar cargar más' : 'Cargar más'}</button>}
     </> : <div className="mural-categories">{categories.map(item => <MuralCarousel key={`${audience}:${item.id}`} title={titleFor(item)} description={item.description} icon={item.icon} items={feed.data.categories[item.id]?.items || []} empty={empty} onViewAll={() => viewAll(item.id)} renderItem={renderItem} />)}</div>)}
     </section>
+    <div className="mural-right-column">
+    {selectedProfile && <PublicationComposerLauncher key={selectedProfile.id} role={user.role} profileId={selectedProfile.id} onCreated={() => setRefresh(value => value + 1)} />}
     <aside className="mural-aside"><section className="reader-summary"><span className="kicker">TU RINCÓN</span><h2>Hola, {user.display_name.split(' ')[0]}</h2><p>Tu próxima página también tiene una historia.</p><Link to="/profile">Visitar mi perfil <ArrowUpRight size={16} /></Link></section>
       <section className="aside-reading"><h2><BookOpen size={18} /> Sigue leyendo</h2>{books.filter(book => book.status === 'Leyendo').map(book => <Link to={'/books/' + book.id} className="aside-book" key={book.id}><BookCover book={book} /><div><strong>{book.title}</strong><small>{book.progress}% leído · ejemplo</small></div></Link>)}<Link className="aside-link" to="/profile?tab=library">Ver mi biblioteca →</Link></section>
       <div className="community-note"><MessageCircle size={22} /><p>Un lugar para conversar sobre las historias que nos acompañan.</p><small>LibrIA · Comunidad lectora</small></div>
-    </aside>
+    </aside></div>
     {selected && <MuralActivityDialog key={`${selected.item.feed_item_type}:${selected.item.id}:${selected.comments}`} item={selected.item} openComments={selected.comments} onClose={() => setSelected(null)} />}
     {management&&<ContentManagementDialog target={management} onClose={()=>setManagement(null)} onSaved={result=>{setManagement(null);setSelected(null);setSavedMessage(result?.deleted?'Publicación eliminada.':'Cambios guardados.');setRefresh(value=>value+1)}} />}
   </div>

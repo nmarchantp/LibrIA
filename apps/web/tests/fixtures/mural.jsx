@@ -68,6 +68,13 @@ window.fetch = (url, options) => {
   window.muralTest.requests.push({ path: parsed.pathname + parsed.search, method: options?.method || 'GET' })
   let data = [], status = 200
   if (parsed.pathname.endsWith('/profiles/me')) data = [{ id: 'personal-fixture', kind: 'personal' }]
+  else if(parsed.pathname==='/api/posts'&&options?.method==='POST'){
+    const form=options.body,details=form.has('event_details')?JSON.parse(form.get('event_details')):null
+    window.muralTest.createdPublication={...Object.fromEntries(form.entries()),event_details:details}
+    const item={...items.events[0],id:'created-publication',title:form.get('title'),body:form.get('body'),publication_type:form.get('publication_type'),source:form.get('source'),images:[],event_details:details?{...items.events[0].event_details,...details,id:'created-publication'}:null}
+    items[details?'events':({news:'announcements',promotion:'promotions',launch:'launches'}[item.publication_type]||'social')].unshift(item)
+    data=decorate(item);status=201
+  }
   else if (parsed.pathname.endsWith('/readings/me')) data = [{ book_ref: 'reading-fixture', book_title: 'Lectura en curso', status: 'reading', progress_percent: 16, current_page: 16, total_pages: 100 }]
   else if (/\/posts\/[^/]+$/.test(parsed.pathname)||/\/reviews\/[^/]+$/.test(parsed.pathname)) {
     const id=parsed.pathname.split('/').at(-1),item=Object.values(items).flat().find(candidate=>candidate.id===id),method=options?.method||'GET'

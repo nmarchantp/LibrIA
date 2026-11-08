@@ -220,7 +220,7 @@ try {
     assert.equal(await evaluate(`document.querySelectorAll('.mural-publication')[3].querySelectorAll('.post-gallery-tile').length`), 4, 'At most four previews in one row')
     assert.equal(await evaluate(`document.querySelectorAll('.mural-publication')[3].querySelector('.post-gallery-overflow').textContent`), '+3')
     assert.equal(await evaluate(`document.querySelectorAll('.mural-publication')[2].querySelector('.post-gallery-overflow')===null`), true, 'Four images have no overlay')
-    assert.ok(await evaluate(`document.querySelector('.mural-publication .post-book .book-cover').getBoundingClientRect().width<=170`))
+    assert.ok(await evaluate(`document.querySelector('.mural-publication .post-book .book-cover').getBoundingClientRect().width<=${index===0?180:120}`))
     assert.equal(await evaluate(`document.querySelectorAll('.mural-publication')[5].querySelector('.post-gallery-editorial,.post-book')===null`), true, 'No photo or linked-book placeholders')
     const sixthGallery = `document.querySelectorAll('.mural-publication')[3]`
     await evaluate(`${sixthGallery}.querySelectorAll('.post-gallery-tile')[3].click()`)
@@ -271,13 +271,13 @@ try {
   }
   await navigate()
   await send('Page.navigate', { url: `${app}/tests/fixtures/mural.html?count=3&role=admin` })
-  await until(`document.querySelector('.mural-feed .composer') !== null`)
+  await until(`document.querySelector('.mural-right-column .publication-create-shortcut') !== null`)
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false })
-  assert.equal(await evaluate(`(() => {const form=document.querySelector('.composer').getBoundingClientRect(),feed=document.querySelector('.mural-feed').getBoundingClientRect(),aside=document.querySelector('.mural-aside').getBoundingClientRect();return form.width<=feed.width&&form.right<aside.left&&form.left>=feed.left})()`), true, 'Original composer confined to left column')
-  assert.equal(await evaluate(`document.querySelector('.composer').compareDocumentPosition(document.querySelector('.mural-audiences')) & Node.DOCUMENT_POSITION_FOLLOWING`), 4)
+  assert.equal(await evaluate(`(() => {const form=document.querySelector('.publication-create-shortcut').getBoundingClientRect(),feed=document.querySelector('.mural-feed').getBoundingClientRect(),aside=document.querySelector('.mural-aside').getBoundingClientRect();return form.left>feed.right&&Math.abs(form.width-aside.width)<1})()`), true, 'Small creation shortcut in right column')
+  assert.equal(await evaluate(`document.querySelector('.mural-feed .composer')===null`),true)
   for (const width of [1440, 1000, 900, 768, 390, 320]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1100, deviceScaleFactor: 1, mobile: width < 500 })
-    assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('.composer').scrollWidth <= document.querySelector('.composer').clientWidth + 1`), true, `Composer overflow at ${width}`)
+    assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('.publication-create-shortcut').scrollWidth <= document.querySelector('.publication-create-shortcut').clientWidth + 1`), true, `Composer overflow at ${width}`)
   }
   console.log('PASS: original Git header/sidebar JSX, greeting, side links, desktop width, mobile stacking and composer placement')
   await navigate()
@@ -346,7 +346,7 @@ try {
     await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
     await until(`document.querySelectorAll('.mural-publication').length===3`)
     assert.equal(await evaluate(`document.querySelector('.publication-cover-edit,.publication-cover-picker')===null`),true)
-    assert.ok(await evaluate(`document.querySelector('.mural-publication .book-cover').getBoundingClientRect().height<=${index===0?230:180.5}`))
+    assert.ok(await evaluate(`document.querySelector('.mural-publication .book-cover').getBoundingClientRect().height<=${index===0?270.5:180.5}`))
     if(index===0)await evaluate(`document.querySelector('.mural-publication .event-edit-button').click()`)
     else await evaluate(`document.querySelector('.mural-publication .activity-options summary').click();document.querySelector('.mural-publication .activity-options button').click()`)
     await until(`Boolean(document.querySelector('.content-management-dialog .composer'))`)

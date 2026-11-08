@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bold, BookOpen, CalendarDays, CircleCheck, ImagePlus, Italic, Megaphone, Rocket, Search, SendHorizontal, Smile, Tag, X } from 'lucide-react'
+import { Bold, BookOpen, CalendarDays, Camera, CircleCheck, ImagePlus, Italic, Megaphone, Rocket, Search, SendHorizontal, Smile, Tag, X } from 'lucide-react'
 import { apiRequest, apiUrl } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { searchBookCatalog } from '../services/booksService'
@@ -63,13 +63,13 @@ function BookLinker({ value, onChange }) {
   </div>
 }
 
-export default function PostComposer({ role, profileId, onCreated, initialPost = null, onBusyChange }) {
-  const { user, retry } = useAuth()
+export default function PostComposer({ role, profileId, onCreated, initialPost = null, onBusyChange, onDirtyChange, onCancel, initialType = 'news' }) {
+  const { retry } = useAuth()
   const copy = initialPost ? { heading:'Editar publicación',hint:'Actualiza el contenido conservando sus comentarios e interacciones.',placeholder:'Texto de la publicación' } : composerCopy[role]
   const textLimit = initialPost ? 3000 : maxLength
   const textRef = useRef(null)
   const publishing = useRef(false)
-  const [type, setType] = useState(initialPost?.publication_type || (initialPost?.source==='event'?'event':'news'))
+  const [type, setType] = useState(initialPost?.publication_type || (initialPost?.source==='event'?'event':initialType))
   const [title, setTitle] = useState(initialPost?.title || '')
   const [body, setBody] = useState(initialPost?.body || '')
   const [book, setBook] = useState(initialPost?.book_title ? {ref:initialPost.book_ref||String(initialPost.work_id||''),title:initialPost.book_title,author:initialPost.book_author,cover:initialPost.book_cover_url,work_id:initialPost.work_id,edition_id:initialPost.edition_id} : null)
@@ -78,6 +78,9 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
   const [images, setImages] = useState([])
   const [existingImages,setExistingImages] = useState(initialPost?.images||[])
   const [eventValues,setEventValues]=useState(()=>({start_date:initialPost?.event_details?.start_date||'',start_time:initialPost?.event_details?.start_time||'',end_date:initialPost?.event_details?.end_date||'',end_time:initialPost?.event_details?.end_time||'',timezone:initialPost?.event_details?.timezone||'America/Santiago',location:initialPost?.event_details?.location||'',organizer:initialPost?.event_details?.organizer||'',category:initialPost?.event_details?.category||'meetup'}))
+  const snapshot=JSON.stringify({type,title,body,book,coverMode,eventValues,existingImages,images:images.map(image=>[image.name,image.size,image.lastModified]),coverFile:coverFile&&[coverFile.name,coverFile.size,coverFile.lastModified]})
+  const baseline=useRef(snapshot)
+  useEffect(()=>onDirtyChange?.(snapshot!==baseline.current),[snapshot,onDirtyChange])
   const eventRequired=type==='event'&&(!initialPost||initialPost.publication_type!=='event'||Boolean(initialPost.event_details)||Boolean(eventValues.start_date||eventValues.start_time))
   const [dragging, setDragging] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -87,7 +90,6 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
   const [imageError, setImageError] = useState('')
   const previews = useMemo(() => images.map(image => URL.createObjectURL(image)), [images])
   useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews])
-  const initials = (user?.display_name || '').trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase()
   const selectableTypes = initialPost && !postTypes.some(([value])=>value===initialPost.publication_type) ? [[initialPost.publication_type,({note:'Nota',theory:'Teoría',free:'Publicación',institutional:'Institucional'})[initialPost.publication_type]||'Publicación',BookOpen],...postTypes] : postTypes
   const typeLabel = selectableTypes.find(([value]) => value === type)?.[1] || 'Publicación'
 
@@ -142,11 +144,6 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
   }
 
   return <form className="post-composer composer" onSubmit={submit} aria-busy={busy}>
-    <header className="composer-header">
-      <span className="composer-avatar" aria-hidden="true">{initials}</span>
-      <div><h2>{copy.heading}{roleLabels[role] && <span className="composer-role">{roleLabels[role]}</span>}</h2><p>{copy.hint}</p></div>
-    </header>
-
     <div className="composer-field">
       <span className="composer-label" id="composer-type-label">Tipo de publicación</span>
       <div className="composer-types" role="group" aria-labelledby="composer-type-label">
@@ -176,20 +173,22 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
     </div>
     {body.includes('*') && <div className="composer-preview"><span>Así se verá:</span><FormattedText text={body} className="post-text" /></div>}
 
-    {type==='event'&&<EventFields value={eventValues} onChange={setEventValues} required={eventRequired} disabled={busy} />}
+    <div className="composer-attachments"><div className="composer-related-column">
     <BookLinker value={book} onChange={value=>{setBook(value);setCoverFile(null);setCoverMode('catalog')}} />
-    {book&&<PublicationCoverPicker mode={coverMode} onModeChange={setCoverMode} file={coverFile} onChange={setCoverFile} currentUrl={initialPost?.custom_book_cover_url?apiUrl(initialPost.custom_book_cover_url):null} catalogUrl={book.cover} disabled={busy} />}
+    <PublicationCoverPicker mode={coverMode} onModeChange={setCoverMode} file={coverFile} onChange={setCoverFile} currentUrl={initialPost?.custom_book_cover_url?apiUrl(initialPost.custom_book_cover_url):null} catalogUrl={book?.cover} disabled={busy||!book} />
+    {!book&&<p className="composer-cover-hint">Selecciona una obra para usar su portada o subir una imagen propia.</p>}
 
-    <div className="composer-field">
+    </div><div className="composer-field composer-photo-column">
       <div className="composer-images-heading"><span className="composer-label">Imágenes de apoyo ({images.length+existingImages.length}/{maxImages})</span><small>JPEG, PNG, GIF o WebP hasta 5 MB</small></div>
       <label className={`composer-dropzone${dragging ? ' is-dragging' : ''}`}
         onDragOver={event => { event.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)}
         onDrop={event => { event.preventDefault(); setDragging(false); addImages(event.dataTransfer.files) }}>
         <input type="file" className="composer-file-input" accept={imageTypes.join(',')} multiple onChange={event => { addImages(event.target.files); event.target.value = '' }} disabled={images.length+existingImages.length >= maxImages} />
         <span className="composer-dropzone-icon"><ImagePlus aria-hidden="true" /></span>
-        <strong>Haz clic o arrastra fotos aquí</strong>
-        <small>Puedes sumar portadas, fotos de tu lectura o afiches.</small>
+        <strong>Agregar fotografías</strong>
+        <small>También puedes arrastrarlas aquí.</small>
       </label>
+      <label className="composer-camera"><Camera size={16} aria-hidden="true" />Tomar foto<input type="file" className="composer-file-input" accept="image/*" capture="environment" disabled={busy||images.length+existingImages.length>=maxImages} onChange={event=>{addImages(event.target.files);event.target.value=''}} /></label>
       {existingImages.length>0&&<ul className="composer-thumbs">{existingImages.map(path=><li key={path}><img src={/^https?:/.test(path)?path:apiUrl(path)} alt="Imagen adjunta actual" /><button type="button" aria-label="Quitar imagen adjunta" onClick={()=>setExistingImages(current=>current.filter(value=>value!==path))}><X /></button></li>)}</ul>}
       {images.length > 0 && <ul className="composer-thumbs">{images.map((image, index) => <li key={`${image.name}-${index}`}>
         <img src={previews[index]} alt="" />
@@ -198,9 +197,12 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
       {imageError && <p className="comment-error" role="alert">{imageError}</p>}
     </div>
 
+    </div>
+    {type==='event'&&<EventFields value={eventValues} onChange={setEventValues} required={eventRequired} disabled={busy} />}
     {error && <p className="comment-error" role="alert">{error}</p>}
     <footer className="composer-footer">
       <span><CircleCheck aria-hidden="true" />Visible para todos los miembros de LibrIA</span>
+      {onCancel&&<button type="button" className="button" disabled={busy} onClick={onCancel}>Cancelar</button>}
       <button className="button primary" disabled={busy || !body.trim() || Boolean(imageError) || (book&&coverMode==='custom'&&!coverFile&&!initialPost?.custom_book_cover_url)}><SendHorizontal aria-hidden="true" />{busy ? 'Guardando…' : initialPost?'Guardar cambios':`Publicar ${typeLabel.toLowerCase()}`}</button>
     </footer>
   </form>

@@ -86,3 +86,51 @@
   .composer-emoji-panel { grid-template-columns:repeat(6,32px); }
 }
 @media(prefers-reduced-motion:reduce) { .composer-dropzone { transition:none; } }
+
+.composer-launcher { gap:10px; padding:16px 20px; border-radius:16px; }
+.mural-right-column { min-width:0; align-self:start; }
+.mural-right-column>.mural-aside { display:block; }
+.publication-create-shortcut { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:48px; margin-bottom:18px; padding:10px 14px; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--accent-text); font:600 14px 'DM Sans',sans-serif; cursor:pointer; }
+.publication-create-shortcut:hover { background:var(--soft); border-color:var(--accent-text); }
+.publication-create-shortcut:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+.composer-launcher .composer-header { gap:10px; }
+.composer-launcher h2 { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font:20px/1.2 'DM Serif Display',serif; }
+.composer-launcher .composer-avatar { width:34px; height:34px; border-radius:50%; overflow:hidden; }
+.composer-avatar img { width:100%; height:100%; object-fit:cover; }
+.composer-launch-prompt { min-height:44px; padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--muted); font:inherit; font-size:14px; text-align:left; cursor:pointer; }
+.composer-launcher .composer-types { gap:6px; }
+.composer-launcher .composer-types button { min-height:36px; flex:1; justify-content:center; padding:0 8px; font-size:12px; }
+.composer-launch-prompt:focus-visible,.composer-types button:focus-visible,.composer-dropzone:focus-within,.composer-camera:focus-within { outline:2px solid var(--focus); outline-offset:3px; }
+.content-management-body .composer { gap:12px; }
+.content-management-body .composer-editor textarea { min-height:120px; max-height:260px; box-sizing:border-box; }
+.composer-title { box-sizing:border-box; }
+.composer-editor:focus-within,.composer-title:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.composer-attachments { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; min-width:0; }
+.composer-related-column { display:grid; gap:10px; min-width:0; }
+.composer-related-column .publication-cover-picker { margin:0; }
+.composer-cover-hint { color:var(--muted); font-size:11px; line-height:1.5; }
+.composer-photo-column { min-width:0; }
+.composer-photo-column .composer-dropzone { display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; gap:8px; padding:10px; border-radius:10px; text-align:left; }
+.composer-photo-column .composer-dropzone strong { margin:0; }
+.composer-photo-column .composer-dropzone small { flex-basis:100%; }
+.composer-photo-column .composer-dropzone-icon { width:28px; height:28px; }
+.composer-camera { display:inline-flex; align-items:center; gap:6px; position:relative; justify-self:start; min-height:40px; color:var(--accent-text); font-size:12px; cursor:pointer; }
+.composer-thumbs li { width:56px; height:56px; }
+.content-management-body .composer-footer { display:flex; flex-direction:row; flex-wrap:wrap; min-height:0; position:sticky; bottom:0; z-index:6; margin:0 -18px -18px; padding:10px 18px; background:var(--surface); gap:8px; }
+.composer-footer>span { flex:1; font-size:11px; }
+.composer-footer>.button { min-height:44px; }
+.composer-discard-confirm { position:sticky; bottom:-18px; z-index:12; margin:18px -18px -18px; padding:16px 18px; border-top:1px solid var(--line); background:var(--surface); }
+.composer-discard-confirm p { margin:0 0 10px; }
+.composer-discard-confirm button { margin-right:8px; min-height:44px; }
+.composer .composer-event-fields { gap:8px 12px; padding:10px 12px; }
+.composer .composer-event-fields input,.composer .composer-event-fields select { min-height:36px; }
+.composer .composer-event-fields>p { margin:0; }
+@media(max-width:560px) {
+  .composer-launcher { padding:14px; }
+  .composer-launcher .composer-types { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .composer-attachments { grid-template-columns:minmax(0,1fr); }
+  .composer-footer>.button { width:auto; min-width:0; flex:1; padding:0 10px; font-size:12px; }
+  .composer-footer>span { flex-basis:100%; }
+  .composer-book-search { min-width:0; }
+  .content-management-dialog { width:calc(100% - 12px); max-height:calc(var(--management-height,100dvh) - 12px); }
+}

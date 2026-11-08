@@ -38,7 +38,7 @@ try{
   await mural()
   assert.equal(await evaluate(`document.querySelector('${first} .event-date strong').textContent`),'13')
   assert.equal(await evaluate(`document.querySelector('${first} .event-attend-button').getAttribute('aria-pressed')`),'true')
-  assert.equal(await evaluate(`Boolean(document.querySelector('${first} .event-schedule-update'))`),true)
+  assert.equal(await evaluate(`Boolean(document.querySelector('${first} .event-schedule-update'))`),false)
   for(const theme of ['lavanda','otono','invierno','bosque','rosa-antiguo','dark','dark-rosado','dark-blood','dark-dorado']){
     await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
     for(const width of [1440,768,390,320]){
