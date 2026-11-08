@@ -129,12 +129,12 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
       Object.entries(publication).forEach(([key, value]) => form.append(key, value))
       images.forEach(image => form.append('images', image))
       if(book&&coverMode==='custom'&&coverFile)form.append('book_cover',coverFile)
-      await apiRequest(initialPost?`/posts/${initialPost.id}`:'/posts', { method: initialPost?'PUT':'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` }, body: form })
+      const saved=await apiRequest(initialPost?`/posts/${initialPost.id}`:'/posts', { method: initialPost?'PUT':'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` }, body: form })
       setTitle(''); setBody(''); setBook(null); setImages([])
       setEventValues({start_date:'',start_time:'',end_date:'',end_time:'',timezone:'America/Santiago',location:'',organizer:'',category:'meetup'})
       setCoverMode('catalog');setCoverFile(null)
       if(type==='event'||initialPost?.source==='event')window.dispatchEvent(new Event('libria-events-updated'))
-      onCreated()
+      onCreated(saved)
     } catch (cause) {
       if (cause.status === 403) retry()
       setError(cause.status === 403 ? 'Tu perfil ya no tiene permiso para este tipo de publicación.'

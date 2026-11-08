@@ -57,8 +57,18 @@ try {
   assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.mural-audiences button'),button=>button.textContent)`), ['Contactos','Comunidad','Eventos','Lanzamientos','Anuncios','Promociones'])
   assert.equal(await evaluate(`document.body.innerText.includes('PRIVATE SPOILER TEXT')`), false)
   assert.equal(await evaluate(`document.querySelector('.mural-activity-pages').textContent`), 'Llegó a la página 82.')
-  await evaluate(`document.querySelector('.mural-carousel-arrow.next').click()`)
+  const arrowPoint=await evaluate(`(()=>{const arrow=document.querySelector('.mural-carousel-arrow.next');arrow.scrollIntoView({block:'center'});const rect=arrow.getBoundingClientRect();return {x:rect.left+rect.width/2,y:rect.top+rect.height/2,hit:arrow.contains(document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2))}})()`)
+  assert.equal(arrowPoint.hit,true,'Arrow receives a real pointer click')
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:arrowPoint.x,y:arrowPoint.y,button:'left',clickCount:1})
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:arrowPoint.x,y:arrowPoint.y,button:'left',clickCount:1})
   await until(`document.querySelector('.mural-carousel-track').scrollLeft > 30`)
+  await until(`!document.querySelector('.mural-carousel-arrow.previous').disabled`)
+  const previousPoint=await evaluate(`(()=>{const arrow=document.querySelector('.mural-carousel-arrow.previous'),rect=arrow.getBoundingClientRect();return {x:rect.left+rect.width/2,y:rect.top+rect.height/2,hit:arrow.contains(document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2))}})()`)
+  assert.equal(previousPoint.hit,true,'Previous arrow also receives pointer clicks')
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:previousPoint.x,y:previousPoint.y,button:'left',clickCount:1})
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:previousPoint.x,y:previousPoint.y,button:'left',clickCount:1})
+  await until(`document.querySelector('.mural-carousel-track').scrollLeft < 2`)
+  assert.equal(await evaluate(`(()=>{const style=getComputedStyle(document.querySelector('.mural-carousel-arrow.next'),'::before');return style.width===style.height&&style.borderRadius==='50%'&&style.backgroundColor!=='rgba(0, 0, 0, 0)'})()`),true,'Arrow has a visible circular background')
   await evaluate(`document.querySelector('.mural-carousel-track').focus()`)
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'End', code: 'End', windowsVirtualKeyCode: 35 })
   await until(`document.querySelector('.mural-carousel-arrow.next').disabled`)
@@ -73,7 +83,18 @@ try {
       assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, `${theme}/${width}: page overflow`)
       assert.equal(await evaluate(`Array.from(document.querySelectorAll('.mural-activity-card')).every(card => card.scrollWidth <= card.clientWidth + 1)`), true, `${theme}/${width}: card overflow`)
       const { ratio, available } = await evaluate(`(() => {const track=document.querySelector('.mural-carousel-track'); return {ratio:track.clientWidth / track.firstElementChild.getBoundingClientRect().width,available:document.querySelector('.mural-feed').clientWidth}})()`)
-      assert.ok(ratio > (available > 800 ? 2.8 : available > 500 ? 1.8 : 1), `${theme}/${width}: visible cards ${ratio}`)
+      const visible=available>800?3:available>500?2:1
+      assert.ok(ratio >= visible-.01, `${theme}/${width}: visible cards ${ratio}`)
+      const sections=await evaluate(`Array.from(document.querySelectorAll('.mural-category'),section=>{
+        const heading=section.querySelector('.mural-category-heading').getBoundingClientRect(),track=section.querySelector('.mural-carousel-track'),bounds=track.getBoundingClientRect(),cards=Array.from(track.children,card=>card.getBoundingClientRect());
+        return {headingLeft:heading.left,headingRight:heading.right,left:bounds.left,right:bounds.right,first:cards[0].left+track.scrollLeft,last:cards[${visible-1}].right+track.scrollLeft,arrows:Array.from(section.querySelectorAll('.mural-carousel-arrow'),arrow=>getComputedStyle(arrow).position)}
+      })`)
+      for(const section of sections){
+        assert.ok(Math.abs(section.left-section.headingLeft)<1&&Math.abs(section.right-section.headingRight)<1,'Header and carousel use identical horizontal limits')
+        assert.ok(Math.abs(section.first-section.left)<1&&Math.abs(section.last-section.right)<1,'Visible cards fill available width without cropping')
+        assert.ok(Math.abs(section.left-sections[0].left)<1,'All categories share the same left edge')
+        assert.deepEqual(section.arrows,['absolute','absolute'],'Arrows float without reserving columns')
+      }
       const cards = await evaluate(`Array.from(document.querySelectorAll('.mural-activity-card'),card=>{
         const bounds=card.getBoundingClientRect(),cover=card.querySelector('.mural-activity-cover').getBoundingClientRect();
         return {width:bounds.width,height:bounds.height,coverWidth:cover.width,coverHeight:cover.height,

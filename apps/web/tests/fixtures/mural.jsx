@@ -47,6 +47,16 @@ for (const [category, publication_type] of [['events', 'event'], ['launches', 'l
   if(category==='events')items[category]=items[category].map((item,index)=>({...item,event_details:{id:item.id,start_date:'2026-11-12',start_time:'18:00',end_date:null,end_time:null,timezone:'America/Santiago',location:'Santiago de Chile',organizer:'Comunidad LibrIA',category:'fair',starts_at:'2026-11-12T21:00:00Z',ends_at:null,attending:false,attendee_count:0,schedule_revision:1,schedule_update:null,observed_at:'2020-01-01T00:00:00.000Z'},...eventState[item.id]})).filter(item=>!item.deleted)
 }
 window.muralTest = { requests: [], fail: false, noContacts: false, failMore: false }
+if(new URLSearchParams(location.search).has('description')){
+  items.events[0].body='**Una invitación literaria** 📚\nCompartimos *historias y encuentros*.\n'+ 'Un encuentro para descubrir libros y conversar con la comunidad lectora. '.repeat(24)
+  items.events[0].title='Encuentro literario'
+  items.events[1].body='Hola. 📚';items.events[1].title='Evento breve'
+  items.events[2].images=[];items.events[2].book_ref=null;items.events[2].book_title=null;items.events[2].body=items.events[0].body
+}
+if(new URLSearchParams(location.search).has('agenda')){
+  const dates=['2026-11-14','2026-11-14','2026-11-22','2026-12-05','2026-10-31','2026-11-30','2026-11-08','2026-11-01']
+  items.events=items.events.map((item,index)=>({...item,title:index===0?'Stella Tack en Chile':`Encuentro literario ${index+1}`,body:'Una experiencia para compartir historias con la comunidad lectora.',images:index===3||index===5?[]:index===2?['/images/unavailable-agenda-test.png']:item.images,book_cover_url:index===5?null:new URL(item.book_cover_url,location.origin).href,custom_book_cover_url:index===0?'/posts/events-0/book-cover?version=fixture':index===3?new URL('/images/story-books-cat.png',location.origin).href:null,event_details:{...item.event_details,start_date:dates[index],start_time:index===5?'23:30':'12:00',end_date:index===4?'2026-11-02':null,end_time:index===4?'15:00':null,category:index===3?'book_club':index===2?'fair':'meetup'}}))
+}
 if(persistEvents){const stella=items.events.find(item=>item.id==='events-0');if(stella){if(!eventState[stella.id])stella.title='Stella a Chile';stella.images=['story-books-candles-plain.png','story-books-coffee.png','story-books-cat.png','story-books-cat-candle.png','reading-year-books.png','profile-reading-nook.png'].map(name=>new URL(`/images/${name}`,location.origin).href)}}
 localStorage.setItem('libria_token', 'isolated-mural-test')
 authService.me = async () => ({ id: 'fixture', display_name: 'Lector de prueba', role, capabilities: [] })
@@ -59,7 +69,7 @@ const countsFor = item => {
     capabilities: item.capabilities, observed_at: item.observed_at })
   return counters.get(key)
 }
-const decorate = item => ({ ...item, ...countsFor(item), custom_book_cover_url: customCovers.get(item.id) || null })
+const decorate = item => ({ ...item, ...countsFor(item), custom_book_cover_url: customCovers.get(item.id) || item.custom_book_cover_url || null })
 const saveEvent=item=>{if(persistEvents){eventState[item.id]={title:item.title,body:item.body,event_details:item.event_details,deleted:item.deleted||false};localStorage.setItem(eventStateKey,JSON.stringify(eventState))}}
 window.fetch = (url, options) => {
   const path = String(url)
@@ -82,7 +92,8 @@ window.fetch = (url, options) => {
     if(window.muralTest.failSave&&method==='PUT')return Promise.resolve(new Response(JSON.stringify({detail:'Error al guardar de prueba'}),{status:422,headers:{'Content-Type':'application/json'}}))
     if(method==='DELETE'){item.deleted=true;saveEvent(item);for(const category of Object.keys(items))items[category]=items[category].filter(candidate=>candidate.id!==id);data={}}
     else if(method==='PUT'){
-      if(options.body instanceof FormData){for(const key of ['body','title','publication_type','source','book_ref','book_title'])item[key]=options.body.get(key);if(options.body.has('book_cover'))customCovers.set(id,`/fixture-covers/${id}`);else if(options.body.get('cover_mode')==='catalog')customCovers.delete(id)
+      if(options.body instanceof FormData){
+        for(const key of ['body','title','publication_type','source','book_ref','book_title'])item[key]=options.body.get(key);if(options.body.has('book_cover'))customCovers.set(id,`/fixture-covers/${id}`);else if(options.body.get('cover_mode')==='catalog')customCovers.delete(id)
         if(options.body.has('event_details')){const next=JSON.parse(options.body.get('event_details')),old=item.event_details;const changed=old&&(old.start_date!==next.start_date||old.start_time!==next.start_time||old.end_date!==next.end_date||old.end_time!==next.end_time||old.timezone!==next.timezone);item.event_details={...old,...next,id:item.id,starts_at:new Date(`${next.start_date}T${next.start_time}:00-03:00`).toISOString(),schedule_revision:(old?.schedule_revision||1)+(changed?1:0),schedule_update:changed?{changed_at:new Date().toISOString(),previous_start:old.starts_at,previous_timezone:old.timezone}:old?.schedule_update||null,attending:old?.attending||false,attendee_count:old?.attendee_count||0,observed_at:new Date().toISOString()}}
       }
       else Object.assign(item,JSON.parse(options.body))
@@ -127,7 +138,10 @@ window.fetch = (url, options) => {
     if(method!=='GET'){const enabled=method==='PUT';if(current.attending!==enabled)current.attendee_count+=enabled?1:-1;current.attending=enabled;saveEvent(item)}
     current.observed_at=new Date().toISOString();data={...current}
   } else if (parsed.pathname==='/api/events') {
-    data={items:items.events.filter(item=>item.event_details).sort((a,b)=>a.event_details.starts_at.localeCompare(b.event_details.starts_at)).map(decorate),has_more:false}
+    if(window.muralTest.failEvents)return Promise.resolve(new Response(JSON.stringify({detail:'No se pudo cargar la agenda de prueba'}),{status:503,headers:{'Content-Type':'application/json'}}))
+    const from=parsed.searchParams.get('from_date'),to=parsed.searchParams.get('to_date'),offset=Number(parsed.searchParams.get('offset')||0),limit=Number(parsed.searchParams.get('limit')||20)
+    const matching=items.events.filter(item=>item.event_details&&(!from||(item.event_details.end_date||item.event_details.start_date)>=from)&&(!to||item.event_details.start_date<=to)).sort((a,b)=>a.event_details.start_date.localeCompare(b.event_details.start_date)||a.id.localeCompare(b.id))
+    data={items:matching.slice(offset,offset+limit).map(decorate),has_more:matching.length>offset+limit}
   } else if (parsed.pathname.endsWith('/mural')) {
     if (window.muralTest.fail) status = 500
     data = { audience: parsed.searchParams.get('audience'), categories: Object.fromEntries(categoryNames.map(category => [category, { items: window.muralTest.noContacts && parsed.searchParams.get('audience') === 'contacts' ? [] : items[category].slice(0, 9).map(decorate), has_more: count > 9 }])) }

@@ -9,20 +9,22 @@
 .mural-refresh { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border:1px solid var(--line); border-radius:50%; color:var(--accent-text); background:var(--surface); cursor:pointer; }
 .mural-categories { display:grid; gap:32px; }
 .mural-category { min-width:0; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
-.mural-category-heading { display:flex; align-items:center; gap:12px; margin:0 33px 14px; min-width:0; }
+.mural-category-heading { display:flex; align-items:center; gap:12px; margin:0 0 14px; min-width:0; }
 .mural-category-icon { display:grid; place-items:center; flex:0 0 44px; height:44px; color:var(--accent-text); border-radius:50%; background:var(--soft); }
 .mural-category-heading>div { flex:1; min-width:0; }
 .mural-category-heading h2 { margin:0 0 3px; font:23px/1.2 'DM Serif Display',serif; overflow-wrap:anywhere; }
 .mural-category-heading p { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
 .mural-view-all { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:6px 0 6px 10px; flex-shrink:0; border:0; background:transparent; color:var(--accent-text); font:600 12px 'DM Sans',sans-serif; cursor:pointer; }
-.mural-carousel-wrap { position:relative; padding-inline:32px; min-width:0; }
-.mural-carousel-track { --mural-card-width:calc((100% - 2 * var(--mural-card-gap))/3); display:grid; grid-auto-flow:column; grid-auto-columns:var(--mural-card-width); gap:var(--mural-card-gap); overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scrollbar-width:none; padding:2px 1px 4px; }
+.mural-carousel-wrap { position:relative; padding-inline:0; min-width:0; }
+.mural-carousel-track { --mural-card-width:calc((100% - 2 * var(--mural-card-gap))/3); display:grid; grid-auto-flow:column; grid-auto-columns:var(--mural-card-width); gap:var(--mural-card-gap); overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scrollbar-width:none; padding:2px 0 4px; }
 .mural-carousel-track::-webkit-scrollbar { display:none; }
 .mural-carousel-slide { min-width:0; scroll-snap-align:start; display:flex; }
-.mural-carousel-arrow { display:grid; place-items:center; position:absolute; top:calc(50% - 24px); width:32px; height:44px; border:0; border-radius:999px; background:transparent; color:color-mix(in srgb,var(--accent-text) 65%,transparent); cursor:pointer; z-index:1; padding:0; }
-.mural-carousel-arrow:not(:disabled):hover { color:var(--accent-text); }
-.mural-carousel-arrow.previous { left:-1px; }
-.mural-carousel-arrow.next { right:-1px; }
+.mural-carousel-arrow { display:grid; place-items:center; position:absolute; top:50%; transform:translateY(-50%); width:28px; height:44px; border:0; background:transparent; color:var(--accent-text); cursor:pointer; z-index:3; padding:0; }
+.mural-carousel-arrow::before { content:''; position:absolute; width:28px; height:28px; box-sizing:border-box; border:1px solid var(--line); border-radius:50%; background:var(--surface); }
+.mural-carousel-arrow svg { position:relative; pointer-events:none; }
+.mural-carousel-arrow:not(:disabled):hover::before { border-color:var(--accent-text); background:var(--soft); }
+.mural-carousel-arrow.previous { left:-14px; }
+.mural-carousel-arrow.next { right:-14px; }
 .mural-carousel-arrow:disabled { opacity:.25; cursor:default; }
 .mural-activity-card { display:grid; grid-template-rows:var(--mural-person-height) minmax(0,1fr) var(--mural-action-height); gap:6px; width:100%; height:var(--mural-card-height); min-width:0; box-sizing:border-box; padding:12px; border:1px solid var(--line); border-radius:15px; background:var(--surface); }
 .mural-activity-main { display:flex; align-items:flex-start; gap:12px; min-width:0; min-height:0; }
@@ -178,8 +180,8 @@
 .mural-screen button:focus-visible,.mural-screen a:focus-visible,.mural-carousel-track:focus-visible,.mural-activity-dialog button:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
 .mural-screen button:disabled { cursor:default; opacity:.5; }
 @container mural (max-width:800px) { .mural-carousel-track { --mural-card-width:calc((100% - var(--mural-card-gap))/2); } .mural-history-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@container mural (max-width:620px) { .mural-category-heading { gap:8px; margin-inline:25px; } .mural-category-heading h2 { font-size:20px; } .mural-category-icon { flex-basis:34px; height:34px; } .mural-category-heading p { font-size:11px; } .mural-view-all { font-size:11px; gap:3px; padding-left:3px; } .mural-carousel-wrap { padding-inline:24px; } .mural-carousel-arrow { width:24px; } .mural-audiences button { gap:6px; padding-inline:6px; font-size:12px; } }
-@container mural (max-width:500px) { .mural-carousel-track { --mural-card-width:88%; } .mural-history-grid { grid-template-columns:minmax(0,1fr); } }
+@container mural (max-width:620px) { .mural-category-heading { gap:8px; } .mural-category-heading h2 { font-size:20px; } .mural-category-icon { flex-basis:34px; height:34px; } .mural-category-heading p { font-size:11px; } .mural-view-all { font-size:11px; gap:3px; padding-left:3px; } .mural-audiences button { gap:6px; padding-inline:6px; font-size:12px; } }
+@container mural (max-width:500px) { .mural-carousel-track { --mural-card-width:100%; } .mural-history-grid { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:700px) { .mural-categories { gap:26px; } }
 @media(prefers-reduced-motion:reduce) { .mural-carousel-track { scroll-behavior:auto; } }
 

@@ -75,6 +75,11 @@ def query_items(db, user, audience, category, snapshot, limit, after=None, lates
             if category == 'events':
                 publication_filter = or_(publication_filter, and_(Post.source == 'event', Post.publication_type.is_(None)))
             query = query.where(publication_filter)
+        elif category == 'social':
+            # Both preview and history use this predicate before limit/keyset pagination.
+            # Keep untyped historical community posts, but never legacy event sources.
+            query = query.where(Post.source == 'community',or_(Post.publication_type.is_(None),
+                Post.publication_type.not_in(tuple(PUBLICATION_CATEGORIES.values()))))
     if audience == "contacts" and (category in ("reviews", "social") or category in PUBLICATION_CATEGORIES):
         query = query.where(select(ProfileFollow.user_id).where(ProfileFollow.user_id == user.id,
             ProfileFollow.profile_id == model.author_profile_id).exists())

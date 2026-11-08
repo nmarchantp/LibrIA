@@ -22,6 +22,8 @@ class Post(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
     author_profile_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.perfiles.id", ondelete="RESTRICT"))
     publication_type: Mapped[str | None] = mapped_column(String(20))
+    # Inactive compatibility field: keep already-applied schema and saved selections intact.
+    event_image_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.imagenes_publicacion.id',ondelete='SET NULL',use_alter=True,name='fk_publicaciones_event_image'))
     source: Mapped[str] = mapped_column(String(40))
     author_role: Mapped[str] = mapped_column(String(20))
     kind: Mapped[str] = mapped_column(String(20))

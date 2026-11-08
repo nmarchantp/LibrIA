@@ -8,10 +8,11 @@ import { useAuth } from '../context/AuthContext'
 import BookCover from './BookCover'
 import SpoilerShield from './SpoilerShield'
 import FormattedText from './FormattedText'
+import MuralEventContent from './MuralEventContent'
 import PostGallery from './PostGallery'
 import ActivityOptionsMenu from './ActivityOptionsMenu'
 import CommentEntry from './CommentEntry'
-import { EventDate,EventAttendanceButton,EventAttendanceCount,EventInformation } from './EventPresentation'
+import { EventAttendanceButton,EventAttendanceCount } from './EventPresentation'
 import { useMuralManagement } from '../context/MuralManagementContext'
 import '../pages/HomePage.css'
 
@@ -205,7 +206,7 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
     <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.avatarUrl ? <img src={post.avatarUrl} alt="" /> : post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div>{isEventPublication&&(socialDialog||widePublication)?<><EventAttendanceButton details={post.eventDetails} showCount={false} />{post.activity?.can_manage&&management&&<button type="button" className="event-edit-button" aria-label="Editar evento" title="Editar evento" onClick={()=>management.edit(post.activity)}><Pencil size={20} /></button>}</>:<><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? ({ start: 'Nueva lectura', finish: 'Terminado' }[post.readingEvent] || 'Avance') : 'Publicación')}</span>{(socialDialog || widePublication) && followControl && <span className="mural-user-follow">{followControl}</span>}<ActivityOptionsMenu item={post.activity} /></>}</header>
     <div className={widePublication ? `mural-publication-editorial${book ? ' has-related-book' : ''}` : 'feed-content-pass-through'}>
     <div className={widePublication ? 'mural-publication-content' : 'feed-content-pass-through'}>
-    {widePublication&&isEventPublication?<div className="mural-event-content"><EventDate details={post.eventDetails} /><div className="mural-event-message"><h2>{post.title}</h2><FormattedText className="post-text" text={post.text} /><EventInformation details={post.eventDetails} /></div><PostGallery images={post.images.map(imageUrl)} alt={`Fotografía del evento ${post.title}`} onOpen={openImage} editorial /></div>:isProgress || socialDialog ? <div className="post-reading-progress">
+    {widePublication&&isEventPublication?<MuralEventContent key={`${post.id}:${post.text}`} post={post} onOpen={openImage} />:isProgress || socialDialog ? <div className="post-reading-progress">
       {book && <BookContainer className="post-progress-cover" {...(book.id ? { to: '/books/' + book.id, 'aria-label': `Ver ficha de ${book.title}` } : {})}><ProgressBookCover key={book.image || book.id} book={book} /></BookContainer>}
       <div className="post-progress-details">
         {book && <><h3 className="post-progress-title">{book.title}</h3>{book.author && <p className="post-progress-author">{book.author}</p>}</>}

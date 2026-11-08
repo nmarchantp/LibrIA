@@ -143,6 +143,55 @@ class MuralFeedTest(unittest.TestCase):
             self.assertEqual(self.client.get('/api/mural' + path + cursor).status_code, 422)
         self.assertEqual(self.client.get('/api/mural/progress?cursor=invalid').status_code, 422)
 
+    def test_social_excludes_dedicated_categories_before_limits_and_pagination(self):
+        self.post.created_at=self.now-timedelta(minutes=20)
+        allowed=[]
+        for index,kind in enumerate(('note','theory','free',None,'institutional')):
+            row=Post(user_id=self.author.id,author_profile_id=self.profiles[self.author.id].id,
+                author_role='admin',source='community',kind='community',publication_type=kind,
+                body=f'General literary conversation {index}',created_at=self.now+timedelta(minutes=index))
+            self.db.add(row);allowed.append(row)
+        excluded={}
+        for index,(category,kind) in enumerate((('events','event'),('launches','launch'),('announcements','news'),('promotions','promotion'))):
+            row=Post(user_id=self.author.id,author_profile_id=self.profiles[self.author.id].id,
+                author_role='admin',source='event' if kind=='event' else 'community',kind='community',
+                publication_type=kind,title='Stella Tack en Chile' if kind=='event' else category,
+                body='Dedicated category publication',created_at=self.now+timedelta(minutes=30+index))
+            self.db.add(row);excluded[category]=row
+        legacy=Post(user_id=self.author.id,author_profile_id=self.profiles[self.author.id].id,
+            author_role='admin',source='event',kind='community',publication_type=None,body='Legacy event',created_at=self.now+timedelta(minutes=40))
+        stranger=Post(user_id=self.other.id,author_profile_id=self.profiles[self.other.id].id,
+            author_role='admin',source='community',kind='community',publication_type='free',body='Public conversation from an unfollowed profile')
+        deleted=Post(user_id=self.author.id,author_profile_id=self.profiles[self.author.id].id,
+            author_role='admin',source='community',kind='community',publication_type='note',body='Deleted note',deleted_at=self.now)
+        hidden=Post(user_id=self.author.id,author_profile_id=self.profiles[self.author.id].id,
+            author_role='lector',source='community',kind='community',publication_type='free',body='Not authorized by visibility policy')
+        self.db.add_all([legacy,stranger,deleted,hidden]);self.db.flush()
+        before=self.db.execute(select(Post.id,Post.body,Post.publication_type,Post.source).order_by(Post.id)).all()
+        preview=self.get('?audience=contacts&limit=2')['categories']['social']
+        expected=[str(row.id) for row in reversed(allowed)]+[str(self.post.id)]
+        self.assertEqual([item['id'] for item in preview['items']],expected[:2])
+        self.assertTrue(preview['has_more'])
+        seen=[];cursor=None
+        while True:
+            page=self.get('/social?audience=contacts&limit=2'+(f'&cursor={cursor}' if cursor else ''))
+            seen.extend(item['id'] for item in page['items'])
+            cursor=page['next_cursor']
+            if not cursor:break
+        self.assertEqual(seen,expected)
+        community=self.get('/social?audience=community&limit=50')['items']
+        community_ids={item['id'] for item in community}
+        self.assertIn(str(stranger.id),community_ids)
+        forbidden={str(row.id) for row in [*excluded.values(),legacy,deleted,hidden]}
+        self.assertFalse(forbidden&community_ids)
+        for audience in ('contacts','community'):
+            summary_ids={item['id'] for item in self.get(f'?audience={audience}&limit=12')['categories']['social']['items']}
+            self.assertFalse(forbidden&summary_ids)
+        for category,row in excluded.items():
+            self.assertIn(str(row.id),{item['id'] for item in self.get(f'/{category}?audience=contacts')['items']})
+        self.assertIn(str(legacy.id),{item['id'] for item in self.get('/events?audience=contacts')['items']})
+        self.assertEqual(self.db.execute(select(Post.id,Post.body,Post.publication_type,Post.source).order_by(Post.id)).all(),before)
+
     def test_audiences_nonreciprocal_and_privacy(self):
         contacts = self.get('/progress?audience=contacts')['items']
         self.assertTrue(all(i['user_id'] == str(self.author.id) for i in contacts))

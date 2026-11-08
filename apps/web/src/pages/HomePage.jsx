@@ -18,11 +18,11 @@ import './HomePage.css'
 import './MuralPage.css'
 
 const categories = [
-  { id: 'progress', title: 'Avances de lecturas', description: 'El progreso más reciente de cada lectura compartida.', icon: ChartNoAxesColumnIncreasing },
-  { id: 'started', title: 'Empezaron a leer', description: 'Nuevas historias que acaban de comenzar.', icon: BookOpen },
-  { id: 'finished', title: 'Terminados por tus contactos', description: 'Lecturas que acaban de completar.', icon: Check },
+  { id: 'progress', title: 'Entre páginas', description: 'El progreso más reciente de cada lectura compartida.', icon: ChartNoAxesColumnIncreasing },
+  { id: 'started', title: 'Iniciando una aventura', description: 'Nuevas historias que acaban de comenzar.', icon: BookOpen },
+  { id: 'finished', title: 'Terminando el viaje', description: 'Lecturas que acaban de completar.', icon: Check },
   { id: 'reviews', title: 'Reseñas recientes', description: 'Opiniones y valoraciones para descubrir tu próxima lectura.', icon: Star },
-  { id: 'social', title: 'Publicaciones de la comunidad', description: 'Notas, teorías, anuncios y conversaciones literarias.', icon: MessageCircle },
+  { id: 'social', title: 'Publicaciones de la comunidad', description: 'Notas, teorías y conversaciones literarias', icon: MessageCircle },
 ]
 const publicationCategories = [
   { id: 'events', title: 'Eventos', description: 'Encuentros y actividades de nuestra comunidad literaria.' },
@@ -49,6 +49,17 @@ function MuralContent() {
   const [profileError, setProfileError] = useState('')
   const savedScroll = useRef(0)
   const feed = useMural(user.id, audience, category?.id, refresh)
+  const linkedPublication=params.get('publication')
+  const [linkedError,setLinkedError]=useState('')
+  useEffect(()=>{
+    if(!linkedPublication)return
+    const controller=new AbortController();setLinkedError('')
+    apiRequest(`/posts/${encodeURIComponent(linkedPublication)}`,{signal:controller.signal,headers:{Authorization:`Bearer ${localStorage.getItem('libria_token')}`}}).then(async item=>{
+      if(!controller.signal.aborted&&await interactions.view(item,'open')&&!controller.signal.aborted)setSelected({item,comments:false})
+    }).catch(cause=>{if(!controller.signal.aborted)setLinkedError(cause.message||'No se pudo abrir la publicación original.')})
+    return()=>controller.abort()
+  },[linkedPublication,interactions])
+  function closeActivity(){setSelected(null);if(linkedPublication)setParams(current=>{const next=new URLSearchParams(current);next.delete('publication');return next},{replace:true})}
   useEffect(() => {
     let active = true
     const controller = new AbortController()
@@ -91,7 +102,7 @@ function MuralContent() {
       return () => cancelAnimationFrame(frame)
     }
   }, [category, feed.loading])
-  const titleFor = item => item.id === 'finished' && audience === 'community' ? 'Terminados por la comunidad' : item.title
+  const titleFor = item => item.title
   const empty = audience === 'contacts' ? 'Todavía no hay actividades de tus contactos en esta categoría. Sigue perfiles para descubrir sus lecturas.' : 'Todavía no hay actividades públicas en esta categoría.'
   async function openActivity(item, comments = false) {
     if (await interactions.view(item, comments ? 'open_comments' : 'open')) setSelected({ item, comments })
@@ -102,6 +113,7 @@ function MuralContent() {
     <section className="mural-feed" aria-labelledby="mural-title">
     <header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
     {profileError && <p role="alert">{profileError}</p>}
+    {linkedError&&<p role="alert">{linkedError}</p>}
     {savedMessage&&<p role="status">{savedMessage}</p>}
     <div className="mural-navigation">
       <nav ref={navigation} className="mural-audiences" aria-label="Secciones del mural">{[{ id: 'contacts', title: 'Contactos' }, { id: 'community', title: 'Comunidad' }, ...publicationCategories].map(item => <button key={item.id} aria-pressed={activeTab === item.id} onClick={() => item.id === 'contacts' || item.id === 'community' ? chooseAudience(item.id) : viewAll(item.id)}>{item.title}</button>)}</nav>
@@ -123,7 +135,7 @@ function MuralContent() {
       <section className="aside-reading"><h2><BookOpen size={18} /> Sigue leyendo</h2>{books.filter(book => book.status === 'Leyendo').map(book => <Link to={'/books/' + book.id} className="aside-book" key={book.id}><BookCover book={book} /><div><strong>{book.title}</strong><small>{book.progress}% leído · ejemplo</small></div></Link>)}<Link className="aside-link" to="/profile?tab=library">Ver mi biblioteca →</Link></section>
       <div className="community-note"><MessageCircle size={22} /><p>Un lugar para conversar sobre las historias que nos acompañan.</p><small>LibrIA · Comunidad lectora</small></div>
     </aside></div>
-    {selected && <MuralActivityDialog key={`${selected.item.feed_item_type}:${selected.item.id}:${selected.comments}`} item={selected.item} openComments={selected.comments} onClose={() => setSelected(null)} />}
+    {selected && <MuralActivityDialog key={`${selected.item.feed_item_type}:${selected.item.id}:${selected.comments}`} item={selected.item} openComments={selected.comments} onClose={closeActivity} />}
     {management&&<ContentManagementDialog target={management} onClose={()=>setManagement(null)} onSaved={result=>{setManagement(null);setSelected(null);setSavedMessage(result?.deleted?'Publicación eliminada.':'Cambios guardados.');setRefresh(value=>value+1)}} />}
   </div>
   </MuralManagementContext.Provider>

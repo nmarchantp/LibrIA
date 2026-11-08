@@ -50,6 +50,32 @@ def details(day='2026-11-12',hour='18:00'):
 
 
 class PublicationEventsTest(MuralFeedTest):
+    def test_calendar_ranges_use_event_local_dates_and_include_multiday_events(self):
+        self.owner()
+        schedules=[{**details('2026-10-31','23:30'),'end_date':'2026-11-02','end_time':'09:00'},details('2026-11-30','23:30'),details('2026-12-01','00:30')]
+        identifiers=[]
+        for schedule in schedules:
+            payload=self.payload(schedule);payload.pop('book_ref')
+            response=self.client.post('/api/posts',json=payload)
+            self.assertEqual(response.status_code,201,response.text)
+            identifiers.append(response.json()['id'])
+        self.viewer_user()
+        query='/api/events?from_date=2026-11-01&to_date=2026-11-30'
+        data=self.client.get(query).json()
+        ids={item['id'] for item in data['items']}
+        self.assertTrue(set(identifiers[:2]).issubset(ids));self.assertNotIn(identifiers[2],ids)
+        self.assertIn(identifiers[0],{item['id'] for item in self.client.get('/api/events?from_date=2026-11-01&to_date=2026-11-01').json()['items']})
+        self.assertEqual(self.client.get(query+'&limit=1').json()['items'][0]['id'],data['items'][0]['id'])
+        self.assertEqual(self.client.get(query+'&limit=1&offset=1').json()['items'][0]['id'],data['items'][1]['id'])
+        self.assertTrue(self.client.get(query+'&limit=1').json()['has_more'])
+        self.assertEqual(self.client.get('/api/events?from_date=2026-11-30&to_date=2026-11-01').status_code,422)
+        self.assertEqual(self.client.get('/api/events?from_date=2020-01-01&to_date=2026-11-01').status_code,422)
+        self.assertEqual(self.client.get('/api/events?from_date=invalid').status_code,422)
+        self.owner();self.client.delete(f'/api/posts/{identifiers[1]}');self.viewer_user()
+        self.assertNotIn(identifiers[1],{item['id'] for item in self.client.get(query).json()['items']})
+        self.db.get(Post,uuid.UUID(identifiers[0])).author_role='lector';self.db.flush()
+        self.assertNotIn(identifiers[0],{item['id'] for item in self.client.get(query).json()['items']})
+
     def owner(self):
         self.author.role='admin';self.db.flush()
         app.dependency_overrides[get_current_user]=lambda:self.author
