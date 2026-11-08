@@ -1,0 +1,33 @@
+.activity-options { position:relative; flex-shrink:0; font-size:12px; }
+.activity-options summary { display:grid; place-items:center; width:36px; min-height:40px; cursor:pointer; list-style:none; color:var(--muted); }
+.activity-options summary::-webkit-details-marker { display:none; }
+.activity-options>div { position:absolute; right:0; top:100%; z-index:8; min-width:175px; border:1px solid var(--line); border-radius:10px; padding:4px; background:var(--surface); }
+.activity-options button { display:block; min-height:44px; width:100%; padding:8px; border:0; background:none; color:var(--ink); font:inherit; text-align:left; cursor:pointer; }
+.mural-activity-person { overflow:visible; }
+.mural-activity-person>div { flex:1; }
+.mural-activity-person .activity-options summary { min-height:32px; height:32px; width:28px; }
+.content-management-dialog { width:min(760px,calc(100% - 20px)); max-height:calc(var(--management-height,100dvh) - 24px); padding:0; border:1px solid var(--line); border-radius:18px; background:var(--surface); color:var(--ink); overflow:auto; }
+.content-management-dialog::backdrop { background:#0009; }
+.content-management-dialog>header { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; background:var(--surface); padding:12px 18px; border-bottom:1px solid var(--line); }
+.content-management-dialog h2 { margin:0; font:24px 'DM Serif Display',serif; }
+.content-management-dialog>header button { width:40px; height:40px; border:0; border-radius:50%; background:transparent; color:var(--ink); cursor:pointer; }
+.content-management-body { padding:18px; }
+.content-management-body .post-composer { margin:0; padding:0; border:0; box-shadow:none; }
+.content-management-body>footer { display:flex; justify-content:flex-end; gap:10px; }
+.mural-review-editor { display:grid; gap:14px; }
+.mural-review-editor>label { display:flex; flex-wrap:wrap; gap:7px; font-size:13px; }
+.mural-review-editor textarea { flex-basis:100%; box-sizing:border-box; width:100%; padding:10px; background:var(--soft); color:var(--ink); border:1px solid var(--line); border-radius:8px; }
+.mural-review-editor fieldset { min-width:0; border:1px solid var(--line); border-radius:10px; padding:12px; }
+.mural-review-editor .library-rating-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; }
+.mural-review-editor .library-rating-label { display:flex; align-items:center; gap:6px; position:relative; font-size:12px; }
+.mural-review-editor .library-rating-label>svg { width:18px; height:18px; }
+.mural-review-editor .library-rating-tooltip { display:none; }
+.mural-review-editor .library-rating-buttons { display:flex; align-items:center; gap:4px; }
+.mural-review-editor .library-rating-buttons button { width:28px; height:32px; padding:0; border:0; background:transparent; color:var(--rating-category-color); cursor:pointer; }
+.mural-review-editor .library-rating-buttons svg { width:24px; height:24px; }
+.comment-content { min-width:0; }
+.comment-meta .activity-options { margin-left:auto; }
+.comment-inline-editor { display:grid; gap:6px; }
+.comment-inline-editor textarea { width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:7px; padding:8px; background:var(--soft); color:var(--ink); }
+.comment-inline-editor button,.comment-remove-confirm button { min-height:40px; margin-right:6px; padding:6px 10px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--ink); cursor:pointer; }
+.comment-edited { font-size:10px; color:var(--muted); }

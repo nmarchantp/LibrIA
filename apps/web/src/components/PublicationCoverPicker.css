@@ -1,0 +1,14 @@
+.publication-cover-picker { min-width:0; margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); }
+.publication-cover-picker legend { padding:0 4px; font-size:12px; font-weight:600; }
+.publication-cover-options { display:flex; flex-wrap:wrap; gap:10px 16px; }
+.publication-cover-options label { display:flex; align-items:center; gap:6px; font-size:12px; }
+.publication-cover-upload { display:flex; gap:12px; margin-top:12px; align-items:flex-start; }
+.publication-cover-upload>img { width:64px; height:96px; flex-shrink:0; object-fit:contain; border-radius:4px; }
+.publication-cover-upload>div { min-width:0; display:flex; align-items:flex-start; flex-wrap:wrap; gap:6px; }
+.publication-cover-file,.publication-cover-upload button { display:inline-flex; align-items:center; justify-content:center; gap:6px; position:relative; min-height:40px; padding:6px 8px; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font-size:12px; cursor:pointer; }
+.publication-cover-file input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.publication-cover-file:focus-within { outline:2px solid var(--accent-text); outline-offset:2px; }
+.publication-cover-upload small { flex-basis:100%; color:var(--muted); font-size:11px; line-height:1.5; }
+.publication-cover-edit { margin-top:12px; font-size:12px; }
+.publication-cover-edit>button,.publication-cover-edit footer button { min-height:40px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--accent-text); cursor:pointer; }
+.publication-cover-edit footer { display:flex; flex-wrap:wrap; gap:8px; }

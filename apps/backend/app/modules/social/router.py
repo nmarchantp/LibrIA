@@ -11,7 +11,8 @@ from starlette.formparsers import MultiPartException
 
 from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user, get_optional_current_user
-from app.modules.social.models import Post, PostComment, PostImage, PostLike, ProfileFollow, Review, ReviewLike
+from app.modules.social.models import Post, PostBookCover, PostComment, PostImage, PostLike, ProfileFollow, Review, ReviewLike
+from app.modules.social.post_covers import read_cover, cover_url
 from app.modules.social.schemas import (
     CommentCreate,
     CommentResponse,
@@ -40,7 +41,7 @@ def as_response(post: Post, author: str, author_role: str, image_ids: list[uuid.
                         source=post.source, kind=post.kind, title=post.title,
                         body=post.body, book_ref=post.book_ref, book_title=post.book_title,
                         rating=post.rating, progress_percent=post.progress_percent,
-                        reading_event=post.reading_event, created_at=post.created_at,work_id=post.work_id,edition_id=post.edition_id)
+                        reading_event=post.reading_event, created_at=post.created_at,updated_at=post.updated_at,work_id=post.work_id,edition_id=post.edition_id)
 
 
 def image_content_type(data: bytes) -> str | None:
@@ -57,22 +58,14 @@ def image_content_type(data: bytes) -> str | None:
 
 def as_comment_response(comment: PostComment, author: str, author_role: str) -> CommentResponse:
     return CommentResponse(id=comment.id, post_id=comment.post_id or comment.reading_event_id or comment.review_id, user_id=comment.user_id,
-                           author=author, author_role=author_role, body=comment.body, created_at=comment.created_at)
+                           author=author, author_role=author_role, body=comment.body, created_at=comment.created_at, edited_at=comment.edited_at)
 
 
-def visible_posts():
-    return and_(Post.source.in_(("community", "event")),
-                or_(Post.author_role != "lector", Post.publication_type.in_(("note", "theory"))))
+from app.modules.social.activity_access import visible_posts, resolve_legacy
 
 
 def require_post(db: Session, post_id: uuid.UUID) -> str:
-    if db.scalar(select(Post.id).where(Post.id == post_id, visible_posts())) is not None:
-        return "publication"
-    if db.scalar(select(ReadingEvent.id).where(ReadingEvent.id == post_id, ReadingEvent.is_public)) is not None:
-        return "reading_event"
-    if db.scalar(select(Review.id).where(Review.id == post_id, Review.status == "published").with_for_update()) is not None:
-        return "review"
-    raise HTTPException(status_code=404, detail="Contenido no encontrado")
+    return resolve_legacy(db, post_id)
 
 
 def as_review_response(db: Session, review: Review) -> PostResponse:
@@ -111,6 +104,7 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
                       db: Annotated[Session, Depends(get_db)]) -> PostResponse:
     content_type = request.headers.get("content-type", "")
     uploads: list[UploadFile] = []
+    book_cover = None
     if content_type.startswith("multipart/form-data"):
         try:
             form = await request.form(max_files=MAX_POST_IMAGES + 1, max_fields=len(PostCreate.model_fields))
@@ -124,6 +118,7 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
             if value is not None:
                 payload[field] = value
         raw_uploads = form.getlist("images")
+        book_cover = form.get('book_cover')
         if any(not isinstance(image, UploadFile) for image in raw_uploads):
             for image in raw_uploads:
                 if isinstance(image, UploadFile):
@@ -142,13 +137,18 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
     except ValidationError as error:
         for upload in uploads:
             await upload.close()
+        if isinstance(book_cover, UploadFile):
+            await book_cover.close()
         raise HTTPException(status_code=422, detail=error.errors(include_context=False)) from error
 
     if len(uploads) > MAX_POST_IMAGES:
         for upload in uploads:
             await upload.close()
+        if isinstance(book_cover, UploadFile):
+            await book_cover.close()
         raise HTTPException(status_code=422, detail=f"Una publicación admite hasta {MAX_POST_IMAGES} imágenes")
     image_data: list[tuple[str, bytes]] = []
+    cover_data = None
     total_image_bytes = 0
     try:
         for upload in uploads:
@@ -162,9 +162,15 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
             if total_image_bytes > MAX_IMAGES_TOTAL_BYTES:
                 raise HTTPException(status_code=413, detail="Las imágenes de una publicación no pueden superar 25 MB")
             image_data.append((detected_type, content))
+        if book_cover is not None:
+            cover_data = await read_cover(book_cover)
+            if total_image_bytes + len(cover_data[1]) > MAX_IMAGES_TOTAL_BYTES:
+                raise HTTPException(413, "Las imágenes y la portada no pueden superar 25 MB")
     finally:
         for upload in uploads:
             await upload.close()
+        if isinstance(book_cover, UploadFile):
+            await book_cover.close()
 
     profile = require_actor(db, user, data.author_profile_id) if data.author_profile_id else personal_profile(db, user)
     role = "admin" if user.role == "admin" and profile.kind == "personal" else publication_role(db, profile)
@@ -189,6 +195,8 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
         resolved_work=next(iter(works));resolved_edition=resolved_edition or matches[0].id
     if resolved_work and not db.get(Work,resolved_work):
         raise HTTPException(422,'Obra no encontrada en el catálogo de LibrIA')
+    if cover_data and not (resolved_work or data.book_ref):
+        raise HTTPException(422, 'Enlaza una obra antes de personalizar su portada')
     post = Post(user_id=user.id, author_role=role, author_profile_id=profile.id,
                 work_id=resolved_work,edition_id=resolved_edition,
                 publication_type=publication_type,
@@ -198,9 +206,13 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
     images = [PostImage(post_id=post.id, content_type=image_type, data=content)
               for image_type, content in image_data]
     db.add_all(images)
+    cover = None
+    if cover_data:
+        cover = PostBookCover(post_id=post.id, revision=uuid.uuid4(), content_type=cover_data[0], data=cover_data[1])
+        db.add(cover)
     db.commit()
     db.refresh(post)
-    return as_response(post, profile.display_name, role, [image.id for image in images])
+    return as_response(post, profile.display_name, role, [image.id for image in images]).model_copy(update={'custom_book_cover_url': cover_url(cover), 'can_edit_book_cover': True})
 
 
 @router.get("", response_model=list[PostResponse])
@@ -213,6 +225,7 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
     profile_ids = {post.author_profile_id for post, _, _ in rows if post.author_profile_id}
     names = dict(db.execute(select(Profile.id, Profile.display_name).where(Profile.id.in_(profile_ids))).all())
     post_ids = [post.id for post, _, _ in rows]
+    custom_covers = {cover.post_id: cover_url(cover) for cover in db.execute(select(PostBookCover.post_id,PostBookCover.revision).where(PostBookCover.post_id.in_(post_ids)))} if post_ids else {}
     image_ids: dict[uuid.UUID, list[uuid.UUID]] = {}
     if post_ids:
         for post_id, image_id in db.execute(
@@ -236,6 +249,7 @@ def list_posts(db: Annotated[Session, Depends(get_db)],
     for post, name, role in rows:
         item = as_response(post, names.get(post.author_profile_id, name), role, image_ids.get(post.id))
         items.append(item.model_copy(update={
+            "custom_book_cover_url": custom_covers.get(post.id),
             "like_count": like_counts.get(post.id, 0),
             "liked_by_me": post.id in liked_ids,
             "following_author": post.author_profile_id in followed_ids,
@@ -292,28 +306,21 @@ def get_post_image(post_id: uuid.UUID, image_id: uuid.UUID, db: Annotated[Sessio
 @router.put("/{post_id}/like", response_model=PostLikeResponse)
 def like_post(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
               db: Annotated[Session, Depends(get_db)]) -> PostLikeResponse:
-    kind = require_post(db, post_id)
-    if kind == "reading_event":
-        raise HTTPException(status_code=404, detail="Publicación no encontrada")
-    model, target, key = (ReviewLike, ReviewLike.review_id, "review_id") if kind == "review" else (PostLike, PostLike.post_id, "post_id")
-    db.execute(insert(model).values(**{key: post_id, "user_id": user.id})
-               .on_conflict_do_nothing(index_elements=[key, "user_id"]))
+    from app.modules.social.interaction_service import like
+    kind = resolve_legacy(db, post_id, lock=True)
+    result = like(db, kind, post_id, user.id, True)
     db.commit()
-    count = db.scalar(select(func.count()).select_from(model).where(target == post_id)) or 0
-    return PostLikeResponse(like_count=count, liked_by_me=True)
+    return PostLikeResponse(like_count=result["like_count"], liked_by_me=result["liked_by_me"])
 
 
 @router.delete("/{post_id}/like", response_model=PostLikeResponse)
 def unlike_post(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
                 db: Annotated[Session, Depends(get_db)]) -> PostLikeResponse:
-    kind = require_post(db, post_id)
-    if kind == "reading_event":
-        raise HTTPException(status_code=404, detail="Publicación no encontrada")
-    model, target = (ReviewLike, ReviewLike.review_id) if kind == "review" else (PostLike, PostLike.post_id)
-    db.query(model).filter(target == post_id, model.user_id == user.id).delete()
+    from app.modules.social.interaction_service import like
+    kind = resolve_legacy(db, post_id, lock=True)
+    result = like(db, kind, post_id, user.id, False)
     db.commit()
-    count = db.scalar(select(func.count()).select_from(model).where(target == post_id)) or 0
-    return PostLikeResponse(like_count=count, liked_by_me=False)
+    return PostLikeResponse(like_count=result["like_count"], liked_by_me=result["liked_by_me"])
 
 
 @profile_social_router.post("/{profile_id}/follow", response_model=ProfileFollowResponse)
@@ -353,13 +360,10 @@ def list_comments(post_id: uuid.UUID, db: Annotated[Session, Depends(get_db)],
 def create_comment(post_id: uuid.UUID, data: CommentCreate,
                    user: Annotated[User, Depends(get_current_user)],
                    db: Annotated[Session, Depends(get_db)]) -> CommentResponse:
-    kind = require_post(db, post_id)
+    from app.modules.social.interaction_service import add_comment
+    kind = resolve_legacy(db, post_id, lock=True)
     profile = personal_profile(db, user)
-    comment = PostComment(post_id=post_id if kind == "publication" else None,
-                          reading_event_id=post_id if kind == "reading_event" else None,
-                          review_id=post_id if kind == "review" else None,
-                          user_id=user.id, author_profile_id=profile.id, body=data.body)
-    db.add(comment)
+    comment, _ = add_comment(db, kind, post_id, user.id, profile.id, data.body)
+    response = as_comment_response(comment, user.display_name, user.role)
     db.commit()
-    db.refresh(comment)
-    return as_comment_response(comment, user.display_name, user.role)
+    return response

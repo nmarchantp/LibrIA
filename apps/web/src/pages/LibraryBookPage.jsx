@@ -229,15 +229,15 @@ export default function LibraryBookPage() {
   }
 
   const deleteReview = async () => {
-    setBusy('Eliminando tu reseña y valoración…'); setError(''); setMessage('')
+    setBusy('Ocultando tu reseña y valoración…'); setError(''); setMessage('')
     try {
       await apiRequest(`/reviews/${existingReview.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
-      setExistingReview(null); setComment(''); setIsSpoiler(false)
+      setExistingReview(current=>({...current,status:'hidden'})); setComment(''); setIsSpoiler(false)
       const emptyRatings = Object.fromEntries(ratingDimensions.map(([key]) => [key, null]))
       setRatings(emptyRatings)
       setRatingBaseline(ratingSnapshot(emptyRatings, '', 'public'))
-      setMessage('Reseña y valoración eliminadas. Tu perfil se actualizará sin esa evidencia.')
-    } catch { setError('No se pudo eliminar tu reseña.') }
+      setMessage('Reseña oculta. Se conservaron su historial y sus interacciones.')
+    } catch { setError('No se pudo ocultar tu reseña.') }
     finally { setBusy(false) }
   }
 
@@ -363,7 +363,7 @@ export default function LibraryBookPage() {
       </div></section>
       <div className="book-review-submit">
       <button className="button primary reading-save-review" disabled={busy || !comment.trim()}>{busy === 'Guardando valoración y reseña…' ? 'Guardando…' : existingReview ? 'Guardar valoración' : 'Crear valoración'}</button>
-      {existingReview && <button className="button secondary" type="button" disabled={Boolean(busy)} onClick={deleteReview}>Eliminar mi reseña y valoración</button>}
+      {existingReview && <button className="button secondary" type="button" disabled={Boolean(busy)} onClick={deleteReview}>Ocultar mi reseña y valoración</button>}
       </div>
       {comment.trim() && <ReviewPreview user={user} book={book} rating={ratings.general} text={comment.trim()} isSpoiler={isSpoiler} visibility={reviewVisibility} />}
       </form>}

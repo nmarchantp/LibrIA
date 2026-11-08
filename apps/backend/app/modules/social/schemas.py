@@ -52,6 +52,9 @@ class PostResponse(BaseModel):
     book_ref: str | None
     book_title: str | None
     book_cover_url: str | None = None
+    custom_book_cover_url: str | None = None
+    can_edit_book_cover: bool = False
+    can_manage: bool = False
     rating: float | None
     dimension_ratings: dict[str, float] = Field(default_factory=dict)
     progress_percent: int | None
@@ -88,6 +91,7 @@ class CommentResponse(BaseModel):
     author_role: UserRole
     body: str
     created_at: datetime
+    edited_at: datetime | None = None
 
 
 RatingDimension = Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace", "battles", "horror", "boring_moments", "comedy"]

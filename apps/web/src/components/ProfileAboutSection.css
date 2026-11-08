@@ -1,5 +1,4 @@
-/* This composition belongs only to Sobre mí. Header, tabs and other pages keep
-   their existing styles. The quotes area is reserved, with no placeholder card. */
+/* This composition belongs only to Sobre mí. */
 .reader-about-section { container:reader-about / inline-size; padding-top:30px; }
 .reader-about-intro { display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
 .reader-about-intro>svg { flex:0 0 32px; width:32px; height:48px; color:var(--accent-text); opacity:.6; }
@@ -10,7 +9,7 @@
 .reader-about-section .reader-about-grid {
   display:grid;
   grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-  grid-template-areas:"history genres" "tropes featured" "statistics quotes";
+  grid-template-areas:"history genres" "tropes featured" "statistics .";
   align-items:stretch;
   gap:22px;
 }

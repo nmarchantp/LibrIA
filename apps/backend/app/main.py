@@ -14,6 +14,10 @@ from app.core.environment_admin import router as environment_admin_router
 from app.modules.auth.router import router as auth_router
 from app.modules.users.account_router import router as account_router
 from app.modules.social.router import profile_social_router, router as social_router
+from app.modules.social.feed_router import router as feed_router
+from app.modules.social.interactions_router import router as interactions_router
+from app.modules.social.post_covers import router as post_covers_router
+from app.modules.social.publication_management import router as publication_management_router
 from app.modules.users.roles_router import router as roles_router
 from app.modules.library.router import router as readings_router
 from app.modules.users.identities_router import router as profiles_router
@@ -48,6 +52,10 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(account_router, prefix=settings.api_prefix)
 app.include_router(social_router, prefix=settings.api_prefix)
+app.include_router(feed_router, prefix=settings.api_prefix)
+app.include_router(interactions_router, prefix=settings.api_prefix)
+app.include_router(post_covers_router, prefix=settings.api_prefix)
+app.include_router(publication_management_router, prefix=settings.api_prefix)
 app.include_router(profile_social_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
 app.include_router(environment_admin_router, prefix=settings.api_prefix)

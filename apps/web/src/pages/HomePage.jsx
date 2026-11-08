@@ -1,216 +1,130 @@
-import RatingStar from '../components/RatingStar'
-import { useEffect, useState } from 'react'
-import { ArrowUpRight, BookOpen, Heart, MessageCircle, UserRoundCheck, UserRoundPlus } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { apiRequest, apiUrl } from '../api/client'
-import { useLibrary } from '../context/LibraryContext'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowUpRight, BookOpen, ChartNoAxesColumnIncreasing, Check, MessageCircle, RefreshCw, Star } from 'lucide-react'
+import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { useLibrary } from '../context/LibraryContext'
 import BookCover from '../components/BookCover'
-import SpoilerShield from '../components/SpoilerShield'
 import PostComposer from '../components/PostComposer'
-import FormattedText from '../components/FormattedText'
-import PostGallery from '../components/PostGallery'
+import MuralCarousel from '../components/MuralCarousel'
+import MuralActivityCard from '../components/MuralActivityCard'
+import MuralActivityDialog from '../components/MuralActivityDialog'
+import MuralPublication from '../components/MuralPublication'
+import ContentManagementDialog from '../components/ContentManagementDialog'
+import { MuralManagementContext } from '../context/MuralManagementContext'
+import useMural from '../hooks/useMural'
+import { ActivityInteractionProvider, useActivityStore } from '../context/ActivityInteractionContext'
 import './HomePage.css'
+import './MuralPage.css'
 
-const filters = [['all', 'Para ti'], ['reviews', 'Reseñas'], ['progress', 'Lecturas'], ['community', 'Comunidad']]
-const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
-const publicationLabels = { news: 'Anuncio', promotion: 'Promoción', launch: 'Lanzamiento', institutional: 'Institucional', event: 'Evento', note: 'Nota', theory: 'Teoría' }
-const roleColors = { lector: 'var(--secondary)', influencer: 'var(--soft)', autor: 'var(--secondary)', libreria: 'var(--soft)', editorial: 'var(--secondary)', admin: 'var(--secondary)' }
-function FeedCard({ post }) {
-  const { getBook } = useLibrary()
-  const libraryBook = post.bookId ? getBook(post.bookId) : null
-  const book = post.bookTitle ? {
-    ...libraryBook,
-    id: post.bookId,
-    title: post.bookTitle,
-    author: libraryBook?.author || '',
-    image: post.bookCoverUrl || libraryBook?.image,
-    initial: post.bookTitle.charAt(0),
-    color: 'var(--lavender-soft)',
-    accent: 'var(--ink)',
-  } : libraryBook
-  const BookContainer = book?.id ? Link : 'div'
-  const [liked, setLiked] = useState(post.likedByMe)
-  const [likeCount, setLikeCount] = useState(post.likeCount)
-  const [following, setFollowing] = useState(post.followingAuthor)
-  const [interactionBusy, setInteractionBusy] = useState(false)
-  const [interactionError, setInteractionError] = useState('')
-  const [commentsOpen, setCommentsOpen] = useState(false)
-  const [comments, setComments] = useState([])
-  const [commentText, setCommentText] = useState('')
-  const [commentsLoading, setCommentsLoading] = useState(false)
-  const [commentSending, setCommentSending] = useState(false)
-  const [commentError, setCommentError] = useState('')
+const categories = [
+  { id: 'progress', title: 'Avances de lecturas', description: 'El progreso más reciente de cada lectura compartida.', icon: ChartNoAxesColumnIncreasing },
+  { id: 'started', title: 'Empezaron a leer', description: 'Nuevas historias que acaban de comenzar.', icon: BookOpen },
+  { id: 'finished', title: 'Terminados por tus contactos', description: 'Lecturas que acaban de completar.', icon: Check },
+  { id: 'reviews', title: 'Reseñas recientes', description: 'Opiniones y valoraciones para descubrir tu próxima lectura.', icon: Star },
+  { id: 'social', title: 'Publicaciones de la comunidad', description: 'Notas, teorías, anuncios y conversaciones literarias.', icon: MessageCircle },
+]
+const publicationCategories = [
+  { id: 'events', title: 'Eventos', description: 'Encuentros y actividades de nuestra comunidad literaria.' },
+  { id: 'launches', title: 'Lanzamientos', description: 'Nuevos libros e historias que llegan a la comunidad.' },
+  { id: 'announcements', title: 'Anuncios', description: 'Novedades y anuncios de la comunidad.' },
+  { id: 'promotions', title: 'Promociones', description: 'Promociones compartidas por la comunidad.' },
+]
 
-  const toggleComments = async () => {
-    if (commentsOpen) { setCommentsOpen(false); return }
-    setCommentsOpen(true)
-    setCommentsLoading(true)
-    setCommentError('')
-    try {
-      setComments(await apiRequest(`/posts/${post.id}/comments`))
-    } catch {
-      setCommentError('No se pudieron cargar los comentarios. Cierra y vuelve a abrir esta sección para reintentar.')
-    } finally {
-      setCommentsLoading(false)
-    }
-  }
-
-  const submitComment = async event => {
-    event.preventDefault()
-    const body = commentText.trim()
-    if (!body || commentSending) return
-    const token = localStorage.getItem('libria_token')
-    if (!token) { setCommentError('Tu sesión terminó. Vuelve a iniciar sesión para comentar.'); return }
-    setCommentSending(true)
-    setCommentError('')
-    try {
-      const comment = await apiRequest(`/posts/${post.id}/comments`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ body }),
-      })
-      setComments(current => [...current, comment])
-      setCommentText('')
-    } catch (error) {
-      setCommentError(error.status === 401 ? 'Tu sesión terminó. Vuelve a iniciar sesión para comentar.' : 'No se pudo publicar el comentario. Inténtalo de nuevo.')
-    } finally {
-      setCommentSending(false)
-    }
-  }
-
-  const toggleLike = async () => {
-    const token = localStorage.getItem('libria_token')
-    if (!token || interactionBusy) { setInteractionError('Inicia sesión para indicar que te gusta.'); return }
-    setInteractionBusy(true)
-    setInteractionError('')
-    try {
-      const result = await apiRequest(`/posts/${post.id}/like`, {
-        method: liked ? 'DELETE' : 'PUT', headers: { Authorization: 'Bearer ' + token },
-      })
-      setLiked(result.liked_by_me)
-      setLikeCount(result.like_count)
-    } catch {
-      setInteractionError('No se pudo actualizar tu me gusta. Inténtalo de nuevo.')
-    } finally {
-      setInteractionBusy(false)
-    }
-  }
-
-  const toggleFollow = async () => {
-    const token = localStorage.getItem('libria_token')
-    if (!token || interactionBusy) { setInteractionError('Inicia sesión para seguir este perfil.'); return }
-    setInteractionBusy(true)
-    setInteractionError('')
-    try {
-      if (following) await apiRequest(`/profiles/${post.authorProfileId}/follow`, {
-        method: 'DELETE', headers: { Authorization: 'Bearer ' + token },
-      })
-      else await apiRequest(`/profiles/${post.authorProfileId}/follow`, {
-        method: 'POST', headers: { Authorization: 'Bearer ' + token },
-      })
-      setFollowing(!following)
-    } catch {
-      setInteractionError('No se pudo actualizar el seguimiento. Inténtalo de nuevo.')
-    } finally {
-      setInteractionBusy(false)
-    }
-  }
-
-  return <article className="feed-card">
-    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? 'Avance' : 'Publicación')}</span></header>
-    {post.title && <h2>{post.title}</h2>}
-    {post.rating && <div className="review-rating" aria-label={post.rating + ' de 5 estrellas'}>{Array.from({ length: 5 }, (_, i) => <RatingStar key={i} size={16} fraction={post.rating - i} />)}<span>{post.rating}/5</span></div>}
-    {post.bookTitle && !post.title && <h2>{post.bookTitle}</h2>}
-    {post.isSpoiler ? <SpoilerShield><FormattedText className="post-text" text={post.text} /><PostGallery images={post.images.map(image => apiUrl(image))} alt={`Imagen de la reseña de ${post.author}`} /></SpoilerShield> : <><FormattedText className="post-text" text={post.text} />
-    <PostGallery images={post.images.map(image => apiUrl(image))} alt={`Imagen de la publicación de ${post.author}`} /></>}
-    {post.type === 'progress' && post.progressPercent !== null && <div className="progress-label"><span>Progreso de lectura</span><strong>{post.progressPercent} %</strong></div>}
-    {post.quote && <blockquote className="post-quote">“{post.quote}”<span>Desde el cuaderno de la autora</span></blockquote>}
-    {book && <BookContainer className="post-book" {...(book.id ? { to: '/books/' + book.id } : {})}><BookCover book={book} /><div><small>{post.type === 'progress' ? 'LECTURA COMPARTIDA' : post.type === 'reviews' ? 'EN ESTA RESEÑA' : 'OBRA ENLAZADA'}</small><h3>{book.title}</h3>{book.author && <p>{book.author}</p>}{post.progressPercent !== null && post.type === 'progress' && <div className="progress"><span style={{ width: post.progressPercent + '%' }} /></div>}</div>{book.id && <ArrowUpRight size={18} />}</BookContainer>}
-    {post.feedItemType !== 'reading_event' && <div className="post-actions">
-      <button type="button" aria-pressed={liked} disabled={interactionBusy} onClick={toggleLike}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> Me gusta <span>{likeCount}</span></button>
-      {post.authorProfileId && <button type="button" aria-pressed={following} disabled={interactionBusy} onClick={toggleFollow}>{following ? <UserRoundCheck size={17} /> : <UserRoundPlus size={17} />}{following ? 'Siguiendo' : 'Seguir perfil'}</button>}
-      {interactionError && <p className="comment-error" role="alert">{interactionError}</p>}
-    </div>}
-    <section className="post-comments" aria-label={`Comentarios de ${post.title || post.author}`}>
-      <button type="button" className="comments-toggle" aria-expanded={commentsOpen} aria-controls={`comments-${post.id}`} onClick={toggleComments}>
-        <MessageCircle size={17} aria-hidden="true" /> {commentsOpen ? 'Ocultar comentarios' : 'Ver comentarios'}
-      </button>
-      {commentsOpen && <div id={`comments-${post.id}`} className="comments-panel">
-        {commentsLoading ? <p className="comments-state">Cargando comentarios...</p> : <>
-          <div className="comments-list" aria-live="polite">
-            {comments.length === 0 && !commentError && <p className="comments-state">Sé la primera persona en comentar.</p>}
-            {comments.map(comment => <div className="comment-item" key={comment.id}>
-              <div className="comment-meta"><div className="comment-author"><strong>{comment.author}</strong><span className={`user-role-badge role-${comment.author_role}`}>{roleLabels[comment.author_role] || 'Lector'}</span></div><time dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleString('es-CL')}</time></div>
-              <p>{comment.body}</p>
-            </div>)}
-          </div>
-          <form className="comment-form" onSubmit={submitComment}>
-            <label htmlFor={`comment-${post.id}`}>Escribe un comentario</label>
-            <textarea id={`comment-${post.id}`} value={commentText} onChange={event => setCommentText(event.target.value)} maxLength={1000} rows={3} required placeholder="Comparte tu opinión..." />
-            {commentError && <p className="comment-error" role="alert">{commentError}</p>}
-            <button type="submit" className="button primary" disabled={commentSending || !commentText.trim()}>{commentSending ? 'Publicando...' : 'Publicar comentario'}</button>
-          </form>
-        </>}
-      </div>}
-    </section>
-  </article>
-}
-
-export default function HomePage() {
-  const [filter, setFilter] = useState('all')
-  const [posts, setPosts] = useState([])
-  const [feedError, setFeedError] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
-  const { books } = useLibrary()
+function MuralContent() {
   const { user } = useAuth()
+  const { books } = useLibrary()
+  const interactions = useActivityStore()
+  const [params, setParams] = useSearchParams()
+  const audience = params.get('audience') === 'contacts' ? 'contacts' : 'community'
+  const category = [...categories, ...publicationCategories].find(item => item.id === params.get('category')) || null
+  const widePublications = category?.id === 'social' || publicationCategories.some(item => item.id === category?.id)
+  const activeTab = publicationCategories.some(item => item.id === category?.id) ? category.id : audience
+  const navigation = useRef(null)
+  const [refresh, setRefresh] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [management,setManagement] = useState(null)
   const [profiles, setProfiles] = useState([])
-  const [profileError, setProfileError] = useState(false)
+  const [profileError, setProfileError] = useState('')
+  const savedScroll = useRef(0)
+  const feed = useMural(user.id, audience, category?.id, refresh)
   useEffect(() => {
     let active = true
-    apiRequest('/profiles/me', { headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` } })
-      .then(data => { if (active) { setProfiles(data); setProfileError(false) } })
-      .catch(() => { if (active) setProfileError(true) })
-    return () => { active = false }
-  }, [user.id, refreshKey])
+    const controller = new AbortController()
+    apiRequest('/profiles/me', { headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` }, signal: controller.signal })
+      .then(data => { if (active) { setProfiles(data); setProfileError('') } })
+      .catch(() => { if (active) setProfileError('No se pudieron cargar tus permisos de publicación.') })
+    return () => { active = false; controller.abort() }
+  }, [user.id, refresh])
   const selectedProfile = user.role !== 'lector' ? profiles.find(profile => profile.kind === 'personal') : null
-  const publishingRole = user.role
+  function chooseAudience(value) {
+    setSelected(null)
+    savedScroll.current = 0
+    setParams(current => { const next = new URLSearchParams(current); next.set('audience', value); next.delete('category'); return next })
+  }
+  function viewAll(value) {
+    savedScroll.current = window.scrollY
+    setParams(current => { const next = new URLSearchParams(current); next.set('category', value); return next })
+    window.scrollTo({ top: 0 })
+  }
   useEffect(() => {
-    let active = true
-    const refresh = () => {
-      const token = localStorage.getItem('libria_token')
-      const headers = token ? { Authorization: 'Bearer ' + token } : {}
-      return apiRequest('/posts', { headers }).then(data => {
-        if (!active) return
-        setFeedError(false)
-        setPosts(data.map(post => ({
-          id: post.id, type: post.kind, feedItemType: post.feed_item_type, authorProfileId: post.author_profile_id,
-          images: post.images || [], likeCount: post.like_count || 0, likedByMe: post.liked_by_me || false,
-          followingAuthor: post.following_author || false, author: post.author, authorRole: post.author_role,
-          initials: post.author.split(' ').slice(0, 2).map(part => part[0]).join('').toUpperCase(),
-          time: new Date(post.created_at).toLocaleString('es-CL'),
-          title: post.title, text: post.body, source: post.source, publicationType: post.publication_type, bookId: post.book_ref,
-          bookTitle: post.book_title, rating: post.rating, progressPercent: post.progress_percent,
-          bookCoverUrl: post.book_cover_url,
-          isSpoiler: post.is_spoiler || false,
-          color: roleColors[post.author_role] || roleColors.lector,
-        })))
-      }).catch(() => { if (active) setFeedError(true) })
+    const nav = navigation.current
+    const revealSelected = () => {
+      const button = nav?.querySelector('[aria-pressed="true"]')
+      if (!button) return
+      const container = nav.getBoundingClientRect(), selected = button.getBoundingClientRect()
+      if (selected.left < container.left || selected.right > container.right) {
+        nav.scrollTo({ left: nav.scrollLeft + selected.left - container.left - (container.width - selected.width) / 2 })
+      }
     }
-    refresh()
-    const timer = window.setInterval(refresh, 30000)
-    return () => { active = false; window.clearInterval(timer) }
-  }, [refreshKey])
-  return <div className="mural-layout">
-    <section className="mural-feed" aria-labelledby="mural-title"><header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
-      {profileError && <p role="alert">No se pudieron cargar tus permisos de publicación.</p>}
-      {selectedProfile && <PostComposer key={selectedProfile.id} role={publishingRole} profileId={selectedProfile.id} onCreated={() => setRefreshKey(current => current + 1)} />}
-      {feedError && <div className="demo-label">No se pudieron cargar las publicaciones.</div>}
-      <nav className="feed-filters" aria-label="Filtrar mural">{filters.map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</nav>
-      <div className="feed-posts">{posts.filter(post => filter === 'all' || post.type === filter).map(post => <FeedCard key={post.id} post={post} />)}</div>
-      <p className="feed-end">{posts.length ? 'Estás al día con las publicaciones.' : 'Aún no hay publicaciones.'}</p>
+    revealSelected()
+    const observer = new ResizeObserver(revealSelected)
+    if (nav) observer.observe(nav)
+    return () => observer.disconnect()
+  }, [activeTab])
+  useEffect(() => {
+    if (!category && !feed.loading) {
+      const frame = requestAnimationFrame(() => window.scrollTo({ top: savedScroll.current }))
+      return () => cancelAnimationFrame(frame)
+    }
+  }, [category, feed.loading])
+  const titleFor = item => item.id === 'finished' && audience === 'community' ? 'Terminados por la comunidad' : item.title
+  const empty = audience === 'contacts' ? 'Todavía no hay actividades de tus contactos en esta categoría. Sigue perfiles para descubrir sus lecturas.' : 'Todavía no hay actividades públicas en esta categoría.'
+  async function openActivity(item, comments = false) {
+    if (await interactions.view(item, comments ? 'open_comments' : 'open')) setSelected({ item, comments })
+  }
+  const renderItem = item => <MuralActivityCard item={item} onOpen={openActivity} />
+
+  return <MuralManagementContext.Provider value={{edit:item=>setManagement({action:'edit',item}),remove:item=>setManagement({action:'delete',item})}}><div className="mural-layout mural-screen">
+    <section className="mural-feed" aria-labelledby="mural-title">
+    <header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
+    {profileError && <p role="alert">{profileError}</p>}
+    {selectedProfile && !category && <PostComposer key={selectedProfile.id} role={user.role} profileId={selectedProfile.id} onCreated={() => setRefresh(value => value + 1)} />}
+    <div className="mural-navigation">
+      <nav ref={navigation} className="mural-audiences" aria-label="Secciones del mural">{[{ id: 'contacts', title: 'Contactos' }, { id: 'community', title: 'Comunidad' }, ...publicationCategories].map(item => <button key={item.id} aria-pressed={activeTab === item.id} onClick={() => item.id === 'contacts' || item.id === 'community' ? chooseAudience(item.id) : viewAll(item.id)}>{item.title}</button>)}</nav>
+      <button className="mural-refresh" aria-label="Actualizar mural" disabled={feed.loading || feed.busy} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={18} /></button>
+    </div>
+    {category && <div className="mural-history-heading"><h2>{titleFor(category)}</h2><p>{category.id === 'progress' ? 'Todos los avances compartidos, del más reciente al más antiguo.' : category.description}</p></div>}
+    {feed.loading && <p className="mural-status" role="status">Cargando actividades…</p>}
+    {feed.error && <div className="mural-status" role="alert"><p>{feed.error}</p><button onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>}
+    {!feed.loading && !feed.error && feed.data && (category ? <>
+      <div className={widePublications ? 'feed-posts mural-publications' : 'mural-history-grid'}>{feed.data.items.map(item => <div key={`${item.feed_item_type}:${item.id}`}>{widePublications ? <MuralPublication item={item} /> : renderItem(item)}</div>)}</div>
+      {!feed.data.items.length && <p className="mural-status">{empty}</p>}
+      {feed.moreError && <p role="alert">{feed.moreError}</p>}
+      {feed.data.next_cursor && <button className="mural-load-more" disabled={feed.busy} onClick={feed.loadMore}>{feed.busy ? 'Cargando…' : feed.moreError ? 'Reintentar cargar más' : 'Cargar más'}</button>}
+    </> : <div className="mural-categories">{categories.map(item => <MuralCarousel key={`${audience}:${item.id}`} title={titleFor(item)} description={item.description} icon={item.icon} items={feed.data.categories[item.id]?.items || []} empty={empty} onViewAll={() => viewAll(item.id)} renderItem={renderItem} />)}</div>)}
     </section>
     <aside className="mural-aside"><section className="reader-summary"><span className="kicker">TU RINCÓN</span><h2>Hola, {user.display_name.split(' ')[0]}</h2><p>Tu próxima página también tiene una historia.</p><Link to="/profile">Visitar mi perfil <ArrowUpRight size={16} /></Link></section>
       <section className="aside-reading"><h2><BookOpen size={18} /> Sigue leyendo</h2>{books.filter(book => book.status === 'Leyendo').map(book => <Link to={'/books/' + book.id} className="aside-book" key={book.id}><BookCover book={book} /><div><strong>{book.title}</strong><small>{book.progress}% leído · ejemplo</small></div></Link>)}<Link className="aside-link" to="/profile?tab=library">Ver mi biblioteca →</Link></section>
       <div className="community-note"><MessageCircle size={22} /><p>Un lugar para conversar sobre las historias que nos acompañan.</p><small>LibrIA · Comunidad lectora</small></div>
     </aside>
+    {selected && <MuralActivityDialog key={`${selected.item.feed_item_type}:${selected.item.id}:${selected.comments}`} item={selected.item} openComments={selected.comments} onClose={() => setSelected(null)} />}
+    {management&&<ContentManagementDialog target={management} onClose={()=>setManagement(null)} onSaved={()=>{setManagement(null);setSelected(null);setRefresh(value=>value+1)}} />}
   </div>
+  </MuralManagementContext.Provider>
+}
+
+export default function HomePage() {
+  const { user } = useAuth()
+  return <ActivityInteractionProvider key={user.id}><MuralContent /></ActivityInteractionProvider>
 }
