@@ -44,7 +44,7 @@ def choices(db, user_id):
 
 def own_response(db, user):
     profile = personal_profile(db, user)
-    return {"profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
+    return {"story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
 
 
 @router.get("/preference-catalogs", response_model=PreferenceCatalogs)
@@ -98,6 +98,10 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
     else:
         featured_id = previous_featured if previous_featured in selected_ids else None
     try:
+        if "story_illustration" in supplied:
+            owner.story_illustration = data.story_illustration
+        if "favorite_quotes" in supplied:
+            owner.favorite_quotes = [item if isinstance(item, str) else item.model_dump() for item in data.favorite_quotes]
         if "biography" in supplied:
             from app.modules.users.account_service import audit
             audit(db, owner, owner.id, "profile_updated", before={"biography": owner.biography},
@@ -140,5 +144,5 @@ def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB):
     owner = db.get(User, profile.owner_user_id)
     if owner is None:
         raise HTTPException(status_code=404, detail="Perfil personal no encontrado")
-    return {"id": profile.id, "display_name": owner.display_name, "avatar_url": owner.avatar_url,
+    return {"story_illustration": owner.story_illustration, "id": profile.id, "display_name": owner.display_name, "avatar_url": owner.avatar_url,
             "biography": owner.biography, **choices(db, owner.id)}

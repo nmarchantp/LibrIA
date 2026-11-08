@@ -1,0 +1,146 @@
+import assert from 'node:assert/strict'
+import { mkdir,writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
+const cdp='http://127.0.0.1:9224',app='http://127.0.0.1:5173'
+const target=await(await fetch(`${cdp}/json/new?about:blank`,{method:'PUT'})).json()
+const ws=new WebSocket(target.webSocketDebuggerUrl)
+await new Promise(resolve=>{ws.onopen=resolve})
+let sequence=0
+const pending=new Map(),errors=[]
+ws.onmessage=event=>{const message=JSON.parse(event.data);if(message.method==='Fetch.requestPaused')send('Fetch.fulfillRequest',{requestId:message.params.requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'image/png'}],body:readFileSync(new URL('../public/images/story-books-cat.png',import.meta.url)).toString('base64')});if(message.method==='Runtime.exceptionThrown')errors.push(message.params);if(pending.has(message.id)){pending.get(message.id)(message);pending.delete(message.id)}}
+const send=(method,params={})=>new Promise(resolve=>{pending.set(++sequence,resolve);ws.send(JSON.stringify({id:sequence,method,params}))})
+async function evaluate(expression){const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.error||result.result?.exceptionDetails)throw Error(JSON.stringify(result));return result.result.result.value}
+async function until(expression){for(let i=0;i<160;i++){if(await evaluate(expression))return;await new Promise(resolve=>setTimeout(resolve,50))}throw Error(`Timed out: ${expression}`)}
+async function input(selector,value){await evaluate(`(()=>{const input=document.querySelector('${selector}');Object.getOwnPropertyDescriptor(input.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(value)});input.dispatchEvent(new Event('input',{bubbles:true}))})()`)}
+const card=id=>`.agenda-detail [data-event-id="${id}"]`
+async function day(date){await evaluate(`document.querySelector('[data-day="${date}"]').click()`)}
+async function month(value){await input('[aria-label="Elegir mes y año"]',value);await until(`document.querySelector('[aria-label="Elegir mes y año"]').value==='${value}'&&!document.querySelector('.agenda-detail [role=status]')`)}
+try{
+  await send('Fetch.enable',{patterns:[{urlPattern:'*/api/posts/events-0/book-cover*',requestStage:'Request'}]})
+  await send('Runtime.enable');await send('Emulation.setTimezoneOverride',{timezoneId:'Pacific/Honolulu'})
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:`{const NativeDate=Date;window.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:['2026-11-08T15:00:00Z']))}static now(){return new NativeDate('2026-11-08T15:00:00Z').getTime()}}}`})
+  await send('Emulation.setDeviceMetricsOverride',{width:1536,height:1100,deviceScaleFactor:1,mobile:false})
+  await send('Page.navigate',{url:`${app}/tests/fixtures/mural.html?count=8&agenda=1&role=admin`})
+  await until(`Boolean(document.querySelector('a[href="/events"]'))`)
+  await evaluate(`document.querySelector('a[href="/events"]').click()`)
+  await until(`Boolean(document.querySelector('.agenda-create'))&&!document.querySelector('.agenda-detail [role=status]')`)
+  assert.equal(await evaluate(`Array.from(document.querySelectorAll('.agenda-upcoming .agenda-event')).every(card=>Boolean(card.querySelector('.agenda-event-image')))`),true,'Upcoming cards show their event image or book cover')
+  assert.equal(await evaluate(`Array.from(document.querySelectorAll('.agenda-upcoming .agenda-event')).every(card=>{const rect=card.getBoundingClientRect(),button=card.querySelector('.event-attend-button').getBoundingClientRect();return Math.abs(rect.right-button.right-14)<2&&Math.abs(button.top-rect.top-12)<2})`),true,'Attendance is placed in the upper-right corner')
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Elegir mes y año"]').value`),'2026-11')
+  assert.equal(await evaluate(`document.querySelectorAll('.agenda-calendar-days button')[6].dataset.day`),'2026-11-01','November 1 is Sunday in a Monday-first calendar')
+  assert.equal(await evaluate(`document.querySelector('[data-day="2026-11-08"]').getAttribute('aria-current')`),'date')
+  assert.equal(await evaluate(`document.querySelector('[data-day="2026-11-14"]').textContent.trim()`),'142','Two events share a day')
+  await day('2026-11-02');await until(`Boolean(document.querySelector('${card('events-4')}'))`)
+  await day('2026-11-11');assert.equal(await evaluate(`Boolean(document.querySelector('.agenda-detail .agenda-empty'))`),true)
+  await day('2026-11-14');await until(`document.querySelectorAll('.agenda-day-options button').length===2`)
+  await evaluate(`document.querySelectorAll('.agenda-day-options button')[1].click()`)
+  await until(`Boolean(document.querySelector('${card('events-1')}'))`)
+  await evaluate(`document.querySelectorAll('.agenda-day-options button')[0].click()`)
+  await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  assert.ok((await evaluate(`document.querySelector('${card('events-0')} .agenda-event-image img').src`)).includes('/api/posts/events-0/book-cover'),'Detail resolves the custom cover through the API prefix before event photos')
+  await until(`document.querySelector('${card('events-0')} .agenda-event-image img')?.naturalWidth>0`)
+  assert.equal(await evaluate(`(()=>{const card=document.querySelector('${card('events-0')}');return Math.abs(card.querySelector('.agenda-event-image').getBoundingClientRect().height-card.querySelector('.agenda-event-copy').getBoundingClientRect().height)<1})()`),true,'Image and adjacent information share the same height')
+  await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').click()`)
+  await until(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')==='true'`)
+  assert.equal(await evaluate(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')`),'true')
+  assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attendee-count').textContent`),'Asistentes1')
+  await evaluate(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').click()`)
+  await until(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')==='false'`)
+  for(const index of [1,2,0]){
+    await evaluate(`document.querySelectorAll('.agenda-views button')[${index}].click()`)
+    await until(index===1?`Boolean(document.querySelector('.agenda-list .agenda-event'))`:index===2?`Boolean(document.querySelector('.agenda-grid .agenda-event'))`:`Boolean(document.querySelector('.agenda-calendar'))`)
+    if(index===1){
+      await evaluate(`document.querySelector('.agenda-list [data-event-id="events-0"] .event-attend-button').click()`)
+      await until(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')==='true'`)
+    }
+    if(index===2){
+      assert.equal(await evaluate(`document.querySelector('.agenda-grid [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')`),'true','List and grid share confirmed attendance')
+      await evaluate(`document.querySelector('.agenda-grid [data-event-id="events-0"] .event-attend-button').click()`)
+      await until(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')==='false'`)
+    }
+    if(index===0)assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')`),'false','Cancellation is reflected in the detail')
+  }
+  await evaluate(`document.querySelector('[aria-label="Mes anterior"]').click()`);await until(`document.querySelector('[aria-label="Elegir mes y año"]').value==='2026-10'`)
+  await month('2026-12');await until(`Boolean(document.querySelector('${card('events-3')}'))`)
+  assert.ok((await evaluate(`document.querySelector('${card('events-3')} img').src`)).includes('story-books-cat.png'),'Custom cover is used when no event attachment exists')
+  await month('2026-11');await day('2026-11-30');await until(`Boolean(document.querySelector('${card('events-5')} .agenda-event-image svg'))`)
+  await day('2026-11-22');await until(`document.querySelector('${card('events-2')} .agenda-event-image img')?.src.includes('profile-reading-nook.png')`)
+  await day('2026-11-14');await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  const output=new URL('../../../artifacts/events-agenda/',import.meta.url);await mkdir(output,{recursive:true})
+  for(const theme of ['lavanda','otono','invierno','bosque','rosa-antiguo','dark','dark-rosado','dark-blood','dark-dorado']){
+    await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
+    for(const width of [1536,1100,768,390,320]){
+      await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:width<500})
+      assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth`),true,`${theme}/${width}: no page overflow`)
+      assert.equal(await evaluate(`(()=>{const cards=Array.from(document.querySelectorAll('.agenda-upcoming .agenda-event'));return cards.every(card=>{const rect=card.getBoundingClientRect(),first=cards[0].getBoundingClientRect(),image=card.querySelector('.agenda-event-image').getBoundingClientRect(),date=card.querySelector('.event-date').getBoundingClientRect();return Math.abs(rect.width-first.width)<1&&rect.height===320&&date.left>=image.left-1&&date.right>image.left&&date.top<image.bottom&&card.scrollWidth<=card.clientWidth+1})})()`),true,`${theme}/${width}: equal cards and date overlay`)
+      if(theme==='dark-dorado'&&[1536,390].includes(width)){
+        await evaluate(`window.scrollTo({top:0,behavior:'instant'})`)
+        const image=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})
+        await writeFile(new URL(`agenda-${width}.png`,output),Buffer.from(image.result.data,'base64'))
+      }
+    }
+    for(const index of [1,2]){
+      await evaluate(`document.querySelectorAll('.agenda-views button')[${index}].click()`)
+      for(const width of [1536,768,390,320]){
+        await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:width<500})
+        assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth&&Array.from(document.querySelectorAll('.agenda-event')).every(card=>card.scrollWidth<=card.clientWidth+1)`),true,`${theme}/${width}/${index}: list and grid fit`)
+      }
+    }
+    await evaluate(`document.querySelectorAll('.agenda-views button')[0].click()`)
+  }
+  await send('Emulation.setDeviceMetricsOverride',{width:1536,height:1100,deviceScaleFactor:1,mobile:false})
+  await day('2026-11-14');await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').click()`)
+  await until(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')==='true'`)
+  await evaluate(`document.querySelector('${card('events-0')} .event-edit-button').click()`)
+  await until(`Boolean(document.querySelector('[name="event_start_date"]'))`)
+  assert.equal(await evaluate(`document.querySelector('[name="event_start_date"]').value`),'2026-11-14')
+  await input('[name="event_start_date"]','2026-12-06')
+  await evaluate(`document.querySelector('.post-composer').requestSubmit()`)
+  await until(`!document.querySelector('.content-management-dialog')&&document.querySelector('[aria-label="Elegir mes y año"]').value==='2026-12'`)
+  await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')`),'true')
+  assert.equal(await evaluate(`Boolean(document.querySelector('.agenda-event-original'))`),false)
+  const originalPoint=await evaluate(`(()=>{const card=document.querySelector('.agenda-upcoming [data-event-id="events-0"]');card.scrollIntoView({block:'center',inline:'center',behavior:'instant'});const rect=card.getBoundingClientRect();return {x:rect.right-25,y:rect.bottom-25}})()`)
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:originalPoint.x,y:originalPoint.y,button:'left',clickCount:1})
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:originalPoint.x,y:originalPoint.y,button:'left',clickCount:1})
+  await until(`Boolean(document.querySelector('.mural-activity-dialog'))`)
+  assert.ok((await evaluate(`document.querySelector('.mural-activity-dialog').textContent`)).includes('Stella Tack en Chile'))
+  await evaluate(`document.querySelector('.mural-activity-dialog .event-edit-button').click()`)
+  await until(`Boolean(document.querySelector('[name="event_start_date"]'))`)
+  await input('[name="event_start_date"]','2026-12-08')
+  await evaluate(`document.querySelector('.post-composer').requestSubmit()`)
+  await until(`!document.querySelector('.content-management-dialog')&&!document.querySelector('.mural-activity-dialog')`)
+  await evaluate(`document.querySelector('a[href="/events"]').click()`)
+  await until(`Boolean(document.querySelector('.agenda-create'))`)
+  await month('2026-12');await day('2026-12-08')
+  await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')`),'true','Mural edit invalidates the agenda cache and preserves attendance')
+  await evaluate(`document.querySelector('.agenda-create').click()`)
+  await until(`Boolean(document.querySelector('[name="event_start_date"]'))`)
+  assert.equal(await evaluate(`document.querySelectorAll('.post-composer .composer-types button')[1].getAttribute('aria-pressed')`),'true')
+  await input('.composer-title','Un nuevo evento de agenda');await input('.composer-editor textarea','Descripción de un evento creado desde la agenda.')
+  for(const [name,value] of Object.entries({event_start_date:'2026-12-07',event_start_time:'18:00',event_location:'Santiago',event_organizer:'LibrIAverse'}))await input(`[name="${name}"]`,value)
+  await evaluate(`document.querySelector('.post-composer').requestSubmit()`)
+  await until(`!document.querySelector('.content-management-dialog')&&Boolean(document.querySelector('${card('created-publication')}'))`)
+  assert.equal(await evaluate(`window.muralTest.requests.filter(request=>request.path==='/api/posts'&&request.method==='POST').length`),1)
+  await day('2026-12-08');await until(`Boolean(document.querySelector('${card('events-0')}'))`)
+  await evaluate(`document.querySelector('${card('events-0')} .event-edit-button').click()`)
+  await until(`Boolean(document.querySelector('.event-delete-zone'))`)
+  await evaluate(`document.querySelector('.event-delete-zone>button').click()`)
+  await until(`Boolean(document.querySelector('.event-delete-zone [role=alertdialog]'))`)
+  await evaluate(`document.querySelector('.event-delete-zone [role=alertdialog] button:last-child').click()`)
+  await until(`!document.querySelector('.content-management-dialog')&&!document.querySelector('[data-event-id="events-0"]')`)
+  await evaluate(`window.muralTest.failEvents=true;window.dispatchEvent(new Event('focus'))`)
+  await until(`Boolean(document.querySelector('.agenda-error'))`)
+  await evaluate(`window.muralTest.failEvents=false;document.querySelector('.agenda-error button').click()`)
+  await until(`!document.querySelector('.agenda-error')&&!document.querySelector('.agenda-detail [role=status]')`)
+  await month('2027-06');await until(`Boolean(document.querySelector('.agenda-month-empty'))`)
+  assert.ok(await evaluate(`window.muralTest.requests.filter(request=>request.path.startsWith('/api/events?')).every(request=>request.path.includes('from_date=')&&request.path.includes('limit='))`))
+  await send('Page.navigate',{url:`${app}/tests/fixtures/mural.html?count=8&agenda=1&role=lector`})
+  await until(`Boolean(document.querySelector('a[href="/events"]'))`);await evaluate(`document.querySelector('a[href="/events"]').click()`)
+  await until(`Boolean(document.querySelector('.agenda-calendar'))&&!document.querySelector('.agenda-detail [role=status]')`)
+  assert.equal(await evaluate(`Boolean(document.querySelector('.agenda-create'))`),false)
+  assert.deepEqual(errors,[])
+  console.log('PASS: calendar dates, multiday, same-day selection, three views, range queries, attendance sharing, images, create/edit/delete, original publication, errors, empty states, permissions and nine responsive themes')
+}finally{ws.close();await fetch(`${cdp}/json/close/${target.id}`)}

@@ -75,6 +75,14 @@ try {
   await until(`document.querySelectorAll('.reader-about-grid>.reader-personal-card').length===5`)
   await evaluate(`document.fonts.ready.then(()=>true)`)
   await pause(100)
+  assert.equal(await evaluate(`document.querySelectorAll('.reader-personal-card .reader-card-heading .reader-edit-button').length`), 0)
+  await evaluate(`document.querySelector('.reader-about-edit-toggle').click()`)
+  assert.equal(await evaluate(`document.querySelectorAll('.reader-personal-card .reader-card-heading .reader-edit-button').length`), 5)
+  await evaluate(`document.querySelector('.reader-about-edit-toggle').click()`)
+  assert.equal(await evaluate(`document.querySelectorAll('.reader-personal-card .reader-card-heading .reader-edit-button').length`), 0)
+  await evaluate(`document.querySelector('.reader-about-edit-toggle').click()`)
+  assert.equal(await evaluate(`document.querySelector('.reader-about-edit-toggle').getAttribute('aria-pressed')`), 'true')
+  console.log('PASS: main pencil toggles all five card editors, including favorite quotes')
   await open('.reader-story')
   assert.equal(await evaluate(`document.activeElement.tagName`), 'TEXTAREA')
   // Keyboard focus must cycle inside the modal, including reverse Tab.
@@ -167,6 +175,38 @@ try {
   await until(`document.querySelector('dialog h2').textContent.includes('Descartar')`)
   await button('Descartar cambios')
   await closed()
+
+  await open('.reader-favorite-quotes')
+  await input('#favorite-quote-0', 'Primera cita favorita')
+  await input('#favorite-quote-source-0', 'Mi libro favorito')
+  await input('#favorite-quote-1', 'Segunda cita favorita')
+  await input('#favorite-quote-2', 'Tercera cita favorita')
+  await button('Guardar')
+  await closed()
+  assert.deepEqual(await evaluate(`window.profileModalTest.saves.at(-1)`), { favorite_quotes: [{ text: 'Primera cita favorita', source: 'Mi libro favorito' }, { text: 'Segunda cita favorita', source: '' }, { text: 'Tercera cita favorita', source: '' }] })
+  assert.equal(await evaluate(`document.querySelectorAll('.reader-quote-dots button').length`), 3)
+  assert.equal(await evaluate(`document.querySelector('.reader-quote-position').textContent`), 'Mi libro favorito')
+  await evaluate(`document.querySelector('[aria-label="Cita siguiente"]').click()`)
+  assert.equal(await evaluate(`document.querySelector('.reader-quote-slide blockquote').textContent.includes('Segunda cita favorita')`), true)
+  await open('.reader-favorite-quotes')
+  assert.equal(await evaluate(`document.querySelector('#favorite-quote-2').value`), 'Tercera cita favorita')
+  await button('Cancelar')
+  await closed()
+  console.log('PASS: favorite quotes save, omit blank fields, render carousel and reopen saved values')
+
+  for (const option of ['books', 'cat', 'none', 'flowers']) {
+    await open('.reader-story')
+    await evaluate(`document.querySelector('input[name="story-illustration"][value="${option}"]').click()`)
+    await button('Guardar')
+    await closed()
+    assert.deepEqual(await evaluate(`window.profileModalTest.saves.at(-1)`), { story_illustration: option })
+    assert.equal(await evaluate(`Boolean(document.querySelector('.reader-story img.reader-story-decoration-slot'))`), option !== 'none')
+    await open('.reader-story')
+    assert.equal(await evaluate(`document.querySelector('input[name="story-illustration"]:checked').value`), option)
+    await button('Cancelar')
+    await closed()
+  }
+  console.log('PASS: story illustration selection saves, reopens, and hides illustration when none selected')
 
   const sections = ['.reader-story', '.reader-favorite-genres', '.reader-tastes', '.reader-reading-tastes']
   for (const theme of ['lavanda', 'otono', 'invierno', 'dark', 'bosque', 'rosa-antiguo', 'dark-rosado', 'dark-blood', 'dark-dorado']) {

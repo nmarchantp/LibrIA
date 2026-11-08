@@ -1,0 +1,695 @@
+[
+  {
+    "theme": "lavanda",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.348824 0.254314 0.471961)",
+    "border": "color(srgb 0.571882 0.477392 0.690627)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "otono",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.480196 0.287059 0.215098)",
+    "border": "color(srgb 0.698686 0.497431 0.421686)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "invierno",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.22451 0.339608 0.453922)",
+    "border": "color(srgb 0.441922 0.546392 0.647549)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "rosa-antiguo",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.503137 0.309608 0.386078)",
+    "border": "color(srgb 0.704039 0.518098 0.583118)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "bosque",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.266667 0.370588 0.298431)",
+    "border": "color(srgb 0.480274 0.567941 0.499373)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.852549 0.777255 0.968824)",
+    "border": "color(srgb 0.635196 0.552412 0.774098)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "dark-rosado",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.936275 0.758039 0.843726)",
+    "border": "color(srgb 0.732745 0.499804 0.615294)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "dark-blood",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.945686 0.677059 0.740588)",
+    "border": "color(srgb 0.735412 0.431333 0.508118)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  },
+  {
+    "theme": "dark-dorado",
+    "childOutline": "none",
+    "childShadow": "none",
+    "outline": "2px",
+    "outlineColor": "color(srgb 0.919804 0.839804 0.667255)",
+    "border": "color(srgb 0.711961 0.60451 0.391961)",
+    "shadow": "none",
+    "width": 650,
+    "height": 162.5625,
+    "tab": true,
+    "fields": [
+      {
+        "type": "email",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "password",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "search",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "textarea",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "select-one",
+        "disabled": false,
+        "invalid": null,
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": true,
+        "invalid": null,
+        "outline": "3px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      },
+      {
+        "type": "text",
+        "disabled": false,
+        "invalid": "true",
+        "outline": "2px",
+        "shadow": "none",
+        "sameSize": true,
+        "errorPreserved": true
+      }
+    ]
+  }
+]

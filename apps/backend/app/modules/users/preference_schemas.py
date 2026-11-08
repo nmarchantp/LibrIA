@@ -1,8 +1,10 @@
 """Separate public projection and strict owner-only PATCH contract."""
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, StrictInt, field_validator
+
+StoryIllustration = Literal["flowers", "books", "cat", "none"]
 
 Identifier = Annotated[str, StringConstraints(min_length=1, max_length=64)]
 
@@ -40,7 +42,15 @@ class IntensitySelection(BaseModel):
     level: Annotated[StrictInt, Field(ge=1, le=5)]
 
 
+class FavoriteQuote(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
+    source: Annotated[str, StringConstraints(strip_whitespace=True, max_length=150)] = ""
+
+
 class LiteraryPreferences(BaseModel):
+    story_illustration: StoryIllustration = "flowers"
+    favorite_quotes: list[FavoriteQuote | str] = Field(default_factory=list)
     profile_id: uuid.UUID
     biography: str | None
     genres: list[GenreOption]
@@ -51,6 +61,7 @@ class LiteraryPreferences(BaseModel):
 
 
 class PublicProfile(BaseModel):
+    story_illustration: StoryIllustration = "flowers"
     # Deliberate allowlist: no user ID, email, roles, capabilities, or private data.
     id: uuid.UUID
     display_name: str
@@ -86,7 +97,9 @@ class ReadingGenreStatistics(BaseModel):
 
 
 class PreferencesUpdate(BaseModel):
+    story_illustration: StoryIllustration = "flowers"
     model_config = ConfigDict(extra="forbid")
+    favorite_quotes: list[FavoriteQuote | Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]] = Field(default_factory=list, max_length=4)
     biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=70)] | None = None
     genre_ids: list[Identifier] | None = Field(default=None, max_length=5)
     trope_ids: list[Identifier] | None = None

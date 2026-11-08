@@ -1,4 +1,4 @@
-import { BookOpen, BrainCircuit, Library, Lightbulb, StickyNote, UserRound } from 'lucide-react'
+import { BookOpen, BrainCircuit, CalendarDays, Library, Lightbulb, StickyNote, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext'
 import LibraryPage from './LibraryPage'
 import InsightsPage from './InsightsPage'
 import ProfileHeader from '../components/ProfileHeader'
+import ProfilePanels from '../components/ProfilePanels'
+import ProfileEvents from '../components/ProfileEvents'
 import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
 import ProfileAboutSection from '../components/ProfileAboutSection'
 import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
@@ -34,34 +36,34 @@ function ProfileActivity({ userId }) {
 export default function ProfilePage() {
   const { user } = useAuth()
   const preferences = useLiteraryPreferences()
+  const [editMode, setEditMode] = useState(false)
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab')
-  const tab = ['about', 'activity', 'library', 'analysis'].includes(requested) ? requested : 'about'
+  const tab = ['about', 'activity', 'library', 'analysis', 'events'].includes(requested) ? requested : 'about'
   if (requested === 'account' || requested === 'personalization') {
     return <Navigate to={requested === 'personalization' ? '/settings?tab=personalization' : '/settings'} replace />
   }
-  // Only the active panel is mounted; leaving the library removes its entire tree.
-  let activeContent
-  switch (tab) {
+  const renderPanel = (value, active) => {
+  switch (value) {
+    case 'events':
+      return <ProfileEvents active={active} />
     case 'library':
-      activeContent = <LibraryPage />
-      break
+      return <LibraryPage />
     case 'analysis':
-      activeContent = <InsightsPage />
-      break
+      return <InsightsPage active={active} />
     case 'activity':
-      activeContent = <ProfileActivity userId={user.id} />
-      break
+      return <ProfileActivity userId={user.id} />
     default:
-      activeContent = <ProfileAboutSection key={user.id} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+      return <ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+  }
   }
 
   return <div className="profile-page page-width reader-profile">
     <div className="reader-profile-main">
       <ProfileHeader key={user.id} user={user} />
-      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
-      <div key={tab} className="profile-content reader-profile-content">{activeContent}</div>
+      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['events', 'Mis eventos', CalendarDays]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
+      <ProfilePanels key={user.id} active={tab} renderPanel={renderPanel} />
     </div>
-    <ProfilePersonalColumn key={user.id} preferences={preferences.data} />
+    <ProfilePersonalColumn key={user.id} preferencesState={preferences} editMode={editMode && tab === 'about'} />
   </div>
 }

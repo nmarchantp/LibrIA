@@ -22,6 +22,8 @@ class Post(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
     author_profile_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.perfiles.id", ondelete="RESTRICT"))
     publication_type: Mapped[str | None] = mapped_column(String(20))
+    # Inactive compatibility field: keep already-applied schema and saved selections intact.
+    event_image_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('app.imagenes_publicacion.id',ondelete='SET NULL',use_alter=True,name='fk_publicaciones_event_image'))
     source: Mapped[str] = mapped_column(String(40))
     author_role: Mapped[str] = mapped_column(String(20))
     kind: Mapped[str] = mapped_column(String(20))
@@ -35,6 +37,56 @@ class Post(Base):
     progress_percent: Mapped[int | None] = mapped_column(Integer)
     reading_event: Mapped[str | None] = mapped_column(String(20))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PublicationEvent(Base):
+    __tablename__ = 'eventos_publicacion'
+    __table_args__ = (CheckConstraint('ends_at IS NULL OR ends_at >= starts_at',name='ck_evento_fin'),{'schema':'app'})
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.publicaciones.id',ondelete='RESTRICT'),primary_key=True)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),index=True)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    timezone: Mapped[str] = mapped_column(String(64))
+    location: Mapped[str] = mapped_column(String(300))
+    organizer: Mapped[str] = mapped_column(String(200))
+    category: Mapped[str] = mapped_column(String(40))
+    schedule_revision: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
+class EventAttendance(Base):
+    __tablename__ = 'asistencias_evento'
+    __table_args__ = {'schema':'app'}
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.eventos_publicacion.post_id',ondelete='RESTRICT'),primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id',ondelete='RESTRICT'),primary_key=True)
+    attending: Mapped[bool] = mapped_column(default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
+class EventScheduleUpdate(Base):
+    __tablename__ = 'actualizaciones_horario_evento'
+    __table_args__ = (UniqueConstraint('post_id','revision',name='uq_actualizacion_horario_revision'),{'schema':'app'})
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True,default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.eventos_publicacion.post_id',ondelete='RESTRICT'))
+    changed_by: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id',ondelete='RESTRICT'))
+    revision: Mapped[int] = mapped_column(Integer)
+    previous_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    previous_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    previous_timezone: Mapped[str] = mapped_column(String(64))
+    new_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    new_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    new_timezone: Mapped[str] = mapped_column(String(64))
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
+class PostBookCover(Base):
+    __tablename__ = "portadas_publicacion"
+    __table_args__ = {"schema": "app"}
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="CASCADE"), primary_key=True)
+    revision: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4)
+    content_type: Mapped[str] = mapped_column(String(40))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
 
 
 class PostImage(Base):
@@ -72,7 +124,7 @@ class ProfileFollow(Base):
 class PostComment(Base):
     __tablename__ = "comentarios_publicacion"
     __table_args__ = (
-        CheckConstraint("length(trim(body)) BETWEEN 1 AND 1000", name="ck_comentarios_publicacion_body"),
+        CheckConstraint("length(trim(body)) >= 1 AND (reading_event_id IS NOT NULL OR length(trim(body)) <= 1000)", name="ck_comentarios_publicacion_body"),
         CheckConstraint("num_nonnulls(post_id, reading_event_id, review_id) = 1", name="ck_comentarios_destino"),
         Index("ix_comentarios_publicacion_post_created", "post_id", "created_at"),
         {"schema": "app"},
@@ -86,6 +138,7 @@ class PostComment(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), index=True)
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Review(Base):
@@ -142,3 +195,26 @@ class ReviewLike(Base):
     review_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.resenas.id", ondelete="CASCADE"), primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ReadingEventLike(Base):
+    __tablename__ = "me_gusta_evento_lectura"
+    __table_args__ = {"schema": "app"}
+    reading_event_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.eventos_lectura.id", ondelete="RESTRICT"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), primary_key=True)
+
+
+class ActivityView(Base):
+    __tablename__ = "visualizaciones_actividad"
+    __table_args__ = (
+        CheckConstraint("num_nonnulls(post_id, review_id, reading_event_id) = 1", name="ck_visualizaciones_destino"),
+        UniqueConstraint("post_id", "user_id", name="uq_visualizacion_publicacion_usuario"),
+        UniqueConstraint("review_id", "user_id", name="uq_visualizacion_resena_usuario"),
+        UniqueConstraint("reading_event_id", "user_id", name="uq_visualizacion_evento_usuario"),
+        {"schema": "app"},
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"))
+    post_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.publicaciones.id", ondelete="RESTRICT"))
+    review_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.resenas.id", ondelete="RESTRICT"))
+    reading_event_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.eventos_lectura.id", ondelete="RESTRICT"))

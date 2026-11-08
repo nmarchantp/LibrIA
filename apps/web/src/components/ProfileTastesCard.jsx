@@ -57,7 +57,7 @@ export default function ProfileTastesCard({ tropes = [], editable = false, onSav
     return rank(a) - rank(b) || a.localeCompare(b, 'es')
   })
   return <section className="reader-personal-card reader-tastes">
-    <div className="reader-card-heading"><h2><BookHeart size={19} aria-hidden="true" />Mis temáticas y tropos favoritos</h2>{editable && <button className="reader-edit-button" type="button" aria-label="Editar temáticas y tropos" onClick={edit}><Pencil size={15} aria-hidden="true" /><span>Editar</span></button>}</div>
+    <div className="reader-card-heading"><h2><BookHeart size={19} aria-hidden="true" />Mis temáticas y tropos favoritos</h2>{editable && <button className="reader-edit-button" type="button" aria-label="Editar temáticas y tropos" onClick={edit}><Pencil size={15} aria-hidden="true" /></button>}</div>
     <p className="reader-card-description">Las temáticas que siempre me llaman y los tropos que me hacen amar una historia.</p><span className="reader-card-decoration" data-decoration-slot="trope-books-flowers" aria-hidden="true"><LibraryBig /><Sprout /></span>
     <PreferenceTags values={tropes} empty="Aún no hay temáticas o tropos seleccionados." />
     <ProfileEditModal open={editable && editing} title="Editar temáticas y tropos" icon={<BookHeart />} description="Elige las temáticas y los tropos que disfrutas en tus lecturas." dirty={initial !== JSON.stringify([...tropeIds].sort())} busy={busy} saveDisabled={!catalogs} onSubmit={save} onClose={() => { setEditing(false); setError('') }}>

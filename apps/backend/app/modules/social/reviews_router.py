@@ -77,10 +77,23 @@ def record_revision(db, review, user, now):
                          edition_id=review.edition_id, recorded_at=now))
 
 
+def require_current_revision(db,review):
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        if review.id not in {r.id for r in current_reviews(db,{review.work_id},reader_id=review.created_by_user_id)}:
+            raise HTTPException(409,'Esta reseña es histórica; edita la versión vigente')
+
+
 @router.get("/me", response_model=list[PostResponse])
 def own_reviews(response: Response, user: CurrentUser, db: Database, work_id: uuid.UUID | None = None):
     response.headers["Cache-Control"] = "no-store"
     profile = personal_profile(db, user)
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        reviews=current_reviews(db,{work_id} if work_id else None,reader_id=user.id)
+        return [as_review_response(db,review) for review in reviews[:100] if review.author_profile_id==profile.id]
     query = select(Review).where(Review.author_profile_id == profile.id)
     if work_id:
         query = query.where(Review.work_id.in_(equivalent_work_ids(db, work_id)))
@@ -160,10 +173,12 @@ def delete_own_review(review_id: uuid.UUID, response: Response, user: CurrentUse
     if review is None:
         raise HTTPException(404, 'Reseña propia no encontrada')
     require_actor(db, user, review.author_profile_id)
-    db.execute(text('DELETE FROM app.comentarios_publicacion WHERE review_id=:id'), {'id': review_id})
-    db.execute(text('DELETE FROM app.me_gusta_resena WHERE review_id=:id'), {'id': review_id})
-    db.execute(text('DELETE FROM app.revisiones_resena WHERE review_id=:id'), {'id': review_id})
-    db.delete(review)
+    require_current_revision(db,review)
+    if review.status!='hidden':
+        review.status='hidden'
+        review.updated_at=datetime.now(timezone.utc)
+        review.revision_number+=1
+        record_revision(db,review,user,review.updated_at)
     db.commit()
     response.headers['Cache-Control'] = 'no-store'
 
@@ -190,6 +205,7 @@ async def update_review(review_id: uuid.UUID, request: Request, response: Respon
     if review is None:
         raise HTTPException(status_code=404, detail="Reseña propia no encontrada")
     require_actor(db, user, review.author_profile_id)
+    require_current_revision(db,review)
     validate_edition(db, review.work_id, data.edition_id)
     if data.status == "draft" and review.published_at is not None:
         raise HTTPException(status_code=422, detail="Una reseña publicada puede ocultarse, pero no volver a borrador")

@@ -1,0 +1,190 @@
+.mural-screen { min-width:0; color:var(--ink); --mural-card-height:210px; --mural-card-gap:14px; --mural-cover-width:65px; --mural-cover-height:96px; --mural-person-height:32px; --mural-title-height:45px; --mural-action-height:44px; }
+.mural-screen>.mural-feed { min-width:0; container:mural / inline-size; }
+.mural-screen>.mural-aside { display:block; min-width:0; }
+.mural-navigation { display:flex; align-items:center; gap:12px; margin:12px 0 24px; }
+.mural-audiences { display:flex; flex:1; min-width:0; padding:3px; border:1px solid var(--line); border-radius:18px; background:var(--surface); overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
+.mural-audiences::-webkit-scrollbar { display:none; }
+.mural-audiences button { display:flex; align-items:center; justify-content:center; flex:1 0 112px; min-width:0; box-sizing:border-box; white-space:nowrap; gap:10px; min-height:46px; padding:8px 6px; border:1px solid transparent; border-radius:14px; color:var(--muted); background:transparent; font:600 14px 'DM Sans',sans-serif; cursor:pointer; }
+.mural-audiences button[aria-pressed=true] { border-color:var(--accent-text); background:var(--soft); color:var(--ink); box-shadow:inset 0 0 8px color-mix(in srgb,var(--accent) 15%,transparent); }
+.mural-refresh { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border:1px solid var(--line); border-radius:50%; color:var(--accent-text); background:var(--surface); cursor:pointer; }
+.mural-categories { display:grid; gap:32px; }
+.mural-category { min-width:0; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.mural-category-heading { display:flex; align-items:center; gap:12px; margin:0 0 14px; min-width:0; }
+.mural-category-icon { display:grid; place-items:center; flex:0 0 44px; height:44px; color:var(--accent-text); border-radius:50%; background:var(--soft); }
+.mural-category-heading>div { flex:1; min-width:0; }
+.mural-category-heading h2 { margin:0 0 3px; font:23px/1.2 'DM Serif Display',serif; overflow-wrap:anywhere; }
+.mural-category-heading p { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+.mural-view-all { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:6px 0 6px 10px; flex-shrink:0; border:0; background:transparent; color:var(--accent-text); font:600 12px 'DM Sans',sans-serif; cursor:pointer; }
+.mural-carousel-wrap { position:relative; padding-inline:0; min-width:0; }
+.mural-carousel-track { --mural-card-width:calc((100% - 2 * var(--mural-card-gap))/3); display:grid; grid-auto-flow:column; grid-auto-columns:var(--mural-card-width); gap:var(--mural-card-gap); overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scrollbar-width:none; padding:2px 0 4px; }
+.mural-carousel-track::-webkit-scrollbar { display:none; }
+.mural-carousel-slide { min-width:0; scroll-snap-align:start; display:flex; }
+.mural-carousel-arrow { display:grid; place-items:center; position:absolute; top:50%; transform:translateY(-50%); width:28px; height:44px; border:0; background:transparent; color:var(--accent-text); cursor:pointer; z-index:3; padding:0; }
+.mural-carousel-arrow::before { content:''; position:absolute; width:28px; height:28px; box-sizing:border-box; border:1px solid var(--line); border-radius:50%; background:var(--surface); }
+.mural-carousel-arrow svg { position:relative; pointer-events:none; }
+.mural-carousel-arrow:not(:disabled):hover::before { border-color:var(--accent-text); background:var(--soft); }
+.mural-carousel-arrow.previous { left:-14px; }
+.mural-carousel-arrow.next { right:-14px; }
+.mural-carousel-arrow:disabled { opacity:.25; cursor:default; }
+.mural-activity-card { display:grid; grid-template-rows:var(--mural-person-height) minmax(0,1fr) var(--mural-action-height); gap:6px; width:100%; height:var(--mural-card-height); min-width:0; box-sizing:border-box; padding:12px; border:1px solid var(--line); border-radius:15px; background:var(--surface); }
+.mural-activity-main { display:flex; align-items:flex-start; gap:12px; min-width:0; min-height:0; }
+.mural-activity-cover { display:grid; place-items:center; flex:0 0 var(--mural-cover-width); width:var(--mural-cover-width); height:var(--mural-cover-height); align-self:flex-start; overflow:hidden; border-radius:4px; color:var(--accent-text); background:var(--soft); }
+.mural-activity-cover img { width:100%; height:100%; object-fit:contain; }
+.mural-activity-copy { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; min-height:0; max-height:100%; }
+.mural-activity-person { display:flex; align-items:center; gap:7px; margin:0; min-width:0; overflow:hidden; }
+.mural-activity-person>div { min-width:0; }
+.mural-activity-person strong { display:block; font-size:11px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mural-activity-person time { display:block; font-size:10px; color:var(--muted); line-height:1.5; }
+.mural-activity-avatar { display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px; border-radius:50%; overflow:hidden; background:var(--secondary); color:var(--ink); font-size:10px; font-weight:600; }
+.mural-activity-avatar img { width:100%; height:100%; object-fit:cover; }
+.mural-activity-copy h3 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:0; font:18px/1.25 'DM Serif Display',serif; overflow-wrap:anywhere; align-self:start; }
+.mural-activity-book-author { flex-shrink:0; max-width:100%; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:11px; line-height:14px; }
+.mural-activity-meta { flex:1; min-width:0; min-height:0; overflow:hidden; }
+.mural-activity-progress { margin:0; }
+.mural-activity-progress-label { display:flex; align-items:baseline; justify-content:space-between; gap:4px; margin-bottom:3px; color:var(--muted); font-size:10px; line-height:13px; }
+.mural-activity-progress-label strong { flex-shrink:0; font-size:10px; font-weight:600; color:var(--accent-text); }
+.mural-activity-progress progress { display:block; appearance:none; min-width:0; width:100%; height:6px; margin:0; border:0; border-radius:99px; overflow:hidden; background:var(--soft); color:var(--primary); }
+.mural-activity-progress progress::-webkit-progress-bar { background:var(--soft); }
+.mural-activity-progress progress::-webkit-progress-value { background:var(--primary); border-radius:99px; }
+.mural-activity-progress progress::-moz-progress-bar { background:var(--primary); }
+.mural-activity-progress-label span { min-width:0; }
+.mural-activity-pages,.mural-activity-excerpt { margin:0; color:var(--muted); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.mural-activity-excerpt { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; line-height:17px; }
+.mural-activity-rating { display:flex; align-items:center; gap:4px; color:var(--accent-text); font-size:11px; line-height:14px; margin-bottom:2px; }
+.mural-finished-badge { display:inline-flex; align-items:center; align-self:flex-start; gap:5px; padding:4px 8px; border:1px solid var(--accent-text); color:var(--accent-text); border-radius:999px; font-size:11px; }
+.mural-activity-card.is-finished { border-color:color-mix(in srgb,var(--accent-text) 55%,var(--line)); }
+.mural-activity-footer { display:block; min-width:0; min-height:0; height:var(--mural-action-height); margin:0; padding:0; border:0; text-align:left; }
+.mural-activity-open { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-width:0; height:var(--mural-action-height); min-height:var(--mural-action-height); box-sizing:border-box; margin:0; padding:0; border:0; border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent); background:transparent; color:var(--accent-text); font-size:11px; cursor:pointer; }
+.mural-activity-open>svg { flex-shrink:0; }
+.mural-activity-title { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; max-height:45px; width:100%; padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; overflow-wrap:anywhere; }
+.mural-activity-footer { position:relative; }
+.mural-social-actions { display:flex; align-items:center; gap:8px; height:var(--mural-action-height); border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent); box-sizing:border-box; }
+.mural-social-actions button,.mural-social-views { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:0; padding:0; border:0; background:none; color:var(--muted); font:11px 'DM Sans',sans-serif; font-variant-numeric:tabular-nums; }
+.mural-social-actions button { min-height:44px; min-width:44px; cursor:pointer; }
+.mural-social-actions button:focus-visible { outline:2px solid var(--accent-text); outline-offset:-3px; border-radius:6px; }
+.mural-social-actions button[aria-busy=true] { opacity:.55; cursor:wait; }
+.mural-social-actions button[aria-pressed=true] { color:var(--accent-text); }
+.mural-social-actions button:not(:disabled):hover { color:var(--accent-text); }
+.mural-social-actions svg { flex-shrink:0; }
+.mural-social-views { margin-left:auto; }
+/* Semantic colors belong only to mural social actions, never library favorites. */
+.mural-social-actions .lucide-heart,.mural-publication .post-actions .lucide-heart,.feed-card-social-dialog .post-actions .lucide-heart { color:#E85D75; transition:fill .18s ease,stroke .18s ease; }
+.mural-social-actions .lucide-message-circle,.mural-publication .post-actions .lucide-message-circle,.feed-card-social-dialog .post-actions .lucide-message-circle { color:#75A9DF; }
+.mural-social-views .lucide-eye,.mural-publication .mural-dialog-views .lucide-eye,.feed-card-social-dialog .mural-dialog-views .lucide-eye { color:#A99BD9; }
+.mural-activity-card .mural-social-actions button[aria-pressed] { color:var(--muted); }
+.mural-publication .post-actions button[aria-pressed],.feed-card-social-dialog .post-actions button[aria-pressed] { color:var(--ink); }
+@media(prefers-reduced-motion:reduce) { .mural-social-actions .lucide-heart,.mural-publication .post-actions .lucide-heart,.feed-card-social-dialog .post-actions .lucide-heart { transition:none; } }
+.mural-social-error { position:absolute; z-index:3; bottom:100%; left:0; right:0; padding:6px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--error-text); font-size:11px; line-height:1.4; overflow-wrap:anywhere; }
+.mural-category-empty,.mural-status { margin:8px 12px; padding:20px; color:var(--muted); font-size:13px; line-height:1.7; }
+.mural-history-heading { margin-bottom:20px; }
+.mural-history-heading h2 { margin:12px 0 5px; font:29px 'DM Serif Display',serif; }
+.mural-history-heading p { margin:0; font-size:13px; color:var(--muted); }
+.mural-history-heading button,.mural-load-more,.mural-status button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; gap:8px; padding:8px 14px; border:1px solid var(--line); border-radius:12px; color:var(--accent-text); background:var(--surface); cursor:pointer; }
+.mural-load-more { display:flex; margin:24px auto 0; }
+.mural-publications { width:100%; max-width:none; gap:24px; }
+.mural-publications>div { min-width:0; }
+.mural-publication { width:100%; box-sizing:border-box; height:auto; min-height:0; overflow-wrap:anywhere; container:publication / inline-size; }
+.feed-content-pass-through { display:contents; }
+.mural-publication-editorial { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; margin-top:12px; align-items:start; }
+.mural-publication-editorial.has-related-book { grid-template-columns:minmax(0,3fr) minmax(120px,1fr); align-items:start; }
+.mural-publication-content { min-width:0; display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+.mural-publication-content>h2:first-child { margin-top:0; }
+.mural-publication .post-person { flex:1; }
+.mural-publication .person-avatar { overflow:hidden; }
+.mural-publication .person-avatar img { width:100%; height:100%; object-fit:cover; }
+.mural-publication .post-kind { display:inline-flex; flex-shrink:0; margin-left:0; }
+.mural-publication .post-text { white-space:pre-wrap; margin:0; }
+.post-gallery-editorial { display:grid; width:100%; gap:8px; margin-top:14px; min-width:0; }
+.post-gallery-editorial .post-gallery-tile { display:block; position:relative; min-width:0; min-height:0; aspect-ratio:1; border:1px solid var(--line); border-radius:10px; background:var(--soft); }
+.post-gallery-editorial .post-gallery-tile img { width:100%; height:100%; object-fit:cover; }
+.post-gallery-overflow { position:absolute; inset:0; display:grid; place-items:center; color:#fff; background:#0009; font:32px 'DM Serif Display',serif; }
+.mural-publication .post-gallery-tile:hover img { transform:none; }
+.mural-publication .post-actions { padding-top:8px; border-top:1px solid var(--line); gap:12px; }
+.mural-publication .post-actions button { min-height:44px; }
+.mural-publication .comment-composer-body,.mural-publication .comment-composer-bottom { display:contents; }
+.mural-publication .comment-form textarea { box-sizing:border-box; color:var(--ink); }
+.mural-publication .comment-item { min-width:0; }
+.mural-publication .comment-content { min-width:0; }
+.mural-related-book { min-width:0; align-self:start; padding-left:18px; border-left:1px solid var(--line); }
+.mural-related-label { display:flex; align-items:center; gap:7px; margin:0 0 12px; font:600 12px/1.5 'DM Sans',sans-serif; }
+.mural-related-label svg { flex-shrink:0; color:var(--accent-text); }
+.mural-publication .post-book { display:flex; flex-direction:column; align-items:flex-start; gap:10px; margin:0; padding:0; border:0; border-radius:0; background:transparent; }
+.mural-publication .post-book .book-cover { flex:none; align-self:center; width:min(100%,120px); height:auto; aspect-ratio:2/3; min-height:0; padding:0; box-shadow:none; border-radius:4px; overflow:hidden; }
+.mural-publication .post-book .book-cover img { width:100%; height:100%; object-fit:contain; }
+.mural-publication .post-book h3 { margin:0 0 4px; font:20px/1.3 'DM Serif Display',serif; }
+.mural-publication .post-book small { display:none; }
+.mural-related-link { display:inline-flex; align-items:center; gap:5px; min-height:38px; padding:4px 0; color:var(--accent-text); font-size:12px; }
+@container publication (max-width:620px) { .mural-publication-editorial.has-related-book { grid-template-columns:minmax(0,1fr); gap:18px; } .mural-related-book { padding:14px 0 0; border-left:0; border-top:1px solid var(--line); } .mural-related-label { margin-bottom:12px; } .mural-publication .post-book { display:flex; flex-direction:column; gap:12px; } .mural-publication .post-book .book-cover { width:min(100%,120px); height:auto; aspect-ratio:2/3; } .mural-related-link { align-self:start; } .mural-publication .post-book h3 { font-size:18px; } }
+@media(max-width:600px) { .mural-publication { padding:16px; } .mural-publication .post-author { flex-wrap:wrap; gap:8px; } .mural-publication .post-person { flex-basis:calc(100% - 70px); } .mural-publication .post-actions { gap:8px; } .mural-publication .post-actions button { font-size:11px; gap:4px; } .mural-publication .post-book { gap:10px; } }
+.mural-history-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.mural-history-grid>div { display:flex; min-width:0; }
+.mural-activity-dialog { width:min(580px,calc(100% - 20px)); max-height:calc(var(--activity-viewport-height,100dvh) - 24px); box-sizing:border-box; padding:0; border:1px solid var(--line); border-radius:18px; background:var(--surface); color:var(--ink); overscroll-behavior:contain; overflow:auto; scroll-padding-block:64px 16px; }
+.mural-activity-dialog::backdrop { background:#0009; }
+.mural-dialog-heading { position:sticky; top:0; z-index:4; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 16px; border-bottom:1px solid var(--line); background:var(--surface); }
+.mural-dialog-heading h2 { margin:0; font:22px/1.3 'DM Serif Display',serif; }
+.mural-dialog-close { display:grid; place-items:center; flex-shrink:0; width:40px; height:40px; border:0; border-radius:50%; color:var(--ink); background:transparent; cursor:pointer; }
+.mural-activity-dialog .feed-card { width:100%; min-height:0; box-sizing:border-box; margin:0; padding:16px 20px; border:0; border-radius:0; box-shadow:none; background:transparent; }
+.mural-activity-dialog .post-author { display:flex; align-items:center; gap:8px; margin:0 0 16px; }
+.mural-activity-dialog .person-avatar { flex:0 0 34px; width:34px; height:34px; overflow:hidden; }
+.mural-activity-dialog .person-avatar img { width:100%; height:100%; object-fit:cover; }
+.mural-activity-dialog .post-person { flex:1; }
+.mural-activity-dialog .post-person strong { font-size:13px; overflow-wrap:anywhere; }
+.mural-activity-dialog .post-author small { font-size:10px; color:var(--muted); }
+.mural-activity-dialog .post-kind { display:inline-flex; margin:0; padding:4px 6px; font-size:10px; white-space:normal; }
+.mural-user-follow { flex-shrink:0; }
+.mural-follow-button { display:grid; place-items:center; width:40px; height:44px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; }
+.mural-follow-button:hover,.mural-follow-button[aria-pressed=true] { color:var(--accent-text); }
+.mural-follow-button:disabled { opacity:.5; cursor:wait; }
+.mural-activity-dialog .post-reading-progress { display:flex; align-items:flex-start; gap:16px; margin:0; padding:0; min-height:0; border:0; background:none; }
+.mural-activity-dialog .post-progress-cover { display:block; flex:0 0 84px; width:84px; height:124px; padding:0; }
+.mural-activity-dialog .post-progress-cover .book-cover { width:100%; height:100%; min-height:0; border-radius:5px; box-shadow:none; }
+.mural-activity-dialog .post-progress-cover img { width:100%; height:100%; object-fit:contain; }
+.mural-activity-dialog .post-progress-details { flex:1; min-width:0; }
+.mural-activity-dialog .post-progress-title,.mural-activity-dialog .post-activity-title { margin:0 0 5px; font:22px/1.25 'DM Serif Display',serif; overflow-wrap:anywhere; }
+.mural-activity-dialog .post-progress-author { margin:0 0 8px; color:var(--muted); font-size:12px; }
+.mural-activity-dialog .post-text { margin:6px 0; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.mural-activity-dialog .review-rating { margin:6px 0; }
+.mural-activity-dialog .post-progress-meter { display:flex; align-items:center; gap:8px; margin:10px 0; }
+.mural-activity-dialog .post-progress-meter progress { width:100%; min-width:0; height:7px; accent-color:var(--primary); }
+.mural-activity-dialog .post-progress-meter strong { flex-shrink:0; font-size:12px; color:var(--accent-text); }
+.mural-activity-dialog .post-progress-book-link { display:inline-flex; align-items:center; gap:5px; min-height:36px; margin-top:4px; font-size:12px; color:var(--accent-text); }
+.mural-activity-dialog .post-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:16px 0 0; padding:2px 0; border-block:1px solid var(--line); }
+.mural-activity-dialog .post-actions button { min-height:44px; font-size:12px; }
+.mural-dialog-views { display:inline-flex; align-items:center; gap:5px; margin-left:auto; font-size:12px; color:var(--muted); }
+.mural-activity-dialog .post-comments { margin:0; padding:12px 0 0; border:0; }
+.mural-comments-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.mural-comments-heading h3 { margin:0; font:18px/1.3 'DM Serif Display',serif; }
+.mural-comments-heading>span { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.mural-activity-dialog .comments-panel { padding-top:10px; }
+.mural-activity-dialog .comments-list { max-height:240px; overflow:auto; overscroll-behavior:contain; gap:0; }
+.mural-activity-dialog .comment-item { display:flex; align-items:flex-start; gap:9px; padding:10px 0; border-bottom:1px solid var(--line); border-radius:0; background:none; }
+.mural-activity-dialog .comment-content { flex:1; min-width:0; }
+.mural-comment-avatar { display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px; border-radius:50%; background:var(--secondary); color:var(--ink); font-size:10px; font-weight:600; }
+.mural-comments-empty { display:flex; align-items:center; justify-content:center; gap:9px; padding:14px 0; }
+.mural-comments-empty svg { flex-shrink:0; opacity:.65; }
+.mural-activity-dialog .comment-item:first-child { padding-top:0; }
+.mural-activity-dialog .comment-form { display:flex; align-items:flex-start; position:sticky; bottom:-16px; padding-block:12px 4px; margin-top:0; gap:9px; background:var(--surface); }
+.mural-activity-dialog .comment-composer-body { display:block; flex:1; min-width:0; padding:8px 10px 4px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
+.mural-activity-dialog .comment-composer-body:focus-within { border-color:var(--accent-text); }
+.mural-comment-label { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.mural-activity-dialog .comment-form textarea { display:block; box-sizing:border-box; min-height:44px; max-height:144px; width:100%; padding:0; border:0; border-radius:0; resize:none; background:transparent; color:var(--ink); font:13px/1.6 'DM Sans',sans-serif; scroll-margin-block:70px 20px; }
+.mural-activity-dialog .comment-form textarea:focus,.mural-activity-dialog .comment-form textarea:focus-visible { outline:none; box-shadow:none; border:0; }
+.mural-activity-dialog .comment-composer-bottom { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.comment-character-count { color:var(--muted); font-size:10px; font-variant-numeric:tabular-nums; }
+.mural-activity-dialog .comment-form .button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; margin-left:auto; padding:6px 10px; font-size:12px; }
+.mural-activity-dialog .comment-form .mural-comment-send { width:44px; height:44px; padding:0; background:transparent; border:0; box-shadow:none; color:#c99516; }
+.mural-activity-dialog .comment-form .mural-comment-send:not(:disabled):hover { color:#e3b746; background:var(--surface); }
+.mural-comment-send[aria-busy=true] svg { opacity:.5; }
+.comment-character-count.comment-limit-exceeded { color:var(--error-text); }
+@media(max-width:600px) { .mural-activity-dialog .feed-card { padding:12px; } .mural-dialog-heading { padding-inline:12px; } .mural-activity-dialog .post-progress-cover { flex-basis:76px; width:76px; height:112px; } .mural-activity-dialog .post-reading-progress { gap:12px; } .mural-activity-dialog .post-progress-title { font-size:20px; } .mural-activity-dialog .user-role-badge { font-size:9px; padding:2px 5px; } .mural-activity-dialog .post-actions { gap:8px; } .mural-activity-dialog .post-actions button { font-size:11px; gap:4px; } .mural-activity-dialog .comment-form { bottom:-12px; } }
+.mural-screen button:focus-visible,.mural-screen a:focus-visible,.mural-carousel-track:focus-visible,.mural-activity-dialog button:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
+.mural-screen button:disabled { cursor:default; opacity:.5; }
+@container mural (max-width:800px) { .mural-carousel-track { --mural-card-width:calc((100% - var(--mural-card-gap))/2); } .mural-history-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@container mural (max-width:620px) { .mural-category-heading { gap:8px; } .mural-category-heading h2 { font-size:20px; } .mural-category-icon { flex-basis:34px; height:34px; } .mural-category-heading p { font-size:11px; } .mural-view-all { font-size:11px; gap:3px; padding-left:3px; } .mural-audiences button { gap:6px; padding-inline:6px; font-size:12px; } }
+@container mural (max-width:500px) { .mural-carousel-track { --mural-card-width:100%; } .mural-history-grid { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:700px) { .mural-categories { gap:26px; } }
+@media(prefers-reduced-motion:reduce) { .mural-carousel-track { scroll-behavior:auto; } }
+
+/* Keep the original right-hand cards visible; stack instead of hiding on mobile. */
+@media(min-width:1000px) { .mural-layout.mural-screen { grid-template-columns:minmax(0,1fr) 280px; } .mural-screen .aside-reading { margin-top:34px; } .mural-screen .community-note { display:block; } }
+@media(max-width:999px) { .mural-layout.mural-screen { grid-template-columns:minmax(0,1fr); } .mural-screen>.mural-aside { display:block; } .mural-screen .aside-reading { margin-top:34px; } .mural-screen .community-note { display:block; } }

@@ -1,3 +1,4 @@
+@import "./input-focus.css";
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
 /* Variables globales: tipografías y colores compartidos por toda la aplicación. */
@@ -91,7 +92,6 @@ body { background:radial-gradient(ellipse at top right,var(--soft) 0,transparent
 button, a, input, select, textarea { -webkit-tap-highlight-color:transparent; }
 button, a { touch-action:manipulation; }
 input, select, textarea { max-width:100%; }
-input:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
 button:disabled { opacity:.55; cursor:not-allowed; }
 svg { flex-shrink:0; }
 .button { border-radius:12px; min-height:46px; transition:background .18s,transform .18s; }
@@ -129,7 +129,6 @@ svg { flex-shrink:0; }
 .post-actions button,.comments-toggle { min-height:44px; }
 .post-author small,.comment-meta time { font-size:12px; }
 .search-box { min-height:58px; height:auto; padding:16px 20px; border-radius:14px; box-shadow:var(--shadow); }
-.search-box:focus-within { border-color:var(--accent-text); box-shadow:0 0 0 3px var(--lavender-soft); }
 .search-box input { min-width:0; width:100%; font-size:16px; }
 .social-main .book-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
 .book-tile { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
