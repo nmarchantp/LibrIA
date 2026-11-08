@@ -16,7 +16,7 @@ const errors = {
   provider_error: 'Gemini rechazó la solicitud. Puedes volver a intentarlo.',
 }
 
-function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision }) {
+function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, active }) {
   const isBook = scope === 'book'
   const base = isBook ? `/me/ai/books/${workId}` : '/me/ai/profile'
   const [data, setData] = useState(null)
@@ -88,10 +88,11 @@ function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision }) {
   const analysis = data?.scope === scope ? data.analysis : null
   const jobStatus = data?.job?.status || data?.status
   useEffect(() => {
+    if (!active) return undefined
     if (isBook ? !shouldPollBookAnalysis(data) : !['pending', 'processing'].includes(jobStatus)) return undefined
     const timer = window.setInterval(() => load(true), 2500)
     return () => window.clearInterval(timer)
-  }, [jobStatus, load, isBook, data])
+  }, [jobStatus, load, isBook, data, active])
   const servicePaused = isBook && data?.generation_enabled === false && jobStatus === 'pending'
   const working = loading || (!servicePaused && ['pending', 'processing'].includes(jobStatus))
   const failed = ['failed', 'budget_exhausted'].includes(jobStatus)
@@ -115,8 +116,8 @@ function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision }) {
   return <BookExperience {...shared} workId={workId} onRetry={retryBook} onWriteReview={onWriteReview} history={history} historyBusy={historyBusy} onLoadHistory={loadHistory} />
 }
 
-export default function AdaptiveAnalysis({ workId, scope = 'profile', onWriteReview, evidenceRevision }) {
+export default function AdaptiveAnalysis({ workId, scope = 'profile', onWriteReview, evidenceRevision, active = true }) {
   const { user } = useAuth()
   if (scope === 'book' && !workId) return null
-  return <><AiUsageBar /><PrivateAnalysis key={`${user?.id}:${scope}:${workId || 'profile'}`} scope={scope} workId={workId} onWriteReview={onWriteReview} evidenceRevision={evidenceRevision} /></>
+  return <><AiUsageBar active={active} /><PrivateAnalysis key={`${user?.id}:${scope}:${workId || 'profile'}`} scope={scope} workId={workId} onWriteReview={onWriteReview} evidenceRevision={evidenceRevision} active={active} /></>
 }

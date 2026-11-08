@@ -7,6 +7,8 @@ import { ThemeProvider } from '/src/context/ThemeContext'
 import { authService } from '/src/services/authService'
 import HomePage from '/src/pages/HomePage'
 import EventsPage from '/src/pages/EventsPage'
+import ProfilePage from '/src/pages/ProfilePage'
+import CommunityProfilePage from '/src/pages/CommunityProfilePage'
 import Layout from '/src/components/Layout'
 import '/src/styles.css'
 import '/src/theme/themes.css'
@@ -14,6 +16,7 @@ import '/src/theme/themes.css'
 const count = Number(new URLSearchParams(location.search).get('count') ?? 12)
 const emptyComments = new URLSearchParams(location.search).get('comments') === 'empty'
 const role = new URLSearchParams(location.search).get('role') || 'lector'
+let agendaPrivacy = 'private'
 const persistEvents=new URLSearchParams(location.search).has('persist_events')
 const eventStateKey='libria-event-test-state'
 const eventState=persistEvents?JSON.parse(localStorage.getItem(eventStateKey)||'{}'):{}
@@ -78,6 +81,19 @@ window.fetch = (url, options) => {
   window.muralTest.requests.push({ path: parsed.pathname + parsed.search, method: options?.method || 'GET' })
   let data = [], status = 200
   if (parsed.pathname.endsWith('/profiles/me')) data = [{ id: 'personal-fixture', kind: 'personal' }]
+  else if (/\/profiles\/[^/]+\/events\/access$/.test(parsed.pathname)) data = { allowed: agendaPrivacy === 'public', is_owner: false }
+  else if (parsed.pathname === '/api/profiles/me/events/privacy') { agendaPrivacy = JSON.parse(options.body).visibility; data = { visibility: agendaPrivacy } }
+  else if (/\/profiles\/[^/]+\/events$/.test(parsed.pathname)) {
+    const own = parsed.pathname.includes('/me/'), period = parsed.searchParams.get('period'), participation = parsed.searchParams.get('participation')
+    if (!own && agendaPrivacy !== 'public') { data = { detail: 'Esta agenda es privada' }; status = 403 }
+    else {
+      const all = items.events.map((item,index) => ({ ...decorate(item), profile_attending: own ? item.event_details.attending : true, profile_organizing: index === 0 }))
+      const matching = all.filter(item => (role !== 'lector' && item.profile_organizing || item.profile_attending) && (participation !== 'attending' || item.profile_attending) && (participation !== 'organizing' || item.profile_organizing))
+      data = { items: period === 'past' ? [] : matching, has_more: false, counts: { upcoming: matching.length, past: 0 }, is_owner: own, can_organize: role !== 'lector', visibility: own ? agendaPrivacy : null }
+    }
+  }
+  else if (parsed.pathname.endsWith('/literary-preferences') || parsed.pathname === '/api/profiles/visitor') data = { id:'visitor', profile_id:'personal-fixture', display_name:'Perfil de prueba', genres:[], tropes:[], intensities:[], interests:[], favorite_quotes:[], biography:'' }
+  else if (parsed.pathname.endsWith('/reading-genres')) data = { items:[], total_books:0 }
   else if(parsed.pathname==='/api/posts'&&options?.method==='POST'){
     const form=options.body,details=form.has('event_details')?JSON.parse(form.get('event_details')):null
     window.muralTest.createdPublication={...Object.fromEntries(form.entries()),event_details:details}
@@ -158,6 +174,7 @@ window.fetch = (url, options) => {
 }
 export default function Fixture() {
   const { user, loading } = useAuth()
-  return user && !loading ? <Routes><Route element={<Layout />}><Route path="/events" element={<EventsPage />} /><Route path="*" element={<HomePage />} /></Route></Routes> : null
+  return user && !loading ? <Routes><Route element={<Layout />}><Route path="/events" element={<EventsPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/profiles/:profileId" element={<CommunityProfilePage />} /><Route path="*" element={<HomePage />} /></Route></Routes> : null
 }
+if (new URLSearchParams(location.search).has('profile_tab')) history.replaceState({}, '', `/profile?tab=${new URLSearchParams(location.search).get('profile_tab')}`)
 createRoot(document.getElementById('root')).render(<BrowserRouter><AuthProvider><ThemeProvider><LibraryProvider><Fixture /></LibraryProvider></ThemeProvider></AuthProvider></BrowserRouter>)

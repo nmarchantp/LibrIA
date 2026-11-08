@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import './AiUsageBar.css'
 
 const number = value => new Intl.NumberFormat('es-CL').format(value)
 
-export default function AiUsageBar() {
+export default function AiUsageBar({ active: panelActive = true }) {
+  const visible = useRef(panelActive)
+  useEffect(() => { visible.current = panelActive }, [panelActive])
   const { user } = useAuth()
   const [state, setState] = useState({})
   useEffect(() => {
@@ -14,6 +16,7 @@ export default function AiUsageBar() {
     const controller = new AbortController()
     setState({})
     async function load() {
+      if (!visible.current) return
       try {
         const data = await apiRequest('/analytics/me/free-usage', {
           headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },

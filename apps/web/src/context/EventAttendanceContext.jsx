@@ -22,7 +22,7 @@ function createStore(){
     async toggle(details){
       const value=get(details);if(!value||value.busy)return
       entries.set(details.id,{...value,busy:true,error:''});notify()
-      try{apply(details.id,await request(details.id,value.attending?'DELETE':'PUT'))}
+      try{apply(details.id,await request(details.id,value.attending?'DELETE':'PUT'));window.dispatchEvent(new Event('libria-event-attendance-updated'))}
       catch(cause){entries.set(details.id,{...entries.get(details.id),error:cause.message||'No se pudo actualizar la asistencia.'})}
       finally{entries.set(details.id,{...entries.get(details.id),busy:false});notify()}
     },

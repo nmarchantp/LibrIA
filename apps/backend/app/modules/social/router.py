@@ -26,7 +26,7 @@ from app.modules.social.schemas import (
 from app.modules.users.models import User
 from app.modules.library.models import ReadingEvent, Reading
 from app.modules.books.models import Work, CatalogSource, Edition
-from app.modules.users.identities import personal_profile, publication_role, require_actor
+from app.modules.users.identities import personal_profile, publication_role, require_actor, can_create_events
 from app.modules.users.identity_models import Profile
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -180,6 +180,8 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
     profile = require_actor(db, user, data.author_profile_id) if data.author_profile_id else personal_profile(db, user)
     role = "admin" if user.role == "admin" and profile.kind == "personal" else publication_role(db, profile)
     publication_type = data.publication_type or ("event" if data.source == "event" else "free")
+    if publication_type == "event" and not can_create_events(db, user, profile):
+        raise HTTPException(403, "No tienes permiso para crear eventos")
     if role == "lector" and not (publication_type in {"note", "theory"} and data.book_ref and data.book_title):
         raise HTTPException(status_code=403, detail="Los lectores solo pueden publicar reseñas de libros")
     if (publication_type == "event") != (data.source == "event"):
