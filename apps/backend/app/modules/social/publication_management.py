@@ -18,6 +18,8 @@ from app.modules.social.router import image_content_type, MAX_IMAGE_BYTES, MAX_I
 from app.modules.users.identities import publication_role
 from app.modules.users.identity_models import Profile
 from app.modules.users.models import User
+from app.modules.social.schemas import EventDetailsInput
+from app.modules.social.event_service import validate_event_change,sync_event
 
 router=APIRouter(prefix='/posts',tags=['publication management'])
 DB=Annotated[Session,Depends(get_db)]
@@ -38,6 +40,7 @@ class PublicationEdit(BaseModel):
     edition_id: uuid.UUID | None=None
     existing_image_ids: list[uuid.UUID] | None=None
     cover_mode: Literal['keep','catalog','custom']='keep'
+    event_details: EventDetailsInput | None=None
 
 
 def full_item(db,user,post):
@@ -62,6 +65,9 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             if 'existing_image_ids' in payload:
                 try:payload['existing_image_ids']=json.loads(payload['existing_image_ids'])
                 except (ValueError,TypeError):raise HTTPException(422,'La selección de imágenes no es válida') from None
+            if isinstance(payload.get('event_details'),str):
+                try:payload['event_details']=json.loads(payload['event_details'])
+                except ValueError:raise HTTPException(422,'Los datos del evento no son válidos') from None
             uploads=form.getlist('images');cover_upload=form.get('book_cover')
         elif request.headers.get('content-type','').startswith('application/json'):
             try:payload=await request.json()
@@ -80,6 +86,7 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             raise HTTPException(403,'Tu perfil no puede publicar este tipo de contenido')
         if (data.publication_type=='event')!=(data.source=='event'):
             raise HTTPException(422,'El tipo no corresponde al contenido')
+        validate_event_change(db,post,data.publication_type,data.event_details,data.title)
         images=list(db.scalars(select(PostImage).where(PostImage.post_id==post.id)))
         selected={i.id for i in images} if data.existing_image_ids is None else set(data.existing_image_ids)
         if not selected.issubset({i.id for i in images}):raise HTTPException(422,'Una imagen no pertenece a esta publicación')
@@ -132,6 +139,7 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             existing_cover.revision,existing_cover.content_type,existing_cover.data=uuid.uuid4(),cover_data[0],cover_data[1]
         elif existing_cover and (data.cover_mode=='catalog' or not same_book or not (work_id or data.book_ref)):
             db.delete(existing_cover)
+        sync_event(db,post,data.event_details,user)
         db.flush();result=full_item(db,user,post);db.commit()
         return result
     finally:

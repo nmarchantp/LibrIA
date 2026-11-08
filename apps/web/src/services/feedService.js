@@ -10,6 +10,7 @@ export const feedService = {
 export function toFeedPost(item) {
   return {
     activity: item,
+    eventDetails: item.event_details || null,
     id: item.id, type: item.kind, feedItemType: item.feed_item_type, authorProfileId: item.author_profile_id,
     images: item.images || [], likeCount: item.like_count || 0, likedByMe: item.liked_by_me || false,
     followingAuthor: item.following_author || false, author: item.author, authorRole: item.author_role, avatarUrl: item.avatar_url ? apiAssetUrl(item.avatar_url) : null,

@@ -1,0 +1,44 @@
+.event-attendance { display:flex; flex-direction:column; align-items:flex-end; gap:2px; margin-left:auto; }
+.event-attend-button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:8px 0; background:transparent; color:var(--accent-text); border:0; border-radius:6px; white-space:nowrap; font-size:13px; cursor:pointer; }
+.event-attend-button.is-attending { color:var(--accent-text); }
+.event-interest-check { opacity:.3; }
+.event-attend-button.is-attending .event-interest-check { opacity:1; stroke-width:3; }
+.event-attend-button:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+.event-attend-button:disabled { opacity:.55; cursor:default; }
+.event-attendance small { color:var(--muted); font-size:10px; }
+.event-attendee-count { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:12px; color:var(--ink); }
+.event-attendee-count svg { color:var(--accent-text); flex-shrink:0; }
+@media(max-width:600px) { .event-attendee-count { font-size:11px; gap:4px; } }
+.event-attendance p { max-width:220px; margin:4px 0; font-size:11px; color:var(--error-text); }
+.event-edit-button { display:grid; place-items:center; width:40px; height:44px; border:0; background:none; color:var(--accent-text); cursor:pointer; flex-shrink:0; }
+.mural-event-content { --event-date-size:140px; display:grid; grid-template-columns:var(--event-date-size) minmax(0,1fr); gap:16px; min-width:0; align-items:start; }
+.mural-event-content .event-date { display:flex; flex-direction:column; align-items:center; justify-content:center; width:var(--event-date-size); height:var(--event-date-size); min-height:0; padding:10px 6px; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; text-align:center; }
+.mural-event-content .event-date strong { font:38px/1.1 'DM Serif Display',serif; color:var(--accent-text); }
+.mural-event-content .event-date span { display:block; font-size:12px; color:var(--accent-text); }
+.mural-event-message { display:flex; flex-direction:column; justify-content:flex-start; min-width:0; min-height:var(--event-date-size); }
+.mural-publication-event .mural-event-message h2 { margin:0 0 8px; line-height:1.2; }
+.mural-event-message .event-information>p:last-child { margin-bottom:0; }
+.mural-event-content .post-gallery-editorial { grid-column:1/-1; }
+.event-information { color:var(--muted); font-size:12px; }
+.event-information>p { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.event-information svg { color:var(--accent-text); flex-shrink:0; }
+.event-schedule-update { margin:8px 0 0; color:var(--accent-text); }
+.event-schedule-update summary { cursor:pointer; }
+.event-schedule-update p { margin:5px 0; color:var(--muted); font-size:11px; line-height:1.5; }
+.event-missing-date { color:var(--muted); font-size:12px; }
+.composer-event-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; border:1px solid var(--line); padding:14px; border-radius:12px; }
+.composer-event-fields legend { font-size:13px; font-weight:600; }
+.composer-event-fields label { display:grid; gap:6px; min-width:0; font-size:12px; }
+.composer-event-fields input,.composer-event-fields select { width:100%; min-width:0; box-sizing:border-box; min-height:40px; border:1px solid var(--line); border-radius:7px; padding:7px; color:var(--ink); background:var(--soft); font:inherit; }
+.composer-event-fields>p { grid-column:1/-1; font-size:11px; color:var(--muted); }
+.event-delete-zone { margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.event-delete-zone button { min-height:40px; color:var(--error-text); border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:8px 12px; cursor:pointer; }
+@container publication (max-width:620px) { .mural-event-content { --event-date-size:100px; gap:12px; } .mural-event-content .event-date { padding:8px 4px; } .mural-event-content .event-date strong { font-size:34px; } }
+@container publication (max-width:380px) { .mural-event-content { --event-date-size:70px; gap:10px; } .mural-event-content .event-date strong { font-size:30px; } }
+@media(max-width:600px) { .event-attendance { margin-left:0; align-items:flex-start; } .event-attend-button { font-size:12px; padding:8px 0; } .composer-event-fields { grid-template-columns:minmax(0,1fr); } }
+.calendar-event-actions { display:flex; align-items:flex-start; gap:5px; }
+@media(max-width:700px) { .event-card>.calendar-event-actions { grid-column:2; justify-self:start; align-items:flex-start; } }
+.event-card>div { min-width:0; }
+.mural-publication-event .mural-publication-editorial.has-related-book { grid-template-columns:minmax(0,2.7fr) minmax(180px,1fr); }
+.mural-publication.mural-publication-event .post-book .book-cover { align-self:flex-start; width:min(100%,180px); height:auto; aspect-ratio:2/3; }
+@container publication (max-width:620px) { .mural-publication-event .mural-publication-editorial.has-related-book { grid-template-columns:minmax(0,1fr); } }

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { searchBookCatalog } from '../services/booksService'
 import FormattedText from './FormattedText'
 import PublicationCoverPicker from './PublicationCoverPicker'
+import EventFields from './EventFields'
+import './EventPresentation.css'
 import './PostComposer.css'
 
 const roleLabels = { influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
@@ -75,6 +77,8 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
   const [coverFile,setCoverFile] = useState(null)
   const [images, setImages] = useState([])
   const [existingImages,setExistingImages] = useState(initialPost?.images||[])
+  const [eventValues,setEventValues]=useState(()=>({start_date:initialPost?.event_details?.start_date||'',start_time:initialPost?.event_details?.start_time||'',end_date:initialPost?.event_details?.end_date||'',end_time:initialPost?.event_details?.end_time||'',timezone:initialPost?.event_details?.timezone||'America/Santiago',location:initialPost?.event_details?.location||'',organizer:initialPost?.event_details?.organizer||'',category:initialPost?.event_details?.category||'meetup'}))
+  const eventRequired=type==='event'&&(!initialPost||initialPost.publication_type!=='event'||Boolean(initialPost.event_details)||Boolean(eventValues.start_date||eventValues.start_time))
   const [dragging, setDragging] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -119,18 +123,21 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
         publication.existing_image_ids=JSON.stringify(existingImages.map(path=>path.split('/').at(-1)))
         publication.cover_mode=coverMode==='catalog'?'catalog':coverFile?'custom':'keep'
       }
+      if(type==='event'&&eventValues.start_date)publication.event_details=JSON.stringify({...eventValues,end_date:eventValues.end_date||null,end_time:eventValues.end_time||null})
       Object.entries(publication).forEach(([key, value]) => form.append(key, value))
       images.forEach(image => form.append('images', image))
       if(book&&coverMode==='custom'&&coverFile)form.append('book_cover',coverFile)
       await apiRequest(initialPost?`/posts/${initialPost.id}`:'/posts', { method: initialPost?'PUT':'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` }, body: form })
       setTitle(''); setBody(''); setBook(null); setImages([])
+      setEventValues({start_date:'',start_time:'',end_date:'',end_time:'',timezone:'America/Santiago',location:'',organizer:'',category:'meetup'})
       setCoverMode('catalog');setCoverFile(null)
+      if(type==='event'||initialPost?.source==='event')window.dispatchEvent(new Event('libria-events-updated'))
       onCreated()
     } catch (cause) {
       if (cause.status === 403) retry()
       setError(cause.status === 403 ? 'Tu perfil ya no tiene permiso para este tipo de publicación.'
         : cause.status === 422 && book && cause.message?.toLowerCase().includes('obra') ? 'Esa obra no está disponible en el catálogo de LibrIA. Prueba con otra o publica sin enlazarla.'
-          : [413,415].includes(cause.status) ? cause.message : 'No se pudo publicar. Inténtalo de nuevo.')
+          : [413,415,422].includes(cause.status) ? cause.message : 'No se pudo publicar. Inténtalo de nuevo.')
     } finally { publishing.current=false;setBusy(false) }
   }
 
@@ -147,7 +154,7 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
       </div>
     </div>
 
-    <input className="composer-title" value={title} onChange={event => setTitle(event.target.value)} maxLength="200" placeholder="Título opcional (ej: Lectura conjunta de noviembre)" aria-label="Título opcional" />
+    <input className="composer-title" value={title} onChange={event => setTitle(event.target.value)} maxLength="200" required={type==='event'} placeholder={type==='event'?'Título del evento':'Título opcional (ej: Lectura conjunta de noviembre)'} aria-label={type==='event'?'Título del evento':'Título opcional'} />
 
     <div className="composer-editor">
       <textarea ref={textRef} value={body} onChange={event => setBody(event.target.value)} maxLength={textLimit} rows="4" required placeholder={copy.placeholder} aria-label="Texto de la publicación"
@@ -169,6 +176,7 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
     </div>
     {body.includes('*') && <div className="composer-preview"><span>Así se verá:</span><FormattedText text={body} className="post-text" /></div>}
 
+    {type==='event'&&<EventFields value={eventValues} onChange={setEventValues} required={eventRequired} disabled={busy} />}
     <BookLinker value={book} onChange={value=>{setBook(value);setCoverFile(null);setCoverMode('catalog')}} />
     {book&&<PublicationCoverPicker mode={coverMode} onModeChange={setCoverMode} file={coverFile} onChange={setCoverFile} currentUrl={initialPost?.custom_book_cover_url?apiUrl(initialPost.custom_book_cover_url):null} catalogUrl={book.cover} disabled={busy} />}
 
@@ -193,7 +201,7 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
     {error && <p className="comment-error" role="alert">{error}</p>}
     <footer className="composer-footer">
       <span><CircleCheck aria-hidden="true" />Visible para todos los miembros de LibrIA</span>
-      <button className="button primary" disabled={busy || !body.trim() || Boolean(imageError) || (book&&coverMode==='custom'&&!coverFile&&!initialPost?.custom_book_cover_url)}><SendHorizontal aria-hidden="true" />{busy ? 'Guardando…' : initialPost?'Guardar publicación':`Publicar ${typeLabel.toLowerCase()}`}</button>
+      <button className="button primary" disabled={busy || !body.trim() || Boolean(imageError) || (book&&coverMode==='custom'&&!coverFile&&!initialPost?.custom_book_cover_url)}><SendHorizontal aria-hidden="true" />{busy ? 'Guardando…' : initialPost?'Guardar cambios':`Publicar ${typeLabel.toLowerCase()}`}</button>
     </footer>
   </form>
 }

@@ -1,10 +1,43 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date, time, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.modules.users.roles import UserRole
+
+
+class EventDetailsInput(BaseModel):
+    model_config=ConfigDict(extra='forbid',str_strip_whitespace=True)
+    start_date: date
+    start_time: time
+    end_date: date | None=None
+    end_time: time | None=None
+    timezone: str=Field(default='America/Santiago',max_length=64)
+    location: str=Field(min_length=1,max_length=300)
+    organizer: str=Field(min_length=1,max_length=200)
+    category: Literal['fair','book_club','workshop','meetup','other']='meetup'
+
+    def instants(self):
+        try:zone=ZoneInfo(self.timezone)
+        except ZoneInfoNotFoundError:raise ValueError('Selecciona una zona horaria IANA válida') from None
+        def instant(day,hour):
+            if hour.tzinfo:raise ValueError('Introduce la hora local y selecciona la zona horaria')
+            local=datetime.combine(day,hour)
+            candidates={local.replace(tzinfo=zone,fold=fold).astimezone(timezone.utc) for fold in (0,1)
+                if local.replace(tzinfo=zone,fold=fold).astimezone(timezone.utc).astimezone(zone).replace(tzinfo=None)==local}
+            if not candidates:raise ValueError('Esa hora no existe por el cambio de horario; elige otra hora')
+            if len(candidates)>1:raise ValueError('Esa hora se repite por el cambio de horario; elige una hora no ambigua')
+            return candidates.pop()
+        return instant(self.start_date,self.start_time),instant(self.end_date,self.end_time) if self.end_date and self.end_time else None
+
+    @model_validator(mode='after')
+    def valid_schedule(self):
+        if (self.end_date is None)!=(self.end_time is None):raise ValueError('Completa fecha y hora de término, o deja ambas vacías')
+        start,end=self.instants()
+        if end and end<start:raise ValueError('El término no puede ser anterior al inicio')
+        return self
 
 
 class PostCreate(BaseModel):
@@ -19,6 +52,7 @@ class PostCreate(BaseModel):
     book_title: str | None = Field(default=None, min_length=1, max_length=200)
     work_id: uuid.UUID | None = None
     edition_id: uuid.UUID | None = None
+    event_details: EventDetailsInput | None = None
 
     @model_validator(mode="after")
     def source_matches_kind(self):
@@ -29,6 +63,8 @@ class PostCreate(BaseModel):
             raise ValueError("El texto no puede estar vacío")
         if len(self.body) > 500:
             raise ValueError("Las publicaciones deben ser breves (máximo 500 caracteres)")
+        if self.event_details and (self.source!='event' or not self.title):
+            raise ValueError('Los datos del evento requieren tipo Evento y un título')
         return self
 
 
@@ -55,6 +91,7 @@ class PostResponse(BaseModel):
     custom_book_cover_url: str | None = None
     can_edit_book_cover: bool = False
     can_manage: bool = False
+    event_details: dict | None = None
     rating: float | None
     dimension_ratings: dict[str, float] = Field(default_factory=dict)
     progress_percent: int | None

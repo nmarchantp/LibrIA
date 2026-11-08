@@ -1,4 +1,5 @@
 import uuid
+import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -13,6 +14,7 @@ from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_user, get_optional_current_user
 from app.modules.social.models import Post, PostBookCover, PostComment, PostImage, PostLike, ProfileFollow, Review, ReviewLike
 from app.modules.social.post_covers import read_cover, cover_url
+from app.modules.social.event_service import sync_event,batch_event_details
 from app.modules.social.schemas import (
     CommentCreate,
     CommentResponse,
@@ -133,6 +135,9 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
     else:
         raise HTTPException(status_code=415, detail="Usa JSON o multipart/form-data")
     try:
+        if isinstance(payload.get('event_details'),str):
+            try:payload['event_details']=json.loads(payload['event_details'])
+            except ValueError:raise HTTPException(422,'Los datos del evento no son válidos') from None
         data = PostCreate.model_validate(payload)
     except ValidationError as error:
         for upload in uploads:
@@ -200,19 +205,20 @@ async def create_post(request: Request, user: Annotated[User, Depends(get_curren
     post = Post(user_id=user.id, author_role=role, author_profile_id=profile.id,
                 work_id=resolved_work,edition_id=resolved_edition,
                 publication_type=publication_type,
-                **data.model_dump(exclude={"author_profile_id", "publication_type", "work_id", "edition_id"}))
+                **data.model_dump(exclude={"author_profile_id", "publication_type", "work_id", "edition_id", "event_details"}))
     db.add(post)
     db.flush()
     images = [PostImage(post_id=post.id, content_type=image_type, data=content)
               for image_type, content in image_data]
     db.add_all(images)
+    sync_event(db,post,data.event_details,user)
     cover = None
     if cover_data:
         cover = PostBookCover(post_id=post.id, revision=uuid.uuid4(), content_type=cover_data[0], data=cover_data[1])
         db.add(cover)
     db.commit()
     db.refresh(post)
-    return as_response(post, profile.display_name, role, [image.id for image in images]).model_copy(update={'custom_book_cover_url': cover_url(cover), 'can_edit_book_cover': True})
+    return as_response(post, profile.display_name, role, [image.id for image in images]).model_copy(update={'custom_book_cover_url': cover_url(cover), 'can_edit_book_cover': True,'event_details':batch_event_details(db,[post.id],user.id).get(post.id)})
 
 
 @router.get("", response_model=list[PostResponse])

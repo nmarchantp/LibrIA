@@ -15,6 +15,7 @@ from app.modules.books.models import Author, CatalogSource, Edition, Work, WorkA
 from app.modules.library.models import Reading, ReadingEvent
 from app.modules.social.models import Post, PostBookCover, PostImage, PostLike, ProfileFollow, Review, ReviewLike
 from app.modules.social.post_covers import cover_url
+from app.modules.social.event_service import batch_event_details
 from app.modules.social.router import as_reading_response, as_response
 from app.modules.social.activity_access import visible_posts, visible_reading_events, public_reviews
 from app.modules.social.interaction_service import batch_counts, capabilities
@@ -115,6 +116,7 @@ def hydrate(db, records, viewer):
         ProfileFollow.profile_id.in_(profile_map))))
     posts = [r.id for r in records if isinstance(r, Post)]
     reviews = [r.id for r in records if isinstance(r, Review)]
+    calendar_events=batch_event_details(db,posts,viewer.id)
     covers = {cover.post_id: cover for cover in db.execute(select(PostBookCover.post_id,PostBookCover.revision).where(PostBookCover.post_id.in_(posts)))} if posts else {}
     images = {}
     for post_id, image_id in db.execute(select(PostImage.post_id, PostImage.id).where(PostImage.post_id.in_(posts)).order_by(PostImage.created_at, PostImage.id)):
@@ -153,6 +155,7 @@ def hydrate(db, records, viewer):
             "work_id": work_id, "edition_id": edition_id, "book_ref": item.book_ref or reference,
             "book_cover_url": edition.cover_url if edition else None, "book_author": ", ".join(authors.get(work_id, [])),
             "custom_book_cover_url": cover_url(covers.get(record.id)) if isinstance(record, Post) else None,
+            "event_details": calendar_events.get(record.id) if isinstance(record,Post) and record.publication_type=='event' else None,
             "can_edit_book_cover": isinstance(record, Post) and ((profile and profile.id in editable_profiles) or (not profile and record.user_id == viewer.id)),
             "can_manage": ((isinstance(record, Post) and ((profile and profile.id in editable_profiles) or (not profile and record.user_id == viewer.id))) or (isinstance(record, Review) and record.created_by_user_id == viewer.id and profile.id in editable_profiles)),
             "reading_id": reading.id if reading else None, "page": record.page if reading else None,

@@ -44,6 +44,7 @@ function MuralContent() {
   const [refresh, setRefresh] = useState(0)
   const [selected, setSelected] = useState(null)
   const [management,setManagement] = useState(null)
+  const [savedMessage,setSavedMessage]=useState('')
   const [profiles, setProfiles] = useState([])
   const [profileError, setProfileError] = useState('')
   const savedScroll = useRef(0)
@@ -58,11 +59,13 @@ function MuralContent() {
   }, [user.id, refresh])
   const selectedProfile = user.role !== 'lector' ? profiles.find(profile => profile.kind === 'personal') : null
   function chooseAudience(value) {
+    setSavedMessage('')
     setSelected(null)
     savedScroll.current = 0
     setParams(current => { const next = new URLSearchParams(current); next.set('audience', value); next.delete('category'); return next })
   }
   function viewAll(value) {
+    setSavedMessage('')
     savedScroll.current = window.scrollY
     setParams(current => { const next = new URLSearchParams(current); next.set('category', value); return next })
     window.scrollTo({ top: 0 })
@@ -99,6 +102,7 @@ function MuralContent() {
     <section className="mural-feed" aria-labelledby="mural-title">
     <header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
     {profileError && <p role="alert">{profileError}</p>}
+    {savedMessage&&<p role="status">{savedMessage}</p>}
     {selectedProfile && !category && <PostComposer key={selectedProfile.id} role={user.role} profileId={selectedProfile.id} onCreated={() => setRefresh(value => value + 1)} />}
     <div className="mural-navigation">
       <nav ref={navigation} className="mural-audiences" aria-label="Secciones del mural">{[{ id: 'contacts', title: 'Contactos' }, { id: 'community', title: 'Comunidad' }, ...publicationCategories].map(item => <button key={item.id} aria-pressed={activeTab === item.id} onClick={() => item.id === 'contacts' || item.id === 'community' ? chooseAudience(item.id) : viewAll(item.id)}>{item.title}</button>)}</nav>
@@ -119,7 +123,7 @@ function MuralContent() {
       <div className="community-note"><MessageCircle size={22} /><p>Un lugar para conversar sobre las historias que nos acompañan.</p><small>LibrIA · Comunidad lectora</small></div>
     </aside>
     {selected && <MuralActivityDialog key={`${selected.item.feed_item_type}:${selected.item.id}:${selected.comments}`} item={selected.item} openComments={selected.comments} onClose={() => setSelected(null)} />}
-    {management&&<ContentManagementDialog target={management} onClose={()=>setManagement(null)} onSaved={()=>{setManagement(null);setSelected(null);setRefresh(value=>value+1)}} />}
+    {management&&<ContentManagementDialog target={management} onClose={()=>setManagement(null)} onSaved={result=>{setManagement(null);setSelected(null);setSavedMessage(result?.deleted?'Publicación eliminada.':'Cambios guardados.');setRefresh(value=>value+1)}} />}
   </div>
   </MuralManagementContext.Provider>
 }

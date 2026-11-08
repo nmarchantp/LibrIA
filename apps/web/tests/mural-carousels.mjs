@@ -196,7 +196,7 @@ try {
       for (const width of [1440, 390, 320]) {
         await send('Emulation.setDeviceMetricsOverride', { width, height:1100, deviceScaleFactor:1, mobile:width<500 })
         assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth && Array.from(document.querySelectorAll('.mural-publication')).every(card=>card.scrollWidth<=card.clientWidth+1)`), true, `${category}/${theme}/${width}: wide publications fit the original layout`)
-        await until(`(() => {const nav=document.querySelector('.mural-audiences').getBoundingClientRect(),active=document.querySelector('.mural-audiences [aria-pressed=true]').getBoundingClientRect();return active.left>=nav.left-1&&active.right<=nav.right+1})()`)
+        await until(`(() => {const nav=document.querySelector('.mural-audiences').getBoundingClientRect(),active=document.querySelector('.mural-audiences [aria-pressed=true]').getBoundingClientRect();return active.left>=nav.left-1&&active.right<=nav.right+1})()`).catch(async cause=>{throw new Error(`${category}/${theme}/${width}: ${await evaluate(`JSON.stringify({nav:document.querySelector('.mural-audiences').getBoundingClientRect(),active:document.querySelector('.mural-audiences [aria-pressed=true]').getBoundingClientRect()})`)} ${cause.message}`)})
         assert.equal(await evaluate(`(() => {const buttons=Array.from(document.querySelectorAll('.mural-audiences button'),b=>b.getBoundingClientRect());return buttons.every(b=>Math.abs(b.top-buttons[0].top)<1&&Math.abs(b.height-buttons[0].height)<1&&Math.abs(b.width-buttons[0].width)<1)})()`), true, 'Uniform segments stay on one row')
         assert.equal(await evaluate(`getComputedStyle(document.querySelector('.mural-publication .post-gallery-tile img')).objectFit`), 'cover', 'Square thumbnails crop only the preview')
         assert.equal(await evaluate(`Math.abs(document.querySelector('.mural-publications').getBoundingClientRect().width-document.querySelector('.mural-feed').clientWidth)<1`), true, 'Use the full main column width')
@@ -256,7 +256,7 @@ try {
     await evaluate(`document.querySelector('.mural-load-more').click()`)
     await until(`document.querySelectorAll('.mural-publication').length===12`)
   }
-  await evaluate(`document.querySelector('.mural-history-heading button').click()`)
+  await evaluate(`document.querySelectorAll('.mural-audiences button')[1].click()`)
   await until(`document.querySelectorAll('.mural-category').length===5`)
   await evaluate(`document.querySelectorAll('.mural-view-all')[4].click()`)
   await until(`document.querySelectorAll('.mural-publication').length===8`)
@@ -346,8 +346,9 @@ try {
     await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
     await until(`document.querySelectorAll('.mural-publication').length===3`)
     assert.equal(await evaluate(`document.querySelector('.publication-cover-edit,.publication-cover-picker')===null`),true)
-    assert.ok(await evaluate(`document.querySelector('.mural-publication .book-cover').getBoundingClientRect().height<=180.5`))
-    await evaluate(`document.querySelector('.mural-publication .activity-options summary').click();document.querySelector('.mural-publication .activity-options button').click()`)
+    assert.ok(await evaluate(`document.querySelector('.mural-publication .book-cover').getBoundingClientRect().height<=${index===0?230:180.5}`))
+    if(index===0)await evaluate(`document.querySelector('.mural-publication .event-edit-button').click()`)
+    else await evaluate(`document.querySelector('.mural-publication .activity-options summary').click();document.querySelector('.mural-publication .activity-options button').click()`)
     await until(`Boolean(document.querySelector('.content-management-dialog .composer'))`)
     if(index===0)for(const theme of ['lavanda','otono','invierno','bosque','rosa-antiguo','dark','dark-rosado','dark-blood','dark-dorado']) {
       await evaluate(`import('/src/theme/themes.js').then(module=>module.applyTheme('${theme}'))`)
@@ -373,10 +374,18 @@ try {
     assert.equal(await evaluate(`document.querySelectorAll('.mural-publication').length`),3,'Editing never adds a publication')
     assert.equal(await evaluate(`document.querySelector('.mural-publication .post-actions button span').textContent`),'2')
     assert.ok((await evaluate('window.muralTest.requests')).some(r=>r.path===`/api/posts/${category}-0`&&r.method==='PUT'))
-    await evaluate(`document.querySelector('.mural-publication .activity-options summary').click();document.querySelectorAll('.mural-publication .activity-options button')[1].click()`)
-    await until(`Boolean(document.querySelector('.content-management-dialog[open]'))`)
-    assert.ok((await evaluate(`document.querySelector('.content-management-body').textContent`)).includes(`Publicación editada ${category}`))
-    await evaluate(`document.querySelector('.content-management-body footer button:last-child').click()`)
+    if(index===0) {
+      await evaluate(`document.querySelector('.mural-publication .event-edit-button').click()`)
+      await until(`Boolean(document.querySelector('.event-delete-zone'))`)
+      await evaluate(`document.querySelector('.event-delete-zone>button').click()`)
+      await until(`Boolean(document.querySelector('.event-delete-zone [role=alertdialog]'))`)
+      await evaluate(`document.querySelector('.event-delete-zone [role=alertdialog] button:last-child').click()`)
+    } else {
+      await evaluate(`document.querySelector('.mural-publication .activity-options summary').click();document.querySelectorAll('.mural-publication .activity-options button')[1].click()`)
+      await until(`Boolean(document.querySelector('.content-management-dialog[open]'))`)
+      assert.ok((await evaluate(`document.querySelector('.content-management-body').textContent`)).includes(`Publicación editada ${category}`))
+      await evaluate(`document.querySelector('.content-management-body footer button:last-child').click()`)
+    }
     await until(`!document.querySelector('.content-management-dialog')&&document.querySelectorAll('.mural-publication').length===2`)
   }
   await navigate(3)

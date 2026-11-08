@@ -12,6 +12,7 @@ import NotificationBellIcon from './NotificationBellIcon'
 import HeaderGreeting from './HeaderGreeting'
 import MagicalBackground from './MagicalBackground'
 import './LayoutNavigation.css'
+import { EventAttendanceProvider } from '../context/EventAttendanceContext'
 
 
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
@@ -135,7 +136,7 @@ export default function Layout() {
         </details>}
       <button ref={toggleRef} className="mobile-nav-toggle" type="button" aria-label={menuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'} aria-expanded={menuOpen} aria-controls="sidebar-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
       </nav></header>
-      <main id="main-content" className="social-main" tabIndex={-1}><Outlet /></main>
+      <main id="main-content" className="social-main" tabIndex={-1}><EventAttendanceProvider key={user.id}><Outlet /></EventAttendanceProvider></main>
     </div>
   </div>
 }

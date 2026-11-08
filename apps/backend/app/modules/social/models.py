@@ -39,6 +39,45 @@ class Post(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class PublicationEvent(Base):
+    __tablename__ = 'eventos_publicacion'
+    __table_args__ = (CheckConstraint('ends_at IS NULL OR ends_at >= starts_at',name='ck_evento_fin'),{'schema':'app'})
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.publicaciones.id',ondelete='RESTRICT'),primary_key=True)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),index=True)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    timezone: Mapped[str] = mapped_column(String(64))
+    location: Mapped[str] = mapped_column(String(300))
+    organizer: Mapped[str] = mapped_column(String(200))
+    category: Mapped[str] = mapped_column(String(40))
+    schedule_revision: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
+class EventAttendance(Base):
+    __tablename__ = 'asistencias_evento'
+    __table_args__ = {'schema':'app'}
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.eventos_publicacion.post_id',ondelete='RESTRICT'),primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id',ondelete='RESTRICT'),primary_key=True)
+    attending: Mapped[bool] = mapped_column(default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
+class EventScheduleUpdate(Base):
+    __tablename__ = 'actualizaciones_horario_evento'
+    __table_args__ = (UniqueConstraint('post_id','revision',name='uq_actualizacion_horario_revision'),{'schema':'app'})
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True,default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.eventos_publicacion.post_id',ondelete='RESTRICT'))
+    changed_by: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id',ondelete='RESTRICT'))
+    revision: Mapped[int] = mapped_column(Integer)
+    previous_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    previous_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    previous_timezone: Mapped[str] = mapped_column(String(64))
+    new_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    new_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    new_timezone: Mapped[str] = mapped_column(String(64))
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),server_default=func.now())
+
+
 class PostBookCover(Base):
     __tablename__ = "portadas_publicacion"
     __table_args__ = {"schema": "app"}

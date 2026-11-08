@@ -1,6 +1,6 @@
 import RatingStar from './RatingStar'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, BookOpen, Eye, Heart, MessageCircle, Send, UserRoundCheck, UserRoundPlus } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Eye, Heart, MessageCircle, Pencil, Send, UserRoundCheck, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiRequest, apiUrl } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
@@ -11,6 +11,8 @@ import FormattedText from './FormattedText'
 import PostGallery from './PostGallery'
 import ActivityOptionsMenu from './ActivityOptionsMenu'
 import CommentEntry from './CommentEntry'
+import { EventDate,EventAttendanceButton,EventAttendanceCount,EventInformation } from './EventPresentation'
+import { useMuralManagement } from '../context/MuralManagementContext'
 import '../pages/HomePage.css'
 
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Admin' }
@@ -28,6 +30,7 @@ function ProgressBookCover({ book }) {
 export default function FeedCard({ post, interactions, initialCommentsOpen = false, socialDialog = false, widePublication = false }) {
   const { getBook } = useLibrary()
   const { user } = useAuth()
+  const management=useMuralManagement()
   const [customCover,setCustomCover] = useState(post.customBookCoverUrl || null)
   useEffect(()=>setCustomCover(post.customBookCoverUrl || null),[post.customBookCoverUrl])
   const libraryBook = post.bookId ? getBook(post.bookId) : null
@@ -186,6 +189,7 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
   }
 
   const isProgress = post.type === 'progress'
+  const isEventPublication=post.feedItemType==='publication'&&(post.publicationType==='event'||post.source==='event')
   const progressText = isProgress && book?.title
     ? (post.text || '').replaceAll(`de "${book.title}"`, 'de su lectura').replaceAll(`"${book.title}"`, 'este libro')
     : post.text
@@ -197,11 +201,11 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
     commentInput.current?.focus({ preventScroll: true })
   }
   const openImage = widePublication ? () => interactions.view('open') : undefined
-  return <article className={`feed-card${isProgress ? ' feed-card-progress' : ''}${socialDialog ? ' feed-card-social-dialog' : ''}${widePublication ? ' mural-publication' : ''}`}>
-    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.avatarUrl ? <img src={post.avatarUrl} alt="" /> : post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? ({ start: 'Nueva lectura', finish: 'Terminado' }[post.readingEvent] || 'Avance') : 'Publicación')}</span>{(socialDialog || widePublication) && followControl && <span className="mural-user-follow">{followControl}</span>}<ActivityOptionsMenu item={post.activity} /></header>
+  return <article className={`feed-card${isProgress ? ' feed-card-progress' : ''}${socialDialog ? ' feed-card-social-dialog' : ''}${widePublication ? ' mural-publication' : ''}${widePublication&&isEventPublication ? ' mural-publication-event' : ''}`}>
+    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.avatarUrl ? <img src={post.avatarUrl} alt="" /> : post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div>{isEventPublication&&(socialDialog||widePublication)?<><EventAttendanceButton details={post.eventDetails} showCount={false} />{post.activity?.can_manage&&management&&<button type="button" className="event-edit-button" aria-label="Editar evento" title="Editar evento" onClick={()=>management.edit(post.activity)}><Pencil size={20} /></button>}</>:<><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? ({ start: 'Nueva lectura', finish: 'Terminado' }[post.readingEvent] || 'Avance') : 'Publicación')}</span>{(socialDialog || widePublication) && followControl && <span className="mural-user-follow">{followControl}</span>}<ActivityOptionsMenu item={post.activity} /></>}</header>
     <div className={widePublication ? `mural-publication-editorial${book ? ' has-related-book' : ''}` : 'feed-content-pass-through'}>
     <div className={widePublication ? 'mural-publication-content' : 'feed-content-pass-through'}>
-    {isProgress || socialDialog ? <div className="post-reading-progress">
+    {widePublication&&isEventPublication?<div className="mural-event-content"><EventDate details={post.eventDetails} /><div className="mural-event-message"><h2>{post.title}</h2><FormattedText className="post-text" text={post.text} /><EventInformation details={post.eventDetails} /></div><PostGallery images={post.images.map(imageUrl)} alt={`Fotografía del evento ${post.title}`} onOpen={openImage} editorial /></div>:isProgress || socialDialog ? <div className="post-reading-progress">
       {book && <BookContainer className="post-progress-cover" {...(book.id ? { to: '/books/' + book.id, 'aria-label': `Ver ficha de ${book.title}` } : {})}><ProgressBookCover key={book.image || book.id} book={book} /></BookContainer>}
       <div className="post-progress-details">
         {book && <><h3 className="post-progress-title">{book.title}</h3>{book.author && <p className="post-progress-author">{book.author}</p>}</>}
@@ -227,7 +231,7 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
     </div>
     {(interactions?.capabilities.can_like || post.feedItemType !== 'reading_event') && <div className="post-actions">
       <button type="button" aria-pressed={liked} disabled={interactionBusy || interactions?.likeBusy} onClick={event => { event.stopPropagation(); toggleLike() }}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> Me gusta <span>{likeCount}</span></button>
-      {socialDialog || widePublication ? <><button type="button" onClick={event => { event.stopPropagation(); if (widePublication) toggleComments(); else focusComment() }} aria-expanded={widePublication ? commentsOpen : undefined} aria-controls={`comments-${post.id}`} aria-label={widePublication ? 'Abrir comentarios' : 'Ir a los comentarios'}><MessageCircle size={17} aria-hidden="true" /> Comentarios <span>{interactions?.comment_count ?? '—'}</span></button>{post.feedItemType !== 'reading_event' && <span className="mural-dialog-views" aria-label={`${interactions?.view_count ?? '—'} visualizaciones`}><Eye size={17} aria-hidden="true" /><span>{interactions?.view_count ?? '—'}</span></span>}</> : followControl}
+      {socialDialog || widePublication ? <><button type="button" onClick={event => { event.stopPropagation(); if (widePublication) toggleComments(); else focusComment() }} aria-expanded={widePublication ? commentsOpen : undefined} aria-controls={`comments-${post.id}`} aria-label={widePublication ? 'Abrir comentarios' : 'Ir a los comentarios'}><MessageCircle size={17} aria-hidden="true" /> Comentarios <span>{interactions?.comment_count ?? '—'}</span></button>{isEventPublication&&<EventAttendanceCount details={post.eventDetails} />}{post.feedItemType !== 'reading_event' && <span className="mural-dialog-views" aria-label={`${interactions?.view_count ?? '—'} visualizaciones`}><Eye size={17} aria-hidden="true" /><span>{interactions?.view_count ?? '—'}</span></span>}</> : followControl}
       {(interactionError || interactions?.error) && <p className="comment-error" role="alert">{interactionError || interactions.error}</p>}
     </div>}
     {(!widePublication || commentsOpen) && <section className="post-comments" aria-label={`Comentarios de ${post.title || post.author}`}>
