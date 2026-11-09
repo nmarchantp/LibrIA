@@ -3,7 +3,7 @@ from sqlalchemy import select, func
 from datetime import datetime, timezone
 from sqlalchemy.dialects.postgresql import insert
 from app.modules.social.models import ActivityView, ReadingEventLike, PostLike, ReviewLike, PostComment
-from app.modules.social.activity_access import resolve_activity
+from app.modules.social.activity_access import resolve_activity, visible_comments
 from app.modules.users.identity_models import Profile
 
 DESTINATIONS = {
@@ -26,7 +26,7 @@ def batch_counts(db, groups, viewer_id):
         likes = dict(db.execute(select(target, func.count()).where(target.in_(identifiers)).group_by(target)).all())
         liked = set(db.scalars(select(target).where(target.in_(identifiers), model.user_id == viewer_id)))
         comment_target, view_target = getattr(PostComment, field), getattr(ActivityView, field)
-        comments = dict(db.execute(select(comment_target, func.count()).where(comment_target.in_(identifiers)).group_by(comment_target)).all())
+        comments = dict(db.execute(select(comment_target, func.count()).where(comment_target.in_(identifiers),visible_comments()).group_by(comment_target)).all())
         views = dict(db.execute(select(view_target, func.count()).where(view_target.in_(identifiers)).group_by(view_target)).all())
         result.update({(kind, identifier): {"like_count": likes.get(identifier, 0), "liked_by_me": identifier in liked,
             "comment_count": comments.get(identifier, 0), "view_count": views.get(identifier, 0)} for identifier in identifiers})
@@ -64,5 +64,11 @@ def add_comment(db, kind, identifier, viewer_id, profile_id, body):
                           **{DESTINATIONS[kind][1]: identifier})
     db.add(comment)
     db.flush()
-    record_view(db, kind, identifier, viewer_id, owners)
+    from app.modules.social.moderation_integration import analyze_fields, creation_revision
+    from app.modules.users.models import User
+    if analyze_fields({'body':body}).flagged:
+        revision = creation_revision(db,db.get(User,viewer_id),'comment',comment,{'body':body})
+        comment._pending_revision = revision
+    else:
+        record_view(db, kind, identifier, viewer_id, owners)
     return comment, stats(db, kind, identifier, viewer_id, owners)

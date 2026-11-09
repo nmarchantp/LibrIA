@@ -1,0 +1,8 @@
+{
+  "status": "pending",
+  "authenticated_browser_verified": false,
+  "connected_browser_port": 9225,
+  "observed_path": "/login",
+  "real_credentials_used": false,
+  "permissions_modified": false
+}

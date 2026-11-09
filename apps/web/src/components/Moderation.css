@@ -1,0 +1,42 @@
+.moderation-section { min-width: 0; }
+.moderation-section summary { display: flex; align-items: center; gap: .65rem; cursor: pointer; }
+.moderation-section summary h2 { margin: 0; }
+.moderation-counter { margin-left: auto; font-size: .8rem; color: var(--accent-text); }
+.moderation-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+.moderation-tabs button, .moderation-action-picker button, .moderation-pagination button { border: 1px solid var(--line); border-radius: 999px; padding: .55rem .9rem; background: var(--surface); color: var(--ink); min-height: 40px; cursor: pointer; }
+.moderation-tabs button[aria-pressed="true"], .moderation-action-picker button[aria-pressed="true"] { border-color: var(--accent-text); color: var(--accent-text); }
+.moderation-list article { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--line); }
+.moderation-list article > div { min-width: 0; }
+.moderation-list h3 { margin: .35rem 0; overflow-wrap: anywhere; }
+.moderation-list p { margin: .4rem 0; }
+.moderation-list time, .moderation-version dt { color: var(--muted); font-size: .85rem; }
+.moderation-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.moderation-pagination { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: 1rem; }
+.reader-profile-modal.moderation-review-dialog { max-width: 900px; width: min(900px, calc(100vw - 24px)); }
+.moderation-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.moderation-version { min-width: 0; overflow-wrap: anywhere; }
+.moderation-version h3 { font-size: 1rem; margin: .5rem 0; }
+.moderation-version h4 { margin: .5rem 0; }
+.moderation-full-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.moderation-version dl { font-size: .85rem; }
+.moderation-version dl > div { margin: .35rem 0; }
+.moderation-version dd { margin: 0; }
+.moderation-images { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0; }
+.moderation-images img { width: 110px; height: 150px; object-fit: contain; border-radius: .5rem; }
+.moderation-images span { font-size: .8rem; }
+.moderation-action-picker { border: 0; padding: .75rem 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.moderation-report-button { display: inline-flex; align-items: center; gap: .35rem; border: 0; background: transparent; color: var(--muted); font-size: .8rem; padding: .35rem; min-height: 36px; cursor: pointer; }
+.moderation-report-status { display: block; font-size: .8rem; color: var(--muted); }
+.moderation-notice { position: fixed; bottom: 1rem; right: 1rem; z-index: 120; width: min(400px, calc(100vw - 2rem)); padding: 1rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 1rem; }
+.moderation-notice button { float: right; background: transparent; border: 0; color: inherit; min-width: 32px; min-height: 32px; }
+.private-moderation-list { margin: 1.25rem 0; }
+.private-moderation-list article { padding: .8rem 0; border-bottom: 1px solid var(--line); }
+.private-moderation-list h3 { margin: .4rem 0; overflow-wrap: anywhere; }
+.private-moderation-list p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.moderation-section button:focus-visible, .moderation-report-button:focus-visible, .private-moderation-list button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+@media(max-width: 600px) {
+  .moderation-comparison { grid-template-columns: minmax(0, 1fr); }
+  .moderation-list article { align-items: flex-start; flex-direction: column; gap: .5rem; }
+  .moderation-section summary { flex-wrap: wrap; }
+  .moderation-counter { margin-left: 0; }
+}

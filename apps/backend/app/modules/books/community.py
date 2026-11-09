@@ -17,12 +17,13 @@ def public_rating(db, work_ids):
     # Rank before filtering visibility so an older public review cannot reveal a
     # rating after the reader's latest review has become private.
     reviews = select(
-        Review.rating, Review.status,
+        Review.rating, Review.status, Review.moderation_status, Review.moderation_hidden,
         func.row_number().over(partition_by=Review.created_by_user_id,
             order_by=(Review.updated_at.desc(), Review.id.desc())).label("position"),
     ).where(Review.work_id.in_(work_ids)).subquery()
     return db.execute(select(func.avg(reviews.c.rating), func.count(reviews.c.rating)).where(
         reviews.c.position == 1, reviews.c.status == "published",
+        reviews.c.moderation_status == 'approved', reviews.c.moderation_hidden.is_(False),
         reviews.c.rating.between(0.25, 5),
     )).one()
 

@@ -7,11 +7,14 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+from app.modules.social.moderation_models import ModeratedContentMixin, STATUS_CHECK
 
 
-class Post(Base):
+class Post(ModeratedContentMixin, Base):
     __tablename__ = "publicaciones"
     __table_args__ = (
+        CheckConstraint(STATUS_CHECK, name='ck_publicaciones_moderation_status'),
+        CheckConstraint('moderation_version > 0', name='ck_publicaciones_moderation_version'),
         Index("ix_publicaciones_created_at", "created_at"),
         Index("ix_publicaciones_book_ref", "book_ref"),
         {"schema": "app"},
@@ -121,9 +124,11 @@ class ProfileFollow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
-class PostComment(Base):
+class PostComment(ModeratedContentMixin, Base):
     __tablename__ = "comentarios_publicacion"
     __table_args__ = (
+        CheckConstraint(STATUS_CHECK, name='ck_comentarios_publicacion_moderation_status'),
+        CheckConstraint('moderation_version > 0', name='ck_comentarios_publicacion_moderation_version'),
         CheckConstraint("length(trim(body)) >= 1 AND (reading_event_id IS NOT NULL OR length(trim(body)) <= 1000)", name="ck_comentarios_publicacion_body"),
         CheckConstraint("num_nonnulls(post_id, reading_event_id, review_id) = 1", name="ck_comentarios_destino"),
         Index("ix_comentarios_publicacion_post_created", "post_id", "created_at"),
@@ -139,11 +144,14 @@ class PostComment(Base):
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
-class Review(Base):
+class Review(ModeratedContentMixin, Base):
     __tablename__ = "resenas"
     __table_args__ = (
+        CheckConstraint(STATUS_CHECK, name='ck_resenas_moderation_status'),
+        CheckConstraint('moderation_version > 0', name='ck_resenas_moderation_version'),
         UniqueConstraint("author_profile_id", "work_id", name="uq_resenas_perfil_obra"),
         ForeignKeyConstraint(["edition_id", "work_id"], ["app.ediciones.id", "app.ediciones.work_id"], name="fk_resenas_edicion_obra"),
         {"schema": "app"},

@@ -147,7 +147,8 @@ def hydrate(db, records, viewer):
                 book_title=work.title, rating=record.rating, progress_percent=None, reading_event=None,
                 dimension_ratings=record.dimension_ratings or {}, is_spoiler=record.is_spoiler,
                 status=record.status, published_at=record.published_at, updated_at=record.updated_at,
-                revision_number=record.revision_number, created_at=record.published_at or record.created_at)
+                revision_number=record.revision_number, created_at=record.published_at or record.created_at,
+                moderation_status=record.moderation_status,moderation_version=record.moderation_version)
         else:
             item = as_response(record, name, role, images.get(record.id))
         kind = item.feed_item_type

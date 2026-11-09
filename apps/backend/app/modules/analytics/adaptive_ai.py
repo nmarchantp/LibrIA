@@ -116,9 +116,9 @@ def has_rating(db, owner, work):
     from app.modules.books.canonical import enabled
     if enabled():
         from app.modules.books.consistency import current_reviews
-        return any(r.rating is not None and r.status != "hidden" for r in current_reviews(db, {work}, reader_id=owner))
+        return any(r.rating is not None and r.status != "hidden" and r.moderation_status == "approved" and not r.moderation_hidden for r in current_reviews(db, {work}, reader_id=owner))
     return bool(db.execute(text("""SELECT 1 FROM app.resenas r JOIN app.perfiles p ON p.id=r.author_profile_id
-        WHERE p.kind='personal' AND p.owner_user_id=:owner AND r.created_by_user_id=:owner
+        WHERE r.moderation_status='approved' AND NOT r.moderation_hidden AND p.kind='personal' AND p.owner_user_id=:owner AND r.created_by_user_id=:owner
         AND r.work_id=:work AND r.rating IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM app.procedencia_demo d WHERE d.entity_type='review' AND d.entity_id=r.id)
         LIMIT 1"""), {"owner": owner, "work": work}).first())

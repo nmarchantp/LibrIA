@@ -11,7 +11,7 @@ export default function ReviewEditForm({ item,onSaved,onBusyChange }) {
   const sending=useRef(false)
   async function save(event) {
     event.preventDefault();if(sending.current)return;sending.current=true;setBusy(true);setError('')
-    try {const result=await apiRequest(`/reviews/${item.id}`,{method:'PUT',headers:{Authorization:`Bearer ${localStorage.getItem('libria_token')}`},body:JSON.stringify({body:body.trim(),rating,dimension_ratings:Object.fromEntries(Object.entries(dimensions).filter(([,v])=>v!=null)),is_spoiler:spoiler,edition_id:item.edition_id||null,status:'published'})});onSaved(result)}
+    try {const result=await apiRequest(`/reviews/${item.id}`,{method:'PUT',headers:{Authorization:`Bearer ${localStorage.getItem('libria_token')}`,...(item.moderation_version?{'If-Match':String(item.moderation_version)}:{})},body:JSON.stringify({body:body.trim(),rating,dimension_ratings:Object.fromEntries(Object.entries(dimensions).filter(([,v])=>v!=null)),is_spoiler:spoiler,edition_id:item.edition_id||null,status:'published'})});onSaved(result)}
     catch(cause){setError(cause.message||'No se pudo guardar la reseña.')}
     finally{sending.current=false;setBusy(false)}
   }

@@ -1,0 +1,18 @@
+{
+  "version": "mvp-es-1",
+  "max_text_length": 20000,
+  "rules": [
+    {"id":"racism-group-degradation","category":"racism_xenophobia","reason":"Posible deshumanización dirigida a un grupo por origen o raza.","confidence":0.9,"pattern":"\\b(?:los\\s+)?(?:negros|inmigrantes|migrantes|extranjeros)\\s+(?:son|sois)\\s+(?:una?\\s+)?(?:basura|plaga|animales|inferiores)\\b"},
+    {"id":"xenophobia-expulsion","category":"racism_xenophobia","reason":"Posible hostigamiento por nacionalidad u origen.","confidence":0.8,"pattern":"\\b(?:larguense|fuera)\\s+(?:los\\s+)?(?:inmigrantes|extranjeros|migrantes)\\s+(?:de\\s+(?:mi|este|nuestro)\\s+pais)\\b"},
+    {"id":"lgbt-group-degradation","category":"homophobia_transphobia","reason":"Posible ataque discriminatorio hacia personas LGBT.","confidence":0.9,"pattern":"\\b(?:los|las)\\s+(?:gays|lesbianas|trans|transexuales|homosexuales)\\s+(?:son|sois)\\s+(?:una?\\s+)?(?:basura|enfermos|enfermas|inferiores|plaga)\\b"},
+    {"id":"sexist-group-degradation","category":"misogyny_sexism","reason":"Posible degradación generalizada por género.","confidence":0.9,"pattern":"\\b(?:las\\s+mujeres|los\\s+hombres)\\s+(?:son|sois)\\s+(?:todas?\\s+|todos?\\s+)?(?:inferiores|basura|inutiles)\\b"},
+    {"id":"hate-violence-incitement","category":"hate_speech","reason":"Posible incitación a la violencia contra un grupo.","confidence":0.95,"pattern":"\\b(?:maten|exterminen|hay\\s+que\\s+eliminar)\\s+(?:a\\s+)?(?:todos\\s+|todas\\s+)?(?:los|las)\\s+(?:inmigrantes|negros|gays|lesbianas|trans|mujeres|judios|musulmanes)\\b"},
+    {"id":"direct-personal-insult","category":"harassment_insults","reason":"Posible insulto dirigido a otra persona.","confidence":0.85,"pattern":"\\b(?:eres|sos|sois)\\s+(?:un\\s+|una\\s+)?(?:idiota|imbecil|estupido|estupida|basura|subnormal|mierda)\\b"},
+    {"id":"direct-threat","category":"threats","reason":"Posible amenaza directa de violencia.","confidence":0.95,"pattern":"\\b(?:te\\s+(?:voy|vamos)\\s+a\\s+(?:matar|violar|golpear)|te\\s+(?:matare|violare)|voy\\s+a\\s+(?:matarte|violarte)|i\\s+will\\s+(?:kill|rape)\\s+you)\\b"},
+    {"id":"sexual-pressure","category":"sexual_harassment","reason":"Posible presión sexual no solicitada.","confidence":0.8,"pattern":"\\b(?:mandame|enviame)\\s+(?:tus\\s+)?(?:nudes|fotos\\s+(?:desnuda|desnudo))\\b"},
+    {"id":"sexual-coercion","category":"sexual_harassment","reason":"Posible coacción o exigencia sexual.","confidence":0.95,"pattern":"\\b(?:si\\s+no\\s+me\\s+mandas\\s+(?:nudes|fotos)|te\\s+obligare\\s+a\\s+(?:desnudarte|tener\\s+sexo))\\b"},
+    {"id":"spam-repeated-character","category":"spam","reason":"Repetición excesiva de caracteres.","confidence":0.7,"pattern":"([a-z])\\1{24,}"},
+    {"id":"spam-repeated-word","category":"spam","reason":"Repetición excesiva del mismo término.","confidence":0.75,"pattern":"\\b([a-z]{2,})\\b(?:\\s+\\1\\b){9,}"},
+    {"id":"spam-link-volume","category":"spam","reason":"Cantidad excesiva de enlaces en un solo mensaje.","confidence":0.7,"pattern":"(?:https?://\\S+\\s*){5,}"}
+  ]
+}

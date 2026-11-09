@@ -43,7 +43,7 @@ def current_reviews(db, work_ids=None, reader_id=None, public=False):
     rows = db.scalars(query).all()
     rows = current_records(rows, work=lambda r: snapshot.root(r.work_id), reader=lambda r: r.author_profile_id,
         timestamp=lambda r: r.updated_at, identifier=lambda r: r.id,preferred=review_preferences(db,snapshot))
-    return sorted((r for r in rows if not public or r.status == "published"),
+    return sorted((r for r in rows if not public or (r.status == "published" and r.moderation_status == 'approved' and not r.moderation_hidden)),
                   key=lambda r: (r.published_at or r.created_at, str(r.id)), reverse=True)
 
 

@@ -60,7 +60,7 @@ function WallComposer({ type, book, onSaved }) {
     event.preventDefault()
     setBusy('Publicando en tu muro…'); setError(''); setMessage('')
     try {
-      await apiRequest('/posts', {
+      const saved = await apiRequest('/posts', {
         method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },
         body: JSON.stringify({ source: 'community', kind: 'community', publication_type: type,
           title: `${isNote ? 'Nota' : 'Teoría'} · ${book.title}`, body: body.trim(),
@@ -68,7 +68,7 @@ function WallComposer({ type, book, onSaved }) {
       })
       setBody('')
       onSaved?.()
-      setMessage(`${isNote ? 'Nota' : 'Teoría'} publicada en tu muro.`)
+      setMessage(saved.moderation_status === 'pending_review' ? saved.moderation_message : `${isNote ? 'Nota' : 'Teoría'} publicada en tu muro.`)
     } catch { setError('No se pudo publicar. Inténtalo nuevamente.') }
     finally { setBusy(false) }
   }
@@ -209,7 +209,7 @@ export default function LibraryBookPage() {
       })
       setExistingReview(saved)
       setRatingBaseline(ratingSnapshot(ratings, comment, reviewVisibility, isSpoiler))
-      setMessage(reviewVisibility === 'public' ? 'Tu valoración quedó visible para la comunidad.' : 'Tu valoración quedó guardada de forma privada.')
+      setMessage(saved.moderation_status === 'pending_review' ? saved.moderation_message : reviewVisibility === 'public' ? 'Tu valoración quedó visible para la comunidad.' : 'Tu valoración quedó guardada de forma privada.')
     } catch { setError('No se pudo guardar la valoración.') }
     finally { setBusy(false) }
   }

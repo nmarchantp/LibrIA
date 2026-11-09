@@ -11,7 +11,7 @@ const send=(method,params={})=>new Promise(resolve=>{pending.set(++sequence,reso
 async function evaluate(expression){const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.error||result.result?.exceptionDetails)throw Error(JSON.stringify(result));return result.result.result.value}
 async function until(expression){for(let i=0;i<160;i++){if(await evaluate(expression))return;await new Promise(resolve=>setTimeout(resolve,50))}throw Error(`Timed out: ${expression}`)}
 async function select(value){
-  await evaluate(`(()=>{const tabs=[...document.querySelectorAll('[aria-label="Secciones de mi perfil"] button')];tabs[${JSON.stringify({about:0,library:1,analysis:2,activity:3,events:4}[value])}].click()})()`)
+  await evaluate(`(()=>{const tabs=[...document.querySelectorAll('[aria-label="Secciones de mi perfil"] button')];tabs[${JSON.stringify({about:0,library:1,activity:2,events:3,analysis:4}[value])}].click()})()`)
   await until(`document.querySelector('[data-profile-panel="${value}"]')?.hidden===false`)
   await until(`![...document.querySelectorAll('[data-profile-panel="${value}"] [role="status"]')].some(node=>/Cargando|Consultando/.test(node.textContent))`)
   assert.equal(await evaluate(`new URL(location.href).searchParams.get('tab')`),value)

@@ -198,6 +198,14 @@ class AnalyticsPermissionTest(unittest.TestCase):
     def test_monitor_detects_a_gap_even_if_latest_day_succeeded(self):
         self.db.add(AccountPermission(user_id=self.user.id, permission="admin"))
         self.db.flush()
+        # Do not assume the developer's database contains this historical day.
+        if not self.db.execute(text("SELECT 1 FROM analytics.ejecuciones_etl WHERE business_date='2026-09-22'")).first():
+            from app.modules.analytics.models import ETLRun
+            start,cutoff=day_bounds(date(2026,9,22))
+            self.db.add(ETLRun(id=uuid.uuid4(),business_date=date(2026,9,22),status='failed',
+                started_at=datetime.now(timezone.utc),source_cutoff_at=cutoff,
+                period_start=start,transform_version='test-gap'))
+            self.db.flush()
         self.db.execute(text("UPDATE analytics.ejecuciones_etl SET status='failed' WHERE business_date='2026-09-22'"))
         result = self.client.get("/api/analytics/admin/etl").json()
         self.assertFalse(result["up_to_date"])

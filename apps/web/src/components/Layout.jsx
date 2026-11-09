@@ -1,3 +1,4 @@
+import ModerationNotice from './ModerationNotice'
 import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
@@ -136,7 +137,7 @@ export default function Layout() {
         </details>}
       <button ref={toggleRef} className="mobile-nav-toggle" type="button" aria-label={menuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'} aria-expanded={menuOpen} aria-controls="sidebar-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
       </nav></header>
-      <main id="main-content" className="social-main" tabIndex={-1}><EventAttendanceProvider key={user.id}><Outlet /></EventAttendanceProvider></main>
+      <main id="main-content" className="social-main" tabIndex={-1}><EventAttendanceProvider key={user.id}><Outlet /><ModerationNotice key={user.id} /></EventAttendanceProvider></main>
     </div>
   </div>
 }

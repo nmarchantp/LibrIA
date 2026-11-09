@@ -1,3 +1,4 @@
+import ContentReportButton from './ContentReportButton'
 import RatingStar from './RatingStar'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, BookOpen, Eye, Heart, MessageCircle, Pencil, Send, UserRoundCheck, UserRoundPlus } from 'lucide-react'
@@ -139,7 +140,8 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
       const comment = interactions ? await interactions.addComment(body) : await apiRequest(`/posts/${post.id}/comments`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify({ body }),
       })
-      setComments(current => [...current, comment])
+      if(comment.moderation_status==='pending_review')revealNewComment.current=false
+      else setComments(current => [...current, comment])
       setCommentText('')
     } catch (error) {
       revealNewComment.current = false
@@ -203,7 +205,7 @@ export default function FeedCard({ post, interactions, initialCommentsOpen = fal
   }
   const openImage = widePublication ? () => interactions.view('open') : undefined
   return <article className={`feed-card${isProgress ? ' feed-card-progress' : ''}${socialDialog ? ' feed-card-social-dialog' : ''}${widePublication ? ' mural-publication' : ''}${widePublication&&isEventPublication ? ' mural-publication-event' : ''}`}>
-    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.avatarUrl ? <img src={post.avatarUrl} alt="" /> : post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div>{isEventPublication&&(socialDialog||widePublication)?<><EventAttendanceButton details={post.eventDetails} showCount={false} />{post.activity?.can_manage&&management&&<button type="button" className="event-edit-button" aria-label="Editar evento" title="Editar evento" onClick={()=>management.edit(post.activity)}><Pencil size={20} /></button>}</>:<><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? ({ start: 'Nueva lectura', finish: 'Terminado' }[post.readingEvent] || 'Avance') : 'Publicación')}</span>{(socialDialog || widePublication) && followControl && <span className="mural-user-follow">{followControl}</span>}<ActivityOptionsMenu item={post.activity} /></>}</header>
+    <header className="post-author"><span className="person-avatar" style={{ background: post.color }}>{post.avatarUrl ? <img src={post.avatarUrl} alt="" /> : post.initials}</span><div className="post-person"><div className="post-person-name"><strong>{post.author}</strong><span className={`user-role-badge role-${post.authorRole}`}>{roleLabels[post.authorRole] || 'Lector'}</span></div><small>{post.time}</small></div>{isEventPublication&&(socialDialog||widePublication)?<><EventAttendanceButton details={post.eventDetails} showCount={false} /><ContentReportButton kind="publication" identifier={post.activity?.id || post.id} />{post.activity?.can_manage&&management&&<button type="button" className="event-edit-button" aria-label="Editar evento" title="Editar evento" onClick={()=>management.edit(post.activity)}><Pencil size={20} /></button>}</>:<><span className="post-kind">{publicationLabels[post.publicationType] || (post.source === 'event' ? 'Evento' : post.type === 'reviews' ? 'Reseña' : post.type === 'progress' ? ({ start: 'Nueva lectura', finish: 'Terminado' }[post.readingEvent] || 'Avance') : 'Publicación')}</span>{(socialDialog || widePublication) && followControl && <span className="mural-user-follow">{followControl}</span>}<ActivityOptionsMenu item={post.activity} /></>}</header>
     <div className={widePublication ? `mural-publication-editorial${book ? ' has-related-book' : ''}` : 'feed-content-pass-through'}>
     <div className={widePublication ? 'mural-publication-content' : 'feed-content-pass-through'}>
     {widePublication&&isEventPublication?<MuralEventContent key={`${post.id}:${post.text}`} post={post} onOpen={openImage} />:isProgress || socialDialog ? <div className="post-reading-progress">

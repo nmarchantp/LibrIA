@@ -22,5 +22,5 @@ export function useActivityInteractions(item) {
   const value = useSyncExternalStore(store.subscribe, () => store.get(item))
   useEffect(() => { store.seed(item) }, [store, item])
   return { ...value, toggleLike: () => store.toggleLike(item), view: action => store.view(item, action),
-    loadComments: signal => store.comments(item, signal), addComment: body => store.comment(item, body), updateComment:(id,body)=>store.updateComment(item,id,body),deleteComment:id=>store.deleteComment(item,id) }
+    loadComments: signal => store.comments(item, signal), addComment: body => store.comment(item, body), updateComment:(id,body,version)=>store.updateComment(item,id,body,version),deleteComment:id=>store.deleteComment(item,id) }
 }

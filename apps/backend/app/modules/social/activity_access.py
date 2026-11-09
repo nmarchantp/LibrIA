@@ -2,13 +2,13 @@
 from fastapi import HTTPException
 from sqlalchemy import and_, case, or_, select, func
 from sqlalchemy.orm import aliased
-from app.modules.social.models import Post, Review
+from app.modules.social.models import Post, Review, PostComment
 from app.modules.library.models import Reading, ReadingEvent
 from app.modules.users.identity_models import Profile
 
 
 def visible_posts():
-    return and_(Post.deleted_at.is_(None), Post.source.in_(("community", "event")),
+    return and_(Post.deleted_at.is_(None), Post.moderation_status == 'approved', Post.moderation_hidden.is_(False), Post.source.in_(("community", "event")),
                 or_(Post.author_role != "lector", Post.publication_type.in_(("note", "theory"))))
 
 
@@ -35,7 +35,11 @@ def public_reviews(db):
         ranked = query.with_only_columns(Review.id.label("id"), func.row_number().over(
             partition_by=(Review.author_profile_id, root), order_by=(Review.updated_at.desc(), Review.id.desc())).label("position")).subquery()
         query = select(Review).join(ranked, ranked.c.id == Review.id).where(ranked.c.position == 1)
-    return query.where(Review.status == "published")
+    return query.where(Review.status == "published", Review.moderation_status == 'approved', Review.moderation_hidden.is_(False))
+
+
+def visible_comments():
+    return and_(PostComment.moderation_status == 'approved', PostComment.moderation_hidden.is_(False), PostComment.deleted_at.is_(None))
 
 
 MODELS = {"publication": Post, "review": Review, "reading_event": ReadingEvent}

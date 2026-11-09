@@ -35,7 +35,7 @@ class ReadingChallengeTest(unittest.TestCase):
         data=self.client.get(self.path).json()
         self.assertIsNone(data['target']);self.assertEqual(data['year'],current_year())
         self.assertFalse(data['completed'])
-        self.assertEqual(self.db.scalar(select(func.count()).select_from(ReadingChallenge)),0)
+        self.assertEqual(self.db.scalar(select(func.count()).select_from(ReadingChallenge).where(ReadingChallenge.user_id==self.viewer.id)),0)
 
     def test_create_edit_persist_and_one_row(self):
         for target in [12,20,5]:
