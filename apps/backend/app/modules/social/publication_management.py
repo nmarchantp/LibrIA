@@ -1,6 +1,7 @@
 """In-place publication edits and non-destructive removal."""
 import json
 import uuid
+import hashlib
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -20,6 +21,8 @@ from app.modules.users.identity_models import Profile
 from app.modules.users.models import User
 from app.modules.social.schemas import EventDetailsInput
 from app.modules.social.event_service import validate_event_change,sync_event
+from app.modules.social.moderation_integration import analyze_fields,http_claim,finish_http,receipt,check_version,retire_pending
+from app.modules.social.moderation_service import prepare_edit, ProposedAttachment
 
 router=APIRouter(prefix='/posts',tags=['publication management'])
 DB=Annotated[Session,Depends(get_db)]
@@ -43,14 +46,40 @@ class PublicationEdit(BaseModel):
     event_details: EventDetailsInput | None=None
 
 
+def resolve_publication_work(db,post,data):
+    same_book=data.book_ref==post.book_ref and ('work_id' not in data.model_fields_set or data.work_id==post.work_id) and ('edition_id' not in data.model_fields_set or data.edition_id==post.edition_id)
+    if same_book:
+        work_id,edition_id=post.work_id,post.edition_id
+    else:
+        work_id,edition_id=data.work_id,data.edition_id
+        if data.book_ref:
+            try: internal=uuid.UUID(data.book_ref)
+            except ValueError:internal=None
+            if internal and db.get(Work,internal):
+                if work_id and work_id!=internal:raise HTTPException(422,'La obra enlazada no corresponde')
+                work_id=internal
+            else:
+                matches=list(db.scalars(select(Edition).join(CatalogSource,CatalogSource.edition_id==Edition.id).where(CatalogSource.external_id==data.book_ref)))
+                if len({e.work_id for e in matches})!=1:raise HTTPException(422,'Selecciona una obra inequívoca del catálogo')
+                if work_id and work_id!=matches[0].work_id:raise HTTPException(422,'La obra enlazada no corresponde')
+                work_id,edition_id=matches[0].work_id,edition_id or matches[0].id
+        if work_id and not db.get(Work,work_id):raise HTTPException(422,'Obra no encontrada')
+        if edition_id:
+            edition=db.get(Edition,edition_id)
+            if not edition or edition.work_id!=work_id:raise HTTPException(422,'La edición no corresponde a la obra')
+    return same_book,work_id,edition_id
+
+
 def full_item(db,user,post):
     from app.modules.social.feed_service import hydrate
     return hydrate(db,[post],user)[('publication',post.id)]
 
 
 @router.get('/{post_id}')
-def get_publication(post_id:uuid.UUID,db:DB,user:Viewer):
+def get_publication(post_id:uuid.UUID,db:DB,user:Viewer,response:Response):
     post,_=resolve_activity(db,'publication',post_id)
+    response.headers['Cache-Control']='no-store'
+    response.headers['ETag']=f'"{post.moderation_version}"'
     return full_item(db,user,post)
 
 
@@ -86,11 +115,8 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             raise HTTPException(403,'Tu perfil no puede publicar este tipo de contenido')
         if (data.publication_type=='event')!=(data.source=='event'):
             raise HTTPException(422,'El tipo no corresponde al contenido')
-        validate_event_change(db,post,data.publication_type,data.event_details,data.title)
         images=list(db.scalars(select(PostImage).where(PostImage.post_id==post.id)))
         selected={i.id for i in images} if data.existing_image_ids is None else set(data.existing_image_ids)
-        if not selected.issubset({i.id for i in images}):raise HTTPException(422,'Una imagen no pertenece a esta publicación')
-        if len(selected)+len(uploads)>MAX_POST_IMAGES:raise HTTPException(422,'Puedes conservar hasta 10 fotografías')
         new_images=[]
         total=sum(len(image.data) for image in images if image.id in selected)
         for upload in uploads:
@@ -101,36 +127,39 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             if not image_type:raise HTTPException(415,'Usa JPEG, PNG, GIF o WebP')
             total+=len(content);new_images.append((image_type,content))
         cover_data=await read_cover(cover_upload) if cover_upload is not None else None
+        proposed=data.model_dump(mode='json',exclude_unset=True)
+        claim=http_claim(db,user,request,f'update:publication:{post.id}',{'data':proposed,
+            'images':[(kind,hashlib.sha256(content).hexdigest()) for kind,content in new_images],
+            'cover':hashlib.sha256(cover_data[1]).hexdigest() if cover_data else None})
+        if claim is not None and claim.result is not None:return claim.result
+        check_version(request,post)
+        validate_event_change(db,post,data.publication_type,data.event_details,data.title)
+        if not selected.issubset({i.id for i in images}):raise HTTPException(422,'Una imagen no pertenece a esta publicación')
+        if len(selected)+len(new_images)>MAX_POST_IMAGES:raise HTTPException(422,'Puedes conservar hasta 10 fotografías')
         existing_cover=db.get(PostBookCover,post.id)
         total+=len(cover_data[1]) if cover_data else len(existing_cover.data) if existing_cover and data.cover_mode=='keep' else 0
         if total>MAX_IMAGES_TOTAL_BYTES:raise HTTPException(413,'Las imágenes y la portada no pueden superar 25 MB')
-        same_book=data.book_ref==post.book_ref and ('work_id' not in data.model_fields_set or data.work_id==post.work_id) and ('edition_id' not in data.model_fields_set or data.edition_id==post.edition_id)
-        if same_book:
-            work_id,edition_id=post.work_id,post.edition_id
-        else:
-            work_id,edition_id=data.work_id,data.edition_id
-            if data.book_ref:
-                try: internal=uuid.UUID(data.book_ref)
-                except ValueError:internal=None
-                if internal and db.get(Work,internal):
-                    if work_id and work_id!=internal:raise HTTPException(422,'La obra enlazada no corresponde')
-                    work_id=internal
-                else:
-                    matches=list(db.scalars(select(Edition).join(CatalogSource,CatalogSource.edition_id==Edition.id).where(CatalogSource.external_id==data.book_ref)))
-                    if len({e.work_id for e in matches})!=1:raise HTTPException(422,'Selecciona una obra inequívoca del catálogo')
-                    if work_id and work_id!=matches[0].work_id:raise HTTPException(422,'La obra enlazada no corresponde')
-                    work_id,edition_id=matches[0].work_id,edition_id or matches[0].id
-            if work_id and not db.get(Work,work_id):raise HTTPException(422,'Obra no encontrada')
-            if edition_id:
-                edition=db.get(Edition,edition_id)
-                if not edition or edition.work_id!=work_id:raise HTTPException(422,'La edición no corresponde a la obra')
+        same_book,work_id,edition_id=resolve_publication_work(db,post,data)
         if cover_data and not (work_id or data.book_ref):raise HTTPException(422,'Enlaza una obra antes de elegir portada')
         if data.cover_mode=='custom' and not cover_data and not existing_cover:
             raise HTTPException(422,'Selecciona una imagen para la portada personalizada')
+        if analyze_fields(proposed).flagged:
+            staged=[ProposedAttachment('image',kind,content) for kind,content in new_images]
+            if cover_data:
+                staged.append(ProposedAttachment('cover',cover_data[0],cover_data[1]))
+                proposed['cover_mode']='custom'
+            revision=prepare_edit(db,user,'publication',post.id,proposed,request_key=uuid.uuid4(),
+                                  expected_version=post.moderation_version,attachments=staged)
+            result={**full_item(db,user,post),**receipt(post,revision)}
+            finish_http(db,claim,result)
+            return result
+        retire_pending(db,user,post,'publication')
         post.title,post.body,post.source,post.publication_type=data.title,data.body,data.source,data.publication_type
         post.author_role=role
         post.book_ref,post.book_title,post.work_id,post.edition_id=data.book_ref,data.book_title,work_id,edition_id
         post.updated_at=datetime.now(timezone.utc)
+        post.moderation_status='approved'
+        post.moderation_version+=1
         for image in images:
             if image.id not in selected:db.delete(image)
         db.add_all(PostImage(post_id=post.id,content_type=kind,data=content) for kind,content in new_images)
@@ -140,7 +169,7 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
         elif existing_cover and (data.cover_mode=='catalog' or not same_book or not (work_id or data.book_ref)):
             db.delete(existing_cover)
         sync_event(db,post,data.event_details,user)
-        db.flush();result=full_item(db,user,post);db.commit()
+        db.flush();result=full_item(db,user,post);finish_http(db,claim,result)
         return result
     finally:
         for upload in [*uploads,cover_upload]:
@@ -151,5 +180,7 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
 def delete_publication(post_id:uuid.UUID,db:DB,user:Viewer):
     post=require_post_editor(db,user,post_id)
     post.deleted_at=post.updated_at=datetime.now(timezone.utc)
+    post.moderation_version+=1
+    retire_pending(db,user,post,'publication','withdrawn')
     db.commit()
     return Response(status_code=204)

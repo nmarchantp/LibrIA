@@ -20,7 +20,7 @@ def extract_book_context(db, owner, work):
     reviews = db.execute(text("""SELECT rv.id,v.body,v.rating::double precision AS rating,v.dimension_ratings,v.recorded_at AS updated_at,v.revision_number
         FROM app.resenas rv JOIN app.perfiles p ON p.id=rv.author_profile_id
         JOIN app.revisiones_resena v ON v.review_id=rv.id
-        WHERE p.kind='personal' AND p.owner_user_id=:owner AND rv.created_by_user_id=:owner AND rv.work_id=:work
+        WHERE rv.moderation_status='approved' AND NOT rv.moderation_hidden AND p.kind='personal' AND p.owner_user_id=:owner AND rv.created_by_user_id=:owner AND rv.work_id=:work
         AND NOT EXISTS (SELECT 1 FROM app.procedencia_demo d WHERE d.entity_type='review' AND d.entity_id=rv.id)
         ORDER BY v.recorded_at,v.revision_number,rv.id"""),
         {'owner': owner, 'work': work}).mappings().all()
@@ -43,7 +43,7 @@ def extract_book_context(db, owner, work):
     posts = db.execute(text("""SELECT po.id,po.publication_type,po.body,po.created_at FROM app.publicaciones po
         JOIN app.perfiles p ON p.id=po.author_profile_id
         WHERE p.kind='personal' AND p.owner_user_id=:owner AND po.user_id=:owner
-          AND po.publication_type IN ('note','theory') AND NOT po.legacy_content
+          AND po.publication_type IN ('note','theory') AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
           AND (po.work_id=:work OR (po.work_id IS NULL AND (SELECT count(DISTINCT ed.work_id) FROM app.fuentes_catalogo s
                JOIN app.ediciones ed ON ed.id=s.edition_id WHERE s.external_id=po.book_ref)=1
           AND EXISTS (SELECT 1 FROM app.fuentes_catalogo s JOIN app.ediciones ed ON ed.id=s.edition_id

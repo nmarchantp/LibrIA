@@ -71,6 +71,11 @@ class PostCreate(BaseModel):
 class PostResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
+    moderation_status: str = 'approved'
+    public_moderation_status: str | None = None
+    moderation_version: int = 1
+    pending_revision_id: uuid.UUID | None = None
+    moderation_message: str | None = None
     feed_item_type: str = "publication"
     author_profile_id: uuid.UUID | None = None
     publication_type: str | None = None
@@ -129,6 +134,11 @@ class CommentResponse(BaseModel):
     body: str
     created_at: datetime
     edited_at: datetime | None = None
+    moderation_status: str = 'approved'
+    public_moderation_status: str | None = None
+    moderation_version: int = 1
+    pending_revision_id: uuid.UUID | None = None
+    moderation_message: str | None = None
 
 
 RatingDimension = Literal["plot_twist", "tears", "romance", "spicy", "action", "world_building", "pace", "battles", "horror", "boring_moments", "comedy"]

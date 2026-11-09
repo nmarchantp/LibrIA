@@ -4,6 +4,7 @@ import SpoilerShield from './SpoilerShield'
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import './BookReviews.css'
+import ContentReportButton from './ContentReportButton'
 
 
 
@@ -45,6 +46,7 @@ export default function BookReviews({ bookRef }) {
         {Object.entries(review.dimension_ratings).map(([key, value]) => <span key={key}><strong>{dimensionLabels[key] || key}</strong> {value}/5</span>)}
       </div>}
       {review.is_spoiler ? <SpoilerShield><p>{review.body}</p></SpoilerShield> : <p>{review.body}</p>}
+      <ContentReportButton kind="review" identifier={review.id} />
     </article>)}
     {loading && <p role="status">Cargando reseñas…</p>}
     {error && <p role="alert">{error}</p>}

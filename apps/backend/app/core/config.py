@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     app_name: str = "LibrIA API"
     app_env: str = "development"
     api_prefix: str = "/api"
+    # Foundation only; public writers are integrated in moderation stage 2.
+    moderation_rules_path: str = ""
     database_url: str = "postgresql+psycopg://libria:libria@localhost:5432/libria"
     frontend_origins: str = "http://localhost:5173"
     jwt_secret: str = "development-only-change-this-secret"

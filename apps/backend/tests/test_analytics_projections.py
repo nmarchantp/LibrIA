@@ -13,7 +13,7 @@ class ProjectionBoundaryTest(unittest.TestCase):
         self.assertNotIn("enqueue_recommendation_job",profile)
         self.assertNotIn("enqueue_recommendation_job",book)
 
-    def test_owner_refreshes_enqueue_profile_and_book_work(self):
+    def test_refreshes_keep_profile_enqueue_and_nightly_book_contract(self):
         source=(ROOT / "backend/app/modules/analytics/adaptive_router.py").read_text(encoding="utf-8")
         profile_refresh=source[source.index("def refresh_profile("):source.index("@router.get('/profile/history')")]
         book_refresh=source[source.index("def refresh_book("):source.index("@router.get('/profile')")]
@@ -21,9 +21,12 @@ class ProjectionBoundaryTest(unittest.TestCase):
         self.assertIn("prepare_administrator_profile",profile_refresh)
         self.assertIn("enqueue_dna",profile_refresh)
         self.assertNotIn("enqueue=True",profile_refresh)
-        self.assertIn("AccountPermission",book_refresh)
-        self.assertIn("enqueue_reading_event_analysis",book_refresh)
-        self.assertIn("delay_minutes=0",book_refresh)
+        # Book refresh has been read-only since nightly consolidation. This test
+        # must not demand the removed administrator bypass.
+        book_refresh=book_refresh[:book_refresh.index("@router.get('/books/{book_id}/history')")]
+        self.assertNotIn("AccountPermission",book_refresh)
+        self.assertNotIn("enqueue_reading_event_analysis",book_refresh)
+        self.assertIn("return book_analysis",book_refresh)
 
     def test_projections_do_not_import_provider_sdk(self):
         source=(ROOT / "backend/app/modules/analytics/projections.py").read_text(encoding="utf-8")

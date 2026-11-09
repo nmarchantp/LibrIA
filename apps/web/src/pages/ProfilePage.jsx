@@ -61,7 +61,7 @@ export default function ProfilePage() {
   return <div className="profile-page page-width reader-profile">
     <div className="reader-profile-main">
       <ProfileHeader key={user.id} user={user} />
-      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['analysis', 'Mis análisis', BrainCircuit], ['activity', 'Mi actividad', UserRound], ['events', 'Mis eventos', CalendarDays]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
+      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['activity', 'Mi actividad', UserRound], ['events', 'Mis eventos', CalendarDays], ['analysis', 'Mis análisis', BrainCircuit]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
       <ProfilePanels key={user.id} active={tab} renderPanel={renderPanel} />
     </div>
     <ProfilePersonalColumn key={user.id} preferencesState={preferences} editMode={editMode && tab === 'about'} />

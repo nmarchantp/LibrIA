@@ -25,31 +25,45 @@ def extract_social(db,owner):
       FROM app.seguimientos_perfil f JOIN app.perfiles p ON p.id=f.profile_id
       WHERE f.user_id=:owner AND p.verification_status NOT IN ('rejected','suspended')'''),params).mappings().all()
     comments=db.execute(text('''SELECT c.id AS source_id,c.created_at AS at,c.body,
-      COALESCE(rv.work_id,r.work_id,po.work_id,link.work_id) AS work_id,c.review_id,c.post_id,
+      COALESCE(rv.work_id,r.work_id,po.work_id,link.work_id) AS work_id,c.review_id,c.post_id,c.reading_event_id,
       rv.body AS reviewed_text,rv.rating AS reviewed_rating,po.body AS publication_text,po.publication_type
       FROM app.comentarios_publicacion c
-      LEFT JOIN app.resenas rv ON rv.id=c.review_id AND rv.status='published'
-      LEFT JOIN app.publicaciones po ON po.id=c.post_id AND NOT po.legacy_content
+      LEFT JOIN app.resenas rv ON rv.id=c.review_id AND rv.status='published' AND rv.moderation_status='approved' AND NOT rv.moderation_hidden
+      LEFT JOIN app.publicaciones po ON po.id=c.post_id AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
       LEFT JOIN app.eventos_lectura ev ON ev.id=c.reading_event_id AND ev.is_public
       LEFT JOIN app.lecturas r ON r.id=ev.reading_id
       LEFT JOIN LATERAL (SELECT min(ed.work_id::text)::uuid AS work_id FROM app.fuentes_catalogo s
         JOIN app.ediciones ed ON ed.id=s.edition_id WHERE s.external_id=po.book_ref HAVING count(DISTINCT ed.work_id)=1) link ON true
-      WHERE c.user_id=:owner AND (rv.id IS NOT NULL OR po.id IS NOT NULL OR ev.id IS NOT NULL)
+      WHERE c.user_id=:owner AND c.moderation_status='approved' AND NOT c.moderation_hidden AND c.deleted_at IS NULL AND (rv.id IS NOT NULL OR po.id IS NOT NULL OR ev.id IS NOT NULL)
       AND NOT EXISTS(SELECT 1 FROM app.procedencia_demo d WHERE
         (d.entity_type='post' AND d.entity_id=po.id) OR (d.entity_type='review' AND d.entity_id=rv.id)
         OR (d.entity_type='event' AND d.entity_id=ev.id))'''),params).mappings().all()
     reactions=db.execute(text('''SELECT l.review_id AS source_id,l.created_at AS at,
       rv.work_id,rv.body AS reviewed_text,rv.rating AS reviewed_rating,'review_reaction' AS kind
       FROM app.me_gusta_resena l JOIN app.resenas rv ON rv.id=l.review_id
-      WHERE l.user_id=:owner AND rv.status='published'
+      WHERE l.user_id=:owner AND rv.status='published' AND rv.moderation_status='approved' AND NOT rv.moderation_hidden
         AND NOT EXISTS(SELECT 1 FROM app.procedencia_demo d WHERE d.entity_type='review' AND d.entity_id=rv.id)
       UNION ALL
       SELECT l.post_id,l.created_at,COALESCE(po.work_id,link.work_id),po.body,NULL,'post_reaction'
       FROM app.me_gusta_publicacion l JOIN app.publicaciones po ON po.id=l.post_id
       LEFT JOIN LATERAL (SELECT min(ed.work_id::text)::uuid AS work_id FROM app.fuentes_catalogo s
         JOIN app.ediciones ed ON ed.id=s.edition_id WHERE s.external_id=po.book_ref HAVING count(DISTINCT ed.work_id)=1) link ON true
-      WHERE l.user_id=:owner AND NOT po.legacy_content
+      WHERE l.user_id=:owner AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
         AND NOT EXISTS(SELECT 1 FROM app.procedencia_demo d WHERE d.entity_type='post' AND d.entity_id=po.id)'''),params).mappings().all()
+    # Enforce canonical/current parent visibility as well as child moderation.
+    from sqlalchemy import select
+    from app.modules.social.models import Post,Review
+    from app.modules.library.models import Reading,ReadingEvent
+    from app.modules.social.activity_access import visible_posts,public_reviews,visible_reading_events
+    posts={r['post_id'] for r in comments if r['post_id']}|{r['source_id'] for r in reactions if r['kind']=='post_reaction'}
+    reviews={r['review_id'] for r in comments if r['review_id']}|{r['source_id'] for r in reactions if r['kind']=='review_reaction'}
+    events={r['reading_event_id'] for r in comments if r['reading_event_id']}
+    allowed_posts=set(db.scalars(select(Post.id).where(Post.id.in_(posts),visible_posts()))) if posts else set()
+    allowed_reviews=set(db.scalars(public_reviews(db).with_only_columns(Review.id).where(Review.id.in_(reviews)))) if reviews else set()
+    allowed_events=set(db.scalars(select(ReadingEvent.id).join(Reading,Reading.id==ReadingEvent.reading_id)
+        .where(ReadingEvent.id.in_(events),visible_reading_events()))) if events else set()
+    comments=[r for r in comments if r['post_id'] in allowed_posts or r['review_id'] in allowed_reviews or r['reading_event_id'] in allowed_events]
+    reactions=[r for r in reactions if r['source_id'] in (allowed_reviews if r['kind']=='review_reaction' else allowed_posts)]
     return serial([{'kind':'follow',**dict(r)} for r in follows]+[{'kind':'comment',**dict(r)} for r in comments]+[dict(r) for r in reactions])
 
 
@@ -77,7 +91,7 @@ def extract_reader(db,owner):
       ORDER BY ev.created_at,ev.id'''),{'owner':owner}).mappings().all()
     reviews=db.execute(text('''SELECT rv.id AS source_id,rv.work_id,rv.rating,rv.published_at AS at
       FROM app.resenas rv JOIN app.perfiles p ON p.id=rv.author_profile_id
-      WHERE p.owner_user_id=:owner AND rv.created_by_user_id=:owner AND p.kind='personal' AND rv.status='published'
+      WHERE p.owner_user_id=:owner AND rv.created_by_user_id=:owner AND p.kind='personal' AND rv.status='published' AND rv.moderation_status='approved' AND NOT rv.moderation_hidden
       AND NOT EXISTS(SELECT 1 FROM app.procedencia_demo d WHERE (d.entity_type='review' AND d.entity_id=rv.id)
         OR (d.entity_type='obras' AND d.entity_id=rv.work_id))'''),{'owner':owner}).mappings().all()
     payload = serial({'books':books,'events':[dict(e) for e in events],'reviews':[dict(r) for r in reviews],

@@ -45,18 +45,21 @@ async def read_cover(upload):
 
 
 def require_post_editor(db, user, post_id):
-    post, _ = resolve_activity(db, 'publication', post_id, lock=True)
-    if post.author_profile_id:
-        require_actor(db, user, post.author_profile_id, manage=True)
-    elif post.user_id != user.id:
-        raise HTTPException(403, "No puedes editar esta publicación")
-    return post
+    from app.modules.social.moderation_service import owned_target
+    return owned_target(db,user,'publication',post_id)
 
 
 def require_cover_editor(db,user,post_id):
     post=require_post_editor(db,user,post_id)
     if not (post.work_id or post.book_ref):
         raise HTTPException(422, "Enlaza una obra antes de personalizar su portada")
+    from sqlalchemy import select
+    from app.modules.social.moderation_models import ModerationRevision
+    if post.moderation_status!='approved' or db.scalar(select(ModerationRevision.id).where(
+        ModerationRevision.post_id==post.id,ModerationRevision.status=='pending_review',
+        ModerationRevision.lifecycle=='active')) is not None:
+        raise HTTPException(409,'La portada tiene una publicación o edición pendiente de revisión')
+    resolve_activity(db,'publication',post_id)
     return post
 
 
@@ -73,7 +76,7 @@ def get_cover(post_id: uuid.UUID, db: Annotated[Session, Depends(get_db)]):
 
 @router.put('/{post_id}/book-cover')
 async def put_cover(post_id: uuid.UUID, request: Request, user: Annotated[User, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
-    require_cover_editor(db, user, post_id)
+    post=require_cover_editor(db, user, post_id)
     async with request.form(max_files=1, max_fields=0) as form:
         content_type, data = await read_cover(form.get('book_cover'))
     cover = db.get(PostBookCover, post_id)
@@ -83,6 +86,7 @@ async def put_cover(post_id: uuid.UUID, request: Request, user: Annotated[User, 
     else:
         cover.revision, cover.content_type, cover.data = uuid.uuid4(), content_type, data
     db.flush()
+    post.moderation_version+=1
     result = {'custom_book_cover_url': cover_url(cover)}
     db.commit()
     return result
@@ -90,9 +94,10 @@ async def put_cover(post_id: uuid.UUID, request: Request, user: Annotated[User, 
 
 @router.delete('/{post_id}/book-cover')
 def delete_cover(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
-    require_cover_editor(db, user, post_id)
+    post=require_cover_editor(db, user, post_id)
     cover = db.get(PostBookCover, post_id)
     if cover:
         db.delete(cover)
+        post.moderation_version+=1
     db.commit()
     return {'custom_book_cover_url': None}

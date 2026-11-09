@@ -1,0 +1,15 @@
+{
+  "historical_tables_verified": 10,
+  "counts_and_hashes_unchanged": true,
+  "historical_defaults_preserved": true,
+  "test_moderation_records_remaining": {
+    "revisiones_moderacion": 0,
+    "adjuntos_moderacion": 0,
+    "auditoria_moderacion": 0,
+    "solicitudes_moderacion": 0
+  },
+  "migration": "0082_moderation_foundation",
+  "backend_tests_passed": 156,
+  "moderation_tests_passed": 23,
+  "stage_2_enabled": false
+}

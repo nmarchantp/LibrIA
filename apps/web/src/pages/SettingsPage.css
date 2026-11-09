@@ -1,4 +1,4 @@
-.settings-navigation { display:flex; gap:24px; margin:24px 0 32px; border-bottom:1px solid var(--line); }
+.settings-navigation { display:flex; flex-wrap:wrap; gap:8px 24px; margin:24px 0 32px; border-bottom:1px solid var(--line); }
 .settings-navigation a { display:flex; align-items:center; gap:8px; padding:14px 2px; border-bottom:2px solid transparent; color:var(--muted); font-size:14px; }
 .settings-navigation a:hover { color:var(--ink); }
 .settings-navigation a.selected { border-color:var(--primary); color:var(--ink); font-weight:700; }

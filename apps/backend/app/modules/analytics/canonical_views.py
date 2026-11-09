@@ -34,7 +34,7 @@ def book_context(db, owner, work):
         "data": {"state": r.status, "abandonment_reason": r.abandonment_reason, "notebook": r.notebook or {},
                  "physical_work_id": str(r.work_id), "edition_id": str(r.edition_id) if r.edition_id else None}} for r in readings]
     reviews = current_reviews(db, ids, reader_id=owner)
-    current = next((r for r in reviews if r.status != "hidden" and ("review", r.id) not in demo), None)
+    current = next((r for r in reviews if r.status != "hidden" and r.moderation_status == "approved" and not r.moderation_hidden and ("review", r.id) not in demo), None)
     if current:
         sources.append({"key": f"review:{current.id}:{current.revision_number}", "kind": "review", "id": str(current.id),
             "at": current.updated_at.isoformat(), "data": {"body": current.body, "rating": float(current.rating) if current.rating else None,
@@ -47,7 +47,7 @@ def book_context(db, owner, work):
         "at": r["created_at"].isoformat(), "data": r["reflection"]} for r in events if ("event", r["id"]) not in demo)
     posts = db.execute(text("""SELECT po.id,po.publication_type,po.body,po.created_at FROM app.publicaciones po
         JOIN app.perfiles p ON p.id=po.author_profile_id
-        WHERE p.kind='personal' AND p.owner_user_id=:owner AND po.user_id=:owner AND NOT po.legacy_content
+        WHERE p.kind='personal' AND p.owner_user_id=:owner AND po.user_id=:owner AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
           AND po.publication_type IN ('note','theory') AND (po.work_id=ANY(:works) OR
           (po.work_id IS NULL AND (SELECT count(DISTINCT ed.work_id) FROM app.fuentes_catalogo s JOIN app.ediciones ed ON ed.id=s.edition_id WHERE s.external_id=po.book_ref)=1
           AND EXISTS(SELECT 1 FROM app.fuentes_catalogo s JOIN app.ediciones ed ON ed.id=s.edition_id

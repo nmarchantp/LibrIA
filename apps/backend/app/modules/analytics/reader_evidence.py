@@ -32,7 +32,7 @@ def extract_personal(connection, cutoff):
         JOIN LATERAL (SELECT rv.* FROM app.revisiones_resena rv
             WHERE rv.review_id=r.id AND rv.recorded_at < :cutoff
             ORDER BY rv.revision_number DESC LIMIT 1) v ON true
-        WHERE p.kind='personal' AND p.owner_user_id=r.created_by_user_id
+        WHERE r.moderation_status='approved' AND NOT r.moderation_hidden AND p.kind='personal' AND p.owner_user_id=r.created_by_user_id
           AND v.status IN ({statuses})
           AND NOT EXISTS (SELECT 1 FROM app.procedencia_demo d WHERE
             (d.entity_type='review' AND d.entity_id=r.id) OR
@@ -45,7 +45,7 @@ def extract_personal(connection, cutoff):
             JOIN app.fuentes_catalogo s ON s.edition_id=ed.id
             WHERE ed.work_id=w.id AND s.external_id=po.book_ref))
         WHERE p.kind='personal' AND p.owner_user_id=po.user_id
-          AND po.publication_type IN ('note','theory') AND NOT po.legacy_content
+          AND po.publication_type IN ('note','theory') AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
           AND po.created_at < :cutoff
           AND NOT EXISTS (SELECT 1 FROM app.procedencia_demo d WHERE
             (d.entity_type='post' AND d.entity_id=po.id) OR

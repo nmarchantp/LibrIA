@@ -1,0 +1,28 @@
+{
+  "historical_tables_unchanged": true,
+  "tables": {
+    "publicaciones": true,
+    "resenas": true,
+    "comentarios_publicacion": true,
+    "eventos_publicacion": true,
+    "asistencias_evento": true,
+    "me_gusta_publicacion": true,
+    "me_gusta_resena": true,
+    "me_gusta_evento_lectura": true,
+    "visualizaciones_actividad": true,
+    "eventos_lectura": true
+  },
+  "moderation_table_counts": {
+    "revisiones_moderacion": 0,
+    "adjuntos_moderacion": 0,
+    "auditoria_moderacion": 0,
+    "solicitudes_moderacion": 0,
+    "reportes_contenido": 0
+  },
+  "hidden_content_counts": {
+    "publicaciones": 0,
+    "resenas": 0,
+    "comentarios_publicacion": 0
+  },
+  "remaining_test_schemas": 0
+}

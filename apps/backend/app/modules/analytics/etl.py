@@ -47,7 +47,7 @@ def extract(connection, start, cutoff):
         CASE WHEN p.entity_id IS NULL THEN 'unclassified' ELSE 'simulated' END AS provenance
         FROM app.publicaciones po LEFT JOIN app.perfiles pr ON pr.id = po.author_profile_id
         LEFT JOIN app.procedencia_demo p ON p.entity_type = 'post' AND p.entity_id = po.id
-        WHERE po.created_at >= :start AND po.created_at < :cutoff ORDER BY po.id"""), params).mappings().all()
+        WHERE po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL AND po.created_at >= :start AND po.created_at < :cutoff ORDER BY po.id"""), params).mappings().all()
     entries = connection.execute(text("""SELECT le.id, le.user_id, le.work_id,
         CASE WHEN p.entity_id IS NULL THEN 'unclassified' ELSE 'simulated' END AS provenance
         FROM app.entradas_biblioteca le
@@ -65,7 +65,7 @@ def extract(connection, start, cutoff):
             ORDER BY v.recorded_at DESC, v.revision_number DESC LIMIT 1) rv ON true
         LEFT JOIN app.ediciones ed ON ed.id=rv.edition_id
         LEFT JOIN app.procedencia_demo prov ON prov.entity_type='review' AND prov.entity_id=r.id
-        WHERE r.created_at < :cutoff ORDER BY r.id"""), params).mappings().all()
+        WHERE r.moderation_status='approved' AND NOT r.moderation_hidden AND r.created_at < :cutoff ORDER BY r.id"""), params).mappings().all()
     from app.modules.books.canonical import enabled
     if enabled():
         from app.modules.books.consistency import normalize_extract

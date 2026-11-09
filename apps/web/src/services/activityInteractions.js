@@ -4,8 +4,8 @@ export const activityKey = item => `${item.feed_item_type}:${item.id}`
 const base = item => ({ like_count: item.like_count ?? null, liked_by_me: item.liked_by_me ?? false,
     comment_count: item.comment_count ?? null, view_count: item.view_count ?? null, capabilities: item.capabilities || {}, observed_at: item.observed_at || '', likeBusy: false, error: '' })
 const path = item => `/activities/${item.feed_item_type}/${encodeURIComponent(item.id)}`
-const request = (item, suffix, method = 'GET', body, signal) => apiRequest(path(item) + suffix, {
-  method, headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}` },
+const request = (item, suffix, method = 'GET', body, signal, version) => apiRequest(path(item) + suffix, {
+  method, headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}`, ...(version ? { 'If-Match': String(version) } : {}) },
   ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal,
 })
 
@@ -56,14 +56,14 @@ export function createInteractionStore() {
       const result = await request(item, '/comments', 'POST', { body })
       apply(item, result.interactions)
       const rows=get(item).commentItems
-      if(rows)patch(item,{commentItems:[...rows.filter(row=>row.id!==result.comment.id),result.comment],commentRevision:(get(item).commentRevision||0)+1})
+      if(rows&&result.comment.moderation_status!=='pending_review')patch(item,{commentItems:[...rows.filter(row=>row.id!==result.comment.id),result.comment],commentRevision:(get(item).commentRevision||0)+1})
       return result.comment
     },
-    async updateComment(item,id,body) {
-      const result=await request(item,`/comments/${id}`,'PUT',{body})
+    async updateComment(item,id,body,version) {
+      const result=await request(item,`/comments/${id}`,'PUT',{body},undefined,version)
       apply(item,result.interactions)
       const rows=get(item).commentItems
-      if(rows)patch(item,{commentItems:rows.map(row=>row.id===id?result.comment:row),commentRevision:(get(item).commentRevision||0)+1})
+      if(rows&&result.comment.moderation_status!=='pending_review')patch(item,{commentItems:rows.map(row=>row.id===id?result.comment:row),commentRevision:(get(item).commentRevision||0)+1})
       return result.comment
     },
     async deleteComment(item,id) {
