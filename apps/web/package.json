@@ -10,6 +10,7 @@
     "test:profile-modals": "node --experimental-websocket tests/profile-edit-modals.mjs",
     "test:profile-events": "node --experimental-websocket tests/profile-events.mjs",
     "test:profile-tabs": "node --experimental-websocket tests/profile-tab-navigation.mjs",
+    "test:reading-challenge": "node --experimental-websocket tests/reading-challenge.mjs",
     "test:feed-progress": "node --experimental-websocket tests/feed-progress.mjs",
     "test:mural": "node --experimental-websocket tests/mural-carousels.mjs",
     "test:events": "node --experimental-websocket tests/events-integration.mjs",

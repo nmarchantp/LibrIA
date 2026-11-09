@@ -50,6 +50,7 @@ for (const [category, publication_type] of [['events', 'event'], ['launches', 'l
   if(category==='events')items[category]=items[category].map((item,index)=>({...item,event_details:{id:item.id,start_date:'2026-11-12',start_time:'18:00',end_date:null,end_time:null,timezone:'America/Santiago',location:'Santiago de Chile',organizer:'Comunidad LibrIA',category:'fair',starts_at:'2026-11-12T21:00:00Z',ends_at:null,attending:false,attendee_count:0,schedule_revision:1,schedule_update:null,observed_at:'2020-01-01T00:00:00.000Z'},...eventState[item.id]})).filter(item=>!item.deleted)
 }
 window.muralTest = { requests: [], fail: false, noContacts: false, failMore: false }
+window.challengeTest = { target: null, finished_books: 0, failSave: false }
 if(new URLSearchParams(location.search).has('description')){
   items.events[0].body='**Una invitación literaria** 📚\nCompartimos *historias y encuentros*.\n'+ 'Un encuentro para descubrir libros y conversar con la comunidad lectora. '.repeat(24)
   items.events[0].title='Encuentro literario'
@@ -81,6 +82,18 @@ window.fetch = (url, options) => {
   window.muralTest.requests.push({ path: parsed.pathname + parsed.search, method: options?.method || 'GET' })
   let data = [], status = 200
   if (parsed.pathname.endsWith('/profiles/me')) data = [{ id: 'personal-fixture', kind: 'personal' }]
+  else if (parsed.pathname === '/api/me/reading-challenge') {
+    const challenge = window.challengeTest
+    if (options?.method === 'PUT') {
+      if (challenge.failSave) return Promise.resolve(new Response(JSON.stringify({ detail: 'No se pudo guardar tu reto.' }), { status: 503, headers: { 'Content-Type': 'application/json' } }))
+      challenge.target = JSON.parse(options.body).target
+    }
+    data = { year: 2026, target: challenge.target, finished_books: challenge.finished_books,
+      percentage: challenge.target ? Math.min(100, Math.round(challenge.finished_books / challenge.target * 100)) : 0,
+      remaining: challenge.target ? Math.max(0, challenge.target - challenge.finished_books) : null,
+      completed: Boolean(challenge.target && challenge.finished_books >= challenge.target),
+      exceeded: Boolean(challenge.target && challenge.finished_books > challenge.target) }
+  }
   else if (/\/profiles\/[^/]+\/events\/access$/.test(parsed.pathname)) data = { allowed: agendaPrivacy === 'public', is_owner: false }
   else if (parsed.pathname === '/api/profiles/me/events/privacy') { agendaPrivacy = JSON.parse(options.body).visibility; data = { visibility: agendaPrivacy } }
   else if (/\/profiles\/[^/]+\/events$/.test(parsed.pathname)) {

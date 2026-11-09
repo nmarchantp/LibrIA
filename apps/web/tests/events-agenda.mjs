@@ -46,20 +46,8 @@ try{
   assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attendee-count').textContent`),'Asistentes1')
   await evaluate(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').click()`)
   await until(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')==='false'`)
-  for(const index of [1,2,0]){
-    await evaluate(`document.querySelectorAll('.agenda-views button')[${index}].click()`)
-    await until(index===1?`Boolean(document.querySelector('.agenda-list .agenda-event'))`:index===2?`Boolean(document.querySelector('.agenda-grid .agenda-event'))`:`Boolean(document.querySelector('.agenda-calendar'))`)
-    if(index===1){
-      await evaluate(`document.querySelector('.agenda-list [data-event-id="events-0"] .event-attend-button').click()`)
-      await until(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')==='true'`)
-    }
-    if(index===2){
-      assert.equal(await evaluate(`document.querySelector('.agenda-grid [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')`),'true','List and grid share confirmed attendance')
-      await evaluate(`document.querySelector('.agenda-grid [data-event-id="events-0"] .event-attend-button').click()`)
-      await until(`document.querySelector('.agenda-upcoming [data-event-id="events-0"] .event-attend-button').getAttribute('aria-pressed')==='false'`)
-    }
-    if(index===0)assert.equal(await evaluate(`document.querySelector('${card('events-0')} .event-attend-button').getAttribute('aria-pressed')`),'false','Cancellation is reflected in the detail')
-  }
+  assert.equal(await evaluate(`document.querySelector('.agenda-views')`),null,'Only the initial calendar view is offered')
+  assert.equal(await evaluate(`Boolean(document.querySelector('.agenda-calendar'))`),true)
   await evaluate(`document.querySelector('[aria-label="Mes anterior"]').click()`);await until(`document.querySelector('[aria-label="Elegir mes y año"]').value==='2026-10'`)
   await month('2026-12');await until(`Boolean(document.querySelector('${card('events-3')}'))`)
   assert.ok((await evaluate(`document.querySelector('${card('events-3')} img').src`)).includes('story-books-cat.png'),'Custom cover is used when no event attachment exists')
@@ -79,14 +67,6 @@ try{
         await writeFile(new URL(`agenda-${width}.png`,output),Buffer.from(image.result.data,'base64'))
       }
     }
-    for(const index of [1,2]){
-      await evaluate(`document.querySelectorAll('.agenda-views button')[${index}].click()`)
-      for(const width of [1536,768,390,320]){
-        await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:width<500})
-        assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth&&Array.from(document.querySelectorAll('.agenda-event')).every(card=>card.scrollWidth<=card.clientWidth+1)`),true,`${theme}/${width}/${index}: list and grid fit`)
-      }
-    }
-    await evaluate(`document.querySelectorAll('.agenda-views button')[0].click()`)
   }
   await send('Emulation.setDeviceMetricsOverride',{width:1536,height:1100,deviceScaleFactor:1,mobile:false})
   await day('2026-11-14');await until(`Boolean(document.querySelector('${card('events-0')}'))`)
@@ -142,5 +122,5 @@ try{
   await until(`Boolean(document.querySelector('.agenda-calendar'))&&!document.querySelector('.agenda-detail [role=status]')`)
   assert.equal(await evaluate(`Boolean(document.querySelector('.agenda-create'))`),false)
   assert.deepEqual(errors,[])
-  console.log('PASS: calendar dates, multiday, same-day selection, three views, range queries, attendance sharing, images, create/edit/delete, original publication, errors, empty states, permissions and nine responsive themes')
+  console.log('PASS: calendar dates, multiday, same-day selection, initial calendar view, range queries, attendance sharing, images, create/edit/delete, original publication, errors, empty states, permissions and nine responsive themes')
 }finally{ws.close();await fetch(`${cdp}/json/close/${target.id}`)}
