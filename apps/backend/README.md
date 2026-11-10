@@ -98,11 +98,13 @@ antes de iniciar el backend/worker actualizado. Ver [implementación, pruebas y
 limitaciones](../../docs/gemini-optimization-2026-10-28.md); los costos locales son
 equivalentes de tarifa y no acreditan cargos de Google.
 
-Primero aplica las migraciones y levanta la API. `run.cmd` inicia el generador continuo de publicaciones, que crea un post cada 20 segundos y lo guarda en las tablas transaccionales mediante `POST /api/posts`. El generador asegura las cuentas demo de forma idempotente y publica reseñas como lector, además de publicaciones y eventos como perfiles profesionales u organizaciones. Solo funciona con `APP_ENV=development` y necesita `LIBRIA_DEMO_PASSWORD` en `apps/backend/.env`; el instalador la genera automáticamente.
+El modo demostraci?n se controla desde Administraci?n > Configuraci?n. La migraci?n `0087_demo_mode` agrega el interruptor persistente, inicialmente desactivado. Prepara ocho perfiles demo y actividad mediante las APIs actuales: lecturas, rese?as, publicaciones, eventos e interacciones. Ver [modo demostraci?n](../../docs/demo-mode.md).
 
 ```powershell
-# Generación continua cada 20 segundos; detener con Ctrl+C
-python -m scripts.generate_posts
+# Activar el productor compartido; tambi?n puede controlarse desde el panel
+python -m scripts.generate_posts --enable --interval 30
+# Detener nuevas actividades sin borrar lo creado
+python -m scripts.generate_posts --disable
 # Carga finita de escenarios versionados con resultados esperados
 python -m scripts.seed_analytics_demo
 # Inicialización histórica: procesa una vez cada día cerrado
@@ -111,7 +113,7 @@ python -m scripts.run_etl --from-date 2026-09-21
 python -m scripts.run_etl
 ```
 
-El generador continuo sirve para actividad del mural; sus fechas y referencias aleatorias no constituyen escenarios de validación repetibles. Para comprobar indicadores se usa `analytics_demo.json` y su cargador estable. El ETL lee fuentes operacionales, excluye contratos incoherentes y reseñas/avances legados, escribe hechos limpios e indicadores privados y registra reglas y cantidades por cierre. Un fallo revierte la carga y permite reintentar la misma ejecución; un día exitoso nunca se vuelve a cargar. Los análisis grupales siguen deshabilitados hasta validar anonimización.
+El modo demo utiliza ediciones verificadas y conserva su selecci?n al reiniciar. Marca su procedencia para distinguir actividad simulada. Para comprobar indicadores se sigue usando `analytics_demo.json` y su cargador estable; la actividad de presentaci?n no sustituye esos escenarios de validaci?n.
 
 Para revisar el último cierre diario:
 

@@ -126,6 +126,18 @@ if (Test-NetConnection -ComputerName 127.0.0.1 -Port 5173 -InformationLevel Quie
 }
 
 if ($DemoPosts) {
-    Start-Process powershell.exe -WorkingDirectory $backendPath -ArgumentList '-NoExit', '-Command', "& '$python' -m scripts.generate_posts --interval 20" -WindowStyle Normal
-    Write-Host 'Generador de posts demo iniciado.' -ForegroundColor Yellow
+    Push-Location $backendPath
+    try {
+        $demoReady = $false
+        for ($attempt = 0; $attempt -lt 30; $attempt++) {
+            try {
+                $demoHealth = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 2
+                if ($demoHealth.service -eq 'libria-api') { $demoReady = $true; break }
+            } catch { }
+            Start-Sleep -Seconds 1
+        }
+        if (-not $demoReady) { throw 'La API no esta disponible para activar el modo demo.' }
+        & $python -m scripts.generate_posts --enable --interval 20
+        if ($LASTEXITCODE -ne 0) { throw 'No se pudo activar el modo demo. Revisa el permiso administrador y la migracion 0087.' }
+    } finally { Pop-Location }
 }

@@ -141,7 +141,14 @@ if ($AllowMainDatabaseMigration) {
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $backupPath) -or (Get-Item $backupPath).Length -le 0) { throw 'El respaldo falló o está vacío. No se migrará la base.' }
         & $venvPython -m alembic upgrade head
         Assert-LastCommand 'La migración explícita'
-        & $venvPython -m scripts.seed_default_admin
+        $discoveryMode = & $venvPython -c 'from app.core.config import get_settings; print(int(get_settings().catalog_discovery_enabled))'
+        Assert-LastCommand 'La lectura del modo de catalogo'
+        $seedArgs = @('-m', 'scripts.seed_default_admin')
+        if ("$discoveryMode".Trim() -eq '1') {
+            Write-Host 'Modo descubrimiento: se prepara solo la cuenta administradora. Para cargar su biblioteca, importa ediciones autorizadas y ejecuta scripts.seed_default_admin con --catalog-map.' -ForegroundColor Yellow
+            $seedArgs += '--account-only'
+        }
+        & $venvPython @seedArgs
         Assert-LastCommand 'La carga inicial del administrador y su biblioteca'
     } finally {
         Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue

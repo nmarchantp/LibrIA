@@ -16,7 +16,7 @@ export default function MuralActivityCard({ item, onOpen }) {
     <header className="mural-activity-person"><span className="mural-activity-avatar">{item.avatar_url ? <img src={apiAssetUrl(item.avatar_url)} alt="" loading="lazy" /> : initials}</span><div><strong>{item.author}</strong><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</time></div><ActivityOptionsMenu item={item} /></header>
     <div className="mural-activity-main">
     {(item.book_title || item.book_cover_url) && <Link to={`/books/${bookUrl}`} className="mural-activity-cover" aria-label={`Ver ficha de ${title}`} onClick={event => { if (!bookUrl) { event.preventDefault(); onOpen(item) } }}>
-      {item.book_cover_url && !failed ? <img src={item.book_cover_url} alt="" loading="lazy" onError={() => setFailed(true)} /> : <BookOpen size={27} strokeWidth={1.3} aria-hidden="true" />}
+      {item.book_cover_url && !failed ? <img src={apiAssetUrl(item.book_cover_url)} alt="" loading="lazy" onError={() => setFailed(true)} /> : <BookOpen size={27} strokeWidth={1.3} aria-hidden="true" />}
     </Link>}
     {!item.book_title && !item.book_cover_url && <div className="mural-activity-cover" aria-hidden="true"><BookOpen size={27} strokeWidth={1.3} /></div>}
     <div className="mural-activity-copy">

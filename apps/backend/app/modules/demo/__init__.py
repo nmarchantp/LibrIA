@@ -1,0 +1,1 @@
+"""Administrator-controlled demonstration activity."""

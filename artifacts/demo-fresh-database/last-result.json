@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "scope": "owned_empty_postgresql_only",
+  "migration_head": "0087_demo_mode",
+  "imported_books": 12,
+  "prepared_titles": [
+    "La hipótesis del amor",
+    "Perfectos mentirosos",
+    "The Deal / Kiss Me",
+    "Mile High",
+    "Alas de sangre",
+    "Una corte de rosas y espinas",
+    "De sangre y cenizas",
+    "Un destino teñido de sangre",
+    "Haunting Adeline",
+    "Dioses de neón",
+    "Corrupt",
+    "Captive"
+  ],
+  "covers_verified": 12,
+  "personas": 8,
+  "interleaved_steps": 97,
+  "reading_events": 60,
+  "distinct_reading_books": 8,
+  "posts_before_resume": 21,
+  "reviews_before_resume": 12,
+  "switch_on_off": true,
+  "resume_verified": true,
+  "application_database_modified": false,
+  "logs": "C:\\Users\\nikoo\\AppData\\Local\\Temp\\libria-fresh-demo-9b6vdnrv"
+}

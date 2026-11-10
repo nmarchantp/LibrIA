@@ -34,3 +34,4 @@ Thumbs.db
 tmp/
 .tmp/
 temp/
+/apps/backend/var/demo-covers/

@@ -3,6 +3,7 @@ import { apiRequest } from '../api/client'
 import { environmentHelp } from './environmentHelp'
 import './AdminEnvironmentPage.css'
 import { Link } from 'react-router-dom'
+import DemoModePanel from '../components/DemoModePanel'
 
 function EnvironmentForm({ target }) {
   const [data, setData] = useState(null)
@@ -66,10 +67,32 @@ function EnvironmentForm({ target }) {
 }
 
 export default function AdminEnvironmentPage() {
+  const [tab, setTab] = useState('environment')
+  const tabs = [{ id: 'environment', label: 'Backend y Web' }, { id: 'demo', label: 'Modo demostración' }]
+  function navigateTabs(event) {
+    const index = tabs.findIndex(item => item.id === tab)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+      : event.key === 'ArrowRight' ? (index + 1) % tabs.length
+        : event.key === 'ArrowLeft' ? (index - 1 + tabs.length) % tabs.length : null
+    if (next === null) return
+    event.preventDefault()
+    setTab(tabs[next].id)
+    document.getElementById(`application-tab-${tabs[next].id}`)?.focus()
+  }
   return <section className="environment-page"><h1>Configuración de la aplicación</h1>
     <p>Administración de las variables de backend y web. Disponible para todas las cuentas con permiso de administrador.</p>
     <p>Las claves y contraseñas actuales permanecen ocultas. Guardar modifica los archivos del servidor; no reinicia servicios automáticamente.</p>
     <p><Link to="/settings?tab=moderation">Moderación de contenido</Link></p>
-    <EnvironmentForm target="backend" /><EnvironmentForm target="web" />
+    <div className="environment-tabs" role="tablist" aria-label="Configuración de la aplicación" onKeyDown={navigateTabs}>
+      {tabs.map(item => <button key={item.id} type="button" role="tab" id={`application-tab-${item.id}`}
+        aria-controls={`application-panel-${item.id}`} aria-selected={tab === item.id}
+        tabIndex={tab === item.id ? 0 : -1} onClick={() => setTab(item.id)}>{item.label}</button>)}
+    </div>
+    <div role="tabpanel" id="application-panel-environment" aria-labelledby="application-tab-environment" hidden={tab !== 'environment'}>
+      <EnvironmentForm target="backend" /><EnvironmentForm target="web" />
+    </div>
+    <div role="tabpanel" id="application-panel-demo" aria-labelledby="application-tab-demo" hidden={tab !== 'demo'}>
+      {tab === 'demo' && <DemoModePanel />}
+    </div>
   </section>
 }

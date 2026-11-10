@@ -51,11 +51,13 @@ def decode_cursor(token, user_id, audience, category):
 
 
 def query_items(db, user, audience, category, snapshot, limit, after=None, latest=False):
+    from app.modules.demo.presentation import visible_demo_selection
     if category in ("progress", "started", "finished"):
         model, date = ReadingEvent, ReadingEvent.created_at
         personal = aliased(Profile)
         query = select(model).join(Reading, Reading.id == model.reading_id).where(
-            visible_reading_events(), model.kind == {"progress": "progress", "started": "start", "finished": "finish"}[category], date <= snapshot)
+            visible_reading_events(), visible_demo_selection(db, model.actor_user_id, Reading.edition_id),
+            model.kind == {"progress": "progress", "started": "start", "finished": "finish"}[category], date <= snapshot)
         if audience == "contacts":
             query = query.where(select(ProfileFollow.user_id).join(personal, personal.id == ProfileFollow.profile_id)
                 .where(ProfileFollow.user_id == user.id, personal.kind == "personal",
@@ -66,10 +68,10 @@ def query_items(db, user, audience, category, snapshot, limit, after=None, lates
             query = select(model).join(ranked, ranked.c.id == model.id).where(ranked.c.position == 1)
     elif category == "reviews":
         model, date = Review, func.coalesce(Review.published_at, Review.created_at)
-        query = public_reviews(db).where(date <= snapshot)
+        query = public_reviews(db).where(date <= snapshot, visible_demo_selection(db, model.created_by_user_id, model.edition_id))
     else:
         model, date = Post, Post.created_at
-        query = select(model).where(visible_posts(), date <= snapshot)
+        query = select(model).where(visible_posts(), date <= snapshot, visible_demo_selection(db, model.user_id, model.edition_id))
         if category in PUBLICATION_CATEGORIES:
             publication_filter = Post.publication_type == PUBLICATION_CATEGORIES[category]
             if category == 'events':
@@ -92,6 +94,8 @@ def hydrate(db, records, viewer):
     """Bounded batch queries, independent of the number of cards."""
     if not records:
         return {}
+    from app.modules.demo.covers import cached_cover_url
+    from app.modules.demo.presentation import DEMO_USERS
     events = [r for r in records if isinstance(r, ReadingEvent)]
     readings = {r.id: r for r in db.scalars(select(Reading).where(Reading.id.in_({e.reading_id for e in events})))} if events else {}
     profile_ids = {r.author_profile_id for r in records if not isinstance(r, ReadingEvent) and r.author_profile_id}
@@ -159,7 +163,7 @@ def hydrate(db, records, viewer):
             "observed_at": observed_at,
             "capabilities": capabilities(viewer.id, {user_id, profile.owner_user_id if profile else None}, viewer.id in personal),
             "work_id": work_id, "edition_id": edition_id, "book_ref": item.book_ref or reference,
-            "book_cover_url": edition.cover_url if edition else None, "book_author": ", ".join(authors.get(work_id, [])),
+            "book_cover_url": (cached_cover_url(edition_id) if user_id in DEMO_USERS else None) or (edition.cover_url if edition else None), "book_author": ", ".join(authors.get(work_id, [])),
             "custom_book_cover_url": cover_url(covers.get(record.id)) if isinstance(record, Post) else None,
             "event_details": calendar_events.get(record.id) if isinstance(record,Post) and record.publication_type=='event' else None,
             "can_edit_book_cover": isinstance(record, Post) and ((profile and profile.id in editable_profiles) or (not profile and record.user_id == viewer.id)),

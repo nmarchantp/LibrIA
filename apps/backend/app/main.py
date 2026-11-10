@@ -4,6 +4,9 @@ ETL, proyecciones y Gemini se ejecutan como procesos separados para que
 escalar la API no multiplique consumidores ni cierres nocturnos.
 """
 
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from app.modules.books.canonical import CanonicalIdentityError
@@ -35,7 +38,19 @@ from app.modules.analytics.adaptive_router import router as adaptive_router
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+@asynccontextmanager
+async def lifespan(application):
+    from app.modules.demo.worker import run_worker
+    task = asyncio.create_task(run_worker(application))
+    try:
+        yield
+    finally:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 
 
 @app.exception_handler(CanonicalIdentityError)
@@ -66,6 +81,9 @@ app.include_router(profile_events_router, prefix=settings.api_prefix)
 app.include_router(profile_social_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
 app.include_router(environment_admin_router, prefix=settings.api_prefix)
+from app.modules.demo.router import router as demo_router, cover_router as demo_cover_router
+app.include_router(demo_router, prefix=settings.api_prefix)
+app.include_router(demo_cover_router, prefix=settings.api_prefix)
 app.include_router(readings_router, prefix=settings.api_prefix)
 app.include_router(challenge_router, prefix=settings.api_prefix)
 app.include_router(profiles_router, prefix=settings.api_prefix)

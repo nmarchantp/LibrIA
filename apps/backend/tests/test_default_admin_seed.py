@@ -8,6 +8,27 @@ from scripts.seed_default_admin import MANIFEST, seed_default_admin, stable_id
 
 
 class DefaultAdminSeedContractTest(unittest.TestCase):
+    @patch('scripts.migrate_and_seed.command.upgrade')
+    @patch('scripts.migrate_and_seed.seed_default_admin')
+    @patch('scripts.migrate_and_seed.get_settings')
+    def test_fresh_migration_command_uses_account_only_with_discovery(self, settings, seed, upgrade):
+        from scripts.migrate_and_seed import main
+        settings.return_value.catalog_discovery_enabled = True
+        with patch('sys.argv', ['migrate_and_seed']):
+            main()
+        seed.assert_called_once_with(['--account-only'])
+        self.assertEqual(upgrade.call_args.args[1], 'head')
+
+    @patch('scripts.migrate_and_seed.command.upgrade')
+    @patch('scripts.migrate_and_seed.seed_default_admin')
+    @patch('scripts.migrate_and_seed.get_settings')
+    def test_migration_command_preserves_an_explicit_catalog_map(self, settings, seed, upgrade):
+        from scripts.migrate_and_seed import main
+        settings.return_value.catalog_discovery_enabled = True
+        with patch('sys.argv', ['migrate_and_seed', '--catalog-map', 'selected-editions.json']):
+            main()
+        seed.assert_called_once_with(['--catalog-map', 'selected-editions.json'])
+
     def test_manifest_has_ten_unique_rated_and_reviewed_books(self):
         books = MANIFEST["books"]
         self.assertEqual(len(books), 10)
@@ -41,6 +62,18 @@ class DefaultAdminSeedContractTest(unittest.TestCase):
         book = MANIFEST["books"][0]
         self.assertEqual(stable_id(f"work:{book['key']}"), stable_id(f"work:{book['key']}"))
         self.assertNotEqual(stable_id(f"work:{book['key']}"), stable_id(f"review:{book['key']}"))
+
+    @patch("scripts.seed_default_admin._ensure_catalog_book")
+    @patch("scripts.seed_default_admin.seed_demo_accounts")
+    def test_account_only_does_not_touch_catalog_or_library(self, seed_accounts, ensure_catalog):
+        db = MagicMock()
+        result = seed_default_admin(db, "test-password", account_only=True)
+        seed_accounts.assert_called_once_with(db, "test-password", keys={"admin"})
+        ensure_catalog.assert_not_called()
+        db.assert_not_called()
+        self.assertEqual(db.mock_calls, [])
+        self.assertEqual(result["books"], 0)
+        self.assertEqual(result["reviews"], 0)
 
     @patch("scripts.seed_default_admin._ensure_catalog_book")
     @patch("scripts.seed_default_admin._ensure_finished_reading")

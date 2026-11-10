@@ -18,7 +18,7 @@ export function toFeedPost(item) {
     time: new Date(item.created_at).toLocaleString('es-CL'), title: item.title, text: item.body,
     source: item.source, publicationType: item.publication_type, bookId: item.book_ref || item.work_id,
     bookTitle: item.book_title, bookAuthor: item.book_author, rating: item.rating,
-    progressPercent: item.progress_percent, bookCoverUrl: item.book_cover_url,
+    progressPercent: item.progress_percent, bookCoverUrl: item.book_cover_url ? apiAssetUrl(item.book_cover_url) : null,
     customBookCoverUrl: item.custom_book_cover_url ? apiUrl(item.custom_book_cover_url) : null, canEditBookCover: item.can_edit_book_cover || false,
     readingEvent: item.reading_event, isSpoiler: item.is_spoiler || false, color: 'var(--secondary)',
   }
