@@ -163,6 +163,7 @@ def hydrate(db, records, viewer):
             "observed_at": observed_at,
             "capabilities": capabilities(viewer.id, {user_id, profile.owner_user_id if profile else None}, viewer.id in personal),
             "work_id": work_id, "edition_id": edition_id, "book_ref": item.book_ref or reference,
+            "book_title": item.book_title or (work.title if work else None),
             "book_cover_url": (cached_cover_url(edition_id) if user_id in DEMO_USERS else None) or (edition.cover_url if edition else None), "book_author": ", ".join(authors.get(work_id, [])),
             "custom_book_cover_url": cover_url(covers.get(record.id)) if isinstance(record, Post) else None,
             "event_details": calendar_events.get(record.id) if isinstance(record,Post) and record.publication_type=='event' else None,

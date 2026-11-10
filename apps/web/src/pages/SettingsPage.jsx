@@ -7,6 +7,7 @@ import './SettingsPage.css'
 import { useAuth } from '../context/AuthContext'
 import ModerationSection from '../components/ModerationSection'
 import PrivateModerationStatus from '../components/PrivateModerationStatus'
+import ProfilePrivacySettings from '../components/ProfilePrivacySettings'
 
 export default function SettingsPage() {
   const [params] = useSearchParams()
@@ -26,6 +27,6 @@ export default function SettingsPage() {
       <Link to="/settings?tab=publications" className={publications ? 'selected' : ''} aria-current={publications ? 'page' : undefined}><FileText size={18} aria-hidden="true" />Estado de publicaciones</Link>
       {canModerate && <Link to="/settings?tab=moderation" className={moderation ? 'selected' : ''} aria-current={moderation ? 'page' : undefined}><ShieldCheck size={18} aria-hidden="true" />Moderación de contenido</Link>}
     </nav>
-    {publications ? <PrivateModerationStatus key={user.id} userId={user.id} /> : moderation ? <ModerationSection initiallyOpen /> : personalization ? <ThemeSelector /> : <AccountPage biography={preferences.data?.biography} />}
+    {publications ? <PrivateModerationStatus key={user.id} userId={user.id} /> : moderation ? <ModerationSection initiallyOpen /> : personalization ? <ThemeSelector /> : <><AccountPage biography={preferences.data?.biography} /><ProfilePrivacySettings preferences={preferences} /></>}
   </section>
 }

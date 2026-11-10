@@ -1,5 +1,17 @@
 # Modo demostración
 
+Las publicaciones nuevas incluyen la referencia y el título del libro enlazado.
+Eventos, anuncios, lanzamientos y promociones adjuntan también la portada original
+verificada como imagen de galería cuando está disponible en la caché local.
+Los eventos alternan clubes, talleres, ferias de dos días, encuentros y lecturas
+en voz alta, con horarios y ubicaciones distintos en America/Santiago.
+Las promociones incluyen descuento, vigencia y condiciones ficticias en el texto;
+los lanzamientos presentan un ciclo lector sin atribuir nuevas ediciones a los libros.
+La simulación alterna confirmaciones y cancelaciones de asistencia. No simula
+todavía reprogramaciones de eventos ni genera fotografías de asistentes.
+El mural recupera del catálogo el título de obras enlazadas en publicaciones
+antiguas que lo omitieron, sin reescribir esas publicaciones.
+
 La migración `0087_demo_mode` agrega un interruptor persistente, desactivado de
 forma predeterminada. Aplicar con el procedimiento habitual de respaldo y
 migración explícita; reiniciar el backend con el código actualizado.

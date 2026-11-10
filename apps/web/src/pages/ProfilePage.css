@@ -74,3 +74,20 @@
 @media(max-width:700px) { .social-main .profile-page.reader-profile { width:calc(100% - 28px); padding-top:16px; gap:16px; } .reader-profile-cover { aspect-ratio:2.7; border-radius:15px; } .reader-profile-identity { padding:21px 4px; gap:16px; align-items:flex-start; } .reader-profile-avatar { flex-basis:68px; height:68px; font-size:28px; } .reader-profile-name h1 { font-size:30px; } .reader-profile-name>p { font-size:12px; } .reader-profile-stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:18px; } .reader-profile-stat { padding:15px 12px; } .reader-profile .reader-profile-tabs { gap:0 8px; } .reader-profile-tabs button { font-size:11px; padding:11px 6px; gap:6px; min-height:48px; } .reader-profile-tabs button svg { width:16px; } }
 @media(max-width:480px) { .reader-personal-column { grid-template-columns:minmax(0,1fr); } .reader-profile-name h1 { font-size:27px; } .reader-profile-identity { gap:12px; } .reader-profile-avatar { flex-basis:58px; height:58px; font-size:24px; } }
 @media(max-width:700px) { .reader-profile-cover img { object-position:var(--banner-mobile-position,center 52%); } }
+
+.profile-social-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:16px 0; }
+.profile-social-actions>span { display:inline-flex; align-items:center; gap:6px; }
+.profile-locked { text-align:center; margin:24px 0; padding:36px 24px; }
+.profile-connections { margin-top:24px; }
+.profile-connections ul { list-style:none; padding:0; display:grid; gap:12px; }
+.profile-connections li a { display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; background:var(--soft); color:var(--ink); }
+.profile-connections img { width:42px; height:42px; border-radius:50%; object-fit:cover; }
+.profile-privacy-settings { margin-top:24px; }
+.profile-privacy-settings fieldset { display:grid; gap:12px; border:1px solid var(--border); border-radius:12px; padding:16px; }
+.profile-privacy-settings label { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.profile-privacy-settings select { padding:10px; border-radius:8px; background:var(--surface); color:var(--ink); }
+.profile-privacy-settings p { line-height:1.6; }
+.post-person-name a { color:inherit; text-decoration:none; }
+.post-person-name a:hover { text-decoration:underline; }
+.post-person-name a:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+.person-avatar>a { display:flex; width:100%; height:100%; align-items:center; justify-content:center; color:inherit; text-decoration:none; }

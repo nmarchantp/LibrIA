@@ -61,8 +61,10 @@ async def account_lifecycle_scheduler():
     import logging
     from app.core.database import SessionLocal
     def step():
+        from app.modules.social.story_lifecycle import purge_expired_stories
         with SessionLocal() as db:
             process_expired_accounts(db)
+            purge_expired_stories(db)
             db.commit()
     while True:
         try:

@@ -2,7 +2,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
@@ -44,7 +44,7 @@ def choices(db, user_id):
 
 def own_response(db, user):
     profile = personal_profile(db, user)
-    return {"story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
+    return {"profile_visibility": user.profile_visibility, "public_sections": user.public_sections, "story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
 
 
 @router.get("/preference-catalogs", response_model=PreferenceCatalogs)
@@ -98,6 +98,9 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
     else:
         featured_id = previous_featured if previous_featured in selected_ids else None
     try:
+        for field in ('profile_visibility', 'public_sections'):
+            if field in supplied:
+                setattr(owner, field, getattr(data, field))
         if "story_illustration" in supplied:
             owner.story_illustration = data.story_illustration
         if "favorite_quotes" in supplied:
@@ -137,12 +140,26 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
 
 
 @router.get("/{profile_id}", response_model=PublicProfile)
-def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB):
+def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response):
+    from app.modules.users.profile_access import profile_access
+    from app.modules.social.models import ProfileFollow
+    response.headers['Cache-Control'] = 'private, no-store'
     profile = db.get(Profile, profile_id)
     if profile is None or profile.kind != "personal":
         raise HTTPException(status_code=404, detail="Perfil personal no encontrado")
     owner = db.get(User, profile.owner_user_id)
-    if owner is None:
+    if owner is None or owner.account_status != 'active' or owner.suspended_at:
         raise HTTPException(status_code=404, detail="Perfil personal no encontrado")
-    return {"story_illustration": owner.story_illustration, "id": profile.id, "display_name": owner.display_name, "avatar_url": owner.avatar_url,
-            "biography": owner.biography, **choices(db, owner.id)}
+    allowed = profile_access(db, owner, user)
+    sections = owner.public_sections if allowed else []
+    visitor = db.scalar(select(Profile.id).where(Profile.owner_user_id == user.id, Profile.kind == 'personal'))
+    values = choices(db, owner.id) if allowed else {}
+    return {"id": profile.id, "display_name": owner.display_name, "avatar_url": owner.avatar_url,
+            "profile_visibility": owner.profile_visibility, "can_view": allowed, "is_owner": owner.id == user.id,
+            "following": db.get(ProfileFollow, (profile.id, user.id)) is not None,
+            "follows_you": visitor is not None and db.get(ProfileFollow, (visitor, owner.id)) is not None,
+            "visible_sections": sections, "story_illustration": owner.story_illustration if 'biography' in sections else 'none',
+            "biography": owner.biography if 'biography' in sections else None,
+            "favorite_quotes": owner.favorite_quotes if 'favorite_quotes' in sections else [],
+            "featured_category_id": values.get('featured_category_id') if 'intensities' in sections else None,
+            **{key: values.get(key, []) if key in sections else [] for key in ('genres', 'tropes', 'intensities', 'interests')}}

@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, StrictInt, field_validator
 
 StoryIllustration = Literal["flowers", "books", "cat", "none"]
+ProfileSection = Literal['biography', 'genres', 'tropes', 'intensities', 'interests', 'favorite_quotes']
 
 Identifier = Annotated[str, StringConstraints(min_length=1, max_length=64)]
 
@@ -49,6 +50,8 @@ class FavoriteQuote(BaseModel):
 
 
 class LiteraryPreferences(BaseModel):
+    profile_visibility: Literal['public', 'private'] = 'public'
+    public_sections: list[ProfileSection] = Field(default_factory=list)
     story_illustration: StoryIllustration = "flowers"
     favorite_quotes: list[FavoriteQuote | str] = Field(default_factory=list)
     profile_id: uuid.UUID
@@ -61,6 +64,13 @@ class LiteraryPreferences(BaseModel):
 
 
 class PublicProfile(BaseModel):
+    profile_visibility: Literal['public', 'private'] = 'public'
+    visible_sections: list[ProfileSection] = Field(default_factory=list)
+    can_view: bool = True
+    is_owner: bool = False
+    following: bool = False
+    follows_you: bool = False
+    favorite_quotes: list[FavoriteQuote | str] = Field(default_factory=list)
     story_illustration: StoryIllustration = "flowers"
     # Deliberate allowlist: no user ID, email, roles, capabilities, or private data.
     id: uuid.UUID
@@ -97,6 +107,8 @@ class ReadingGenreStatistics(BaseModel):
 
 
 class PreferencesUpdate(BaseModel):
+    profile_visibility: Literal['public', 'private'] = 'public'
+    public_sections: list[ProfileSection] = Field(default_factory=list, max_length=6)
     story_illustration: StoryIllustration = "flowers"
     model_config = ConfigDict(extra="forbid")
     favorite_quotes: list[FavoriteQuote | Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]] = Field(default_factory=list, max_length=4)

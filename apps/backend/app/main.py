@@ -79,6 +79,10 @@ app.include_router(events_router, prefix=settings.api_prefix)
 app.include_router(moderation_private_router, prefix=settings.api_prefix)
 app.include_router(profile_events_router, prefix=settings.api_prefix)
 app.include_router(profile_social_router, prefix=settings.api_prefix)
+from app.modules.social.stories_router import router as stories_router
+app.include_router(stories_router, prefix=settings.api_prefix)
+from app.modules.social.connections_router import router as connections_router
+app.include_router(connections_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
 app.include_router(environment_admin_router, prefix=settings.api_prefix)
 from app.modules.demo.router import router as demo_router, cover_router as demo_cover_router

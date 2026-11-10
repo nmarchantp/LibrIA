@@ -12,6 +12,7 @@ from app.core.database import Base
 class User(Base):
     __tablename__ = "usuarios"
     __table_args__ = (
+        CheckConstraint("profile_visibility IN ('public','private')", name="ck_users_profile_visibility"),
         CheckConstraint("events_visibility IN ('private','contacts','public')", name="ck_users_events_visibility"),
         CheckConstraint("story_illustration IN ('flowers', 'books', 'cat', 'none')", name="ck_story_illustration"),
         CheckConstraint("role IN ('lector', 'influencer', 'autor', 'libreria', 'admin')", name="ck_usuarios_role"),
@@ -33,6 +34,8 @@ class User(Base):
     story_illustration: Mapped[str] = mapped_column(String(16), default="flowers", server_default="flowers")
     biography: Mapped[str | None] = mapped_column(Text)
     events_visibility: Mapped[str] = mapped_column(String(16), default="private", server_default="private")
+    profile_visibility: Mapped[str] = mapped_column(String(16), default="public", server_default="public")
+    public_sections: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["biography", "genres", "tropes", "intensities", "interests"], server_default='["biography","genres","tropes","intensities","interests"]')
     favorite_quotes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

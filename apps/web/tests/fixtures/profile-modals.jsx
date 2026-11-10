@@ -14,7 +14,7 @@ import '/src/theme/themes.css'
 const genres = ['Romance', 'Fantasía', 'Misterio', 'Terror', 'Poesía', 'Aventura'].map((name, i) => ({ id: `genre-${i}`, name }))
 const tropes = ['Magia', 'Dragones', 'Brujas', 'Vampiros', 'Familia encontrada', 'Amor prohibido'].map((name, i) => ({ id: `trope-${i}`, name, group: i < 4 ? 'Fantasía y magia' : 'Personajes y emociones' }))
 const intensities = [['romance', 'Romance', 'heart'], ['spicy', 'Spicy', 'flame'], ['terror', 'Terror', 'ghost'], ['humor', 'Humor', 'smile'], ['accion', 'Acción', 'zap'], ['fantasia', 'Fantasía', 'sparkles']].map(([id, name, icon]) => ({ id, name, icon, color: 'mystic', levels: [1, 2, 3, 4, 5].map(n => `${name}: descripción de prueba ${n}`) }))
-let preferences = { id: 'fixture', profile_id: 'fixture', display_name: 'Perfil de prueba', avatar_url: null, biography: 'Historia guardada', genres: genres.slice(0, 5), tropes: tropes.slice(0, 5), intensities: intensities.slice(0, 5).map(item => ({ ...item, level: 3 })), featured_category_id: 'terror' }
+let preferences = { can_view: true, visible_sections: ['biography', 'genres', 'tropes', 'intensities'], profile_visibility: 'public', public_sections: ['biography', 'genres', 'tropes', 'intensities'], id: 'fixture', profile_id: 'fixture', display_name: 'Perfil de prueba', avatar_url: null, biography: 'Historia guardada', genres: genres.slice(0, 5), tropes: tropes.slice(0, 5), intensities: intensities.slice(0, 5).map(item => ({ ...item, level: 3 })), featured_category_id: 'terror' }
 window.profileModalTest = { saves: [], attempts: [], failSave: false, failCatalog: false, delay: 50 }
 const qa = window.profileModalTest
 const fixtureParams = new URLSearchParams(location.search)

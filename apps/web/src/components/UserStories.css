@@ -1,0 +1,75 @@
+.user-stories { margin: 12px 0 28px; padding: 20px; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; }
+.user-stories h2 { margin: 0 0 6px; font-size: 22px; }
+.user-stories p { font-size: 13px; opacity: .8; }
+.user-stories-row { display: flex; align-items: flex-start; gap: 20px; overflow-x: auto; padding: 12px 8px; }
+.user-story-person { display: flex; align-items: center; flex-direction: column; gap: 10px; flex: 0 0 82px; width: 82px; padding: 0; margin: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.user-story-person > span:last-child { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.user-story-avatar { position: relative; display: block; flex: 0 0 72px; width: 72px; height: 72px; aspect-ratio: 1; padding: 0; border-radius: 50%; box-shadow: inset 0 0 0 2px #a596b3; color: #fff; font-size: 24px; }
+.user-story-avatar.has-stories { box-shadow: none; }
+.story-avatar-photo { position: absolute; inset: 8%; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: #655175; }
+.story-avatar-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.story-star-ring { --ring-core: #fff7cf; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; fill: currentColor; }
+.story-star-ring.is-unseen { color: #edbf53; }
+.story-star-ring.is-seen { --ring-core: #f4f7ff; color: #bac6d7; }
+.story-ring-halo { fill: none; stroke: currentColor; stroke-width: 7; opacity: .65; filter: blur(2px); }
+.story-ring-dust { filter: drop-shadow(0 0 .4px currentColor); }
+.story-ring-lines { fill: none; filter: drop-shadow(0 0 2px currentColor); }
+.story-ring-outline { stroke: currentColor; stroke-width: 3.4; }
+.story-ring-filament { stroke: currentColor; stroke-width: 1.1; opacity: .85; }
+.story-ring-core { stroke: var(--ring-core); stroke-width: 1; opacity: .95; }
+.story-ring-orbit { transform-origin: 50px 50px; }
+.story-ring-trail { fill: none; stroke: var(--ring-core); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 25 254.6; filter: drop-shadow(0 0 2.4px currentColor); }
+.story-ring-flare { fill: var(--ring-core); filter: drop-shadow(0 0 1px currentColor); }
+.story-ring-flare-glow { fill: currentColor; opacity: .7; filter: blur(1.4px); }
+.story-ring-flare-small { opacity: .8; }
+/* Explicit story animation: retain it when the global reduced-motion reset runs. */
+.story-star-ring.is-unseen .story-ring-orbit { animation: story-light-orbit 8s linear infinite !important; }
+.story-star-ring.is-unseen .story-ring-dust { animation: story-dust-glow 3.5s ease-in-out infinite !important; }
+@keyframes story-light-orbit { to { transform: rotate(360deg); } }
+@keyframes story-dust-glow { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+.user-story-own { position: relative; flex: 0 0 82px; width: 82px; }
+.user-story-add { position: absolute; top: 49px; right: 1px; z-index: 1; display: grid; place-items: center; width: 25px; height: 25px; padding: 0; border-radius: 50%; border: 2px solid var(--paper); background: var(--button-bg); color: var(--on-primary); cursor: pointer; }
+.user-story-add:focus-visible,.profile-story-add:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.profile-story-controls { position: relative; flex: 0 0 92px; }
+.profile-story-controls .profile-story-avatar { position: relative; display: block; width: 92px; height: 92px; aspect-ratio: 1; padding: 0; border: 0; overflow: visible; background: transparent; box-shadow: inset 0 0 0 2px #a596b3; cursor: pointer; }
+.profile-story-avatar:disabled { cursor: default; opacity: 1; }
+.profile-story-controls .profile-story-avatar.has-stories { box-shadow: none; }
+.profile-story-add { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; border: 2px solid var(--paper); background: var(--button-bg); color: var(--on-primary); cursor: pointer; }
+.user-story-add:hover,.profile-story-add:hover { background: var(--primary-hover); }
+.user-story-dialog { padding: 0; border: 0; color: #fff; background: #181522; border-radius: 18px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
+.user-story-dialog::backdrop { background: rgb(10 7 17 / 88%); }
+.user-story-dialog button { cursor: pointer; }
+.user-story-dialog button:disabled { opacity: .45; cursor: default; }
+.user-story-dialog button:focus-visible,.user-story-person:focus-visible,.profile-story-avatar:focus-visible { outline: 3px solid #dab9ff; outline-offset: 3px; }
+.user-story-stage { position: relative; width: min(440px, calc((100dvh - 24px) * 9 / 16), calc(100vw - 24px)); aspect-ratio: 9 / 16; overflow: hidden; touch-action: pan-y; }
+.user-story-image { width: 100%; height: 100%; object-fit: contain; }
+.user-story-toolbar { position: absolute; z-index: 2; top: 0; left: 0; right: 0; padding: 12px; background: linear-gradient(#000b, transparent); }
+.user-story-progress { display: flex; gap: 4px; }
+.user-story-progress > span { height: 3px; flex: 1; background: #ffffff50; overflow: hidden; border-radius: 3px; }
+.user-story-progress i { display: block; height: 100%; background: white; }
+.user-story-heading { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.user-story-heading strong { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-story-heading button { background: #0004; color: white; border: 0; border-radius: 50%; padding: 7px; display: grid; place-items: center; }
+.user-story-heading svg { width: 18px; height: 18px; }
+.user-story-mini-avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #75518f; flex-shrink: 0; font-size: 12px; }
+.user-story-mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-story-prev,.user-story-next { position: absolute; top: 20%; bottom: 15%; width: 50%; border: 0; background: transparent; color: white; display: flex; align-items: center; padding: 8px; }
+.user-story-prev { left: 0; justify-content: flex-start; }
+.user-story-next { right: 0; justify-content: flex-end; }
+.user-story-prev svg,.user-story-next svg { background: #0005; border-radius: 50%; }
+.user-story-message { position: absolute; top: 40%; left: 15%; right: 15%; text-align: center; background: #181522dd; padding: 16px; border-radius: 12px; font-size: 14px; }
+.user-story-footer { position: absolute; bottom: 0; width: 100%; min-height: 0; display: block; border: 0; color: #fff; padding: 20px 12px; text-align: center; background: linear-gradient(transparent, #000b); font-size: 11px; pointer-events: none; }
+.user-story-confirm { position: absolute; z-index: 3; inset: 35% 8% auto; padding: 20px; border-radius: 14px; background: #30263b; text-align: center; }
+.user-story-confirm button { margin: 4px; padding: 8px 14px; }
+.user-story-composer { width: 430px; padding: 24px; overflow-y: auto; }
+.user-story-composer header { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.user-story-composer h2 { margin: 0; font-size: 22px; }
+.user-story-composer header button { color: white; background: transparent; border: 0; }
+.user-story-composer p { font-size: 14px; line-height: 1.5; }
+.user-story-file { display: block; font-size: 14px; }
+.user-story-file input { display: block; margin: 12px 0; max-width: 100%; }
+.user-story-composer small { display: block; margin: 12px 0; opacity: .75; }
+.user-story-preview { display: block; width: min(100%, 220px); aspect-ratio: 9 / 16; margin: 16px auto; object-fit: contain; border-radius: 12px; }
+.user-story-publish { width: 100%; padding: 12px; margin-top: 14px; border: 0; border-radius: 12px; background: #d7b8ec; color: #25162d; font-weight: 700; }
+@media(max-width:700px) { .profile-story-controls { flex-basis: 68px; } .profile-story-controls .profile-story-avatar { width: 68px; height: 68px; } .user-stories { padding: 16px; } }
+@media(max-width:480px) { .profile-story-controls { flex-basis: 58px; } .profile-story-controls .profile-story-avatar { width: 58px; height: 58px; } }

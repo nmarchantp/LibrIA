@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { profileDestination } from '../services/profileDestination'
 
 export default function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const [error, setError] = useState('')
 
   const submit = async event => {
@@ -17,7 +19,7 @@ export default function RegisterPage() {
         email: form.get('email'),
         password: form.get('password'),
       })
-      navigate('/')
+      navigate(profileDestination(params.toString()))
     } catch {
       setError('No fue posible crear la cuenta. El correo podría estar registrado.')
     }
@@ -32,7 +34,7 @@ export default function RegisterPage() {
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button primary">Crear cuenta</button>
       <p>Después de crear tu cuenta podrás verificar tu correo y vincular Google en Mi cuenta.</p>
-      <p>¿Ya tienes cuenta? <Link to="/login">Ingresa</Link></p>
+      <p>¿Ya tienes cuenta? <Link to={profileDestination(params.toString()) !== '/' ? `/login?next=${encodeURIComponent(profileDestination(params.toString()))}` : '/login'}>Ingresa</Link></p>
     </form>
   </main>
 }
