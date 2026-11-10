@@ -293,8 +293,15 @@ def _ensure_review(
     )
 
 
-def seed_default_admin(db, password: str, now: datetime | None = None, catalog_map: dict | None = None) -> dict:
+def seed_default_admin(db, password: str, now: datetime | None = None, catalog_map: dict | None = None, *, account_only: bool = False) -> dict:
     seed_demo_accounts(db, password, keys={"admin"})
+    if account_only:
+        return {
+            "dataset": MANIFEST["version"],
+            "administrator": "demo.admin@example.com",
+            "books": 0,
+            "reviews": 0,
+        }
     user_id = account_id("user:admin")
     profile_id = account_id("profile:admin")
     reference_time = now or datetime.now(timezone.utc)
@@ -316,18 +323,20 @@ def seed_default_admin(db, password: str, now: datetime | None = None, catalog_m
     }
 
 
-def main() -> None:
+def main(argv=None) -> None:
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--catalog-map", help="JSON object mapping demo book keys to explicitly selected, already imported edition UUIDs")
-    args = parser.parse_args()
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--catalog-map", help="JSON object mapping demo book keys to explicitly selected, already imported edition UUIDs")
+    mode.add_argument("--account-only", action="store_true", help="Create the administrator without adding demo books or reviews")
+    args = parser.parse_args(argv)
     catalog_map = json.loads(Path(args.catalog_map).read_text(encoding="utf-8")) if args.catalog_map else None
     settings = get_settings()
     if len(settings.libria_demo_password) < 8:
         raise SystemExit("Configura LIBRIA_DEMO_PASSWORD con al menos 8 caracteres")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470053)"))
-        result = seed_default_admin(db, settings.libria_demo_password, catalog_map=catalog_map)
+        result = seed_default_admin(db, settings.libria_demo_password, catalog_map=catalog_map, account_only=args.account_only)
     print(json.dumps(result, ensure_ascii=False))
 
 

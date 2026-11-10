@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import get_settings
 from app.core.database import Base
 from app.modules.auth.models import AuthAccount  # noqa: F401
+from app.modules.demo import models as demo_models  # noqa: F401
 from app.modules.users.models import User  # noqa: F401
 from app.modules.books import models as book_models  # noqa: F401
 from app.modules.books import catalog_models  # noqa: F401

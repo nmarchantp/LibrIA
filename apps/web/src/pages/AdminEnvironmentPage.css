@@ -7,3 +7,7 @@
 .environment-panel input { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: inherit; background: var(--surface); }
 .environment-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .environment-panel [role=alert] { color: var(--error-text); }
+.environment-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.environment-tabs [role=tab] { padding: 10px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; font: inherit; }
+.environment-tabs [role=tab][aria-selected=true] { color: var(--text); font-weight: 700; border-color: currentColor; }
+.environment-tabs [role=tab]:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
