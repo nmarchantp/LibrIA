@@ -8,6 +8,7 @@ Esta guía describe el código revisado el **9 de noviembre de 2026**, incluidos
 
 - [Estado actual](#estado-actual)
 - [Arquitectura y tres esquemas](#arquitectura-y-tres-esquemas)
+- [Modelo analítico: granularidad, hechos, dimensiones y cálculos](#modelo-analítico-granularidad-hechos-dimensiones-y-cálculos)
 - [Instalación Windows desde cero](#instalación-windows-desde-cero)
 - [Instalación con Docker](#instalación-con-docker)
 - [Configuración](#configuración)
@@ -16,6 +17,8 @@ Esta guía describe el código revisado el **9 de noviembre de 2026**, incluidos
 - [Gemini y worker](#gemini-y-worker)
 - [Recomendaciones, análisis e interpretaciones](#recomendaciones-análisis-e-interpretaciones)
 - [Sesiones, permisos y acceso a IA](#sesiones-permisos-y-acceso-a-ia)
+- [Funciones adicionales del administrador del sistema](#funciones-adicionales-del-administrador-del-sistema)
+- [Seguridad de la información, ciberseguridad y auditoría](#seguridad-de-la-información-ciberseguridad-y-auditoría)
 - [Actualizar, respaldar y verificar](#actualizar-respaldar-y-verificar)
 - [Problemas frecuentes](#problemas-frecuentes)
 - [Repositorio y documentación](#repositorio-y-documentación)
@@ -39,25 +42,51 @@ La aplicación básica funciona sin clave Gemini, sin Ollama y sin GPU. Código 
 
 El backend es un **monolito modular**: una API FastAPI con módulos de dominio. Scheduler y worker Gemini son procesos separados que comparten PostgreSQL. No se requiere Redis ni broker externo: PostgreSQL conserva la cola y coordina consumidores.
 
+### Flujo definido para los datos y la IA
+
+La separación de responsabilidades acordada es **`app` → ETL → `analytics` → worker Gemini → resultados en `ia`**. El worker obtiene sus trabajos de `ia.jobs`, pero eso es coordinación: la evidencia que alimenta el análisis debe proceder de los datos preparados por ETL en `analytics`.
+
+El siguiente diagrama representa **ese diseño definido**, no una migración ya aplicada al código:
+
 ```mermaid
-flowchart LR
-    U[Navegador React] --> W[Vite / Nginx]
-    W --> A[FastAPI]
-    A --> APP[(app: operación)]
-    A --> AN[(analytics: hechos y proyecciones)]
-    A --> IA[(ia: trabajos y resultados)]
-    S[Scheduler separado] --> E[ETL diario / manual / incremental]
-    APP --> E
-    E --> AN
-    E --> IA
-    IA --> G[Worker Gemini separado]
-    G --> API[Google Gemini API]
-    API --> G
-    G --> IA
-    A --> C[Google Books / Open Library]
+flowchart TB
+    subgraph WEB[Aplicación web]
+        U[React: interfaz] --> W[Vite: desarrollo / Nginx: archivos y proxy]
+        W --> A[FastAPI: API y permisos]
+    end
+
+    subgraph DATA[Preparación de datos]
+        APP[(app: datos operacionales)] -->|Extraer| E[ETL: validar y transformar]
+        S[Scheduler: programar y recuperar] -.->|Ejecutar| E
+        E -->|Publicar datos preparados| AN[(analytics: hechos, perfiles e instantáneas)]
+    end
+
+    subgraph AI[Procesamiento de IA]
+        J[(ia.jobs: cola de trabajos)] -.->|Reclamar trabajo| G[Worker Gemini: procesar y validar]
+        G -->|Contexto preparado| API[Gemini API: inferencia]
+        API -->|Respuesta estructurada| G
+        G -->|Guardar resultados y métricas| R[(ia: resultados e historial)]
+    end
+
+    A <-->|Operación| APP
+    A -->|Solicitar o sincronizar trabajo| J
+    AN -->|Evidencia preparada por ETL| G
+    AN -->|Indicadores| A
+    R -->|Resultados persistidos| A
+    A <-->|Consultar catálogo| C[Google Books / Open Library]
 ```
 
+Las flechas continuas muestran circulación de datos; las discontinuas muestran coordinación del procesamiento. **La cola no es la fuente de evidencia del análisis.**
+
+### Diferencia con la implementación actual
+
+Actualmente el ETL sí prepara la evidencia antes de la inferencia, pero guarda perfiles en **`ia.reader_profile_versions`** e instantáneas en **`ia.reading_analysis_snapshots`**. El worker consume esas entradas desde `ia` y también consulta `app` para candidatos bibliográficos y comprobaciones. Por tanto, `ia` reúne hoy preparación de entrada, coordinación y resultados: **la separación física aún no coincide completamente con el diseño anterior**.
+
+Para ajustarse estrictamente al diseño, los perfiles e instantáneas de entrada deberían residir en `analytics`, y los trabajos de `ia` referenciarlos. Esta aclaración documenta la diferencia; no modifica tablas, consultas ni procesos.
+
 El navegador consulta LibrIA; la clave Gemini permanece en backend. La evidencia necesaria sí se transfiere al proveedor externo. El generador demo actual tiene una tarea propia en el ciclo de vida de la API y un bloqueo PostgreSQL; no sustituye al scheduler ni al worker IA.
+
+### Distribución física actual de los tres esquemas
 
 | Esquema físico | Responsabilidad y ejemplos | Consumidores |
 |---|---|---|
@@ -70,6 +99,140 @@ Son tres esquemas de la misma base, no tres servidores. El nombre vigente es **`
 Una **obra** agrupa la identidad bibliográfica; una **edición** concreta idioma, ISBN y paginación. La biblioteca relaciona a la persona con la obra; cada intento de lectura y sus eventos conserva su propia experiencia, incluso al releer. La reseña pertenece al perfil y la obra; el análisis individual se asocia además al evento terminal concreto. Ejecuciones y huellas enlazan evidencia con versiones de resultados.
 
 Los esquemas separan responsabilidades, pero no anonimizan datos. Backend aplica autorización por titular; las credenciales técnicas PostgreSQL tienen otro alcance. Para el esquema exacto consulta [modelos y migraciones](apps/backend/migrations/versions), no solo el [diseño histórico](docs/data-model.md).
+
+### Herramientas y su función
+
+| Logo | Herramienta | Uso en LibrIAverse |
+|---|---|---|
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="32" height="32" alt="React"> | React | Construye la interfaz y sus componentes interactivos. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg" width="32" height="32" alt="Vite"> | Vite | Sirve el frontend durante desarrollo y genera la compilación web. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nginx/nginx-original.svg" width="32" height="32" alt="Nginx"> | Nginx | Sirve el frontend compilado y redirige `/api/` a FastAPI en Docker. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="32" height="32" alt="Python"> | Python | Ejecuta backend, ETL, scheduler y worker Gemini. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg" width="32" height="32" alt="FastAPI"> | FastAPI | Expone la API HTTP y aplica autenticación y permisos. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="32" height="32" alt="PostgreSQL"> | PostgreSQL | Persiste los tres esquemas, la cola y los resultados; coordina procesos mediante bloqueos. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlalchemy/sqlalchemy-original.svg" width="32" height="32" alt="SQLAlchemy"> | SQLAlchemy | Gestiona modelos, consultas y transacciones del backend. |
+| <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" width="32" height="32" alt="Google Gemini"> | Google Gemini API | Realiza la inferencia externa; el worker prepara solicitudes y valida respuestas. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="32" height="32" alt="Node.js"> | Node.js | Ejecuta herramientas y scripts del frontend; no reemplaza al backend Python. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/npm/npm-original-wordmark.svg" width="32" height="32" alt="npm"> | npm | Instala dependencias web y ejecuta desarrollo, lint y build. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" width="32" height="32" alt="Docker"> | Docker / Compose | Construye imágenes y coordina los servicios de la instalación con contenedores. |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" width="32" height="32" alt="Git"> | Git | Versiona el código y permite colaborar en el repositorio. |
+
+Además, **Alembic** versiona las migraciones PostgreSQL, **Pydantic** valida configuración y contratos de datos/respuestas IA, y **google-genai** comunica el worker con Gemini. Google Books y Open Library aportan metadatos bibliográficos. Scheduler, ETL y worker son procesos propios de LibrIAverse, no herramientas externas adicionales.
+
+Los logos se cargan desde [Devicon](https://devicon.dev/) y [Simple Icons](https://simpleicons.org/); requieren conexión y un visor Markdown compatible con imágenes HTML. Los nombres y descripciones siguen disponibles si el visor bloquea imágenes externas.
+
+## Modelo analítico: granularidad, hechos, dimensiones y cálculos
+
+Esta descripción procede de las migraciones y transformaciones del repositorio; no de una inspección de datos de una base en ejecución. **`analytics` es un modelo híbrido, no un esquema estrella completo**: combina hechos, catálogos al corte, agregados, proyecciones JSON y tablas de control. No tiene una única granularidad ni dimensiones físicas `dim_fecha`, `dim_lector` o `dim_edicion`.
+
+### Granularidad de hechos y evidencia
+
+El **grano** indica qué representa exactamente una fila. En las tablas del cierre, `etl_run_id` forma parte de la identidad: el mismo registro de origen puede aparecer en varios cortes sin ser una nueva actividad.
+
+| Tabla de `analytics` | Clasificación | Grano / clave de una fila | Contenido y medidas |
+|---|---|---|---|
+| `hechos_lectura` | Hecho de evento | Una ejecución × un evento de origen; PK `(etl_run_id, source_id)`. | Titular, obra, edición opcional, tipo y fecha del evento, página previa/actual y total disponible. Permite contar eventos y calcular desplazamiento de página. |
+| `hechos_publicaciones` | Hecho de publicación | Una ejecución × una publicación manual de origen; PK `(etl_run_id, source_id)`. | Ejecutor, perfil, subtipo, fecha y procedencia. No copia el cuerpo; excluye posts legados de avances/reseñas como fuente de esos hechos. |
+| `hechos_resenas` | Hecho de instantánea | Una ejecución × una reseña, con su última revisión elegible anterior al corte; PK `(etl_run_id, source_id)`. | Titular, obra/edición, valoración, estado, primera publicación y revisión. No es una fila por cada edición del texto ni solo por las reseñas creadas ese día. |
+| `hechos_reflexiones` | Evidencia cualitativa de evento | Una ejecución × un evento de finalización con reflexión válida; PK `(etl_run_id, source_id)`. | Reflexión autodeclarada en JSON, titular, obra, fecha y procedencia. No es una emoción inferida por el ETL. |
+| `evidencia_lectora_personal` | Instantánea privada de aportes | Una ejecución × tipo de fuente × fuente; PK `(etl_run_id, source_kind, source_id)`. | Cuaderno, reseña, nota o teoría, con titular, obra, fecha y JSON. Evidencia acumulada al corte; no debe contarse como actividad exclusiva del intervalo. |
+
+No todos los hechos son numéricos: algunos documentan que ocurrió una actividad y otros conservan evidencia cualitativa. Estos últimos no deben tratarse como una medida sumable ni ponerse a disposición del análisis grupal como textos individuales.
+
+### Dimensiones y atributos de análisis
+
+| Eje | Implementación actual | Límite |
+|---|---|---|
+| Obra | `catalogo_obras`, una fila por `(etl_run_id, work_id)`, con título normalizado. Cumple una función de dimensión bibliográfica mínima al corte. | No es una dimensión completa con historial de todos los atributos. Los hechos de lectura y reseñas la referencian por ejecución y obra. |
+| Catálogo vigente | `catalog_current`, una fila por `work_id`, con ediciones/metadatos/categorías en JSON. | Es una proyección actual reemplazable, distinta del catálogo histórico por ejecución. No equivale a una `dim_edicion` normalizada. |
+| Tiempo | Fechas de hechos más `business_date`, `period_start` y `source_cutoff_at` de `ejecuciones_etl`. | No existe tabla calendario. El día de negocio usa Santiago; los instantes se conservan con zona horaria. |
+| Lector/perfil | Claves `user_id`, `owner_id` y `profile_id`, según la tabla. | Son referencias identificables para preparación restringida y análisis propio; no una dimensión pública o anonimizada de lectores. |
+| Edición | `edition_id` en hechos que la admiten, con origen en el catálogo operacional. | Puede faltar; no asignar una edición ni paginación por suposición. |
+| Procedencia | Atributo `provenance`: `simulated`, `unclassified` u `operational`, según el contrato de cada tabla. | No mezcla poblaciones ni acredita origen real por sí mismo. |
+| Tipo de actividad | `event_kind`, `publication_type`, `source_kind` y `indicator_code`. | Atributos/códigos, no tablas de dimensiones independientes. |
+
+Conceptualmente, los hechos de lectura y reseñas se conectan con el catálogo por **ejecución + obra** y con el control ETL por **ejecución**. No todas las referencias descriptivas constituyen claves foráneas a dimensiones físicas. No se debe dibujar un esquema estrella con tablas que el repositorio no crea.
+
+### Agregados, proyecciones y control
+
+| Tabla | Grano | Función |
+|---|---|---|
+| `indicadores_personales` | Ejecución × titular × indicador × procedencia. | Valor numérico y versión de definición de los indicadores personales. |
+| `preparacion_valoraciones_obras` | Ejecución × obra × procedencia. | Conteos de reseñas/valoraciones, suma, media y distribución; preparación restringida. |
+| `projection_runs` | Una versión de proyección de un titular, identificada por `id`. | JSON con biblioteca, eventos, reseñas, interacciones y feedback; huella, versión y fechas de corte/procesamiento. Se reutiliza si no cambian contenido y transformación. |
+| `reader_current` | Un titular (`owner_id`). | Puntero al `run_id` de su proyección vigente; no es otro hecho de lectura. |
+| `resumenes_grupales` | Fecha de publicación × procedencia. | Publicación agregada protegida del recorrido clásico. |
+| `community_releases` | Una fecha de publicación. | JSON de indicadores comunitarios IND-001 a IND-010 y trazabilidad de fuentes. |
+| `peer_releases` | Titular destinatario × fecha. | Publicación de descubrimiento colaborativo; no es un hecho ni una dimensión bibliográfica. |
+| `ejecuciones_etl` | Una ejecución. | Día de negocio o solicitud manual, intervalo, estado, versión, intentos y resumen técnico. |
+| `validaciones_etl` | Ejecución × regla. | Gravedad y cantidad afectada por exclusiones/validaciones y conciliación. |
+| `dirty_readers`, `dirty_catalog` | Un titular pendiente / una obra pendiente. | Control incremental de cambios por procesar; no son datos para indicadores. |
+
+`instantaneas_actividad` pertenece al modelo inicial y conserva métricas JSON por instantánea e intervalo; no sustituye a los hechos normalizados actuales. Las antiguas tablas de recomendaciones/interpretaciones de `analytics` se trasladaron a `ia`, con compatibilidad de consultas; no deben catalogarse como hechos analíticos actuales por aparecer en una migración antigua.
+
+### Cálculos personales implementados en el ETL
+
+En `etl.py`, la transformación vigente es `daily-v5-editionless`. Los cálculos se realizan sobre registros que superan las validaciones, agrupados por **titular y procedencia**, y se guardan con la ejecución y versión de definición.
+
+| Código | Cálculo implementado | Interpretación / precaución |
+|---|---|---|
+| L02 | Conteo de entradas de biblioteca creadas dentro de `[inicio, corte)` cuya obra es válida. | Incorporaciones registradas; no tamaño actual total de biblioteca. |
+| L04 | Conteo de eventos válidos `start` en el intervalo. | Inicios de intentos, no personas ni obras distintas. |
+| L05 | Conteo de eventos válidos `finish` en el intervalo. | Finalizaciones declaradas; relecturas son otros intentos. |
+| L06 | Conteo de eventos válidos `abandon` en el intervalo. | Abandonos explícitos; no se deducen por inactividad. |
+| L09 | `1` si hay algún evento válido distinto de `correction`; `0` para una combinación titular/procedencia con indicadores pero sin esa actividad. | En cierre diario indica actividad de ese día. En manual es presencia en todo el intervalo, no cantidad de días activos. |
+| L10 | `Σ(page − previous_page)` para `progress`, `correction` y `finish`. | Desplazamiento neto registrado: admite correcciones negativas, no equivale a páginas efectivamente leídas. |
+| S02 | Conteo de reseñas elegibles cuya **primera publicación** cae en el intervalo. | Editar una reseña no vuelve a contar una publicación. |
+| S03 | Conteo de publicaciones manuales válidas de perfiles personales en el intervalo. | No atribuye publicaciones de organizaciones al análisis personal del ejecutor ni duplica avances/reseñas. |
+
+Si no hay fuentes elegibles que formen el grupo titular/procedencia, no se genera una serie de ceros para toda la población. Las exclusiones se registran por regla. Las restricciones de moderación, identidad, propiedad y corte condicionan las fuentes incluidas.
+
+### Valoraciones por obra: preparación de S01
+
+Para cada **ejecución × obra × procedencia**, el ETL usa las reseñas válidas con estado `published` al corte y calcula:
+
+- `review_count = número de reseñas publicadas`, tengan o no valoración.
+- `rated_count = número de valoraciones no nulas`.
+- `rating_sum = suma de valoraciones no nulas`.
+- `rating_average = rating_sum / rated_count`; si no hay valoraciones, queda **NULL**, no cero.
+- `distribution = frecuencia de cada valor permitido`, de **0,25 a 5 en incrementos de 0,25** en el contrato actual.
+
+Las reseñas `hidden` elegibles pueden conservarse en `hechos_resenas`, pero no alimentan este agregado de valoraciones públicas. Esta preparación no es por sí misma una autorización para publicar resultados de grupos pequeños.
+
+Ejemplo: valoraciones `[4, 5, NULL]` producen `review_count=3`, `rated_count=2`, `rating_sum=9`, `rating_average=4,5`. Para combinar grupos compatibles se recalculan medias con sumas y denominadores; **no se promedian medias sin ponderar ni se suman instantáneas repetidas**.
+
+### Cálculos comunitarios implementados
+
+`community.py` calcula los siguientes indicadores sobre proyecciones persistidas. No crea diez tablas de hechos: construye una publicación JSON en `community_releases`. Usa un período actual de 30 días y los 30 días anteriores, con corte fijado para la publicación diaria de Santiago.
+
+| Código | Cálculo y grano de salida |
+|---|---|
+| IND-001 | Por obra: lectores distintos con `finish` en el período; relecturas/ediciones no multiplican al lector. Conteo publicado redondeado. |
+| IND-002 | Por obra: lectores distintos con `abandon` en el período. No implica rechazo del libro. |
+| IND-003 | Por obra: inicios entre 60 y 30 días antes del corte; primer desenlace de cada intento dentro de sus 30 días iniciales, conservando un desenlace por lector/obra. `100 × abandonos_redondeados / (abandonos_redondeados + finales_redondeados)`, a un decimal. No es abandonos sobre todos los inicios. |
+| IND-004 | Por categoría: cada obra terminada por lector reparte peso `1/n` entre sus categorías normalizadas. `100 × peso_redondeado_categoria / Σ pesos_redondeados_publicables`, a un decimal. |
+| IND-005 | Por categoría publicable en ambos períodos: participación actual menos participación anterior, en **puntos porcentuales**. |
+| IND-006 | Por obra: media de valoraciones públicas vigentes por lector/obra anteriores al corte; redondeo a medio punto. No se limita a reseñas publicadas en los últimos 30 días. |
+| IND-007 | Por perfil de autor: seguidores distintos vigentes antes del corte; conteo redondeado. No equivale a lectores de sus obras. |
+| IND-008 | Por obra: suma de comentarios/reacciones del período con vínculo bibliográfico no ambiguo, limitando cada lector a diez; conteo redondeado. |
+| IND-009 | Por tipo `start`/`finish`: suma de eventos del período, máximo diez por lector y tipo; conteo redondeado. |
+| IND-010 | Por tipo de actividad: conteo protegido actual menos anterior para inicios, finales, reseñas públicas o comentarios/reacciones. Es **diferencia absoluta**, no variación porcentual. |
+
+Se requiere una comunidad de al menos **diez participantes** con actividad en las fuentes consideradas de los dos períodos; cada desglose requiere **cinco contribuyentes**. IND-003 exige cinco abandonos y cinco finales. Las categorías pequeñas se suprimen, por lo que IND-004 no representa etiquetas omitidas. El helper actual de conteos es `R(x) = 5 × floor((x + 2) / 5)`; para conteos enteros redondea al múltiplo de cinco más cercano y también se aplica a pesos de categorías. El redondeo a medio punto de valoraciones es `floor(2 × media + 0,5) / 2`.
+
+El recorrido clásico de `resumenes_grupales` calcula además participantes, inicios, finales, abandonos y reseñas con umbrales y límites por persona. Para su media grupal primero obtiene la media de cada participante y luego promedia participantes con igual peso, redondeando a medio punto. No debe confundirse con la media por obra de S01 ni con IND-006.
+
+### Reglas para consultar e interpretar
+
+- Elige una ejecución/corte coherente y la procedencia adecuada; no mezcles manuales y diarios para sumar actividad.
+- Suma indicadores diarios solo cuando su definición sea aditiva y las fechas no se solapen. Para L09 de varios días también puedes recalcular fechas locales distintas de eventos elegibles; no sumes el booleano de una carga manual como días.
+- Recalcula lectores/obras distintos sobre todo el período: sumar únicos diarios puede duplicarlos.
+- Recalcula porcentajes y medias desde sus componentes; denominador vacío significa ausencia de datos.
+- Catálogo vigente y estados actuales no reconstruyen atributos eliminados o cambios anteriores que no se versionaron.
+- Los agregados protegidos reducen exposición, pero no acreditan anonimización formal ni representatividad del mercado. Los hechos con titular y la evidencia textual permanecen privados.
+- No todo indicador propuesto en `analytics-catalog.md` está implementado: esta sección identifica cálculos encontrados en código y los separa de generación narrativa con Gemini.
+
+Fuentes verificables: [transformación ETL](apps/backend/app/modules/analytics/etl.py), [proyecciones](apps/backend/app/modules/analytics/projections.py), [indicadores comunitarios](apps/backend/app/modules/analytics/community.py), [evidencia y agregación clásica](apps/backend/app/modules/analytics/insights.py), [migraciones](apps/backend/migrations/versions). Los reportes históricos no sustituyen las fórmulas de estas implementaciones.
 
 ## Instalación Windows desde cero
 
@@ -536,6 +699,139 @@ Pueden consultarse indicadores y resultados históricos autorizados. Acceso prof
 - Permisos administrativos de cuenta y capacidades públicas/profesionales son comprobaciones diferentes, aplicadas en backend.
 
 Ver [acceso lector](docs/reader-ai-access.md), [cuentas](docs/cuentas-usuario.md), [Google OAuth](docs/google-login.md) y [perfil adaptativo](docs/adaptive-reader-ai.md), considerando sus avisos históricos.
+
+## Funciones adicionales del administrador del sistema
+
+Además de las funciones personales habilitadas para su cuenta, el administrador dispone de herramientas para operar la plataforma. El acceso efectivo se comprueba con el permiso de cuenta **`admin`** en backend; una etiqueta pública de perfil no basta. El menú consulta `/api/roles/access` y muestra las herramientas según permisos y flags.
+
+### Pantallas y capacidades
+
+| Acceso | Funciones adicionales | Condiciones y trazabilidad |
+|---|---|---|
+| **Gestionar perfiles** — `/admin/profiles` | Buscar cuentas por nombre, correo o username según el mantenedor; paginar y filtrar por tipo o estado. Consultar cuentas activas, suspendidas, pendientes de eliminación y anonimizadas. | Acceso administrativo. La información de cuentas no se convierte en un directorio público. |
+| **Cuentas**, dentro de Gestionar perfiles | Suspender o levantar la suspensión de otra cuenta; autorizar un cambio excepcional de username; cambiar el tipo de perfil cuando se cumplen las reglas. | Motivo requerido; auditoría de cuenta. Cambios de suspensión/tipo revocan sesiones. No permite modificar la propia suspensión ni cambiar el propio tipo. |
+| **Verificación profesional** — Gestionar perfiles | Solicitar revisión para otra cuenta como autor, influencer o librería; consultar pendientes y aprobar/rechazar solicitudes mediante revisión administrativa. | No hay verificador automático. Asignar un tipo profesional requiere la verificación aprobada correspondiente. Se registra la decisión y su responsable. |
+| **Perfil público e historial** — Gestionar perfiles | Editar nombre visible/biografía desde el mantenedor; consultar solicitudes, cambios de tipo y auditoría de cuenta con actor, motivo, fecha, correlación y antes/después disponibles. Revocar un tipo profesional mediante el cambio permitido a lector. | Se aplican límites y dependencias del servicio. La revocación no equivale a borrar automáticamente publicaciones históricas ni garantiza que cualquier cambio sea admisible. |
+| **Configurar aplicación** — `/admin/environment` | Consultar/editar las variables admitidas de Backend y Web. Los secretos se muestran como configurados, sin revelar su valor, y pueden reemplazarse. | Validación de valores, revisión para detectar cambios concurrentes y escritura atómica. No hay historial persistente completo de estas ediciones. Cambios pueden requerir reiniciar procesos o recompilar frontend. |
+| **Modo demostración** — Configurar aplicación | Activar/desactivar el generador ficticio, ajustar intervalo de 10 a 3600 segundos y consultar progreso, última ejecución/error, libros preparados y pendientes. | Requiere migración 0087, descubrimiento de catálogo y contraseña demo válida. Guarda último administrador/fecha de configuración; no un historial completo de cada cambio del interruptor. Detener conserva contenido e historial. |
+| **Carga de datos** — `/admin/etl` | Consultar cierres y ejecuciones manuales, próxima ejecución, estado/fase, corte, cantidades y validaciones; solicitar **Ejecutar ETL ahora**. | Solicitud identificada por UUID, idempotencia y conflicto si otro ETL está activo. Prepara datos de todos los titulares elegibles; no muestra sus textos privados ni invoca Gemini directamente. |
+| **Moderación de contenido** — `/settings?tab=moderation` | Revisar propuestas pendientes, contenido/adjuntos autorizados, alertas y versiones; aprobar/rechazar, revisar reportes y resolverlos con las acciones admitidas, incluido ocultar/restaurar contenido cuando corresponde. Consultar historial. | Motivo, versión esperada, controles de concurrencia y auditoría; notificaciones privadas al autor. Un reporte por sí solo no oculta contenido. |
+| **Gestionar libros** — `/admin/catalog` | Inventario por título/autor/ISBN; filtros de posibles duplicados, sin portada o sin ISBN. Crear/corregir obras y ediciones, revisar fuentes y correcciones. | Mantenedor requiere `CATALOG_DISCOVERY_ENABLED` y `CATALOG_ADMIN_PREVIEW_ENABLED`, además del permiso administrativo y condiciones del servicio. Guardados con motivo, idempotencia, versión y auditoría. |
+| **Agrupación bibliográfica** — Gestionar libros | Comparar obras, simular agrupación, validar impacto, resolver conflictos y consultar historial; ejecutar agrupación o simular/ejecutar reversión si están habilitadas. | Simular no equivale a ejecutar. La ejecución exige flags adicionales, confirmación, motivo y controles de conflicto; `CATALOG_ADMIN_MERGE_ENABLED` está restringido por configuración a desarrollo/test con sus dependencias. |
+| **Importación autorizada de catálogo** — API administrativa | Incorporar una referencia externa validada con motivo y clave de idempotencia. | Requiere descubrimiento habilitado. No debe confundirse con la búsqueda de un libro ni con importación masiva automática. |
+
+El mantenedor de libros puede estar oculto o devolver 404 aunque la cuenta sea administradora si sus flags están apagados. No los actives en bloque sin revisar el estado y contrato del catálogo. Las correcciones de metadatos no reescriben el total de páginas fijado en intentos de lectura anteriores.
+
+### Reglas especiales de gestión de cuentas
+
+- Cambiar una cuenta a administrador concede su permiso administrativo; retirarlo mediante cambio de tipo exige conservar otro administrador activo.
+- No se permite cambiar el propio tipo. Cambios profesionales pueden bloquearse por publicaciones asociadas al tipo anterior; pasar a librería requiere archivar antes la biblioteca personal y conservar su historial.
+- Las cuentas anonimizadas no admiten cambios ordinarios de suspensión/username. Recuperar una eliminación pendiente no levanta una suspensión independiente.
+- La creación directa antigua de librerías mediante `POST /api/roles/bookstores` devuelve **410**. El flujo vigente es la verificación profesional de una cuenta existente; un texto antiguo de interfaz que diga «crear librerías» no reemplaza ese contrato.
+- El registro público no permite autoasignarse administración. Para el primer acceso se usa la semilla autorizada o `scripts.grant_admin`, ejecutado por quien opera el servidor.
+
+### Referencia de API administrativa
+
+Todas las rutas siguientes usan el prefijo `/api` y requieren autenticación/permisos; parámetros y cuerpos exactos se consultan en Swagger o en los routers.
+
+| Familia de rutas | Operaciones |
+|---|---|
+| `/api/accounts/admin` | Listado de cuentas; subrutas `/{user_id}/suspension`, `/username`, `/role`, `/verification` y `/history`. |
+| `/api/roles/profiles` y `/api/roles/requests` | Perfiles, edición pública, solicitudes, historial, revocación y decisiones de verificación. |
+| `/api/admin/environment/{backend\|web}` | GET de configuración enmascarada y PATCH de variables admitidas. |
+| `/api/admin/demo` | GET de estado y PATCH de activación/intervalo. |
+| `/api/analytics/admin/etl` | GET de historial/resumen, POST en `/run` y GET de `/{run_id}/validations`. |
+| `/api/admin/moderation` | Cola, detalle/adjuntos, historial y decisiones; `/reports` contiene revisión y resolución de reportes. |
+| `/api/admin/catalog` | Inventario, obras/ediciones, importaciones, comparación, simulaciones, ejecución y reversión condicionadas por flags. |
+
+### Límites del rol y operación del servidor
+
+La administración **no concede lectura general de cuadernos, notas, teorías, reseñas privadas o análisis personales de otras personas**. Los permisos para moderar propuestas/adjuntos corresponden a ese recorrido concreto. Tampoco concede por sí sola acceso profesional a Insights grupales, suprime umbrales de privacidad ni habilita las interpretaciones Gemini pendientes.
+
+Ejecutar un ETL manual puede preparar trabajos de análisis elegibles, pero consultar estados o tener permiso administrativo no permite saltarse el corte del análisis individual mediante su endpoint refresh. Activar flags de Gemini tampoco garantiza un resultado si faltan evidencia, cuota, presupuesto o proceso worker.
+
+Respaldar/restaurar PostgreSQL, aplicar Alembic, reiniciar procesos, revisar logs del host, rotar credenciales externas y desplegar contenedores requieren **acceso operativo al servidor**. Son tareas descritas en esta guía, no permisos que el rol web otorgue automáticamente. No se documenta un panel web de borrado arbitrario de bases ni de ejecución libre de comandos del sistema.
+
+Referencias: [cuentas y restricciones](docs/cuentas-usuario.md), [mantenedor de libros](docs/catalog-maintenance.md), [ETL](docs/etl-daily.md), [moderación](docs/moderation-stage4-results.md), [ubicación de moderación](docs/moderation-access-fix.md) y [modo demo](docs/demo-mode.md).
+
+## Seguridad de la información, ciberseguridad y auditoría
+
+Esta sección reúne **controles implementados y evidencia versionada**, sus mecanismos de auditoría y sus límites. Se contrastó con el código y las migraciones; no constituye una auditoría externa, prueba de penetración, certificación de cumplimiento ni una nueva ejecución de las pruebas citadas. La trazabilidad cubre recorridos concretos: **no existe todavía una auditoría universal de todas las acciones y solicitudes HTTP**.
+
+### Controles y acciones implementadas
+
+| Área | Acción implementada | Alcance y límite |
+|---|---|---|
+| Contraseñas | Hash Argon2 mediante `pwdlib`; comparación del hash al autenticar. Operaciones sensibles requieren contraseña actual. | No se almacena contraseña de usuario en texto plano. Esto no cifra automáticamente la base ni los `.env`. |
+| Tokens y sesiones | JWT con tipo, sujeto, sesión, identificador, emisión y expiración; validación de claims y firma con algoritmo permitido. Sesión persistida, refresh rotativo y almacenamiento de su hash; detección de reutilización y revocación. | Access de corta duración, inactividad y máximo absoluto separados. El access token del navegador sigue en `localStorage`. |
+| Credenciales y estado de cuenta | Cambio/restablecimiento de contraseña, cambio confirmado de correo, desvinculación Google y restricciones críticas invalidan sesiones/desafíos según la operación. Versión de seguridad invalida intenciones OAuth en curso. | Una sesión revocada no se recupera solo conservando el JWT. El worker verifica que el titular siga activo antes de llamar a IA. |
+| Recuperación de cuenta | Tokens aleatorios de 256 bits, solo SHA-256 persistido, expiración de diez minutos y uso único. Reenvío con espera de un minuto por cuenta/propósito. Respuesta de recuperación sin confirmar existencia de cuenta. | El límite de desafíos no equivale a una protección global contra fuerza bruta, abuso distribuido o denegación de servicio. |
+| OAuth Google | Estado aleatorio vinculado al navegador mediante cookie HttpOnly temporal, comprobaciones antes de completar autorización y vinculación por identidad Google. | No se vinculan cuentas únicamente por coincidencia de correo. Los avisos de OAuth incompleto en la revisión de octubre describen una etapa histórica. |
+| Autorización | Comprobaciones de sesión, titularidad, permiso administrativo y capacidad/membresía profesional en backend. Estados privados y adjuntos de moderación requieren acceso autorizado. | Ocultar controles en React no concede ni reemplaza permisos. Ser administrador no habilita automáticamente análisis personales ajenos. |
+| Configuración de producción | Valida secreto JWT propio de al menos 32 caracteres, rechaza valores de desarrollo y exige orígenes HTTPS explícitos y cookie segura fuera de desarrollo/test. CORS se limita a orígenes configurados. | CORS no sustituye autenticación, CSRF ni un firewall; estos controles no instalan TLS en el servidor. |
+| Contenido y archivos | Descripciones bibliográficas renderizadas como texto y restricciones de protocolos en enlaces. Validación de imágenes y límites por tipo de recurso. Avatares se decodifican y recodifican para retirar metadatos. | No se debe extender la garantía de recodificación de avatares a todos los adjuntos. No hay certificación de ausencia de XSS en toda la aplicación ni antivirus general acreditado. |
+| Moderación | Propuestas privadas, reglas versionadas, reportes, decisiones motivadas, comprobación de versiones y acceso a contenido según visibilidad. Decisión, auditoría y notificación se publican transaccionalmente. | Reportar no oculta automáticamente. Moderación de contenido no sustituye controles de infraestructura o autorización. |
+| Integridad y concurrencia | Transacciones, claves únicas, bloqueos de filas/asesores, idempotencia y controles de versión en comandos sensibles. ETL concilia cantidades y publica atómicamente. | Protege los caminos implementados; no garantiza escrituras directas de terceros que omitan servicios o controles. |
+| Privacidad analítica | Aislamiento por titular, procedencia explícita, salidas grupales con umbrales, límites de contribución, supresión y redondeo. Tablas privadas de preparación revocan acceso de `PUBLIC` donde lo declaran las migraciones. | Es seudonimización/preparación restringida y publicación agregada limitada; no anonimización formal ni aislamiento frente a credenciales técnicas de la base. |
+| IA externa | Worker apagado por defecto, activación explícita, evidencia delimitada como datos no confiables, validación de contratos/citas y candidatos; presupuestos de llamadas/tokens y costos, leases y reintentos acotados. | Reduce generación inválida y abuso de consumo; no elimina inyección de instrucciones, errores semánticos o transferencia de datos privados al proveedor. Una llamada ya enviada no puede deshacerse. |
+| Secretos | `.env`, respaldos locales y artefactos sensibles excluidos de versionado/construcción según `.gitignore`/`.dockerignore`; campos sensibles ocultos en lectura del mantenedor de entorno. | Exclusión Git no cifra archivos ni elimina secretos previamente publicados. `VITE_*` forma parte del cliente público. |
+| Disponibilidad y recuperación | Migraciones explícitas, respaldo previo en setup, chequeo de revisión antes de arrancar, cola persistente, recuperación de leases/cierres y volumen PostgreSQL. | No acredita alta disponibilidad, restauraciones periódicas verificadas ni un objetivo RPO/RTO comprometido. |
+
+Referencias de implementación: [seguridad JWT/contraseñas](apps/backend/app/core/security.py), [sesiones](apps/backend/app/modules/auth/sessions.py), [configuración](apps/backend/app/core/config.py), [gestión de cuentas](apps/backend/app/modules/users/account_service.py), [autorización de contenido](apps/backend/app/modules/social/activity_access.py) y [worker Gemini](apps/backend/app/modules/analytics/gemini_worker.py).
+
+### Registros de auditoría y evidencia técnica
+
+| Registro | Qué permite reconstruir | Protección / límite |
+|---|---|---|
+| `app.auditoria_cuentas` | Cuenta afectada, actor, acción, origen, fecha, UUID de correlación, motivo e instantáneas anterior/posterior con campos permitidos. Incluye gestión de cuenta, recuperación y acciones administrativas. | Cambio crítico y auditoría comparten transacción. Trigger impide modificar/borrar, con excepción limitada de minimización de campos identificables tras anonimización. No registra contraseñas, sus hashes, tokens ni credenciales. |
+| `app.auditoria_identidades` | Perfil afectado, actor, acción, detalle y fecha de operaciones de identidad. | Su estructura no es idéntica a la de cuentas: no debe suponerse que tiene el mismo UUID de correlación o antes/después. |
+| `app.auditoria_moderacion` | Revisión o reporte afectado, actor, acción, motivo y fecha; contexto anterior/resultante en decisiones que lo incorporan. Se relaciona con propuestas, reportes y notificaciones. | Trigger de solo adición; versiones y conflictos evitan aplicar decisiones sobre contenido cambiado. Puede contener contexto de contenido: su consulta es restringida. |
+| `app.simulaciones_fusion` y registros de decisiones canónicas | Administrador, obras implicadas, huella, resultado y fecha de simulaciones; decisiones de identidad cuando están habilitadas. | Simulaciones inmutables, caducidad y flags de despliegue. No implica que las fusiones estén habilitadas en todos los entornos. |
+| `app.selecciones_edicion_lectura` | Selecciones explícitas de edición asociadas a una lectura en el contrato de progreso opcional. | Registro protegido contra modificación/borrado; no es un registro de todas las consultas al catálogo. |
+| Sesiones persistidas | Sesión vinculada al usuario, fechas de vigencia/actividad, generación refresh y motivo/fecha de revocación. | Estado de seguridad de sesión; no es un historial completo de navegación ni de todos los intentos fallidos de login. |
+| `analytics.ejecuciones_etl`, `validaciones_etl` y hechos | Quién solicitó una ejecución manual, intervalo/corte, versión, estado, intentos, cantidades, reglas y registros de origen incluidos. | Las claves ejecución/origen permiten explicar un corte y exclusiones contadas; no se conservan necesariamente los textos o filas completas rechazadas. |
+| `analytics.projection_runs` y punteros vigentes | Titular, versión de transformación, hash, evidencia JSON y fechas de proyección; `reader_current` identifica la versión actual. | Historial técnico de proyecciones sujeto a políticas de conservación/minimización; no equivale a log inmutable externo. |
+| `ia.jobs`, perfiles/instantáneas y resultados | Titular, tipo de trabajo, evidencia/huella, versión de perfil, modelo/prompt, ejecución ETL cuando corresponde, estado, intentos y resultado publicado. | Se distinguen la preparación al corte, los intentos y el resultado vigente/histórico. Las comprobaciones de elegibilidad pueden retirar resultados o textos derivados. |
+| `ia.call_ledger`, `ia.usage_metrics` | Llamada e intento, ordinal, modelo/fase, reservas, contadores disponibles, errores, duración, identificador remoto cuando existe y costo estimado. | Un consumo ambiguo puede quedar pendiente de reconciliación; falta de contadores no acredita costo cero. No sustituye factura del proveedor. |
+
+Las restricciones de solo adición protegen frente a operaciones ordinarias de la aplicación. **No son una firma digital, cadena criptográfica ni almacenamiento WORM externo**: quien controle la administración de PostgreSQL puede tener capacidad para alterar esos mecanismos. Los hashes permiten comparar contenido/versión; por sí solos no prueban autoría o integridad frente a un administrador comprometido.
+
+### Recorrido de trazabilidad de un análisis
+
+Para investigar un resultado, conserva los identificadores técnicos y sigue el recorrido correspondiente:
+
+1. **Origen:** obra/edición, entrada de biblioteca, lectura y evento; reseña/revisión o aporte que sustenta el análisis. Comprueba titularidad, visibilidad y procedencia.
+2. **Preparación:** localiza `etl_run_id` o `analytics_run_id`, según el flujo; revisa corte, versión de transformación/identidad, estado, validaciones y fuentes. No todos los resultados usan la misma clase de ejecución.
+3. **Evidencia autorizada:** identifica versión de perfil o snapshot de lectura, su huella y vínculo con el corte. En el código actual estas entradas de IA están parcialmente en `ia`, como se explica en arquitectura.
+4. **Trabajo:** busca `job_id` y revisa tipo, propietario, modelo, versión de prompt, intentos, estado y error. La identidad del evento distingue una relectura de otra.
+5. **Llamadas:** consulta el ledger por trabajo/intento; distingue llamadas completadas, fallidas y consumo pendiente. Contrasta identificador remoto y métricas disponibles sin publicar evidencia privada.
+6. **Resultado:** verifica resultado persistido, referencias de evidencia, versión vigente/histórica y fechas. Una respuesta estructuralmente válida no prueba la corrección de todas sus conclusiones.
+
+La auditoría de cuentas usa su propio `correlation_id`; el análisis usa ejecuciones, hashes, eventos y jobs. **No hay un identificador global propagado a todas las capas**. No se debe afirmar que una edición de `.env`, una llamada HTTP y un cargo Google se unen automáticamente en una sola cadena de auditoría.
+
+### Revisiones y auditorías documentadas
+
+| Evidencia en el repositorio | Alcance documentado | Cómo interpretarla |
+|---|---|---|
+| [Revisión de seguridad del 4 de octubre de 2026](docs/security-review.md) | Hallazgos/correcciones sobre HTML externo, OAuth state, configuración JWT, propiedad, privacidad, concurrencia y roles. | Es histórica: parte de sus pendientes fue implementada después. No es un pentest ni describe por sí sola todo el estado actual. |
+| [Gestión de cuentas](docs/cuentas-usuario.md) y migraciones `0061`–`0067` | Recuperación, revocación, minimización de cuentas, desafíos, versión de seguridad y auditoría. | Distingue la protección del registro administrativo de la eliminación integral de contenido personal, que no está garantizada. |
+| [Auditoría de consumo Gemini del 28 de octubre](docs/gemini-usage-audit-2026-10-28.md) | Inspección de flujos, contabilidad de tokens/costos y límites del consumo. | Auditoría técnica de ese alcance; no auditoría integral de ciberseguridad. |
+| [Corrección y validación Gemini](docs/gemini-optimization-2026-10-28.md) | Ledger, reservas, metadatos, recuperación y pruebas con proveedor simulado/PostgreSQL aislado. | El reporte declara su modalidad y límites; no demuestra nuevas inferencias reales ni facturación en esta actualización del README. |
+| [Moderación: etapa 1](docs/moderation-stage1-results.md), [etapa 2](docs/moderation-stage2-results.md), [etapa 3](docs/moderation-stage3-results.md), [etapa 4](docs/moderation-stage4-results.md) y [corrección de acceso](docs/moderation-access-fix.md) | Preparación privada, integración, decisiones/reportes, auditoría contextual, notificaciones y acceso de interfaz. | Evidencia por etapa; las correcciones posteriores prevalecen sobre rutas y estados anteriores. |
+
+Existen pruebas de contratos y seguridad en [test_security.py](apps/backend/tests/test_security.py), [sesiones](apps/backend/tests/test_stage4_sessions_and_triggers.py), [cuentas](apps/backend/tests/test_account_management.py), [concurrencia de cuentas](apps/backend/tests/test_account_concurrency.py), [OAuth](apps/backend/tests/test_google_login.py), [moderación](apps/backend/tests/test_moderation_administration.py) y [worker](apps/backend/tests/test_stage5_gemini_worker.py). Su presencia no equivale a ejecución aprobada en tu entorno. Para repetirlas usa una base aislada y los flags exigidos; no pruebes ataques ni mutaciones sobre datos compartidos.
+
+### Brechas y cobertura pendiente
+
+- **Auditoría de configuración:** el mantenedor `.env` comprueba administración, oculta secretos en lectura, valida campos, detecta cambios mediante hash de revisión y reemplaza el archivo de forma atómica. El código actual no añade un historial persistente de actor, motivo y antes/después de esa edición. El bloqueo del mantenedor es por proceso; no debe presentarse como coordinación distribuida completa.
+- **Protección web:** access token en `localStorage`, ausencia de token CSRF separado y cabeceras CSP/HSTS completas pendientes de despliegue. La cookie `SameSite=Lax` no resuelve todos los escenarios de ataque.
+- **Defensa perimetral:** no se acredita MFA, rate limiting global de login/API compartido entre réplicas, WAF, detección centralizada de intrusiones ni protección DDoS mediante estos componentes de aplicación.
+- **Infraestructura y secretos:** no se acredita cifrado de discos/backups, TLS de conexión PostgreSQL, gestor externo de secretos o rotación automatizada en todos los entornos. Las configuraciones locales no equivalen a esos controles.
+- **Registro operativo:** falta una correlación global de solicitudes y una política integral acreditada de retención, acceso, exportación, alertas y conservación externa de evidencias. Logs técnicos pueden contener información sensible; no deben compartirse sin revisión.
+- **Privacidad y baja:** la minimización de cuenta preserva relaciones/historial; no garantiza retirar datos personales escritos dentro de textos, motivos administrativos, evidencias o snapshots históricos. Requiere revisión de retención por tipo de dato.
+- **Aseguramiento:** esta revisión documental no ejecuta pentest, análisis dinámico, escaneo de secretos, auditoría actualizada de dependencias, pruebas de carga ni ejercicios de restauración/respuesta a incidentes. Los reportes anteriores no sustituyen esas verificaciones antes de producción.
+
+Ante un incidente, la investigación debe conservar los IDs de cuenta/sesión, ejecución/evento/job y marcas de tiempo relevantes, con acceso restringido. Revocar sesiones o detener el worker evita parte de la actividad posterior, pero no revierte llamadas externas ni elimina una credencial comprometida del proveedor; la rotación y recuperación deben coordinarse en el servicio afectado. Este apartado describe capacidades y brechas existentes, no acredita un plan de respuesta a incidentes ya implantado.
 
 ## Actualizar, respaldar y verificar
 
