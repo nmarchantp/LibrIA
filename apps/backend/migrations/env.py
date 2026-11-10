@@ -10,7 +10,9 @@ from app.modules.users.models import User  # noqa: F401
 from app.modules.books import models as book_models  # noqa: F401
 from app.modules.books import catalog_models  # noqa: F401
 from app.modules.library import models as library_models  # noqa: F401
+from app.modules.library import challenge_models  # noqa: F401
 from app.modules.social import models as social_models  # noqa: F401
+from app.modules.social import moderation_models  # noqa: F401
 from app.modules.users import verification_models  # noqa: F401
 from app.modules.users import profile_models  # noqa: F401
 from app.modules.users import identity_models  # noqa: F401

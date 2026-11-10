@@ -53,6 +53,7 @@
 .reader-profile-tabs button.active { color:var(--ink); border-color:var(--primary); }
 .reader-profile-tabs button svg { flex-shrink:0; }
 .reader-profile-content { min-width:0; }
+.reader-profile-content[hidden] { display:none!important; }
 .reader-profile-summary { margin-top:20px; }
 .reader-profile-content .account-page { padding-top:5px; }
 .reader-profile-content .google-account-panel { margin-inline:0; }

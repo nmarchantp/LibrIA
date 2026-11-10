@@ -1,3 +1,4 @@
+import { prepareModeratedWrite, finishModeratedWrite, rememberModeratedVersions } from './moderationTransport'
 // Punto único para solicitudes REST. La URL puede cambiar sin tocar las páginas.
 const configuredUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
 // The local launcher listens on IPv4. Avoid resolving its address to ::1.
@@ -23,6 +24,7 @@ export function apiAssetUrl(value) {
 export async function apiRequest(path, options = {}) {
   const headers = { ...options.headers }
   if (options.body != null && !(options.body instanceof FormData) && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
+  const moderationIntent = await prepareModeratedWrite(path, options, headers)
   let response
   try {
     response = await fetch(apiUrl(path), { ...options, headers })
@@ -45,6 +47,7 @@ export async function apiRequest(path, options = {}) {
     }
   }
   if (!response.ok) {
+    finishModeratedWrite(moderationIntent, response.status >= 400 && response.status < 500)
     const payload = await response.json().catch(() => null)
     const error = new Error(typeof payload?.detail === 'string' ? payload.detail : payload?.detail?.message || 'No fue posible completar la solicitud')
     error.code = payload?.detail?.code
@@ -52,7 +55,13 @@ export async function apiRequest(path, options = {}) {
     if (response.status === 401 && authSession) authSession.unauthorized(error)
     throw error
   }
-  const data = response.status === 204 ? null : await response.json()
+  const data = response.status === 204 ? null : options.responseType === 'blob' ? await response.blob() : await response.json()
+  finishModeratedWrite(moderationIntent, true)
+  rememberModeratedVersions(path, data, headers)
+  const moderated = data?.comment || data
+  if (['POST', 'PUT'].includes(options.method?.toUpperCase()) && moderated?.moderation_status === 'pending_review') {
+    window.dispatchEvent(new CustomEvent('libria:moderation-pending', { detail: moderated.moderation_message || 'Tu contenido fue enviado a revisión. Te avisaremos cuando esté aprobado' }))
+  }
   if (/^\/(reviews|readings)(\/|\?|$)/.test(path) && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method?.toUpperCase())) {
     window.dispatchEvent(new Event('libria:book-activity-changed'))
   }

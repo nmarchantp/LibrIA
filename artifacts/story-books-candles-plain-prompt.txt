@@ -1,0 +1,6 @@
+Tool: built-in image_gen
+Input: apps/web/public/images/story-books-candles.png
+Output: apps/web/public/images/story-books-candles-plain.png
+Transparent background: true
+
+Edit this decorative watercolor illustration. Remove all flowers, leaves, botanical stems and plant elements. Keep the stack of antique plum and brown books, glowing candle in glass jar, small candle and a few gold sparkles. Preserve the cozy hand drawn watercolor aesthetic, colors and overall portrait composition. Transparent background. No text, no additional objects. Standalone decoration for a reading profile card.

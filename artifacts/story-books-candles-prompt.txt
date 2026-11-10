@@ -1,0 +1,5 @@
+Tool: built-in image_gen
+Reference: user-provided Mi historia card screenshot.
+Transparent background: true
+
+Use case: illustration-story. Create a standalone transparent decorative illustration for the right side of the 'Mi historia' website card. Reference image: the attached card, use only its books/candles/flowers artwork as visual reference, do not reproduce the UI. Subject: a stack of four antique books in muted plum, dusty lavender and warm brown, glowing candle in glass jar in front, delicate pink flowers and tall botanical stems behind, tiny warm gold sparkles. Hand drawn cozy fantasy watercolor illustration with delicate dark outlines, same aesthetic as reference. Portrait composition, all objects completely inside frame, transparent background, no rectangular backdrop, no text or letters, no UI. Output only decorative artwork.

@@ -14,8 +14,16 @@ from app.core.environment_admin import router as environment_admin_router
 from app.modules.auth.router import router as auth_router
 from app.modules.users.account_router import router as account_router
 from app.modules.social.router import profile_social_router, router as social_router
+from app.modules.social.feed_router import router as feed_router
+from app.modules.social.interactions_router import router as interactions_router
+from app.modules.social.post_covers import router as post_covers_router
+from app.modules.social.publication_management import router as publication_management_router
+from app.modules.social.events_router import router as events_router
+from app.modules.social.moderation_private_router import router as moderation_private_router
+from app.modules.social.profile_events_router import router as profile_events_router
 from app.modules.users.roles_router import router as roles_router
 from app.modules.library.router import router as readings_router
+from app.modules.library.challenge_router import router as challenge_router
 from app.modules.users.identities_router import router as profiles_router
 from app.modules.users.preferences_router import router as preferences_router
 from app.modules.analytics.router import router as analytics_router
@@ -48,10 +56,18 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(account_router, prefix=settings.api_prefix)
 app.include_router(social_router, prefix=settings.api_prefix)
+app.include_router(feed_router, prefix=settings.api_prefix)
+app.include_router(interactions_router, prefix=settings.api_prefix)
+app.include_router(post_covers_router, prefix=settings.api_prefix)
+app.include_router(publication_management_router, prefix=settings.api_prefix)
+app.include_router(events_router, prefix=settings.api_prefix)
+app.include_router(moderation_private_router, prefix=settings.api_prefix)
+app.include_router(profile_events_router, prefix=settings.api_prefix)
 app.include_router(profile_social_router, prefix=settings.api_prefix)
 app.include_router(roles_router, prefix=settings.api_prefix)
 app.include_router(environment_admin_router, prefix=settings.api_prefix)
 app.include_router(readings_router, prefix=settings.api_prefix)
+app.include_router(challenge_router, prefix=settings.api_prefix)
 app.include_router(profiles_router, prefix=settings.api_prefix)
 app.include_router(preferences_router, prefix=settings.api_prefix)
 app.include_router(analytics_router, prefix=settings.api_prefix)
@@ -66,3 +82,9 @@ app.include_router(adaptive_router, prefix=settings.api_prefix)
 def health_check() -> dict[str, str]:
     """Permite verificar que el proceso está funcionando sin consultar datos."""
     return {"status": "ok", "service": "libria-api"}
+
+from app.modules.social.moderation_admin_router import router as moderation_admin_router
+app.include_router(moderation_admin_router, prefix=settings.api_prefix)
+
+from app.modules.social.moderation_notifications import router as moderation_notifications_router
+app.include_router(moderation_notifications_router, prefix=settings.api_prefix)

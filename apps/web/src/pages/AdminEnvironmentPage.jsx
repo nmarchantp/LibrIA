@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { environmentHelp } from './environmentHelp'
 import './AdminEnvironmentPage.css'
+import { Link } from 'react-router-dom'
 
 function EnvironmentForm({ target }) {
   const [data, setData] = useState(null)
@@ -68,6 +69,7 @@ export default function AdminEnvironmentPage() {
   return <section className="environment-page"><h1>Configuración de la aplicación</h1>
     <p>Administración de las variables de backend y web. Disponible para todas las cuentas con permiso de administrador.</p>
     <p>Las claves y contraseñas actuales permanecen ocultas. Guardar modifica los archivos del servidor; no reinicia servicios automáticamente.</p>
+    <p><Link to="/settings?tab=moderation">Moderación de contenido</Link></p>
     <EnvironmentForm target="backend" /><EnvironmentForm target="web" />
   </section>
 }

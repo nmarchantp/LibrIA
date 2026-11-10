@@ -33,7 +33,7 @@
 @media(prefers-reduced-motion:reduce) { .reader-book-remove-icon { transition:none; } }
 .reader-book-manage { display:flex; justify-content:center; align-items:center; gap:5px; width:100%; min-height:38px; margin-top:auto; padding:5px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--muted); font:inherit; font-size:11px; cursor:pointer; }
 .reader-book-manage:hover { background:var(--soft); color:var(--ink); }
-.reader-book-manage:focus-visible,.reader-library-modal :is(a,button,select):focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+.reader-book-manage:focus-visible,.reader-library-modal :is(a,button):focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
 .reader-library-modal { max-width:480px; }
 .reader-library-modal .reader-modal-heading-copy p { overflow-wrap:anywhere; }
 .reader-library-state { display:grid; gap:8px; }

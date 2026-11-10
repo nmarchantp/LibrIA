@@ -19,7 +19,6 @@
 .settings-page .account-page form label { display:grid; min-width:0; gap:7px; color:var(--ink); font-size:13px; font-weight:500; line-height:1.5; }
 .settings-page .account-page form :is(input,select,textarea) { width:100%; min-width:0; min-height:44px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--paper); color:var(--ink); font:400 14px/1.5 'DM Sans',sans-serif; }
 .settings-page .account-page textarea { resize:vertical; }
-.settings-page .account-page form :is(input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .settings-page .account-page .button { max-width:100%; min-height:44px; padding:10px 16px; font-size:13px; line-height:1.5; white-space:normal; text-align:center; }
 .settings-page .account-page form .button { justify-self:stretch; width:100%; }
 .settings-page .account-page :is([role="status"],[role="alert"]) { margin:14px 0 0; padding:10px 12px; border:1px solid var(--info-line); border-radius:10px; background:var(--info-bg); color:var(--info-text); }

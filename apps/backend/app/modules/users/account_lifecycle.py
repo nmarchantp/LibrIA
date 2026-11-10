@@ -31,6 +31,8 @@ def process_expired_accounts(db, *, batch_size=50):
         user.username = "deleted_" + user.id.hex
         user.display_name = "Cuenta eliminada"
         user.biography = user.avatar_url = None
+        user.favorite_quotes = []
+        user.story_illustration = "flowers"
         user.account_status, user.anonymized_at = "anonymized", now()
         user.deletion_requested_at = user.deletion_scheduled_at = None
         for profile in db.scalars(select(Profile).where(Profile.owner_user_id == user.id)):

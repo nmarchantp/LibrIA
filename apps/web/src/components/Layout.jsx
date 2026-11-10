@@ -1,3 +1,4 @@
+import ModerationNotice from './ModerationNotice'
 import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
@@ -12,6 +13,7 @@ import NotificationBellIcon from './NotificationBellIcon'
 import HeaderGreeting from './HeaderGreeting'
 import MagicalBackground from './MagicalBackground'
 import './LayoutNavigation.css'
+import { EventAttendanceProvider } from '../context/EventAttendanceContext'
 
 
 const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
@@ -28,6 +30,51 @@ export default function Layout() {
   const { magicalBackground, magicalBackgroundMotion } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width:700px)').matches)
+  const drawerRef = useRef(null)
+  const toggleRef = useRef(null)
+  const closeRef = useRef(null)
+  const pageRef = useRef(null)
+  useEffect(() => {
+    const query = window.matchMedia('(max-width:700px)')
+    const update = () => { setMobile(query.matches); setMenuOpen(false) }
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+  useEffect(() => {
+    if (!mobile || !menuOpen) return
+    const bodyOverflow = document.body.style.overflow
+    const rootOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    const background = [pageRef.current, toggleRef.current, document.querySelector('.social-sidebar > .brand-link'), document.querySelector('.skip-link')].filter(Boolean)
+    const previousInert = background.map(node => node.inert)
+    background.forEach(node => { node.inert = true })
+    // Wait for visibility and inert changes before moving keyboard focus.
+    let focusFrame = requestAnimationFrame(() => {
+      focusFrame = requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }))
+    })
+    const focusable = () => [...drawerRef.current.querySelectorAll('a[href],button:not(:disabled),[tabindex="0"]')].filter(node => node.getClientRects().length)
+    const onKey = event => {
+      if (event.key === 'Escape') { event.preventDefault(); setMenuOpen(false) }
+      if (event.key !== 'Tab') return
+      const items = focusable(), first = items[0], last = items.at(-1)
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+    }
+    const onFocus = event => { if (!drawerRef.current?.contains(event.target)) closeRef.current?.focus() }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('focusin', onFocus)
+    return () => {
+      cancelAnimationFrame(focusFrame)
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('focusin', onFocus)
+      document.body.style.overflow = bodyOverflow
+      document.documentElement.style.overflow = rootOverflow
+      background.forEach((node, index) => { node.inert = previousInert[index] })
+      if (window.matchMedia('(max-width:700px)').matches) toggleRef.current?.focus({ preventScroll: true })
+    }
+  }, [mobile, menuOpen])
   const [headerScrolled, setHeaderScrolled] = useState(() => window.scrollY > 8)
   const toolsRef = useRef(null)
   const { pathname, search } = useLocation()
@@ -59,10 +106,11 @@ export default function Layout() {
   const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
   return <div className={`social-shell${hasTools ? ' has-navigation-tools' : ''}`}>
     <a className="skip-link" href="#main-content">Ir al contenido</a>
-    <aside className="social-sidebar">
+    <aside className={`social-sidebar${menuOpen ? ' mobile-menu-open' : ''}`}>
       <Link className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /></Link>
-      <button className="mobile-nav-toggle" type="button" aria-label={menuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'} aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
-      <div className={`sidebar-navigation${menuOpen ? ' sidebar-navigation--open' : ''}`} onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }} onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); document.querySelector('.mobile-nav-toggle')?.focus() } }}>
+      <button className={`mobile-nav-backdrop${menuOpen ? ' mobile-nav-backdrop--open' : ''}`} type="button" aria-label="Cerrar menú principal" tabIndex={-1} aria-hidden="true" onClick={() => setMenuOpen(false)} />
+      <div ref={drawerRef} id="sidebar-navigation" className={`sidebar-navigation${menuOpen ? ' sidebar-navigation--open' : ''}`} role={mobile ? 'dialog' : undefined} aria-modal={mobile && menuOpen ? true : undefined} aria-label={mobile ? 'Menú principal' : undefined} aria-hidden={mobile && !menuOpen ? true : undefined} inert={mobile && !menuOpen ? true : undefined} onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }}>
+      <div className="mobile-drawer-heading"><span>Menú principal</span><button ref={closeRef} type="button" aria-label="Cerrar menú principal" onClick={() => setMenuOpen(false)}><X size={22} aria-hidden="true" /></button></div>
       <nav id="main-navigation" className="social-nav" aria-label="Navegación principal">
         <NavLink to="/" end className="navigation-galaxy-link"><Home size={22} /><span>Mural</span><NavigationGalaxy /></NavLink>
         <NavLink to="/profile" className="navigation-galaxy-link"><UserRound size={22} /><span>Mi perfil</span><NavigationGalaxy /></NavLink>
@@ -74,7 +122,7 @@ export default function Layout() {
       <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
       </div>
     </aside>
-    <div className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined} data-starfield-motion={magicalBackgroundMotion ? 'enabled' : 'disabled'}>
+    <div ref={pageRef} className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined} data-starfield-motion={magicalBackgroundMotion ? 'enabled' : 'disabled'}>
       {magicalBackground && <MagicalBackground motionEnabled={magicalBackgroundMotion} />}
       <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
@@ -87,8 +135,9 @@ export default function Layout() {
             {access?.catalog_preview && <NavLink to="/admin/catalog"><BookOpen size={19} aria-hidden="true" />Gestionar libros</NavLink>}
           </nav>
         </details>}
+      <button ref={toggleRef} className="mobile-nav-toggle" type="button" aria-label={menuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'} aria-expanded={menuOpen} aria-controls="sidebar-navigation" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}<span>{menuOpen ? 'Cerrar' : 'Menú'}</span></button>
       </nav></header>
-      <main id="main-content" className="social-main" tabIndex={-1}><Outlet /></main>
+      <main id="main-content" className="social-main" tabIndex={-1}><EventAttendanceProvider key={user.id}><Outlet /><ModerationNotice key={user.id} /></EventAttendanceProvider></main>
     </div>
   </div>
 }

@@ -1,0 +1,34 @@
+.personal-events { padding-top:24px; min-width:0; }
+.personal-events-heading { display:flex; align-items:start; justify-content:space-between; flex-wrap:wrap; gap:18px; }
+.personal-events-heading h2 { display:flex; align-items:center; gap:14px; margin:0 0 6px; font:32px/1.2 'DM Serif Display',serif; }
+.personal-events-heading h2 svg { width:30px; height:30px; color:var(--accent-text); }
+.personal-events-heading p { margin:0; color:var(--muted); font-size:14px; }
+.personal-events-privacy { display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:24px; padding:8px 12px; font-size:12px; max-width:100%; }
+.personal-events-privacy select { color:var(--ink); background:var(--surface); border:0; font:inherit; min-width:0; max-width:160px; }
+.personal-events-filters { display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px; margin:24px 0; }
+.personal-events-filters>div { display:flex; gap:8px; overflow-x:auto; max-width:100%; }
+.personal-events-filters button { flex-shrink:0; border:1px solid var(--line); border-radius:24px; padding:10px 16px; background:var(--surface); color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+.personal-events-filters button[aria-pressed=true] { background:var(--lavender-soft); border-color:var(--accent-text); color:var(--accent-text); }
+ .personal-events-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(0,min(100%,495px))); gap:20px; justify-content:start; }
+.personal-event-card { position:relative; display:grid; grid-template-columns:195px minmax(0,1fr); gap:20px; border:1px solid var(--accent-text); border-radius:17px; padding:14px; background:var(--surface); min-width:0; }
+.personal-event-image { position:relative; display:flex; align-items:center; justify-content:center; height:290px; background:var(--soft); border-radius:9px; color:var(--accent-text); pointer-events:none; }
+.personal-event-image img { display:block; width:100%; height:100%; object-fit:contain; border-radius:9px; }
+.personal-event-image .event-date { position:absolute; left:0; top:0; width:58px; height:66px; min-height:0; z-index:1; border:1px solid var(--accent-text); border-radius:13px; background:var(--surface); }
+.personal-event-image .event-date strong { font-size:29px; }
+.personal-event-copy { min-width:0; display:flex; flex-direction:column; align-items:start; }
+.personal-event-category { margin-top:20px; padding:3px 7px; background:var(--soft); color:var(--accent-text); border-radius:10px; font-size:9px; font-weight:700; text-transform:uppercase; }
+.personal-event-copy h3 { margin:14px 0 22px; font:23px/1.2 'DM Serif Display',serif; overflow-wrap:anywhere; }
+.personal-event-link { color:inherit; text-decoration:none; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.personal-event-link::after { content:''; position:absolute; inset:0; border-radius:17px; }
+.personal-event-copy p { display:flex; align-items:start; gap:8px; font-size:12px; margin:0 0 12px; color:var(--muted); overflow-wrap:anywhere; }
+.personal-event-copy p svg { flex-shrink:0; }
+.personal-event-status { display:flex; justify-content:flex-end; width:100%; min-height:34px; color:var(--accent-text); }
+.personal-event-status span,.personal-event-status button { display:inline-flex; align-items:center; gap:7px; font:inherit; font-size:12px; }
+.personal-event-status button { position:relative; z-index:2; min-height:34px; padding:4px 0 4px 8px; border:0; background:transparent; color:inherit; cursor:pointer; }
+.personal-event-actions { display:flex; justify-content:flex-end; width:100%; margin-top:auto; }
+.personal-event-actions button { position:relative; z-index:2; border:0; background:transparent; color:var(--accent-text); padding:8px; min-height:36px; cursor:pointer; }
+.personal-events button:focus-visible,.personal-event-link:focus-visible::after,.personal-events select:focus-visible { outline:2px solid var(--accent-text); outline-offset:3px; }
+.personal-events-empty { padding:40px 16px; text-align:center; color:var(--muted); }
+.personal-events-empty h3 { color:var(--ink); font-size:18px; }
+.personal-events-empty a,.personal-events-more { color:var(--accent-text); }
+@media(max-width:520px) { .personal-event-card { grid-template-columns:minmax(95px,40%) minmax(0,1fr); padding:12px; gap:14px; }.personal-event-image { height:270px; }.personal-event-copy h3 { font-size:20px; margin-bottom:18px; }.personal-events-heading h2 { font-size:28px; }.personal-events-privacy { font-size:11px; }.personal-events-filters button { padding:10px 12px; }.personal-event-image .event-date { width:52px; height:60px; }.personal-event-image .event-date strong { font-size:25px; }.personal-event-copy p { font-size:11px; } }

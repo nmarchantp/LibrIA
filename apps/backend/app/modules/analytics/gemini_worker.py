@@ -771,7 +771,7 @@ def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any
         units.append(EvidenceUnit(f"notebook:{reading}", "notebook", reading, work, row["notebook"]))
     review = db.execute(text("""SELECT rv.id,rv.body,rv.rating,rv.dimension_ratings,rv.status,rv.revision_number
       FROM app.resenas rv JOIN app.perfiles p ON p.id=rv.author_profile_id
-      WHERE p.kind='personal' AND p.owner_user_id=:owner AND rv.created_by_user_id=:owner
+      WHERE rv.moderation_status='approved' AND NOT rv.moderation_hidden AND p.kind='personal' AND p.owner_user_id=:owner AND rv.created_by_user_id=:owner
         AND rv.work_id=:work ORDER BY rv.updated_at DESC,rv.id DESC LIMIT 1"""),
       {"owner": job["owner_id"], "work": work}).mappings().first()
     if review:
@@ -782,7 +782,7 @@ def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any
     posts = db.execute(text("""SELECT po.id,po.publication_type,po.body,po.created_at
       FROM app.publicaciones po JOIN app.perfiles p ON p.id=po.author_profile_id
       WHERE p.kind='personal' AND p.owner_user_id=:owner AND po.user_id=:owner
-        AND po.work_id=ANY(:works) AND po.publication_type IN ('note','theory') AND NOT po.legacy_content
+        AND po.work_id=ANY(:works) AND po.publication_type IN ('note','theory') AND NOT po.legacy_content AND po.moderation_status='approved' AND NOT po.moderation_hidden AND po.deleted_at IS NULL
       ORDER BY po.created_at,po.id"""), {"owner": job["owner_id"], "works": work_ids}).mappings().all()
     for post in posts:
         units.append(EvidenceUnit(f"{post['publication_type']}:{post['id']}", post["publication_type"],
@@ -798,7 +798,7 @@ def _individual_context(db: Session, job: dict[str, Any]) -> tuple[dict[str, Any
         personal_profiles = set(db.execute(text("SELECT id FROM app.perfiles WHERE kind='personal' AND owner_user_id=:owner"),
                                             {'owner':job['owner_id']}).scalars())
         reviews = [r for r in current_reviews(db, {work}, reader_id=job['owner_id'])
-                   if r.author_profile_id in personal_profiles]
+                   if r.author_profile_id in personal_profiles and r.moderation_status == 'approved' and not r.moderation_hidden]
         for current in reviews:
             units.append(EvidenceUnit(f'review:{current.id}:{current.revision_number}', 'review', current.id, root,
                 {'body':current.body, 'rating':current.rating, 'dimension_ratings':current.dimension_ratings, 'status':current.status}))

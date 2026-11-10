@@ -32,6 +32,13 @@ def publication_role(db: Session, profile: Profile) -> str:
     return user.role if user else "lector"
 
 
+def can_create_events(db: Session, user: User, profile: Profile) -> bool:
+    """Same personal actor and publication policy used by POST /posts."""
+    return (user.account_status == "active" and user.suspended_at is None
+            and profile.kind == "personal" and profile.owner_user_id == user.id
+            and publication_role(db, profile) != "lector")
+
+
 def require_actor(db: Session, user: User, profile_id: uuid.UUID,
                   *, capability: str | None = None, manage: bool = False) -> Profile:
     profile = db.scalar(select(Profile).where(Profile.id == profile_id).with_for_update())

@@ -6,7 +6,6 @@
 
 .catalog-search-panel { display:grid; gap:14px; padding:18px; border:1px solid var(--line); border-radius:24px; background:var(--surface); box-shadow:var(--shadow); }
 .catalog-search-input { display:flex; align-items:center; gap:12px; min-height:58px; padding:8px 10px 8px 18px; border:1px solid var(--line); border-radius:16px; background:var(--soft); transition:border-color .18s,box-shadow .18s; }
-.catalog-search-input:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 18%,transparent); }
 .catalog-search-icon { width:20px; height:20px; color:var(--accent-text); }
 .catalog-search-input input { flex:1; min-width:0; border:0; outline:0; background:none; color:var(--ink); font-size:16px; }
 .catalog-search-input input::placeholder { color:var(--muted); }

@@ -1,0 +1,26 @@
+.reader-favorite-quotes { position:relative; overflow:hidden; }
+.reader-favorite-quotes .reader-card-heading { align-items:flex-start; }
+.reader-favorite-quotes .reader-card-heading h2 { font-size:19px; }
+.reader-favorite-quotes .reader-edit-button { border-radius:999px; }
+.reader-quotes-carousel { display:flex; align-items:center; gap:4px; min-height:160px; padding:16px 5px; margin-top:14px; border-radius:14px; background:linear-gradient(120deg,var(--soft),var(--secondary)); }
+.reader-quotes-carousel,.reader-quotes-empty { position:relative; }
+.reader-quotes-carousel::before,.reader-quotes-empty::before { content:''; position:absolute; top:-7px; left:calc(50% - 25px); width:50px; height:17px; background:color-mix(in srgb,var(--primary) 25%,#fff); opacity:.8; transform:rotate(-4deg); clip-path:polygon(3% 0,97% 4%,94% 50%,100% 95%,0 100%,5% 50%); pointer-events:none; }
+.reader-quotes-carousel>button { display:grid; place-items:center; flex:0 0 28px; width:28px; height:32px; padding:0; border:0; border-radius:50%; background:var(--surface); color:var(--accent-text); cursor:pointer; }
+.reader-quotes-carousel>button:disabled { opacity:.3; cursor:default; }
+.reader-quotes-carousel>button:not(:disabled) { color:color-mix(in srgb,var(--accent-text) 45%,transparent); background:color-mix(in srgb,var(--surface) 45%,transparent); transition:color .15s,background .15s; }
+.reader-quotes-carousel>button:not(:disabled):hover,.reader-quotes-carousel>button:not(:disabled):focus-visible { color:var(--accent-text); background:var(--surface); }
+.reader-quote-slide { min-width:0; flex:1; text-align:center; }
+.reader-quote-slide blockquote { margin:0; color:var(--ink); font:italic 18px/1.5 'DM Serif Display',serif; overflow-wrap:anywhere; white-space:pre-wrap; }
+.reader-quote-slide blockquote svg { display:inline; color:var(--accent-text); fill:currentColor; vertical-align:middle; }
+.reader-quote-position { display:block; margin-top:8px; color:var(--muted); font-size:10px; }
+.reader-quote-dots { position:relative; display:flex; justify-content:center; padding-top:8px; }
+.reader-quote-dots button { display:grid; place-items:center; width:24px; height:28px; padding:0; border:0; background:transparent; cursor:pointer; }
+.reader-quote-dots button::after { content:''; width:8px; height:8px; border-radius:50%; background:var(--line); }
+.reader-quote-dots button[aria-current]::after { background:var(--accent-text); }
+.reader-quotes-empty { display:grid; justify-items:center; gap:12px; padding:22px 12px; margin-top:14px; border-radius:14px; background:var(--soft); text-align:center; color:var(--accent-text); }
+.reader-quote-field { display:grid; gap:6px; }
+.reader-quote-field label { color:var(--ink); font-size:13px; font-weight:600; }
+.reader-quote-field textarea { min-height:85px; }
+.reader-quote-field input { width:100%; min-width:0; box-sizing:border-box; padding:10px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font:inherit; font-size:13px; }
+.reader-quote-position { overflow-wrap:anywhere; white-space:pre-wrap; }
+.reader-favorite-quotes button:focus-visible { outline:2px solid var(--accent-text); outline-offset:3px; }

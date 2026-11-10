@@ -1,0 +1,42 @@
+{
+  "publicaciones": {
+    "count": 3,
+    "digest": "0d3105b4662a9db90b1aea7b209c7c90"
+  },
+  "resenas": {
+    "count": 4,
+    "digest": "cc896255f646dabe6eb0126412a1baf1"
+  },
+  "comentarios_publicacion": {
+    "count": 1,
+    "digest": "1d65b5ea95c4e3aec2e2330d28108ed4"
+  },
+  "eventos_publicacion": {
+    "count": 1,
+    "digest": "e683e0b5332e56c01fb577fcccca7dbb"
+  },
+  "asistencias_evento": {
+    "count": 1,
+    "digest": "86078a7f15652c1ebe691a7c81bd322a"
+  },
+  "me_gusta_publicacion": {
+    "count": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "me_gusta_resena": {
+    "count": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "me_gusta_evento_lectura": {
+    "count": 1,
+    "digest": "1ad12ef417ec6496a6429669089d67a8"
+  },
+  "visualizaciones_actividad": {
+    "count": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "eventos_lectura": {
+    "count": 18,
+    "digest": "c956f7e2197e05d4dece7798f9d66a32"
+  }
+}

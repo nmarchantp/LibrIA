@@ -1,0 +1,6 @@
+Tool: built-in image_gen
+Reference: user-provided reading statistics card screenshot.
+Output: apps/web/public/images/reading-year-books.png
+Transparent background: true
+
+Use case: illustration-story. Create a transparent decorative watercolor illustration for the bottom right corner of a reading statistics card, using the attached screenshot as style reference ONLY. Three stacked antique books, cream pages, muted dusty plum, lavender and warm brown covers, delicate dark ink outlines, one slender botanical branch with muted pink and mauve leaves rising at the right, a few tiny golden sparkles. Cozy literary journal aesthetic. Compact landscape composition, books along bottom with branch rising at right, all objects fully inside frame. No card, no UI, no text, no numbers, no background. Genuinely transparent background.

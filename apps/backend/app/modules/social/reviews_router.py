@@ -20,6 +20,8 @@ from app.modules.social.schemas import PostResponse, ReviewCreate, ReviewUpdate
 from app.modules.social.router import as_review_response
 from app.modules.users.identities import personal_profile, require_actor
 from app.modules.users.models import User
+from app.modules.social.moderation_integration import analyze_fields,creation_revision,http_claim,finish_http,receipt,check_version,retire_pending
+from app.modules.social.moderation_service import prepare_edit
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 CurrentUser = Annotated[User, Depends(get_current_user)]
@@ -77,10 +79,23 @@ def record_revision(db, review, user, now):
                          edition_id=review.edition_id, recorded_at=now))
 
 
+def require_current_revision(db,review):
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        if review.id not in {r.id for r in current_reviews(db,{review.work_id},reader_id=review.created_by_user_id)}:
+            raise HTTPException(409,'Esta reseña es histórica; edita la versión vigente')
+
+
 @router.get("/me", response_model=list[PostResponse])
 def own_reviews(response: Response, user: CurrentUser, db: Database, work_id: uuid.UUID | None = None):
     response.headers["Cache-Control"] = "no-store"
     profile = personal_profile(db, user)
+    from app.modules.books.canonical import enabled
+    if enabled():
+        from app.modules.books.consistency import current_reviews
+        reviews=current_reviews(db,{work_id} if work_id else None,reader_id=user.id)
+        return [as_review_response(db,review) for review in reviews[:100] if review.author_profile_id==profile.id]
     query = select(Review).where(Review.author_profile_id == profile.id)
     if work_id:
         query = query.where(Review.work_id.in_(equivalent_work_ids(db, work_id)))
@@ -111,7 +126,8 @@ def book_reviews(book_ref: str, response: Response, db: Database,
         .order_by(CatalogSource.provider).limit(1))
     if work_id is None:
         return {"items": [], "has_more": False}
-    reviews = db.scalars(select(Review).where(Review.work_id.in_(equivalent_work_ids(db, work_id)), Review.status == "published")
+    from app.modules.social.activity_access import public_reviews
+    reviews = db.scalars(public_reviews(db).where(Review.work_id.in_(equivalent_work_ids(db, work_id)))
                          .order_by(Review.published_at.desc(), Review.id.desc())
                          .offset(offset).limit(limit + 1)).all()
     from app.modules.books.canonical import enabled
@@ -131,27 +147,34 @@ async def create_review(request: Request, response: Response, user: CurrentUser,
     if profile.kind != "personal":
         raise HTTPException(status_code=403, detail="Las reseñas requieren tu perfil personal")
     validate_edition(db, data.work_id, data.edition_id)
+    claim=http_claim(db,user,request,'create:review',data.model_dump(mode='json'))
+    if claim is not None and claim.result is not None:return claim.result
     existing = db.scalar(select(Review).where(Review.author_profile_id == profile.id,
                                                Review.work_id.in_(equivalent_work_ids(db, data.work_id))))
     if existing:
         raise HTTPException(status_code=409, detail="Ya tienes una reseña de esta obra; edítala para conservar su historial")
     now = datetime.now(timezone.utc)
+    proposal=data.model_dump(mode='json',exclude={'work_id','author_profile_id'})
+    flagged=data.status=='published' and analyze_fields(proposal).flagged
     review = Review(author_profile_id=profile.id, created_by_user_id=user.id, work_id=data.work_id,
                     edition_id=data.edition_id, body=data.body, rating=data.rating,
                     dimension_ratings=data.dimension_ratings, is_spoiler=data.is_spoiler,
-                    status=data.status, published_at=now if data.status == "published" else None,
+                    status=data.status, moderation_status='pending_review' if flagged else 'approved',
+                    published_at=now if data.status == "published" and not flagged else None,
                     created_at=now, updated_at=now, revision_number=1)
     db.add(review)
     try:
         db.flush()
-        record_revision(db, review, user, now)
-        db.commit()
+        pending=creation_revision(db,user,'review',review,proposal) if flagged else None
+        if not flagged:record_revision(db, review, user, now)
+        result=as_review_response(db,review).model_copy(update=receipt(review,pending))
+        finish_http(db,claim,result)
     except IntegrityError as error:
         db.rollback()
         if getattr(error.orig, "sqlstate", None) == "23505":
             raise HTTPException(status_code=409, detail="Ya existe una reseña de esta obra") from None
         raise
-    return as_review_response(db, review)
+    return result
 
 
 @router.delete('/{review_id}', status_code=204)
@@ -160,10 +183,14 @@ def delete_own_review(review_id: uuid.UUID, response: Response, user: CurrentUse
     if review is None:
         raise HTTPException(404, 'Reseña propia no encontrada')
     require_actor(db, user, review.author_profile_id)
-    db.execute(text('DELETE FROM app.comentarios_publicacion WHERE review_id=:id'), {'id': review_id})
-    db.execute(text('DELETE FROM app.me_gusta_resena WHERE review_id=:id'), {'id': review_id})
-    db.execute(text('DELETE FROM app.revisiones_resena WHERE review_id=:id'), {'id': review_id})
-    db.delete(review)
+    require_current_revision(db,review)
+    if review.status!='hidden':
+        retire_pending(db,user,review,'review','withdrawn')
+        review.status='hidden'
+        review.moderation_version+=1
+        review.updated_at=datetime.now(timezone.utc)
+        review.revision_number+=1
+        record_revision(db,review,user,review.updated_at)
     db.commit()
     response.headers['Cache-Control'] = 'no-store'
 
@@ -171,7 +198,8 @@ def delete_own_review(review_id: uuid.UUID, response: Response, user: CurrentUse
 @router.get("/{review_id}", response_model=PostResponse)
 def public_review(review_id: uuid.UUID, response: Response, db: Database):
     response.headers["Cache-Control"] = "no-store"
-    review = db.scalar(select(Review).where(Review.id == review_id, Review.status == "published"))
+    from app.modules.social.activity_access import public_reviews
+    review = db.scalar(public_reviews(db).where(Review.id == review_id))
     if review is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
     from app.modules.books.canonical import enabled
@@ -190,18 +218,32 @@ async def update_review(review_id: uuid.UUID, request: Request, response: Respon
     if review is None:
         raise HTTPException(status_code=404, detail="Reseña propia no encontrada")
     require_actor(db, user, review.author_profile_id)
+    require_current_revision(db,review)
     validate_edition(db, review.work_id, data.edition_id)
+    proposed=data.model_dump(mode='json')
+    claim=http_claim(db,user,request,f'update:review:{review.id}',proposed)
+    if claim is not None and claim.result is not None:return claim.result
+    check_version(request,review)
     if data.status == "draft" and review.published_at is not None:
         raise HTTPException(status_code=422, detail="Una reseña publicada puede ocultarse, pero no volver a borrador")
     if data.status == "hidden" and review.published_at is None:
         raise HTTPException(status_code=422, detail="Un borrador todavía no tiene una publicación para ocultar")
     now = datetime.now(timezone.utc)
+    if data.status=='published' and analyze_fields(proposed).flagged:
+        pending=prepare_edit(db,user,'review',review.id,proposed,request_key=uuid.uuid4(),expected_version=review.moderation_version)
+        result=as_review_response(db,review).model_copy(update=receipt(review,pending))
+        finish_http(db,claim,result)
+        return result
+    retire_pending(db,user,review,'review','withdrawn' if data.status=='hidden' else 'superseded')
     review.body, review.rating, review.dimension_ratings, review.is_spoiler = data.body, data.rating, data.dimension_ratings, data.is_spoiler
     review.edition_id, review.status = data.edition_id, data.status
     review.updated_at = now
     review.revision_number += 1
+    review.moderation_status='approved'
+    review.moderation_version+=1
     if data.status == "published" and review.published_at is None:
         review.published_at = now
     record_revision(db, review, user, now)
-    db.commit()
-    return as_review_response(db, review)
+    result=as_review_response(db, review)
+    finish_http(db,claim,result)
+    return result

@@ -1,0 +1,13 @@
+/* Aviso de spoiler: solo usa variables de theme/themes.css para respetar cada tema. */
+.spoiler-shield { position:relative; margin-top:14px; }
+.spoiler-shield:not(.is-revealed) { min-height:118px; border:1px solid var(--line); border-radius:14px; background:var(--soft); overflow:hidden; }
+.spoiler-content { padding:12px 16px; filter:blur(7px); opacity:.55; user-select:none; pointer-events:none; }
+.spoiler-content > :first-child { margin-top:0; }
+.spoiler-overlay { position:absolute; inset:0; display:grid; justify-items:center; align-content:center; gap:8px; padding:14px; text-align:center; }
+.spoiler-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border:1px solid color-mix(in srgb,var(--warning-text) 35%,transparent); border-radius:999px; background:var(--warning-bg); color:var(--warning-text); font-size:12px; font-weight:700; }
+.spoiler-overlay p { max-width:380px; margin:0; color:var(--ink); font-size:12px; line-height:1.5; }
+.spoiler-reveal, .spoiler-hide { display:inline-flex; align-items:center; gap:6px; border:0; cursor:pointer; font:inherit; }
+.spoiler-reveal { min-height:34px; padding:0 16px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:12px; font-weight:700; }
+.spoiler-reveal:hover { background:var(--primary-hover); }
+.spoiler-hide { margin-top:8px; padding:4px 0; background:none; color:var(--muted); font-size:12px; text-decoration:underline; text-underline-offset:3px; }
+.spoiler-hide:hover { color:var(--ink); }

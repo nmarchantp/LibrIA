@@ -1,0 +1,6 @@
+Tool: built-in image_gen
+Input: apps/web/public/images/story-books-cat-candle.png
+Output: apps/web/public/images/story-books-cat-candle-left.png
+Transparent background: true
+
+Change only the candle position in this transparent watercolor illustration: move the single glowing glass jar candle from the bottom RIGHT of the book stack to the bottom LEFT of the book stack, beside the books at the base. Remove the candle entirely from its old right position. Keep the same sleeping gray cat facing left atop the four antique books, same pose, same book orientation, watercolor texture, colors, golden sparkles and transparent background. Do not mirror the whole illustration. Exactly one candle jar, on viewer's left. No other changes. Keep all objects fully inside the image.
