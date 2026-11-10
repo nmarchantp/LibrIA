@@ -354,10 +354,18 @@ def unlike_post(post_id: uuid.UUID, user: Annotated[User, Depends(get_current_us
 @profile_social_router.post("/{profile_id}/follow", response_model=ProfileFollowResponse)
 def follow_profile(profile_id: uuid.UUID, user: Annotated[User, Depends(get_current_user)],
                    db: Annotated[Session, Depends(get_db)]) -> ProfileFollowResponse:
-    if db.scalar(select(Profile.id).where(Profile.id == profile_id)) is None:
+    from app.modules.social.models import FollowNotification
+    profile = db.get(Profile, profile_id)
+    owner = db.get(User, profile.owner_user_id) if profile and profile.owner_user_id else None
+    if profile is None or (owner and (owner.account_status != 'active' or owner.suspended_at)):
         raise HTTPException(status_code=404, detail="Perfil no encontrado")
-    db.execute(insert(ProfileFollow).values(profile_id=profile_id, user_id=user.id)
-               .on_conflict_do_nothing(index_elements=["profile_id", "user_id"]))
+    if profile.owner_user_id == user.id:
+        raise HTTPException(422, 'No puedes seguir tu propio perfil')
+    created = db.scalar(insert(ProfileFollow).values(profile_id=profile_id, user_id=user.id)
+               .on_conflict_do_nothing(index_elements=["profile_id", "user_id"]).returning(ProfileFollow.profile_id))
+    if created and owner:
+        # One notification per pair prevents unfollow/refollow notification spam.
+        db.execute(insert(FollowNotification).values(id=uuid.uuid4(), recipient_user_id=owner.id, actor_user_id=user.id).on_conflict_do_nothing())
     db.commit()
     return ProfileFollowResponse(following=True)
 

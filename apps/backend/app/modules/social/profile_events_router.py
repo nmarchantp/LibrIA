@@ -28,7 +28,8 @@ def subject(db, viewer, profile_id):
         raise HTTPException(404, 'Perfil personal no encontrado')
     own = owner.id == viewer.id
     follows = owner.events_visibility == 'contacts' and db.get(ProfileFollow, (profile.id, viewer.id)) is not None
-    allowed = own or owner.events_visibility == 'public' or follows
+    from app.modules.users.profile_access import profile_access
+    allowed = profile_access(db, owner, viewer) and (own or owner.events_visibility == 'public' or follows)
     return profile, owner, own, bool(allowed)
 
 

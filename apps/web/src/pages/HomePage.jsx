@@ -7,6 +7,7 @@ import { useLibrary } from '../context/LibraryContext'
 import BookCover from '../components/BookCover'
 import PublicationComposerLauncher from '../components/PublicationComposerLauncher'
 import MuralCarousel from '../components/MuralCarousel'
+import UserStories from '../components/UserStories'
 import MuralActivityCard from '../components/MuralActivityCard'
 import MuralActivityDialog from '../components/MuralActivityDialog'
 import MuralPublication from '../components/MuralPublication'
@@ -119,6 +120,7 @@ function MuralContent() {
       <nav ref={navigation} className="mural-audiences" aria-label="Secciones del mural">{[{ id: 'contacts', title: 'Contactos' }, { id: 'community', title: 'Comunidad' }, ...publicationCategories].map(item => <button key={item.id} aria-pressed={activeTab === item.id} onClick={() => item.id === 'contacts' || item.id === 'community' ? chooseAudience(item.id) : viewAll(item.id)}>{item.title}</button>)}</nav>
       <button className="mural-refresh" aria-label="Actualizar mural" disabled={feed.loading || feed.busy} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={18} /></button>
     </div>
+    {!category && audience === 'contacts' && <UserStories />}
     {category && <div className="mural-history-heading"><h2>{titleFor(category)}</h2><p>{category.id === 'progress' ? 'Todos los avances compartidos, del más reciente al más antiguo.' : category.description}</p></div>}
     {feed.loading && <p className="mural-status" role="status">Cargando actividades…</p>}
     {feed.error && <div className="mural-status" role="alert"><p>{feed.error}</p><button onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>}

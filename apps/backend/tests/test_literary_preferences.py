@@ -134,7 +134,7 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.mine()["biography"], "Entre libros")
         public = self.client.get(f"/api/profiles/{mine['profile_id']}", headers=self.auth(self.other))
         self.assertEqual(public.status_code, 200, public.text)
-        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration"})
+        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration", "profile_visibility", "visible_sections", "can_view", "is_owner", "following", "follows_you", "favorite_quotes"})
         self.assertEqual(public.json()["genres"], mine["genres"])
         self.assertEqual(public.json()["tropes"], mine["tropes"])
         self.assertNotEqual(mine["profile_id"], self.owner["user"]["id"])

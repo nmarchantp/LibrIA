@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import GoogleLoginButton from '../components/GoogleLoginButton'
+import { profileDestination } from '../services/profileDestination'
 
 const googleErrors = {
   cancelled: 'Cancelaste el ingreso con Google. Puedes volver a intentarlo.',
@@ -23,7 +24,7 @@ export default function LoginPage() {
     const form = new FormData(event.currentTarget)
     try {
       await login({ email: form.get('email'), password: form.get('password') })
-      navigate('/')
+      navigate(profileDestination(params.toString()))
     } catch {
       setError('No fue posible iniciar sesión. Revisa tus datos y que la API esté activa.')
     } finally {
@@ -41,7 +42,7 @@ export default function LoginPage() {
       <p className="auth-divider">o</p>
       <GoogleLoginButton />
       <p>Para usar Google, primero verifica tu correo y vincúlalo en Mi cuenta.</p>
-      <p>¿Aún no tienes cuenta? <Link to="/register">Regístrate</Link></p>
+      <p>¿Aún no tienes cuenta? <Link to={profileDestination(params.toString()) !== '/' ? `/register?next=${encodeURIComponent(profileDestination(params.toString()))}` : '/register'}>Regístrate</Link></p>
     </form>
   </main>
 }

@@ -6,7 +6,7 @@ import './ProfileEditModal.css'
 
 const focusable = 'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
 
-function EditDialog({ title, icon, description, dirty, busy, saveDisabled, onClose, onSubmit, children, className = '', saveLabel = 'Guardar' }) {
+function EditDialog({ title, icon, description, dirty, busy, saveDisabled, onClose, onSubmit, children, className = '', saveLabel = 'Guardar', readOnly = false }) {
   const dialogRef = useRef(null)
   const continueRef = useRef(null)
   const previousField = useRef(null)
@@ -93,7 +93,7 @@ function EditDialog({ title, icon, description, dirty, busy, saveDisabled, onClo
     {confirming && <div className="reader-modal-discard" role="alert"><p>Tu información guardada se conservará.</p><div className="reader-modal-footer"><button ref={continueRef} type="button" onClick={() => setConfirming(false)}>Seguir editando</button><button className="reader-discard-button" type="button" onClick={onClose}>Descartar cambios</button></div></div>}
     <form className="reader-preferences-form reader-modal-form" onSubmit={onSubmit} aria-busy={busy} hidden={confirming}>
       <div className="reader-modal-fields">{children}</div>
-      <footer className="reader-modal-footer"><button type="button" disabled={busy} onClick={requestClose}>Cancelar</button><button type="submit" disabled={busy || saveDisabled}>{busy ? 'Guardando…' : saveLabel}</button></footer>
+      <footer className="reader-modal-footer"><button type="button" disabled={busy} onClick={requestClose}>{readOnly ? 'Listo' : 'Cancelar'}</button>{!readOnly && <button type="submit" disabled={busy || saveDisabled}>{busy ? 'Guardando…' : saveLabel}</button>}</footer>
     </form>
   </dialog>
 }

@@ -15,7 +15,7 @@ from app.main import app
 from app.modules.books.models import CatalogSource, Edition, Work
 from app.modules.demo.models import DemoMode
 from app.modules.demo.service import DemoBook, DemoPaused, PERSONAS, identifier, prepare_actors, prepare_catalog
-from app.modules.demo.worker import DemoAPI, generate_action, due_state, producer_lease
+from app.modules.demo.worker import DemoAPI, generate_action, due_state, producer_lease, shuffled_schedule
 from app.modules.library.models import Reading, ReadingEvent
 from app.modules.social.models import Post, PostComment, PublicationEvent, Review
 from app.modules.users.identity_models import AccountPermission
@@ -90,6 +90,10 @@ class DemoModeIntegrationTest(unittest.IsolatedAsyncioTestCase):
             for category in ('events', 'launches', 'announcements', 'promotions'):
                 page = await api.request('valentina', 'GET', '/mural/' + category)
                 self.assertTrue(page['items'], category)
+                for item in page['items']:
+                    if str(item['work_id']) in {book.work_id for book in books}:
+                        self.assertTrue(item['book_title'], category)
+                        self.assertTrue(item['book_ref'], category)
             with self.factory() as db:
                 work_ids = [uuid.UUID(book.work_id) for book in books]
                 events = list(db.scalars(select(ReadingEvent).join(Reading, Reading.id == ReadingEvent.reading_id)
@@ -112,6 +116,31 @@ class DemoModeIntegrationTest(unittest.IsolatedAsyncioTestCase):
                 db.commit()
             with self.assertRaises(DemoPaused):
                 await generate_action(api, [self.book], 96)
+
+    async def test_event_upload_retry_and_legacy_related_book(self):
+        from io import BytesIO
+        from PIL import Image
+        output = BytesIO()
+        Image.effect_noise((200, 300), 80).convert('RGB').save(output, format='JPEG')
+        files = [('images', ('cover.jpg', output.getvalue(), 'image/jpeg'))]
+        sequence = next(step for step in range(32) if shuffled_schedule(step)[0] == 'event')
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://demo.test') as client:
+            api = DemoAPI(client)
+            with patch('app.modules.demo.worker.publication_files', return_value=files):
+                first = await generate_action(api, [self.book], sequence)
+                second = await generate_action(api, [self.book], sequence)
+            self.assertEqual(first['id'], second['id'])
+            self.assertEqual(len(first['images']), 1)
+            self.assertEqual(first['event_details']['category'], 'book_club')
+            with self.factory() as db:
+                post = db.get(Post, uuid.UUID(first['id']))
+                post.book_title = None
+                post.book_ref = None
+                db.commit()
+            page = await api.request('valentina', 'GET', '/mural/events')
+            item = next(item for item in page['items'] if item['id'] == first['id'])
+            self.assertEqual(item['book_title'], self.book.title)
+            self.assertTrue(item['book_ref'])
 
     async def test_control_requires_admin_and_applies_without_restart(self):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://demo.test') as client:

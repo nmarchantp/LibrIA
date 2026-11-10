@@ -212,6 +212,16 @@ class ReadingEventLike(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.usuarios.id", ondelete="RESTRICT"), primary_key=True)
 
 
+class FollowNotification(Base):
+    __tablename__ = 'notificaciones_seguimiento'
+    __table_args__ = (UniqueConstraint('recipient_user_id', 'actor_user_id', name='uq_follow_notification_pair'), {"schema": "app"})
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    recipient_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id', ondelete='CASCADE'))
+    actor_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id', ondelete='CASCADE'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class ActivityView(Base):
     __tablename__ = "visualizaciones_actividad"
     __table_args__ = (

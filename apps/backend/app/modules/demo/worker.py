@@ -1,8 +1,9 @@
 """One cluster-wide producer; all social activity goes through the current API."""
 import asyncio
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import logging
+import json
 import uuid
 
 import httpx
@@ -11,6 +12,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal, engine
+from app.modules.demo.publications import event_payload, complete_publication, publication_files
 from app.modules.demo.models import DemoMode
 from app.modules.demo.service import (
     DemoPaused, NAMESPACE, PERSONAS, ensure_enabled, identifier, prepare_actors, prepare_catalog, mark_demo_result,
@@ -39,7 +41,7 @@ class DemoAPI:
         self.client = client
         self.tokens = {}
 
-    async def request(self, actor, method, path, payload=None, *, sequence=0):
+    async def request(self, actor, method, path, payload=None, *, sequence=0, files=None):
         ensure_enabled()
         for attempt in range(2):
             if actor not in self.tokens:
@@ -52,8 +54,12 @@ class DemoAPI:
             if method != 'GET':
                 headers['Idempotency-Key'] = str(uuid.uuid5(NAMESPACE, f'activity-v2:{sequence}:{actor}:{method}:{path}'))
             ensure_enabled()
+            body = {'json': payload}
+            if files:
+                body = {'data': {key: json.dumps(value) if isinstance(value, dict) else str(value)
+                                 for key, value in payload.items() if value is not None}, 'files': files}
             response = await self.client.request(method, get_settings().api_prefix + path,
-                                                 json=payload, headers=headers)
+                                                 headers=headers, **body)
             if response.status_code == 401 and attempt == 0:
                 self.tokens.pop(actor, None)
                 continue
@@ -64,22 +70,6 @@ class DemoAPI:
             if method != 'GET':
                 await asyncio.to_thread(mark_demo_result, path, result)
             return result
-
-
-def event_payload(book, sequence):
-    start = datetime.now(timezone.utc) + timedelta(days=3 + sequence % 10)
-    return {
-        'source': 'event', 'kind': 'community', 'publication_type': 'event',
-        'title': 'Club de lectura: conversemos sobre ' + book.title[:100],
-        'body': 'Un encuentro para compartir interpretaciones, descubrir autores y elegir nuestra próxima lectura.',
-        'work_id': book.work_id, 'edition_id': book.edition_id,
-        'event_details': {
-            'start_date': start.date().isoformat(), 'start_time': '18:00',
-            'end_date': start.date().isoformat(), 'end_time': '19:30',
-            'timezone': 'America/Santiago', 'location': 'Encuentro virtual de demostración',
-            'organizer': 'Comunidad LibrIAverse · Demo', 'category': 'book_club',
-        },
-    }
 
 
 async def review_action(api, actor, book, sequence):
@@ -176,7 +166,7 @@ async def independent_reading(api, books, actor, sequence, rng):
                 'aspects': rng.sample(['personajes', 'historia', 'estilo', 'ritmo'], 2),
                 'emotions': [rng.choice(['asombro', 'esperanza', 'nostalgia', 'tension'])],
                 'reflection': rng.choice(['Me quedo pensando en las decisiones de sus personajes.',
-                    'Disfrut? descubrir c?mo se conectan los temas a lo largo de la historia.',
+                    'Disfruté descubrir cómo se conectan los temas a lo largo de la historia.',
                     'Una lectura con momentos que dan ganas de comentar en comunidad.'])}}, sequence=sequence)
         await review_action(api, actor, book, sequence)
         return result
@@ -189,24 +179,15 @@ async def independent_reading(api, books, actor, sequence, rng):
 
 
 PUBLICATION_TEXTS = {
-    'note': ['Anot? una pregunta para mi pr?xima conversaci?n: ?qu? personaje cambia m?s a lo largo de la historia?',
-             'Hay peque?os detalles que cobran otro sentido al seguir leyendo. Los estoy guardando en mi cuaderno.',
-             'Pausa de lectura para anotar una escena que me dej? pensando en las decisiones de sus personajes.'],
-    'theory': ['Mi teor?a: algunos detalles del inicio anticipan las decisiones m?s importantes de los personajes.',
-               'Creo que hay una conexi?n entre el conflicto principal y la forma en que se presenta el mundo de esta historia.',
-               'Estoy reuniendo pistas para una teor?a sobre los personajes. Quiero ver si se sostiene al terminar.'],
-    'free': ['?Qu? est?n leyendo esta semana? Me gusta descubrir recomendaciones fuera de mis g?neros habituales.',
-             'Hoy cambi? mi rutina por una tarde de lectura. ?Prefieren leer con m?sica o en silencio?',
-             'Busco mi pr?xima lectura compartida: ?qu? historia les dej? ganas de conversar al terminar?'],
-    'promotion': ['Selecci?n de la semana: historias para descubrir y compartir. Promoci?n de demostraci?n.',
-                  'Nuestra mesa de recomendaciones se renueva con propuestas para distintos gustos lectores. Selecci?n demo.',
-                  'Una invitaci?n para explorar otro g?nero en la pr?xima visita a la librer?a. Propuesta de demostraci?n.'],
-    'news': ['Estamos preparando nuestra pr?xima selecci?n compartida. ?Qu? g?nero les gustar?a explorar?',
-             'Esta semana abrimos una conversaci?n sobre historias que nos sorprenden. Sus recomendaciones son bienvenidas.',
-             'Ya tenemos una nueva propuesta para nuestro rinc?n de lecturas. Nos encantar? escuchar sus opiniones.'],
-    'launch': ['Presentamos una nueva conversaci?n de nuestro ciclo de lecturas: historias para imaginar y debatir.',
-               'Se suma una propuesta a nuestro recorrido lector. ?Qui?n se anima a descubrirla en comunidad?',
-               'Abrimos un nuevo espacio para conversar sobre esta historia y compartir distintas miradas.'],
+    'note': ['Anoté una pregunta para mi próxima conversación: ¿qué personaje cambia más a lo largo de la historia?',
+             'Hay pequeños detalles que cobran otro sentido al seguir leyendo. Los estoy guardando en mi cuaderno.',
+             'Pausa de lectura para anotar una escena que me dejó pensando en las decisiones de sus personajes.'],
+    'theory': ['Mi teoría: algunos detalles del inicio anticipan las decisiones más importantes de los personajes.',
+               'Creo que hay una conexión entre el conflicto principal y la forma en que se presenta el mundo de esta historia.',
+               'Estoy reuniendo pistas para una teoría sobre los personajes. Quiero ver si se sostiene al terminar.'],
+    'free': ['¿Qué están leyendo esta semana? Me gusta descubrir recomendaciones fuera de mis géneros habituales.',
+             'Hoy cambié mi rutina por una tarde de lectura. ¿Prefieren leer con música o en silencio?',
+             'Busco mi próxima lectura compartida: ¿qué historia les dejó ganas de conversar al terminar?'],
 }
 
 
@@ -220,22 +201,19 @@ async def generate_action(api, books, sequence):
         return await independent_reading(api, books, reading_actor(reading_index), sequence, rng)
     book = rng.choice(books)
     actor = rng.choice(readers)
-    if action in (*PUBLICATION_TEXTS, 'event'):
+    if action in (*PUBLICATION_TEXTS, 'event', 'promotion', 'news', 'launch'):
         author = actor if action in ('note', 'theory') else rng.choice(['influencer', 'autor']) if action == 'free' else 'libreria' if action in ('promotion', 'news') else 'autor'
         if action == 'event':
             payload = event_payload(book, sequence)
-            payload['body'] = rng.choice(['Un encuentro para compartir interpretaciones y elegir nuestra pr?xima lectura.',
-                'Trae tus preguntas y recomendaciones: conversaremos sobre esta historia en comunidad.',
-                'Nos reunimos para descubrir diferentes miradas de una misma lectura.'])
         else:
             payload = {'source': 'community', 'kind': 'community', 'publication_type': action,
                 'title': book.title[:160] if action != 'free' else rng.choice(['Lecturas de la semana', 'Una pausa entre libros', 'Recomendaciones para compartir']),
-                'body': rng.choice(PUBLICATION_TEXTS[action]), 'work_id': book.work_id, 'edition_id': book.edition_id}
-            if action in ('note', 'theory'):
-                from app.modules.demo.service import post_reference
-                payload.update(book_ref=post_reference(book.edition_id), book_title=book.title[:200])
+                'body': rng.choice(PUBLICATION_TEXTS[action]) if action in PUBLICATION_TEXTS else '',
+                'work_id': book.work_id, 'edition_id': book.edition_id}
+        payload = await asyncio.to_thread(complete_publication, payload, book, sequence)
         payload['author_profile_id'] = str(identifier('profile:' + author))
-        return await api.request(author, 'POST', '/posts', payload, sequence=sequence)
+        files = await asyncio.to_thread(publication_files, book, action)
+        return await api.request(author, 'POST', '/posts', payload, sequence=sequence, files=files)
     if action == 'follow':
         other = rng.choice([reader for reader in readers if reader != actor])
         return await api.request(other, 'POST', f'/profiles/{identifier("profile:" + actor)}/follow', sequence=sequence)
@@ -251,12 +229,14 @@ async def generate_action(api, books, sequence):
         await api.request(actor, 'PUT', target + '/like', sequence=sequence)
         await api.request(actor, 'PUT', target + '/view', {'action': 'open_comments'}, sequence=sequence)
         await api.request(actor, 'POST', target + '/comments', {'body': rng.choice([
-            '?Gracias por compartir! Me lo llevo a mi lista de pr?ximas lecturas.',
-            'Me gustar?a conversar sobre esta lectura en el pr?ximo encuentro.',
-            'Qu? interesante ver otras experiencias de lectura.',
-            'Me dio curiosidad tu recomendaci?n. ?Qu? fue lo que m?s te gust??'])}, sequence=sequence)
+            '¡Gracias por compartir! Me lo llevo a mi lista de próximas lecturas.',
+            'Me gustaría conversar sobre esta lectura en el próximo encuentro.',
+            'Qué interesante ver otras experiencias de lectura.',
+            'Me dio curiosidad tu recomendación. ¿Qué fue lo que más te gustó?'])}, sequence=sequence)
         if category == 'events':
-            await api.request(actor, 'PUT', f'/events/{item["id"]}/attendance', sequence=sequence)
+            # Set an explicit deterministic state so retries never toggle it twice.
+            method = 'DELETE' if sequence // 32 % 4 == 3 else 'PUT'
+            await api.request(actor, method, f'/events/{item["id"]}/attendance', sequence=sequence)
 
 
 def due_state():
