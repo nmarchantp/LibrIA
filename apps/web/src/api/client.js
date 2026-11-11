@@ -51,6 +51,7 @@ export async function apiRequest(path, options = {}) {
     const payload = await response.json().catch(() => null)
     const error = new Error(typeof payload?.detail === 'string' ? payload.detail : payload?.detail?.message || 'No fue posible completar la solicitud')
     error.code = payload?.detail?.code
+    if (error.code === 'maintenance_mode') window.dispatchEvent(new Event('libria:maintenance'))
     error.status = response.status
     if (response.status === 401 && authSession) authSession.unauthorized(error)
     throw error

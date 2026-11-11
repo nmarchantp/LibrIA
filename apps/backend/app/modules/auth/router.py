@@ -93,10 +93,15 @@ def get_auth_service(db: Annotated[Session, Depends(get_db)]) -> AuthService:
     return AuthService(AuthRepository(db))
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenResponse | dict[str, str], status_code=status.HTTP_201_CREATED)
 def register(data: RegisterRequest, response: Response,
-             service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse:
+             service: Annotated[AuthService, Depends(get_auth_service)]) -> TokenResponse | dict[str, str]:
     try:
+        if get_settings().maintenance_mode:
+            service.create_account(data)
+            _clear_refresh_cookie(response)
+            response.headers["Cache-Control"] = "no-store"
+            return {"status": "registered", "message": "Tu cuenta está creada. Podrás ingresar cuando abramos LibrIAverse."}
         result = service.register(data)
         _set_refresh_cookie(response, result.refresh_token)
         return result

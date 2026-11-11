@@ -15,10 +15,13 @@ class AuthService:
         self.repository = repository
 
     def register(self, data: RegisterRequest) -> TokenResponse:
+        return self._token_response(self.create_account(data))
+
+    def create_account(self, data: RegisterRequest):
         if self.repository.get_account_by_email(data.email):
             raise EmailAlreadyRegisteredError
         user = self.repository.create_account(data.email, hash_password(data.password), data.display_name, "lector")
-        return self._token_response(user)
+        return user
 
     def login(self, data: LoginRequest) -> TokenResponse:
         account = self.repository.get_account_by_email(data.email)

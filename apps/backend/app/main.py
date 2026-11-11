@@ -13,6 +13,7 @@ from app.modules.books.canonical import CanonicalIdentityError
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.core.maintenance import maintenance_guard
 from app.core.environment_admin import router as environment_admin_router
 from app.modules.auth.router import router as auth_router
 from app.modules.users.account_router import router as account_router
@@ -51,6 +52,7 @@ async def lifespan(application):
 
 
 app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+app.middleware("http")(maintenance_guard)
 
 
 @app.exception_handler(CanonicalIdentityError)
