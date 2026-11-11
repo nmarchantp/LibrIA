@@ -189,7 +189,15 @@ export function AuthProvider({ children }) {
     if (session?.inactivity_expires_at && now >= Date.parse(session.inactivity_expires_at)) clearLocalSession()
   }, [now, session, clearLocalSession])
 
-  const authenticate = async (action, data) => applyResult(await authService[action](data))
+  const authenticate = async (action, data) => {
+    const result = await authService[action](data)
+    if (result.status === 'registered') {
+      clearLocalSession()
+      window.dispatchEvent(new Event('libria:maintenance'))
+      return result
+    }
+    return applyResult(result)
+  }
   const logout = async () => {
     if (unsavedChanges && !window.confirm('Tienes una reseña, nota o teoría sin guardar. ¿Cerrar sesión y descartar esos cambios?')) return
     const token = localStorage.getItem(TOKEN_KEY)

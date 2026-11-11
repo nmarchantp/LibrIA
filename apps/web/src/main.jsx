@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import MaintenanceGate from './components/MaintenanceGate'
 import { LibraryProvider } from './context/LibraryContext'
 import { AuthProvider } from './context/AuthContext'
 import './styles.css'
@@ -18,7 +19,7 @@ createRoot(document.getElementById('root')).render(
     {/* BrowserRouter sincroniza las pantallas con la URL del navegador. */}
     <BrowserRouter>
       {/* LibraryProvider comparte los libros y sus estados entre todas las rutas. */}
-      <ThemeProvider><AuthProvider><LibraryProvider><App /></LibraryProvider></AuthProvider></ThemeProvider>
+      <ThemeProvider><MaintenanceGate><AuthProvider><LibraryProvider><App /></LibraryProvider></AuthProvider></MaintenanceGate></ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 )
