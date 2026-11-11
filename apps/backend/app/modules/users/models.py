@@ -1,7 +1,7 @@
 """Modelo operacional del perfil de usuario."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import CheckConstraint, DateTime, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,12 +10,17 @@ from app.core.database import Base
 
 
 class User(Base):
+    @property
+    def influencer_permissions_suspended(self) -> bool:
+        return bool(self.role == 'influencer' and self.influencer_suspended_until
+                    and self.influencer_suspended_until > datetime.now(timezone.utc))
+
     __tablename__ = "usuarios"
     __table_args__ = (
         CheckConstraint("profile_visibility IN ('public','private')", name="ck_users_profile_visibility"),
         CheckConstraint("events_visibility IN ('private','contacts','public')", name="ck_users_events_visibility"),
         CheckConstraint("story_illustration IN ('flowers', 'books', 'cat', 'none')", name="ck_story_illustration"),
-        CheckConstraint("role IN ('lector', 'influencer', 'autor', 'libreria', 'admin')", name="ck_usuarios_role"),
+        CheckConstraint("role IN ('lector', 'influencer', 'autor', 'libreria', 'editorial', 'admin')", name="ck_usuarios_role"),
         CheckConstraint("account_status IN ('active','pending_deletion','anonymized')", name="ck_account_status"),
         CheckConstraint("(account_status='anonymized')=(anonymized_at IS NOT NULL)", name="ck_anonymized_date"),
         {"schema": "app"},
@@ -25,6 +30,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, default=lambda: "reader_" + uuid.uuid4().hex)
     account_status: Mapped[str] = mapped_column(String(24), default="active", server_default="active")
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    influencer_suspended_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deletion_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deletion_scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     anonymized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

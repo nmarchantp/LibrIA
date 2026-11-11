@@ -111,6 +111,8 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             raise HTTPException(403,'No puedes cambiar la autoría de una publicación')
         profile=db.get(Profile,post.author_profile_id) if post.author_profile_id else None
         role='admin' if user.role=='admin' and (not profile or profile.kind=='personal') else publication_role(db,profile) if profile else user.role
+        from app.modules.users.identities import require_influencer_publication_permission
+        require_influencer_publication_permission(user, data.publication_type, data.book_ref or data.work_id)
         if role=='lector' and not (data.publication_type in ('note','theory') and (data.book_ref or data.work_id)):
             raise HTTPException(403,'Tu perfil no puede publicar este tipo de contenido')
         if (data.publication_type=='event')!=(data.source=='event'):
@@ -155,7 +157,7 @@ async def edit_publication(post_id:uuid.UUID,request:Request,db:DB,user:Viewer):
             return result
         retire_pending(db,user,post,'publication')
         post.title,post.body,post.source,post.publication_type=data.title,data.body,data.source,data.publication_type
-        post.author_role=role
+        # Authorship at publication time survives suspension and revocation.
         post.book_ref,post.book_title,post.work_id,post.edition_id=data.book_ref,data.book_title,work_id,edition_id
         post.updated_at=datetime.now(timezone.utc)
         post.moderation_status='approved'

@@ -1,0 +1,36 @@
+name: libria-influencer-access-test
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: libria_influencer_access_test
+      POSTGRES_USER: access_test
+      POSTGRES_PASSWORD: isolated-test-only
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U access_test -d libria_influencer_access_test]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  test:
+    build: ./apps/backend
+    environment:
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://access_test:isolated-test-only@db:5432/libria_influencer_access_test
+      GEMINI_WORKER_ENABLED: 'false'
+      GEMINI_PAID_SERVICE_CONFIRMED: 'false'
+      GEMINI_FREE_TEST_MODE: 'false'
+      GEMINI_API_KEY: ''
+      MAINTENANCE_MODE: 'false'
+      CATALOG_DISCOVERY_ENABLED: 'true'
+      CATALOG_CANONICAL_ENABLED: 'true'
+      CATALOG_EDITIONLESS_ENABLED: 'true'
+      CATALOG_ADMIN_PREVIEW_ENABLED: 'true'
+      CATALOG_ADMIN_MERGE_ENABLED: 'true'
+    volumes:
+      - ./apps/backend:/app:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [python, -m, unittest, tests.test_influencer_access, tests.test_account_management, tests.test_content_management, tests.test_profile_events, tests.test_activity_interactions, tests.test_moderation_integration, tests.test_moderation_administration]

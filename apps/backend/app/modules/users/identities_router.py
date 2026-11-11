@@ -44,7 +44,8 @@ def profile_response(db: Session, profile: Profile):
 def my_profiles(user: CurrentUser, db: SessionDB):
     profiles = db.scalars(select(Profile).where(Profile.owner_user_id == user.id)
                          .order_by(Profile.created_at, Profile.id)).all()
-    return [profile_response(db, profile) for profile in profiles]
+    return [{**profile_response(db, profile), 'can_publish': user.role != 'lector' and not user.influencer_permissions_suspended}
+            for profile in profiles]
 
 
 @router.post("/organizations", status_code=201)

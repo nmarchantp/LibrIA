@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { accountRequest } from '../services/accountService'
 import { API_URL } from '../api/client'
+import RoleManagementPanel from './RoleManagementPanel'
 
-const labels = { lector: 'Lector', autor: 'Autor', influencer: 'Influencer', libreria: 'Librería', admin: 'Administrador' }
+const labels = { lector: 'Lector', autor: 'Autor', influencer: 'Influencer', libreria: 'Librería', editorial: 'Editorial', admin: 'Administrador' }
 
 export default function AccountManagement() {
   const { retry, endSession: closeLocalSession } = useAuth()
@@ -61,6 +62,7 @@ export default function AccountManagement() {
         <button type="button" className="button" disabled={busy || !account.avatar_url} onClick={() => run(() => accountRequest('/me/avatar', 'DELETE'), 'Fotografía retirada.')}>Retirar fotografía</button>
       </form>
     </section>
+    <RoleManagementPanel key={account.id} user={account} />
     <section className="account-personal-info"><h2>Seguridad y acceso</h2>
       <p>Correo principal: {account.email} · {account.email_verified ? 'Verificado' : 'Pendiente de verificación'}</p>
       <p>Los cambios de contraseña, correo o vinculación cerrarán tus sesiones. Luego podrás volver a ingresar.</p>

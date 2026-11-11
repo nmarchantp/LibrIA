@@ -36,7 +36,24 @@ def can_create_events(db: Session, user: User, profile: Profile) -> bool:
     """Same personal actor and publication policy used by POST /posts."""
     return (user.account_status == "active" and user.suspended_at is None
             and profile.kind == "personal" and profile.owner_user_id == user.id
-            and publication_role(db, profile) != "lector")
+            and publication_role(db, profile) != "lector" and not user.influencer_permissions_suspended)
+
+
+def lock_publishing_user(db, user):
+    from app.modules.users.account_service import require_active
+    # FOR SHARE serializes publication authorization against permission updates
+    # without upgrading the shared administrator lock used by moderation.
+    owner = db.scalar(select(User).where(User.id == user.id).with_for_update(read=True)
+                      .execution_options(populate_existing=True))
+    if owner is None:
+        raise HTTPException(404, 'Cuenta no encontrada')
+    require_active(owner)
+    return owner
+
+
+def require_influencer_publication_permission(user, publication_type, has_book, *, status=403):
+    if user.influencer_permissions_suspended and not (publication_type in ('note', 'theory') and has_book):
+        raise HTTPException(status, 'Los permisos de publicación de Influencer están suspendidos temporalmente')
 
 
 def require_actor(db: Session, user: User, profile_id: uuid.UUID,

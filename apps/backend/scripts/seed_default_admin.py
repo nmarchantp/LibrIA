@@ -332,11 +332,12 @@ def main(argv=None) -> None:
     args = parser.parse_args(argv)
     catalog_map = json.loads(Path(args.catalog_map).read_text(encoding="utf-8")) if args.catalog_map else None
     settings = get_settings()
-    if len(settings.libria_demo_password) < 8:
+    admin_password = settings.libria_demo_admin_password or settings.libria_demo_password
+    if len(admin_password) < 8:
         raise SystemExit("Configura LIBRIA_DEMO_PASSWORD con al menos 8 caracteres")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470053)"))
-        result = seed_default_admin(db, settings.libria_demo_password, catalog_map=catalog_map, account_only=args.account_only)
+        result = seed_default_admin(db, admin_password, catalog_map=catalog_map, account_only=args.account_only)
     print(json.dumps(result, ensure_ascii=False))
 
 

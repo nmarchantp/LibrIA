@@ -11,8 +11,10 @@ from app.modules.users.models import User
 from app.modules.users.identity_models import Profile
 from app.modules.users.identities import personal_profile
 from app.modules.social.models import ProfileFollow, FollowNotification
+from app.modules.social.notification_inbox import router as notification_inbox_router
 
 router = APIRouter(tags=['connections'])
+router.include_router(notification_inbox_router)
 DB = Annotated[Session, Depends(get_db)]
 Viewer = Annotated[User, Depends(get_current_user)]
 

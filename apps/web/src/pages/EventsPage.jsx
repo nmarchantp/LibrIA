@@ -24,7 +24,7 @@ export default function EventsPage(){
   useEffect(()=>{
     if(!['admin','autor','libreria','editorial','influencer'].includes(user.role))return
     const controller=new AbortController()
-    apiRequest('/profiles/me',{signal:controller.signal,headers:{Authorization:`Bearer ${localStorage.getItem('libria_token')}`}}).then(profiles=>{if(!controller.signal.aborted)setProfile(profiles.find(profile=>profile.kind==='personal')||null)}).catch(()=>{})
+    apiRequest('/profiles/me',{signal:controller.signal,headers:{Authorization:`Bearer ${localStorage.getItem('libria_token')}`}}).then(profiles=>{if(!controller.signal.aborted)setProfile(profiles.find(profile=>profile.kind==='personal' && profile.can_publish!==false)||null)}).catch(()=>{})
     return()=>controller.abort()
   },[user.id,user.role])
   useEffect(()=>{

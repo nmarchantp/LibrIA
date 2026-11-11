@@ -157,7 +157,7 @@ def hydrate(db, records, viewer):
             item = as_response(record, name, role, images.get(record.id))
         kind = item.feed_item_type
         result[(kind, record.id)] = {**item.model_dump(), "author_profile_id": profile.id if profile else None,
-            "avatar_url": user.avatar_url, "author": name, "author_role": role,
+            "avatar_url": user.avatar_url, "author": name, "author_role": item.author_role,
             "following_author": profile.id in follows if profile else False,
             **interactions[(kind, record.id)],
             "observed_at": observed_at,

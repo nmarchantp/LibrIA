@@ -52,10 +52,10 @@ class AdminUsername(StrictInput):
 
 
 class AdminRole(StrictInput):
-    role: Literal["lector", "autor", "influencer", "libreria", "admin"]
+    role: Literal["lector", "autor", "influencer", "libreria", "editorial", "admin"]
     reason: Reason
 
 
 class AdminVerification(StrictInput):
-    requested_role: Literal["autor", "influencer", "libreria"]
+    requested_role: Literal["autor", "influencer", "libreria", "editorial"]
     note: Reason

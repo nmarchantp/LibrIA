@@ -32,7 +32,7 @@ def require_active(user):
 def audit(db, user, actor, action, *, before=None, after=None, reason=None, origin="account"):
     # Deliberate field allowlist, including calls from legacy endpoints.
     allowed = {"display_name", "biography", "avatar_present", "username", "role", "account_status",
-               "suspended", "google_linked", "deletion_scheduled_at", "email_changed"}
+               "suspended", "google_linked", "deletion_scheduled_at", "email_changed", "influencer_suspended_until"}
     clean = lambda values: {k: v for k, v in (values or {}).items() if k in allowed}
     db.add(AccountAudit(user_id=user.id, actor_user_id=actor, action=action, origin=origin,
                         before_state=clean(before), after_state=clean(after), reason=reason))
@@ -136,7 +136,7 @@ def cancel_deletion(db, token):
     return user
 
 
-def assign_role(db, user, admin, role, reason, *, approved=False):
+def assign_role(db, user, admin, role, reason, *, approved=False, preserve_influencer_history=False):
     from sqlalchemy import delete
     from app.modules.users.identity_models import ProfileCapability, AccountPermission, IdentityAudit
     from app.modules.users.verification_models import VerificationRequest
@@ -158,10 +158,10 @@ def assign_role(db, user, admin, role, reason, *, approved=False):
     profile = db.scalar(select(Profile).where(Profile.owner_user_id == user.id))
     if not profile:
         raise HTTPException(409, "La cuenta legada requiere adaptación de identidad antes de cambiar su tipo")
-    if user.role in {"autor", "influencer", "libreria"} and db.scalar(select(Post.id).where(
+    if user.role in {"autor", "influencer", "libreria", "editorial"} and not (preserve_influencer_history and user.role == 'influencer' and role == 'lector') and db.scalar(select(Post.id).where(
         Post.user_id == user.id, Post.author_role == user.role).limit(1)):
         raise HTTPException(409, "Hay publicaciones profesionales asociadas al tipo actual; requieren revisión antes del cambio")
-    if role in {"autor", "influencer", "libreria"} and not approved:
+    if role in {"autor", "influencer", "libreria", "editorial"} and not approved:
         verification = db.scalar(select(VerificationRequest.id).where(VerificationRequest.user_id == user.id,
             VerificationRequest.requested_role == role, VerificationRequest.status == "approved").limit(1))
         if not verification:
@@ -172,6 +172,8 @@ def assign_role(db, user, admin, role, reason, *, approved=False):
                                                    LibraryEntry.archived_at.is_(None)).limit(1)):
             raise HTTPException(409, "Archiva la biblioteca personal antes de cambiar al tipo librería; su historial se conservará")
     old = user.role
+    if old == 'influencer':
+        user.influencer_suspended_until = None
     old_capabilities = list(db.scalars(select(ProfileCapability.capability).where(ProfileCapability.profile_id == profile.id)))
     db.execute(delete(ProfileCapability).where(ProfileCapability.profile_id == profile.id,
         ProfileCapability.capability != "lector"))

@@ -56,7 +56,7 @@ async def exercise_owned():
     print('Empty catalog confirmed; testing administrator login and switch.', flush=True)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://fresh-demo.test') as client:
         login = await client.post('/api/auth/login', json={'email': 'demo.admin@example.com',
-                                                        'password': get_settings().libria_demo_password})
+                                                        'password': get_settings().libria_demo_admin_password or get_settings().libria_demo_password})
         assert login.status_code == 200, login.text
         headers = {'Authorization': 'Bearer ' + login.json()['access_token']}
         enabled = await client.patch('/api/admin/demo', json={'enabled': True, 'interval_seconds': 10}, headers=headers)

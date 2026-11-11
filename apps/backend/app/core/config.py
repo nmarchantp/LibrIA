@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = ""
     libria_demo_password: str = ""
+    libria_demo_admin_password: str = ""
+    libria_demo_lector_password: str = ""
+    libria_demo_influencer_password: str = ""
+    libria_demo_autor_password: str = ""
+    libria_demo_libreria_password: str = ""
+    libria_demo_editorial_password: str = ""
     analytics_scheduler_enabled: bool = True
     projection_scheduler_enabled: bool = True
     gemini_worker_enabled: bool = False
