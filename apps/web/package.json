@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:role-notifications": "node --experimental-websocket tests/role-notifications.mjs",
+    "test:influencer-access": "node --experimental-websocket tests/influencer-access.mjs",
     "test:profile-modals": "node --experimental-websocket tests/profile-edit-modals.mjs",
     "test:profile-events": "node --experimental-websocket tests/profile-events.mjs",
     "test:profile-tabs": "node --experimental-websocket tests/profile-tab-navigation.mjs",

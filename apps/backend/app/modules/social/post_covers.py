@@ -45,12 +45,18 @@ async def read_cover(upload):
 
 
 def require_post_editor(db, user, post_id):
+    from app.modules.users.identities import lock_publishing_user
+    user = lock_publishing_user(db, user)
     from app.modules.social.moderation_service import owned_target
     return owned_target(db,user,'publication',post_id)
 
 
 def require_cover_editor(db,user,post_id):
     post=require_post_editor(db,user,post_id)
+    from app.modules.users.identities import require_influencer_publication_permission
+    require_influencer_publication_permission(user, post.publication_type, post.work_id or post.book_ref)
+    if user.role == 'lector' and post.publication_type not in ('note', 'theory'):
+        raise HTTPException(403, 'Tu perfil ya no puede editar esta publicación profesional')
     if not (post.work_id or post.book_ref):
         raise HTTPException(422, "Enlaza una obra antes de personalizar su portada")
     from sqlalchemy import select

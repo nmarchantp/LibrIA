@@ -185,9 +185,12 @@ async def create_post(request: Request, response: Response, user: Annotated[User
         if isinstance(book_cover, UploadFile):
             await book_cover.close()
 
+    from app.modules.users.identities import lock_publishing_user, require_influencer_publication_permission
+    user = lock_publishing_user(db, user)
     profile = require_actor(db, user, data.author_profile_id) if data.author_profile_id else personal_profile(db, user)
     role = "admin" if user.role == "admin" and profile.kind == "personal" else publication_role(db, profile)
     publication_type = data.publication_type or ("event" if data.source == "event" else "free")
+    require_influencer_publication_permission(user, publication_type, data.book_ref and data.book_title)
     if publication_type == "event" and not can_create_events(db, user, profile):
         raise HTTPException(403, "No tienes permiso para crear eventos")
     if role == "lector" and not (publication_type in {"note", "theory"} and data.book_ref and data.book_title):

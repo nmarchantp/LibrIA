@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import text
 from app.core.config import get_settings
+from scripts.seed_demo import configured_passwords
 from app.core.database import SessionLocal
 from app.modules.library.models import LibraryEntry, Reading, ReadingEvent
 from app.modules.social.models import Review, ReviewRevision
@@ -37,8 +38,8 @@ def ensure(db, model, key, **values):
     return entity
 
 
-def seed_group(db, password):
-    seed_scenarios(db, password)
+def seed_group(db, password, *, passwords=None):
+    seed_scenarios(db, password, passwords=passwords)
     work_id = catalog_id("work:journey")
     edition_id = catalog_id("edition:journey:es")
     created = datetime.fromisoformat("2026-10-10T08:00:00-03:00")
@@ -90,7 +91,7 @@ def main():
         raise SystemExit("La cohorte ficticia solo se carga en desarrollo")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470017)"))
-        print(json.dumps(seed_group(db, settings.libria_demo_password)))
+        print(json.dumps(seed_group(db, settings.libria_demo_password, passwords=configured_passwords(settings))))
 
 
 if __name__ == "__main__":

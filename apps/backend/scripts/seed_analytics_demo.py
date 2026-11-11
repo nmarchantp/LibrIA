@@ -11,7 +11,7 @@ from app.core.database import SessionLocal
 from app.modules.books.models import Work, Edition, CatalogSource
 from app.modules.library.models import LibraryEntry, Reading, ReadingEvent, ReadingProgress
 from app.modules.social.models import Post
-from scripts.seed_demo import seed, stable_id as account_id
+from scripts.seed_demo import seed, configured_passwords, stable_id as account_id
 
 MANIFEST = json.loads(Path(__file__).with_name("analytics_demo.json").read_text(encoding="utf-8"))
 NAMESPACE = uuid.UUID(MANIFEST["namespace"])
@@ -45,11 +45,11 @@ def ensure(db, model, key, **values):
     return existing
 
 
-def seed_scenarios(db, password):
+def seed_scenarios(db, password, *, passwords=None):
     if get_settings().catalog_discovery_enabled:
         from app.modules.books.policy import require_disposable_fixture
         require_disposable_fixture(db)
-    seed(db, password)
+    seed(db, password, passwords=passwords)
     reader_id = account_id("user:lector")
     author_id = account_id("user:autor")
     base = parse("2026-10-08T08:00:00-03:00")
@@ -112,7 +112,7 @@ def main():
         raise SystemExit("La carga ficticia solo está habilitada en desarrollo")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470015)"))
-        result = seed_scenarios(db, settings.libria_demo_password)
+        result = seed_scenarios(db, settings.libria_demo_password, passwords=configured_passwords(settings))
     print(json.dumps(result))
 
 

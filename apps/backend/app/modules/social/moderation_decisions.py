@@ -60,6 +60,8 @@ def ensure_not_removed(record):
 
 
 def apply_publication(db,record,proposal,assets,author):
+    from app.modules.users.identities import lock_publishing_user, require_influencer_publication_permission
+    author = lock_publishing_user(db, author)
     from app.modules.social.publication_management import PublicationEdit, resolve_publication_work
     from app.modules.social.event_service import validate_event_change,sync_event
     from app.modules.users.identities import publication_role, require_actor
@@ -68,6 +70,7 @@ def apply_publication(db,record,proposal,assets,author):
     if profile:require_actor(db,author,profile.id,manage=True)
     require_active(author)
     role='admin' if author.role=='admin' and (not profile or profile.kind=='personal') else publication_role(db,profile) if profile else author.role
+    require_influencer_publication_permission(author, data.publication_type, data.book_ref or data.work_id, status=409)
     if role=='lector' and not (data.publication_type in ('note','theory') and (data.book_ref or data.work_id)):
         raise HTTPException(409,'El autor ya no puede publicar este tipo de contenido')
     validate_event_change(db,record,data.publication_type,data.event_details,data.title)
@@ -86,7 +89,7 @@ def apply_publication(db,record,proposal,assets,author):
     elif cover and (data.cover_mode=='catalog' or not same_book or not (work_id or data.book_ref)):
         db.delete(cover)
     record.title,record.body,record.source,record.publication_type=data.title,data.body,data.source,data.publication_type
-    record.author_role=role
+    # Keep the original publication role, including after permission changes.
     record.book_ref,record.book_title,record.work_id,record.edition_id=data.book_ref,data.book_title,work_id,edition_id
     record.updated_at=datetime.now(timezone.utc)
     sync_event(db,record,data.event_details,author)
@@ -119,6 +122,9 @@ def decide(db,admin,identifier,action,reason,expected_version):
     initial=db.get(ModerationRevision,identifier)
     if initial is None:raise HTTPException(404,'Revisión no encontrada')
     kind,target_id=destination(initial)
+    if kind == 'publication':
+        from app.modules.users.identities import lock_publishing_user
+        lock_publishing_user(db, db.get(User, initial.author_user_id))
     record=locked_target(db,kind,target_id)
     revision=db.scalar(select(ModerationRevision).where(ModerationRevision.id==identifier).with_for_update()
                        .execution_options(populate_existing=True))

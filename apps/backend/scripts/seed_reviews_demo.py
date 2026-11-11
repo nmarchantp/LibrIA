@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy import text
 
 from app.core.config import get_settings
+from scripts.seed_demo import configured_passwords
 from app.core.database import SessionLocal
 from app.modules.social.models import Review, ReviewRevision
 from scripts.seed_analytics_demo import seed_scenarios, stable_id as source_id
@@ -20,8 +21,8 @@ def stable_id(key):
     return uuid.uuid5(NAMESPACE, key)
 
 
-def seed_reviews(db, password):
-    seed_scenarios(db, password)
+def seed_reviews(db, password, *, passwords=None):
+    seed_scenarios(db, password, passwords=passwords)
     for spec in MANIFEST["reviews"]:
         versions = spec["revisions"]
         last = versions[-1]
@@ -68,7 +69,7 @@ def main():
         raise SystemExit("La carga ficticia solo está habilitada en desarrollo")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470016)"))
-        result = seed_reviews(db, settings.libria_demo_password)
+        result = seed_reviews(db, settings.libria_demo_password, passwords=configured_passwords(settings))
     print(json.dumps(result))
 
 

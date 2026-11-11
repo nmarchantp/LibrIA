@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import './AdminProfilesPage.css'
 import AdminAccountManagement from '../components/AdminAccountManagement'
+import InfluencerApplicationDetails from '../components/InfluencerApplicationDetails'
+import InfluencerPermissionsPanel from '../components/InfluencerPermissionsPanel'
 
 const PAGE_SIZE = 20
-const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
+const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Administrador' }
 const permissions = {
+  editorial: 'Publicaciones, eventos, lanzamientos y promociones.',
   lector: 'Reseñas, comentarios y avances de lectura.',
   influencer: 'Publicaciones, reseñas y comentarios.',
   autor: 'Publicaciones, eventos, reseñas y comentarios.',
@@ -15,7 +19,8 @@ const permissions = {
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
 export default function AdminProfilesPage() {
-  const [tab, setTab] = useState('accounts')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState(params.get('tab') === 'requests' ? 'requests' : 'accounts')
   const [searchDraft, setSearchDraft] = useState('')
   const [query, setQuery] = useState('')
   const [role, setRole] = useState('')
@@ -23,6 +28,7 @@ export default function AdminProfilesPage() {
   const [profiles, setProfiles] = useState([])
   const [total, setTotal] = useState(0)
   const [pending, setPending] = useState([])
+  const [observations, setObservations] = useState({})
   const [selected, setSelected] = useState(null)
   const [name, setName] = useState('')
   const [biography, setBiography] = useState('')
@@ -77,6 +83,7 @@ export default function AdminProfilesPage() {
     try {
       const result = await apiRequest(path, { method, headers: authHeaders(), body: JSON.stringify(body) })
       setNotice(success)
+      window.dispatchEvent(new Event('libria-notifications-updated'))
       setRefreshKey(current => current + 1)
       return result
     } catch (cause) {
@@ -116,7 +123,7 @@ export default function AdminProfilesPage() {
     if (result) { setSelected(result); setReason('') }
   }
   const decide = async (request, action) => {
-    const result = await mutate(`/roles/requests/${request.id}/${action}`, 'POST', {},
+    const result = await mutate(`/roles/requests/${request.id}/${action}`, 'POST', { reason: (observations[request.id] || '').trim() },
       action === 'approve' ? 'Perfil verificado y habilitado para publicar.' : 'Solicitud rechazada.')
     if (result) setPending(current => current.filter(item => item.id !== request.id))
   }
@@ -159,12 +166,13 @@ export default function AdminProfilesPage() {
             <button className="button primary" disabled={busy || !name.trim()}>Guardar cambios</button>
           </form>
           {selected.pending_role && <p className="admin-inline-note">Tiene una solicitud pendiente para ser {roleLabels[selected.pending_role]}. Revísala en “Solicitudes pendientes”.</p>}
-          {(selected.role === 'autor' || selected.role === 'influencer') && <form className="admin-form admin-revoke" onSubmit={revoke}>
+          {selected.role === 'autor' && <form className="admin-form admin-revoke" onSubmit={revoke}>
             <h3>Revocar permiso de publicación</h3><p>La cuenta volverá a ser lectora. Sus publicaciones anteriores seguirán visibles.</p>
             <label>Motivo<textarea value={reason} onChange={event => setReason(event.target.value)} minLength="10" maxLength="1000" rows="2" required /></label>
             <button className="button" disabled={busy || reason.trim().length < 10}>Revocar permiso</button>
           </form>}
-          <div className="admin-history"><h3>Solicitudes de verificación</h3>{requests.length === 0 && <p>Sin solicitudes.</p>}{requests.map(request => <p key={request.id}><strong>{roleLabels[request.requested_role]}</strong> · {request.status === 'approved' ? 'Aprobada' : request.status === 'rejected' ? 'Rechazada' : 'Pendiente'} · {new Date(request.created_at).toLocaleDateString('es-CL')}<br />{request.note}</p>)}
+          <InfluencerPermissionsPanel key={selected.id} profile={selected} onChanged={result => { setSelected(result); setRefreshKey(value => value + 1) }} />
+          <div className="admin-history"><h3>Solicitudes de verificación</h3>{requests.length === 0 && <p>Sin solicitudes.</p>}{requests.map(request => <div key={request.id}><strong>{roleLabels[request.requested_role]}</strong> · {request.status === 'approved' ? 'Aprobada' : request.status === 'rejected' ? 'Rechazada' : 'Pendiente'} · {new Date(request.created_at).toLocaleDateString('es-CL')}<br /><InfluencerApplicationDetails request={request} /></div>)}
             <h3>Revocaciones</h3>{history.length === 0 && <p>Sin revocaciones.</p>}{history.map(change => <p key={change.id}><strong>{roleLabels[change.previous_role]} → {roleLabels[change.new_role]}</strong> · {new Date(change.created_at).toLocaleDateString('es-CL')}<br />{change.reason}<br /><small>Por {change.admin_name}</small></p>)}</div>
         </section>}
       </div>
@@ -172,7 +180,7 @@ export default function AdminProfilesPage() {
 
     {tab === 'requests' && <section className="admin-requests"><h2>Solicitudes pendientes</h2>{pending.length === 0 && <p className="admin-empty">No hay solicitudes pendientes.</p>}{pending.map(request => <article className="admin-request" key={request.id}>
       <div><strong>{request.display_name}</strong><small>{request.email} · Solicita {roleLabels[request.requested_role]}</small></div>
-      <p>{request.note}</p><div className="admin-request-actions"><button className="button primary" disabled={busy} onClick={() => decide(request, 'approve')}>Aprobar</button><button className="button" disabled={busy} onClick={() => decide(request, 'reject')}>Rechazar</button></div>
+      <InfluencerApplicationDetails request={request} /><label>Observación administrativa<textarea value={observations[request.id] || ''} onChange={event => setObservations(current => ({ ...current, [request.id]: event.target.value }))} minLength={10} maxLength={1000} disabled={busy} /></label><div className="admin-request-actions"><button className="button primary" disabled={busy || (observations[request.id] || '').trim().length < 10} onClick={() => decide(request, 'approve')}>Aprobar</button><button className="button" disabled={busy || (observations[request.id] || '').trim().length < 10} onClick={() => decide(request, 'reject')}>Rechazar</button></div>
     </article>)}</section>}
 
 

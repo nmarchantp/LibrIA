@@ -31,7 +31,7 @@ def main():
         parser.error('--interval debe estar entre 10 y 3600 segundos')
     try:
         token = request(args.api_url, '/auth/login', {'email': 'demo.admin@example.com',
-            'password': get_settings().libria_demo_password})['access_token']
+            'password': get_settings().libria_demo_admin_password or get_settings().libria_demo_password})['access_token']
         if args.enable or args.disable:
             state = request(args.api_url, '/admin/demo', {'enabled': args.enable,
                 'interval_seconds': args.interval}, token, 'PATCH')

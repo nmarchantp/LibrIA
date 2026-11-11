@@ -9,14 +9,14 @@ import BrandLogo from './BrandLogo'
 import NavigationIcon from './NavigationIcon'
 import NavigationGalaxy from './NavigationGalaxy'
 import MessageBubbleIcon from './MessageBubbleIcon'
-import NotificationBellIcon from './NotificationBellIcon'
+import NotificationShortcut from './NotificationShortcut'
 import HeaderGreeting from './HeaderGreeting'
 import MagicalBackground from './MagicalBackground'
 import './LayoutNavigation.css'
 import { EventAttendanceProvider } from '../context/EventAttendanceContext'
 
 
-const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', admin: 'Administrador' }
+const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Administrador' }
 
 function HeaderShortcut({ to, label, icon: Icon }) {
   const tooltipId = useId()
@@ -126,7 +126,7 @@ export default function Layout() {
       {magicalBackground && <MagicalBackground motionEnabled={magicalBackgroundMotion} />}
       <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
-        <HeaderShortcut to="/notifications" label="Notificaciones" icon={NotificationBellIcon} />
+        <NotificationShortcut key={user.id} />
         {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>
           <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>
           <nav className="navigation-tools-menu" aria-label="Herramientas disponibles">

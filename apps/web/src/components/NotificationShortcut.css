@@ -1,0 +1,2 @@
+.notification-shortcut { position:relative; }
+.notification-shortcut-count { position:absolute; top:-3px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:12px; background:#b42332; color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; border:2px solid var(--surface); }

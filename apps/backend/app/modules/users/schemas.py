@@ -8,6 +8,8 @@ from app.modules.users.roles import UserRole
 
 
 class UserResponse(BaseModel):
+    influencer_permissions_suspended: bool = False
+    influencer_suspended_until: datetime | None = None
     id: uuid.UUID
     username: str | None = None
     email: EmailStr

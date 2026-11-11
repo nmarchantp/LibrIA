@@ -69,7 +69,7 @@ function MuralContent() {
       .catch(() => { if (active) setProfileError('No se pudieron cargar tus permisos de publicación.') })
     return () => { active = false; controller.abort() }
   }, [user.id, refresh])
-  const selectedProfile = user.role !== 'lector' ? profiles.find(profile => profile.kind === 'personal') : null
+  const selectedProfile = user.role !== 'lector' ? profiles.find(profile => profile.kind === 'personal' && profile.can_publish !== false) : null
   function chooseAudience(value) {
     setSavedMessage('')
     setSelected(null)

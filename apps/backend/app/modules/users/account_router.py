@@ -33,7 +33,9 @@ Admin = Annotated[User, Depends(get_admin)]
 
 
 def representation(user):
-    return {"id": user.id, "username": user.username, "email": user.auth_account.email,
+    return {"influencer_permissions_suspended": user.influencer_permissions_suspended,
+            "influencer_suspended_until": user.influencer_suspended_until,
+            "id": user.id, "username": user.username, "email": user.auth_account.email,
             "display_name": user.display_name, "biography": user.biography, "avatar_url": user.avatar_url,
             "role": user.role, "account_status": user.account_status,
             "suspended": user.suspended_at is not None, "google_linked": bool(user.auth_account.google_subject),
@@ -350,5 +352,7 @@ def request_professional_verification(user_id: uuid.UUID, data: AdminVerificatio
     item = VerificationRequest(user_id=user_id, requested_role=data.requested_role, note=data.note)
     db.add(item)
     audit(db, user, admin.id, "professional_verification_requested", reason=data.note, origin="admin")
+    from app.modules.users.role_notifications import notify_request
+    notify_request(db, item)
     db.commit()
     return {"id": item.id, "status": item.status}
