@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 
@@ -10,7 +11,7 @@ const messages = {
 }
 const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
-export default function GoogleAccountPanel() {
+export default function GoogleAccountPanel({ children }) {
   const [params] = useSearchParams()
   const [status, setStatus] = useState(null)
   const [email, setEmail] = useState('')
@@ -73,28 +74,28 @@ export default function GoogleAccountPanel() {
       window.location.assign(result.url)
     } catch (cause) { setError(cause.message); setBusy(false) }
   }
-  return <section className="google-account-panel" aria-labelledby="google-account-heading">
-    <h2 id="google-account-heading"><Link2 size={22} aria-hidden="true" />Cuentas vinculadas</h2>
+  return <section className="account-card account-google-card" aria-labelledby="google-account-heading">
+    <h2 className="account-card-title" id="google-account-heading"><Link2 size={18} aria-hidden="true" />Cuentas vinculadas</h2>
     {!status && !error && <p role="status">Consultando vinculación…</p>}
-    {status?.linked ? <p role="status">Cuenta de Google vinculada: <strong>{status.email}</strong>. Puedes ingresar con Google o con tu contraseña.</p> : <>
-      <p>Ingresa el correo que quieres vincular. Te enviaremos un código para verificarlo.</p>
-      <form className="google-verification-form" onSubmit={send}>
-        <label>Correo de tu cuenta de Google<input type="email" autoComplete="email" placeholder="tucorreo@gmail.com" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} /></label>
-        <button type="submit" className="button" disabled={busy || !status || seconds > 0}>{seconds > 0 ? `Reenviar en ${seconds} s` : status?.code_sent ? 'Enviar un nuevo código' : 'Enviar código de verificación'}</button>
+    {status?.linked ? <p className="account-google-linked" role="status">Cuenta de Google vinculada: <strong>{status.email}</strong>. Puedes ingresar con Google o con tu contraseña.</p> : <>
+      <p className="account-card-note">Ingresa el correo de tu cuenta de Google que quieres vincular. Te enviaremos un código para verificarlo.</p>
+      <form className="account-stack" onSubmit={send}>
+        <label className="account-input"><span className="account-sr-only">Correo de tu cuenta de Google</span><input type="email" autoComplete="email" placeholder="tucorreo@gmail.com" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} /></label>
+        <button type="submit" className="button account-button" disabled={busy || !status || seconds > 0}>{seconds > 0 ? `Reenviar en ${seconds} s` : status?.code_sent ? 'Enviar un nuevo código' : 'Enviar código de verificación'}</button>
       </form>
-      {status?.code_sent && <form className="google-verification-form" onSubmit={confirm}>
+      {status?.code_sent && <form className="account-stack" onSubmit={confirm}>
         <p>Ingresa el código enviado a <strong>{status.email}</strong>.</p>
         <p className="verification-countdown" role="timer" aria-label="Tiempo restante para verificar">Tiempo para verificar: <strong>{countdown}</strong></p>
         {remaining === 0 && <p role="alert">El código venció. Solicita uno nuevo para continuar.</p>}
-        <label>Código de 6 dígitos<input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required disabled={busy} /></label>
-        <button type="submit" className="button primary" disabled={busy || remaining === 0}>Verificar y vincular cuenta</button>
+        <label className="account-input"><span className="account-sr-only">Código de 6 dígitos</span><input placeholder="Código de 6 dígitos" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required disabled={busy} /></label>
+        <button type="submit" className="button primary account-submit" disabled={busy || remaining === 0}>Verificar y vincular cuenta</button>
       </form>}
       {status?.email_verified && <><p>Correo verificado: <strong>{status.email}</strong>.</p>
-        <button className="button primary" type="button" disabled={busy} onClick={link}>{busy ? 'Conectando…' : 'Confirmar vinculación con Google'}</button></>}
+        <button className="button primary account-submit" type="button" disabled={busy} onClick={link}>{busy ? 'Conectando…' : 'Confirmar vinculación con Google'}</button></>}
     </>}
     {messages[outcome] && <p role={outcome === 'success' ? 'status' : 'alert'}>{messages[outcome]}</p>}
     {message && <p role="status">{message}</p>}
-    {error && <p role="alert">{error} {!status && <button type="button" className="button text" onClick={() => setAttempt(value => value + 1)}>Reintentar</button>}</p>}
+    {children}
+    {error && <p role="alert">{error} {!status && <button type="button" className="button account-button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button>}</p>}
   </section>
 }
-import { Link2 } from 'lucide-react'

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '/src/context/AuthContext'
-import AccountManagement from '/src/components/AccountManagement'
+import AccountSettings from '/src/components/AccountSettings'
 import AdminProfilesPage from '/src/pages/AdminProfilesPage'
 import '/src/styles.css'
 
@@ -51,9 +51,9 @@ window.fetch = async (url, options = {}) => {
 }
 function Fixture() {
   const [mode, setMode] = useState('reader')
-  return <MemoryRouter><AuthProvider>
+  return <MemoryRouter initialEntries={['/settings?section=role']}><AuthProvider>
     <nav>{['reader', 'admin'].map(value => <button key={value} onClick={() => setMode(value)}>{value}</button>)}</nav>
-    {mode === 'reader' ? <AccountManagement /> : <AdminProfilesPage />}
+    {mode === 'reader' ? <AccountSettings preferences={{ loading: true }} /> : <AdminProfilesPage />}
   </AuthProvider></MemoryRouter>
 }
 createRoot(document.getElementById('root')).render(<Fixture />)

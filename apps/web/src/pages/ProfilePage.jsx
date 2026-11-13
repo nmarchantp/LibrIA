@@ -42,7 +42,8 @@ export default function ProfilePage() {
   const requested = params.get('tab')
   const tab = ['about', 'activity', 'library', 'analysis', 'events'].includes(requested) ? requested : 'about'
   if (requested === 'account' || requested === 'personalization') {
-    return <Navigate to={requested === 'personalization' ? '/settings?tab=personalization' : '/settings'} replace />
+    const google = params.get('google_link')
+    return <Navigate to={requested === 'personalization' ? '/settings?tab=personalization' : google ? `/settings?section=security&google_link=${encodeURIComponent(google)}` : '/settings'} replace />
   }
   const renderPanel = (value, active) => {
   switch (value) {
