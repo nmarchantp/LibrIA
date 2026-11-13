@@ -13,12 +13,9 @@
 .profile-community-actions button:disabled { opacity:.55; cursor:not-allowed; }
 .profile-summary-error { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:12px 0; font-size:12px; color:var(--error-text); }
 .profile-summary-error button { color:inherit; background:none; border:0; text-decoration:underline; cursor:pointer; }
-.profile-community-modal .profile-privacy-settings { margin:0; padding:0; border:0; background:none; }
-.profile-community-modal .profile-privacy-settings>h2 { display:none; }
-.profile-community-modal .profile-privacy-settings p { margin:14px 0; }
-.profile-community-modal .profile-privacy-settings fieldset { border-color:var(--line); margin:16px 0; }
-.profile-community-modal .profile-privacy-settings fieldset label { padding:6px 0; font-size:14px; }
-.profile-community-modal .profile-privacy-settings input[type="checkbox"] { width:17px; height:17px; accent-color:var(--primary); }
+.profile-community-modal .profile-privacy-settings { gap:16px; margin:0; padding:0; border:0; background:none; box-shadow:none; }
+.profile-community-modal .privacy-header { justify-content:flex-end; padding-bottom:0; border-bottom:0; }
+.profile-community-modal .privacy-header-copy { display:none; }
 .profile-community-modal-discover { width:min(760px,calc(100% - 32px)); max-width:760px; }
 .profile-people-list,.profile-people-grid { list-style:none; margin:0; padding:0; display:grid; gap:12px; }
 .profile-people-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }

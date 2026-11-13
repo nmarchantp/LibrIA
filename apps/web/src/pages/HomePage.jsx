@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowUpRight, BookOpen, ChartNoAxesColumnIncreasing, Check, MessageCircle, RefreshCw, Star } from 'lucide-react'
+import { ArrowUpRight, BookOpen, ChartNoAxesColumnIncreasing, Check, MessageCircle, Plus, RefreshCw, Star } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLibrary } from '../context/LibraryContext'
@@ -11,6 +11,7 @@ import UserStories from '../components/UserStories'
 import MuralActivityCard from '../components/MuralActivityCard'
 import MuralActivityDialog from '../components/MuralActivityDialog'
 import MuralPublication from '../components/MuralPublication'
+import MuralLaunchCard from '../components/MuralLaunchCard'
 import ContentManagementDialog from '../components/ContentManagementDialog'
 import { MuralManagementContext } from '../context/MuralManagementContext'
 import useMural from '../hooks/useMural'
@@ -31,6 +32,10 @@ const publicationCategories = [
   { id: 'announcements', title: 'Anuncios', description: 'Novedades y anuncios de la comunidad.' },
   { id: 'promotions', title: 'Promociones', description: 'Promociones compartidas por la comunidad.' },
 ]
+// Lanzamientos uses its own editorial card; the other tabs keep the shared publication card.
+const bulletins = {
+  launches: { heading: 'Novedades editoriales y lecturas conjuntas', nouns: ['lanzamiento', 'lanzamientos'], type: 'launch', action: 'Publicar lanzamiento' },
+}
 
 function MuralContent() {
   const { user } = useAuth()
@@ -40,6 +45,7 @@ function MuralContent() {
   const audience = params.get('audience') === 'contacts' ? 'contacts' : 'community'
   const category = [...categories, ...publicationCategories].find(item => item.id === params.get('category')) || null
   const widePublications = category?.id === 'social' || publicationCategories.some(item => item.id === category?.id)
+  const bulletin = bulletins[category?.id]
   const activeTab = publicationCategories.some(item => item.id === category?.id) ? category.id : audience
   const navigation = useRef(null)
   const [refresh, setRefresh] = useState(0)
@@ -121,11 +127,16 @@ function MuralContent() {
       <button className="mural-refresh" aria-label="Actualizar mural" disabled={feed.loading || feed.busy} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={18} /></button>
     </div>
     {!category && audience === 'contacts' && <UserStories />}
-    {category && <div className="mural-history-heading"><h2>{titleFor(category)}</h2><p>{category.id === 'progress' ? 'Todos los avances compartidos, del más reciente al más antiguo.' : category.description}</p></div>}
+    {category && !bulletin && <div className="mural-history-heading"><h2>{titleFor(category)}</h2><p>{category.id === 'progress' ? 'Todos los avances compartidos, del más reciente al más antiguo.' : category.description}</p></div>}
     {feed.loading && <p className="mural-status" role="status">Cargando actividades…</p>}
     {feed.error && <div className="mural-status" role="alert"><p>{feed.error}</p><button onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>}
+    {bulletin && <div className="bulletin-heading">
+      <p><strong>{bulletin.heading}</strong>{feed.data && !feed.loading && <span>· {feed.data.items.length}{feed.data.next_cursor ? '+' : ''} {bulletin.nouns[feed.data.items.length === 1 && !feed.data.next_cursor ? 0 : 1]}</span>}</p>
+      {selectedProfile && <button type="button" className="bulletin-publish" aria-haspopup="dialog" onClick={() => setManagement({ action: 'create', initialType: bulletin.type, item: { author_role: user.role, author_profile_id: selectedProfile.id } })}><Plus aria-hidden="true" />{bulletin.action}</button>}
+    </div>}
     {!feed.loading && !feed.error && feed.data && (category ? <>
-      <div className={widePublications ? 'feed-posts mural-publications' : 'mural-history-grid'}>{feed.data.items.map(item => <div key={`${item.feed_item_type}:${item.id}`}>{widePublications ? <MuralPublication item={item} /> : renderItem(item)}</div>)}</div>
+      {bulletin ? <div className="bulletin-list">{feed.data.items.map((item, index) => <MuralLaunchCard key={`${item.feed_item_type}:${item.id}`} item={item} featured={index === 0} onOpen={openActivity} />)}</div>
+      : <div className={widePublications ? 'feed-posts mural-publications' : 'mural-history-grid'}>{feed.data.items.map(item => <div key={`${item.feed_item_type}:${item.id}`}>{widePublications ? <MuralPublication item={item} /> : renderItem(item)}</div>)}</div>}
       {!feed.data.items.length && <p className="mural-status">{empty}</p>}
       {feed.moreError && <p role="alert">{feed.moreError}</p>}
       {feed.data.next_cursor && <button className="mural-load-more" disabled={feed.busy} onClick={feed.loadMore}>{feed.busy ? 'Cargando…' : feed.moreError ? 'Reintentar cargar más' : 'Cargar más'}</button>}

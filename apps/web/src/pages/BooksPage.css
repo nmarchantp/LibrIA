@@ -1,10 +1,12 @@
 /* Búsqueda de libros: solo usa variables de theme/themes.css para respetar cada tema. */
 .books-search-page { max-width:960px; }
-.books-kicker { display:inline-block; padding:4px 11px; border:1px solid color-mix(in srgb,var(--primary) 30%,transparent); border-radius:999px; background:var(--soft); color:var(--accent-text); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+.books-header { display:grid; justify-items:center; text-align:center; }
+.books-kicker { display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border:1px solid color-mix(in srgb,var(--primary) 30%,transparent); border-radius:999px; background:var(--soft); color:var(--accent-text); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
 .books-title { margin:12px 0 6px; color:var(--ink); font:clamp(32px,4vw,44px)/1.1 'DM Serif Display',serif; letter-spacing:-.01em; }
+.books-kicker svg { width:13px; height:13px; }
 .books-lead { margin:0 0 24px; color:var(--muted); font-size:14px; line-height:1.6; }
 
-.catalog-search-panel { display:grid; gap:14px; padding:18px; border:1px solid var(--line); border-radius:24px; background:var(--surface); box-shadow:var(--shadow); }
+.catalog-search-panel { width:min(100%,640px); margin:0 auto; display:grid; gap:14px; padding:18px; border:1px solid var(--line); border-radius:24px; background:var(--surface); box-shadow:var(--shadow); }
 .catalog-search-input { display:flex; align-items:center; gap:12px; min-height:58px; padding:8px 10px 8px 18px; border:1px solid var(--line); border-radius:16px; background:var(--soft); transition:border-color .18s,box-shadow .18s; }
 .catalog-search-icon { width:20px; height:20px; color:var(--accent-text); }
 .catalog-search-input input { flex:1; min-width:0; border:0; outline:0; background:none; color:var(--ink); font-size:16px; }
@@ -17,18 +19,23 @@
 .catalog-search-submit { display:grid; place-items:center; width:40px; height:40px; padding:0; border:0; border-radius:12px; background:var(--primary); color:var(--on-primary); cursor:pointer; transition:background .18s; }
 .catalog-search-submit:hover { background:var(--primary-hover); }
 .catalog-search-submit svg { width:19px; }
-.catalog-search-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:4px; border:1px solid var(--line); border-radius:14px; background:var(--soft); }
-.catalog-search-tabs button { min-height:42px; border:1px solid transparent; border-radius:11px; background:transparent; color:var(--muted); font-size:14px; font-weight:600; cursor:pointer; }
+.catalog-search-tabs { display:inline-flex; justify-self:start; gap:4px; padding:4px; border:1px solid var(--line); border-radius:14px; background:var(--soft); }
+.catalog-search-tabs button { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 14px; border:1px solid transparent; border-radius:11px; background:transparent; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; }
+.catalog-search-tabs button svg { width:15px; height:15px; }
+.catalog-search-tabs button:hover:not(.active) { color:var(--ink); }
 .catalog-search-tabs button.active { border-color:var(--line); background:var(--surface); color:var(--ink); box-shadow:0 2px 8px var(--shadow-color); }
-.catalog-suggestions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.catalog-suggestions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-top:14px; border-top:1px solid var(--line); }
 .catalog-suggestions>span { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; }
 .catalog-suggestions>span svg { width:15px; color:var(--accent-text); }
 .catalog-suggestions ul { display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:0; list-style:none; }
 .catalog-suggestions button { min-height:32px; padding:0 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink); font-size:12px; cursor:pointer; }
 .catalog-suggestions button:hover { border-color:var(--primary); background:var(--soft); }
+.catalog-suggestions button.active { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 18%,var(--surface)); font-weight:700; }
+.catalog-suggestions button small { color:var(--accent-text); font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
 
 .catalog-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:28px 2px 14px; }
-.catalog-results-heading strong { color:var(--ink); font:18px 'DM Serif Display',serif; }
+.catalog-results-heading strong { color:var(--ink); font:20px 'DM Serif Display',serif; }
+.catalog-results-heading q { color:var(--accent-text); quotes:'“' '”'; }
 .catalog-segmented { display:inline-flex; gap:3px; padding:3px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
 .catalog-segmented button { display:grid; place-items:center; min-height:30px; min-width:32px; padding:0 10px; border:0; border-radius:9px; background:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; }
 .catalog-segmented button.active { background:var(--primary); color:var(--on-primary); }
@@ -68,7 +75,7 @@
 .catalog-result-meta { display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; margin-top:6px; color:var(--muted); font-size:11px; }
 .catalog-result-meta svg { width:13px; height:13px; }
 .meta-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border:1px solid var(--line); border-radius:7px; background:var(--soft); color:var(--ink); }
-.meta-chip.language-chip { color:var(--accent-text); font-weight:700; }
+.meta-chip.isbn-chip { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10px; }
 .meta-chip.origin-google { border-color:var(--info-line); background:var(--info-bg); color:var(--info-text); font-weight:600; }
 .meta-chip.origin-libria { border-color:var(--success-line); background:var(--success-bg); color:var(--success-text); font-weight:600; }
 .rating-chip { display:inline-flex; align-items:center; gap:3px; color:var(--rating); font-weight:700; }

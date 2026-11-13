@@ -2,11 +2,10 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '../../src/context/AuthContext'
-import AccountManagement from '../../src/components/AccountManagement'
+import AccountSettings from '../../src/components/AccountSettings'
 import AdminAccountManagement from '../../src/components/AdminAccountManagement'
 import RecoverAccountPage from '../../src/pages/RecoverAccountPage'
 import '../../src/styles.css'
-import '../../src/pages/AccountPage.css'
 
 const id = '00000000-0000-4000-8000-000000000001'
 let account = { id, username: 'reader_test', display_name: 'Lector de prueba', email: 'reader@example.com', role: 'lector', biography: 'Historia guardada', avatar_url: null, account_status: 'active', suspended: false, google_linked: true, email_verified: true }
@@ -36,4 +35,4 @@ window.fetch = async (input, options = {}) => {
   return result({ detail: 'Unexpected test endpoint: ' + path }, 404)
 }
 const recovery = new URLSearchParams(location.search).has('recovery')
-createRoot(document.getElementById('root')).render(<BrowserRouter>{recovery ? <RecoverAccountPage /> : <AuthProvider><AccountManagement /><AdminAccountManagement /></AuthProvider>}</BrowserRouter>)
+createRoot(document.getElementById('root')).render(<BrowserRouter>{recovery ? <RecoverAccountPage /> : <AuthProvider><AccountSettings preferences={{ loading: true }} /><AdminAccountManagement /></AuthProvider>}</BrowserRouter>)

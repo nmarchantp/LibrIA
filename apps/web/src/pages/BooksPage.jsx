@@ -1,16 +1,18 @@
 import RatingStar from '../components/RatingStar'
-import { ArrowUpRight, BookOpen, ChevronRight, Cloud, Database, FileText, LayoutGrid, List, Search, TrendingUp, X } from 'lucide-react'
+import { ArrowUpRight, BookOpen, ChevronRight, Cloud, Database, FileText, Hash, LayoutGrid, List, Search, Sparkles, TrendingUp, UserRound, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import BookCover from '../components/BookCover'
+import FeaturedBooks from '../components/FeaturedBooks'
 import { searchBookCatalog } from '../services/booksService'
 import './BooksPage.css'
 
-const searchModes = [['title', 'Título'], ['author', 'Autor'], ['isbn', 'ISBN']]
+const searchModes = [['title', 'Título', BookOpen], ['author', 'Autor', UserRound], ['isbn', 'ISBN', Hash]]
 const placeholders = { title: 'Escribe el título del libro (ej: Harry Potter, Coraline…)', author: 'Escribe el nombre del autor (ej: Isabel Allende…)', isbn: 'Escribe el ISBN (ej: 9788478884452)' }
-// Suggestions only use the search modes the catalog supports (title and author).
-const suggestions = [['Harry Potter', 'Harry Potter', 'title'], ['Cien años de soledad', 'Cien años de soledad', 'title'], ['Obras de Neil Gaiman', 'Neil Gaiman', 'author'], ['Obras de Isabel Allende', 'Isabel Allende', 'author']]
-const origins = [['all', 'Todo'], ['libria', 'LibrIAverse'], ['google', 'Google Books']]
+// [value, search mode]; the mode tag is shown for author and ISBN suggestions.
+const suggestions = [['Harry Potter', 'title'], ['Neil Gaiman', 'author'], ['Isabel Allende', 'author'], ['9781781101315', 'isbn']]
+const suggestionTags = { author: 'Autor', isbn: 'ISBN' }
+const origins = [['all', 'Todos'], ['libria', 'LibrIAverse'], ['google', 'Google Books']]
 const viewStorageKey = 'libria_books_view'
 const readView = () => { try { return localStorage.getItem(viewStorageKey) === 'grid' ? 'grid' : 'list' } catch { return 'list' } }
 const originOf = book => book.catalogOrigin === 'libria' ? 'libria' : 'google'
@@ -27,8 +29,8 @@ function ResultCard({ book }) {
       {book.subtitle && <span className="catalog-result-subtitle">{book.subtitle}</span>}
       <span className="catalog-result-author">{book.author}</span>
       <span className="catalog-result-meta">
-        {book.pageCount && <span className="meta-chip"><FileText aria-hidden="true" />{book.pageCount} pág.</span>}
-        {book.language && <span className="meta-chip language-chip">{book.language.toUpperCase()}</span>}
+        {book.pageCount > 0 && <span className="meta-chip"><FileText aria-hidden="true" />{book.pageCount} pág.</span>}
+        {book.isbn && <span className="meta-chip isbn-chip">ISBN {book.isbn}</span>}
         <span className={`meta-chip origin-chip origin-${originOf(book)}`}>
           {originOf(book) === 'libria' ? <Database aria-hidden="true" /> : <Cloud aria-hidden="true" />}
           {originOf(book) === 'libria' ? 'LibrIAverse' : 'Google Books'}
@@ -98,9 +100,11 @@ export default function BooksPage() {
 
   return (
     <section className="page-width page books-search-page">
-      <span className="books-kicker">Añadir libro</span>
-      <h1 className="books-title">Busca tu próxima lectura</h1>
-      <p className="books-lead">Encuentra la obra por título, autor o ISBN y selecciona el resultado correcto.</p>
+      <header className="books-header">
+        <span className="books-kicker"><Sparkles aria-hidden="true" />Añadir libro</span>
+        <h1 className="books-title">Busca tu próxima lectura</h1>
+        <p className="books-lead">Encuentra la obra por título, autor o ISBN y selecciona el resultado correcto.</p>
+      </header>
 
       <div className="catalog-search-panel">
         <form className="catalog-search-input" role="search" onSubmit={event => { event.preventDefault(); inputRef.current?.blur() }}>
@@ -112,19 +116,23 @@ export default function BooksPage() {
           <button type="submit" className="catalog-search-submit" aria-label="Buscar"><ArrowUpRight /></button>
         </form>
         <div className="catalog-search-tabs" role="tablist" aria-label="Tipo de búsqueda">
-          {searchModes.map(([value, label]) => <button type="button" role="tab" key={value}
+          {searchModes.map(([value, label, Icon]) => <button type="button" role="tab" key={value}
             aria-selected={searchBy === value} className={searchBy === value ? 'active' : ''}
-            onClick={() => { setSearchBy(value); resetPaging() }}>{label}</button>)}
+            onClick={() => { setSearchBy(value); resetPaging() }}><Icon aria-hidden="true" />{label}</button>)}
         </div>
         <div className="catalog-suggestions">
           <span><TrendingUp aria-hidden="true" />Sugerencias:</span>
-          <ul>{suggestions.map(([label, value, by]) => <li key={label}><button type="button" onClick={() => search(value, by)}>{label}</button></li>)}</ul>
+          <ul>{suggestions.map(([value, by]) => {
+            const active = query.trim() === value && searchBy === by
+            return <li key={value}><button type="button" className={active ? 'active' : ''} aria-pressed={active} onClick={() => search(value, by)}>
+              {value}{suggestionTags[by] && <small> · {suggestionTags[by]}</small>}</button></li>
+          })}</ul>
         </div>
       </div>
 
-      <div className="catalog-toolbar">
+      {searching && <div className="catalog-toolbar">
         <div className="catalog-results-heading" role="status" aria-live="polite">
-          <strong>{loading && !books.length ? 'Buscando…' : `${visible.length} ${visible.length === 1 ? 'resultado' : 'resultados'}`}</strong>
+          <strong>{loading && !books.length ? 'Buscando…' : <>{visible.length} {visible.length === 1 ? 'resultado' : 'resultados'} para <q>{query.trim()}</q></>}</strong>
         </div>
         {books.length > 0 && <div className="catalog-segmented" role="group" aria-label="Filtrar por origen">
           {origins.map(([value, label]) => <button type="button" key={value} className={activeOrigin === value ? 'active' : ''} aria-pressed={activeOrigin === value}
@@ -137,15 +145,15 @@ export default function BooksPage() {
             <button type="button" className={view === 'grid' ? 'active' : ''} aria-pressed={view === 'grid'} aria-label="Ver como cuadrícula" onClick={() => changeView('grid')}><LayoutGrid aria-hidden="true" /></button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {(error || warning) && <div className="catalog-state catalog-alert" role="alert"><p>{error || warning}</p><button type="button" className="button primary" disabled={loading} onClick={() => setRetry(value => value + 1)}>Reintentar búsqueda</button></div>}
-      {!searching && <div className="catalog-state catalog-empty">
+      {!searching && <FeaturedBooks fallback={<div className="catalog-state catalog-empty">
         <span className="catalog-empty-icon"><BookOpen aria-hidden="true" /></span>
         <h2>Escribe para buscar</h2>
         <p>Encuentra la obra por título, autor o ISBN y selecciona el resultado correcto.</p>
-        <button type="button" className="catalog-pill-button" onClick={() => search(suggestions[0][1], suggestions[0][2])}>Probar con “{suggestions[0][0]}”<ChevronRight aria-hidden="true" /></button>
-      </div>}
+        <button type="button" className="catalog-pill-button" onClick={() => search(...suggestions[0])}>Probar con “{suggestions[0][0]}”<ChevronRight aria-hidden="true" /></button>
+      </div>} />}
       {!error && !warning && !loading && searching && books.length === 0 && <div className="catalog-state catalog-empty">
         <span className="catalog-empty-icon"><Search aria-hidden="true" /></span>
         <h2>No encontramos libros</h2>

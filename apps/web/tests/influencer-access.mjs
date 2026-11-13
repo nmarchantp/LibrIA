@@ -41,14 +41,14 @@ try {
   const click = text => evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(item => item.textContent.trim() === ${JSON.stringify(text)}); if (!button || button.disabled) throw Error('Button unavailable: ' + ${JSON.stringify(text)}); button.click() })()`)
   const fill = (selector, value) => evaluate(`(() => { const input = document.querySelector(${JSON.stringify(selector)}); Object.getOwnPropertyDescriptor(input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })) })()`)
   async function apply() {
-    await until(`document.querySelector('.role-panel form')`)
-    await fill('.role-panel form textarea', 'Comparto reseñas literarias para lectores de fantasía.')
-    await fill('.role-panel form input', 'Fantasía, misterio')
-    await fill('.role-panel form label:nth-of-type(3) textarea', 'Deseo compartir recomendaciones con mi comunidad.')
-    await fill('.role-panel form label:nth-of-type(4) textarea', 'https://youtube.com/@reader')
+    await until(`document.querySelector('.account-role-panel form')`)
+    await fill('.account-role-panel form textarea', 'Comparto reseñas literarias para lectores de fantasía.')
+    await fill('.account-role-panel form input', 'Fantasía, misterio')
+    await fill('.account-role-panel form label:nth-of-type(3) textarea', 'Deseo compartir recomendaciones con mi comunidad.')
+    await fill('.account-role-panel form label:nth-of-type(4) textarea', 'https://youtube.com/@reader')
     await click('Enviar solicitud de Influencer')
     await until(`document.body.innerText.includes('Pendiente')`)
-    assert.equal(await evaluate(`document.querySelector('.role-panel form') === null`), true)
+    assert.equal(await evaluate(`document.querySelector('.account-role-panel form') === null`), true)
   }
   async function decide(action, observation) {
     await click('admin')
@@ -86,7 +86,7 @@ try {
   await until(`window.influencerTest.reader.role === 'lector' && !document.body.innerText.includes('Revocar perfil Influencer')`)
   assert.equal(await evaluate(`window.influencerTest.actions.every(item => item.reason.length >= 10)`), true)
   await click('reader')
-  await until(`document.querySelector('.role-panel form') && document.body.innerText.includes('Aprobada')`)
+  await until(`document.querySelector('.account-role-panel form') && document.body.innerText.includes('Aprobada')`)
   assert.equal(errors.length, 0, JSON.stringify(errors))
   console.log('PASS RF-INF-001..004: real account component, structured application, rejection/reapplication, approval with reviewer/date/observation, suspension, resume, revocation and audit UI (mock API)')
 } finally {

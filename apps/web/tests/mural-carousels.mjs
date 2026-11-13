@@ -207,7 +207,8 @@ try {
   await until(`document.querySelectorAll('.mural-category').length === 5`)
   console.log('PASS: paginated history, load-more retries, duplicate guard, audience/category combinations, empty contacts and summary error retry')
 
-  for (const [index, category] of ['events', 'launches', 'announcements', 'promotions'].entries()) {
+  // Lanzamientos uses the editorial launch card; it is covered right after this loop.
+  for (const [category, index] of [['events', 0], ['announcements', 2], ['promotions', 3]]) {
     await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
     await until(`document.querySelectorAll('.mural-publication').length===8`)
     assert.equal(await evaluate(`document.querySelectorAll('.mural-audiences button[aria-pressed=true]').length`), 1)
@@ -276,6 +277,43 @@ try {
     await until(`!document.querySelector('.post-lightbox[open]')`)
     await evaluate(`document.querySelector('.mural-load-more').click()`)
     await until(`document.querySelectorAll('.mural-publication').length===12`)
+  }
+  for (const [category, index] of [['launches', 1]]) {
+    await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
+    await until(`document.querySelectorAll('.bulletin-card').length===8`)
+    assert.equal(await evaluate(`document.querySelector('.mural-audiences button[aria-pressed=true]').textContent`), ['Eventos','Lanzamientos','Anuncios','Promociones'][index])
+    for (const theme of ['lavanda', 'otono', 'invierno', 'bosque', 'rosa-antiguo', 'dark', 'dark-rosado', 'dark-blood', 'dark-dorado']) {
+      await evaluate(`import('/src/theme/themes.js').then(module => module.applyTheme('${theme}'))`)
+      for (const width of [1440, 390, 320]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height:1100, deviceScaleFactor:1, mobile:width<500 })
+        assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth && Array.from(document.querySelectorAll('.bulletin-card')).every(card=>card.scrollWidth<=card.clientWidth+1)`), true, `${category}/${theme}/${width}: bulletin cards fit`)
+      }
+    }
+    assert.equal(await evaluate(`document.querySelector('.bulletin-heading').textContent.includes('8+')`), true, 'Heading counts loaded publications and marks more pages')
+    assert.equal(await evaluate(`Array.from(document.querySelectorAll('.bulletin-card'),card=>card.classList.contains('is-featured')).join()`), 'true,false,false,false,false,false,false,false', 'Only the most recent card is featured')
+    assert.equal(await evaluate(`document.querySelector('.mural-activity-card,.mural-publication')===null`), true, 'Launches use only launch cards')
+    assert.ok((await evaluate('window.muralTest.requests')).some(r=>r.path.includes('/mural/' + category + '?audience=community')))
+    assert.ok((await evaluate(`document.querySelector('.bulletin-text').textContent`)).length > 500, 'Full content is visible without modal')
+    assert.equal(await evaluate(`document.querySelector('.bulletin-cover').getAttribute('href')`), '/books/book-0', 'Launch cover links to the book')
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-card')[5].querySelector('.bulletin-cover')===null`), true, 'No cover placeholder without a linked book')
+    assert.equal(await evaluate(`document.querySelector('.bulletin-want').textContent`), 'Quiero leer')
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-card')[3].querySelectorAll('.post-gallery-tile').length`), 4, 'At most four previews')
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-card')[3].querySelector('.post-gallery-overflow').textContent`), '+3')
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-card')[5].querySelector('.post-gallery-editorial,.bulletin-related')===null`), true, 'No photo or linked-book placeholders')
+    await evaluate(`document.querySelectorAll('.bulletin-card')[3].querySelectorAll('.post-gallery-tile')[3].click()`)
+    await until(`Boolean(document.querySelector('.post-lightbox[open]'))`)
+    assert.equal(await evaluate(`document.querySelector('.post-lightbox[open] figcaption').textContent`), '4 / 6', 'Overlay starts at the selected fourth photo')
+    await evaluate(`document.querySelector('.post-lightbox[open] .post-lightbox-close').click()`)
+    await until(`!document.querySelector('.post-lightbox[open]')`)
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-views')[1].textContent`), '0', 'Rendering launch cards does not register views')
+    await evaluate(`document.querySelector('.bulletin-like').click()`)
+    await until(`document.querySelector('.bulletin-like').getAttribute('aria-pressed')==='true'`)
+    await evaluate(`document.querySelectorAll('.bulletin-actions button')[1].click()`)
+    await until(`Boolean(document.querySelector('dialog[open] .comment-form textarea'))`)
+    await evaluate(`document.querySelector('.mural-dialog-close').click()`)
+    await until(`!document.querySelector('dialog[open] .comment-form')`)
+    await evaluate(`document.querySelector('.mural-load-more').click()`)
+    await until(`document.querySelectorAll('.bulletin-card').length===12`)
   }
   await evaluate(`document.querySelectorAll('.mural-audiences button')[1].click()`)
   await until(`document.querySelectorAll('.mural-category').length===5`)
@@ -362,7 +400,24 @@ try {
   await evaluate(`document.querySelector('.mural-dialog-close').click()`)
   console.log('PASS: compact empty state, 200-word reading limit, icon-only submit, auto-growing composer, duplicate submission guard and synchronized comment totals')
   // Management reuses the composer and original identifiers; no public upload forms.
-  for (const [index,category] of ['events','launches','announcements','promotions'].entries()) {
+  for (const [category, index] of [['launches', 1]]) {
+    await navigate(3)
+    await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
+    await until(`document.querySelectorAll('.bulletin-card').length===3`)
+    await evaluate(`document.querySelector('.bulletin-card .activity-options summary').click();document.querySelector('.bulletin-card .activity-options button').click()`)
+    await until(`Boolean(document.querySelector('.content-management-dialog .composer'))`)
+    assert.equal(await evaluate(`document.querySelector('.content-management-dialog .composer-title').value`),`Publicación completa de ${category} 1`)
+    await evaluate(`(() => {const input=document.querySelector('.content-management-dialog .composer-title');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Publicación editada ${category}');input.dispatchEvent(new Event('input',{bubbles:true}))})()`)
+    await evaluate(`document.querySelector('.content-management-dialog .composer').requestSubmit()`)
+    await until(`!document.querySelector('.content-management-dialog')&&document.querySelector('.bulletin-card h2')?.textContent==='Publicación editada ${category}'`)
+    assert.equal(await evaluate(`document.querySelectorAll('.bulletin-card').length`),3,'Editing never adds a publication')
+    assert.equal(await evaluate(`document.querySelector('.bulletin-like span').textContent`),'2')
+    await evaluate(`document.querySelector('.bulletin-card .activity-options summary').click();document.querySelectorAll('.bulletin-card .activity-options button')[1].click()`)
+    await until(`Boolean(document.querySelector('.content-management-dialog[open]'))`)
+    await evaluate(`document.querySelector('.content-management-body footer button:last-child').click()`)
+    await until(`!document.querySelector('.content-management-dialog')&&document.querySelectorAll('.bulletin-card').length===2`)
+  }
+  for (const [category, index] of [['events', 0], ['announcements', 2], ['promotions', 3]]) {
     await navigate(3)
     await evaluate(`document.querySelectorAll('.mural-audiences button')[${index+2}].click()`)
     await until(`document.querySelectorAll('.mural-publication').length===3`)

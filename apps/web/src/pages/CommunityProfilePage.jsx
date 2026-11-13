@@ -38,7 +38,7 @@ export default function CommunityProfilePage() {
   return <div className="profile-page page-width reader-profile reader-community-profile"><div className="reader-profile-main">
     <ProfileHeader key={data.id} user={data} publicView />
     <div className="profile-social-actions"><span>{data.profile_visibility === 'private' ? <><LockKeyhole size={17} /> Perfil privado</> : <><Globe size={17} /> Perfil público</>}</span>
-      {data.is_owner ? <Link className="button" to="/settings">Configurar privacidad</Link> : <button type="button" className="button primary" disabled={busy} aria-pressed={data.following} onClick={toggleFollow}>{data.following ? <UserRoundCheck size={18} /> : <UserRoundPlus size={18} />}{data.following ? 'Dejar de seguir' : 'Seguir'}</button>}
+      {data.is_owner ? <Link className="button" to="/settings?section=privacy">Configurar privacidad</Link> : <button type="button" className="button primary" disabled={busy} aria-pressed={data.following} onClick={toggleFollow}>{data.following ? <UserRoundCheck size={18} /> : <UserRoundPlus size={18} />}{data.following ? 'Dejar de seguir' : 'Seguir'}</button>}
       {data.follows_you && !data.is_owner && <span>Te sigue</span>}
     </div>
     {message && <p role="alert">{message}</p>}
