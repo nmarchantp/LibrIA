@@ -1,10 +1,7 @@
 import { prepareModeratedWrite, finishModeratedWrite, rememberModeratedVersions } from './moderationTransport'
+import { resolveApiLocation } from './apiLocation'
 // Punto único para solicitudes REST. La URL puede cambiar sin tocar las páginas.
-const configuredUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
-// The local launcher listens on IPv4. Avoid resolving its address to ::1.
-const localUrl = new URL(configuredUrl, window.location.origin)
-if (import.meta.env.DEV && localUrl.protocol === 'http:' && localUrl.hostname === 'localhost') localUrl.hostname = '127.0.0.1'
-export const API_URL = localUrl.href.replace(/\/$/, '')
+export const API_URL = resolveApiLocation(import.meta.env.VITE_API_URL, window.location.origin, import.meta.env.DEV)
 
 let authSession = null
 

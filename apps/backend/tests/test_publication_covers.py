@@ -15,6 +15,31 @@ def png(color='red'):
 
 
 class PublicationCoversTest(MuralFeedTest):
+    def test_launch_links_internal_catalog_work(self):
+        self.owner(); self.author.role = 'admin'; self.db.flush()
+        data = {'source': 'community', 'publication_type': 'launch', 'kind': 'community',
+                'title': 'Nuevo lanzamiento', 'body': 'Una nueva obra para la comunidad',
+                'author_profile_id': str(self.profiles[self.author.id].id),
+                'book_ref': str(self.work.id), 'work_id': str(self.work.id), 'edition_id': '', 'book_title': self.work.title}
+        response = self.client.post('/api/posts', files={key: (None, value) for key, value in data.items()} | {'images': ('photo.png', png(), 'image/png')})
+        self.assertEqual(response.status_code, 201, response.text)
+        self.assertEqual(response.json()['work_id'], str(self.work.id))
+        self.assertEqual(response.json()['book_ref'], str(self.work.id))
+        self.assertEqual(len(response.json()['images']), 1)
+        self.assertIsNone(response.json()['edition_id'])
+        import uuid
+        data['work_id'] = str(uuid.uuid4())
+        self.assertEqual(self.client.post('/api/posts', files={key: (None, value) for key, value in data.items()}).status_code, 422)
+
+    def test_create_without_link_accepts_empty_optional_identifiers(self):
+        self.owner(); self.author.role = 'admin'; self.db.flush()
+        data = {'source': 'community', 'publication_type': 'launch', 'kind': 'community',
+                'title': 'Lanzamiento sin enlace', 'body': 'Una novedad para la comunidad',
+                'work_id': '', 'edition_id': '', 'book_ref': '', 'book_title': ''}
+        response = self.client.post('/api/posts', files={key: (None, value) for key, value in data.items()})
+        self.assertEqual(response.status_code, 201, response.text)
+        self.assertIsNone(response.json()['work_id'])
+
     def owner(self):
         app.dependency_overrides[get_current_user]=lambda:self.author
 

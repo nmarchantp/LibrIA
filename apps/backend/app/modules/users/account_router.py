@@ -289,6 +289,14 @@ def admin_accounts(admin: Admin, db: DB, state: str | None = Query(default=None,
     return {"items": [representation(u) for u in db.scalars(query.order_by(User.created_at, User.id).limit(limit).offset(offset))], "total": total}
 
 
+@router.get("/admin/{user_id}")
+def admin_account(user_id: uuid.UUID, admin: Admin, db: DB):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(404, "Cuenta no encontrada")
+    return representation(user)
+
+
 @router.patch("/admin/{user_id}/suspension")
 def admin_suspend(user_id: uuid.UUID, data: AdminState, admin: Admin, db: DB):
     if user_id == admin.id:

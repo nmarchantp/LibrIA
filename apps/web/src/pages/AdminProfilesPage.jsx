@@ -1,188 +1,47 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import './AdminProfilesPage.css'
 import AdminAccountManagement from '../components/AdminAccountManagement'
-import InfluencerApplicationDetails from '../components/InfluencerApplicationDetails'
-import InfluencerPermissionsPanel from '../components/InfluencerPermissionsPanel'
+import AdminVerificationRequests from '../components/AdminVerificationRequests'
 
-const PAGE_SIZE = 20
-const roleLabels = { lector: 'Lector', influencer: 'Influencer', autor: 'Autor', libreria: 'Librería', editorial: 'Editorial', admin: 'Administrador' }
-const permissions = {
-  editorial: 'Publicaciones, eventos, lanzamientos y promociones.',
-  lector: 'Reseñas, comentarios y avances de lectura.',
-  influencer: 'Publicaciones, reseñas y comentarios.',
-  autor: 'Publicaciones, eventos, reseñas y comentarios.',
-  libreria: 'Publicaciones, promociones, eventos, reseñas y comentarios.',
-  admin: 'Publicaciones, eventos, reseñas y administración de perfiles.',
-}
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
+const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
 export default function AdminProfilesPage() {
   const [params] = useSearchParams()
-  const [tab, setTab] = useState(params.get('tab') === 'requests' ? 'requests' : 'accounts')
-  const [searchDraft, setSearchDraft] = useState('')
-  const [query, setQuery] = useState('')
-  const [role, setRole] = useState('')
-  const [page, setPage] = useState(0)
-  const [profiles, setProfiles] = useState([])
-  const [total, setTotal] = useState(0)
+  const [tab, setTab] = useState(params.get('tab') === 'requests' ? 'requests' : 'users')
   const [pending, setPending] = useState([])
   const [observations, setObservations] = useState({})
-  const [selected, setSelected] = useState(null)
-  const [name, setName] = useState('')
-  const [biography, setBiography] = useState('')
-  const [reason, setReason] = useState('')
-  const [requests, setRequests] = useState([])
-  const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [refreshKey, setRefreshKey] = useState(0)
-  const selectedId = selected?.id
-
+  const [refresh, setRefresh] = useState(0)
+  const [openUserId, setOpenUserId] = useState(null)
   useEffect(() => {
     let active = true
-    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) })
-    if (query) params.set('q', query)
-    if (role) params.set('role', role)
-    Promise.all([
-      apiRequest(`/roles/profiles?${params}`, { headers: authHeaders() }),
-      apiRequest('/roles/requests/pending', { headers: authHeaders() }),
-    ]).then(([profilesData, pendingData]) => {
-      if (!active) return
-      setProfiles(profilesData.items)
-      setTotal(profilesData.total)
-      setPending(pendingData)
-      setSelected(current => current ? profilesData.items.find(item => item.id === current.id) || current : null)
-      setLoading(false)
-      setError('')
-    }).catch(() => {
-      if (active) { setLoading(false); setError('No se pudieron cargar los perfiles. Inténtalo nuevamente.') }
-    })
+    setLoading(true)
+    apiRequest('/roles/requests/pending', { headers: headers() }).then(rows => {
+      if (active) { setPending(rows); setLoading(false); setError('') }
+    }).catch(cause => { if (active) { setError(cause.message); setLoading(false) } })
     return () => { active = false }
-  }, [query, role, page, refreshKey])
-
-  useEffect(() => {
-    if (!selectedId) return
-    let active = true
-    Promise.all([
-      apiRequest(`/roles/profiles/${selectedId}/requests`, { headers: authHeaders() }),
-      apiRequest(`/roles/profiles/${selectedId}/history`, { headers: authHeaders() }),
-    ]).then(([requestsData, historyData]) => {
-      if (active) { setRequests(requestsData); setHistory(historyData) }
-    }).catch(() => { if (active) setError('No se pudo cargar el historial del perfil.') })
-    return () => { active = false }
-  }, [selectedId, refreshKey])
-
-  const mutate = async (path, method, body, success) => {
-    setBusy(true)
-    setError('')
-    setNotice('')
-    try {
-      const result = await apiRequest(path, { method, headers: authHeaders(), body: JSON.stringify(body) })
-      setNotice(success)
-      window.dispatchEvent(new Event('libria-notifications-updated'))
-      setRefreshKey(current => current + 1)
-      return result
-    } catch (cause) {
-      setError(cause.status === 409 ? 'La operación ya fue procesada o el correo está registrado.' : 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.')
-      return null
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const openProfile = profile => {
-    setSelected(profile)
-    setName(profile.display_name)
-    setBiography(profile.biography || '')
-    setReason('')
-    setRequests([])
-    setHistory([])
-    setError('')
-    setNotice('')
-  }
-  const search = event => {
-    event.preventDefault()
-    setPage(0)
-    setQuery(searchDraft.trim())
-    setSelected(null)
-  }
-  const saveProfile = async event => {
-    event.preventDefault()
-    const result = await mutate(`/roles/profiles/${selected.id}`, 'PATCH',
-      { display_name: name.trim(), biography: biography.trim() || null, reason }, 'Datos del perfil actualizados.')
-    if (result) setSelected(result)
-  }
-  const revoke = async event => {
-    event.preventDefault()
-    const result = await mutate(`/roles/profiles/${selected.id}/revoke`, 'POST',
-      { reason: reason.trim() }, 'Permiso revocado. La cuenta vuelve a ser lectora.')
-    if (result) { setSelected(result); setReason('') }
-  }
+  }, [refresh])
   const decide = async (request, action) => {
-    const result = await mutate(`/roles/requests/${request.id}/${action}`, 'POST', { reason: (observations[request.id] || '').trim() },
-      action === 'approve' ? 'Perfil verificado y habilitado para publicar.' : 'Solicitud rechazada.')
-    if (result) setPending(current => current.filter(item => item.id !== request.id))
+    setBusy(true); setError(''); setNotice('')
+    try {
+      await apiRequest(`/roles/requests/${request.id}/${action}`, { method: 'POST', headers: headers(), body: JSON.stringify({ reason: observations[request.id]?.trim() }) })
+      setRefresh(value => value + 1)
+      setNotice(action === 'approve' ? 'Perfil aprobado.' : 'Solicitud rechazada.')
+      window.dispatchEvent(new Event('libria-notifications-updated'))
+    } catch (cause) { setError(cause.message) } finally { setBusy(false) }
   }
-
-
   return <div className="admin-profiles page-width">
-    <header className="admin-header"><span className="kicker">ADMINISTRACIÓN</span><h1>Mantenedor de perfiles</h1><p>Revisa las cuentas, verifica perfiles profesionales y crea librerías. Los permisos de publicación dependen del perfil vigente.</p></header>
-    <nav className="admin-tabs" aria-label="Secciones del mantenedor"><button className={tab === 'accounts' ? 'active' : ''} onClick={() => setTab('accounts')}>Cuentas y seguridad</button>
-      <button className={tab === 'profiles' ? 'active' : ''} onClick={() => setTab('profiles')}>Perfiles</button>
-      <button className={tab === 'requests' ? 'active' : ''} onClick={() => setTab('requests')}>Solicitudes pendientes ({pending.length})</button>
-    </nav>
-    {error && <p className="admin-message error" role="alert">{error}</p>}
-    {notice && <p className="admin-message" role="status">{notice}</p>}
-
-    {tab === 'accounts' && <AdminAccountManagement onChanged={() => setRefreshKey(v => v + 1)} />}
-    {tab === 'profiles' && <>
-      <form className="admin-filters" onSubmit={search}>
-        <label>Buscar por nombre o correo<input value={searchDraft} onChange={event => setSearchDraft(event.target.value)} maxLength="100" placeholder="Nombre o correo" /></label>
-        <label>Tipo de perfil<select value={role} onChange={event => { setRole(event.target.value); setPage(0); setSelected(null) }}><option value="">Todos</option>{Object.entries(roleLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-        <button className="button primary" disabled={loading}>Buscar</button>
-      </form>
-      <p className="admin-count">{loading ? 'Cargando perfiles...' : `${total} perfiles encontrados`}</p>
-      <div className="admin-layout">
-        <section className="admin-list" aria-label="Perfiles">
-          {!loading && profiles.length === 0 && <p className="admin-empty">No hay perfiles con esos filtros.</p>}
-          {profiles.map(profile => <button type="button" key={profile.id} className={`admin-profile-row ${selected?.id === profile.id ? 'selected' : ''}`} onClick={() => openProfile(profile)}>
-            <span className="admin-profile-initial">{profile.display_name.trim().charAt(0).toUpperCase()}</span>
-            <span className="admin-profile-main"><strong>{profile.display_name}</strong><small>{profile.email}</small></span>
-            <span className="admin-profile-meta"><span className={`user-role-badge role-${profile.role}`}>{roleLabels[profile.role]}</span>{profile.pending_role && <small>Solicita {roleLabels[profile.pending_role]}</small>}</span>
-          </button>)}
-          {total > PAGE_SIZE && <div className="admin-pagination"><button className="button" disabled={page === 0 || loading} onClick={() => { setPage(value => value - 1); setSelected(null) }}>Anterior</button><span>Página {page + 1} de {Math.ceil(total / PAGE_SIZE)}</span><button className="button" disabled={(page + 1) * PAGE_SIZE >= total || loading} onClick={() => { setPage(value => value + 1); setSelected(null) }}>Siguiente</button></div>}
-        </section>
-        {selected && <section className="admin-detail" aria-label={`Gestionar perfil de ${selected.display_name}`}>
-          <div className="admin-detail-heading"><div><span className="kicker">PERFIL SELECCIONADO</span><h2>{selected.display_name}</h2><p>{selected.email}</p></div><button type="button" className="admin-close" onClick={() => setSelected(null)} aria-label="Cerrar detalle">×</button></div>
-          <p className="admin-permissions"><strong>{roleLabels[selected.role]}</strong> · {permissions[selected.role]}</p>
-          <form className="admin-form" onSubmit={saveProfile}>
-            <h3>Datos públicos</h3>
-            <label>Nombre visible<input value={name} onChange={event => setName(event.target.value)} minLength="2" maxLength="100" required /></label>
-            <label>Biografía<textarea value={biography} onChange={event => setBiography(event.target.value)} maxLength="70" rows="3" /></label>
-            <button className="button primary" disabled={busy || !name.trim()}>Guardar cambios</button>
-          </form>
-          {selected.pending_role && <p className="admin-inline-note">Tiene una solicitud pendiente para ser {roleLabels[selected.pending_role]}. Revísala en “Solicitudes pendientes”.</p>}
-          {selected.role === 'autor' && <form className="admin-form admin-revoke" onSubmit={revoke}>
-            <h3>Revocar permiso de publicación</h3><p>La cuenta volverá a ser lectora. Sus publicaciones anteriores seguirán visibles.</p>
-            <label>Motivo<textarea value={reason} onChange={event => setReason(event.target.value)} minLength="10" maxLength="1000" rows="2" required /></label>
-            <button className="button" disabled={busy || reason.trim().length < 10}>Revocar permiso</button>
-          </form>}
-          <InfluencerPermissionsPanel key={selected.id} profile={selected} onChanged={result => { setSelected(result); setRefreshKey(value => value + 1) }} />
-          <div className="admin-history"><h3>Solicitudes de verificación</h3>{requests.length === 0 && <p>Sin solicitudes.</p>}{requests.map(request => <div key={request.id}><strong>{roleLabels[request.requested_role]}</strong> · {request.status === 'approved' ? 'Aprobada' : request.status === 'rejected' ? 'Rechazada' : 'Pendiente'} · {new Date(request.created_at).toLocaleDateString('es-CL')}<br /><InfluencerApplicationDetails request={request} /></div>)}
-            <h3>Revocaciones</h3>{history.length === 0 && <p>Sin revocaciones.</p>}{history.map(change => <p key={change.id}><strong>{roleLabels[change.previous_role]} → {roleLabels[change.new_role]}</strong> · {new Date(change.created_at).toLocaleDateString('es-CL')}<br />{change.reason}<br /><small>Por {change.admin_name}</small></p>)}</div>
-        </section>}
-      </div>
+    <header className="admin-header"><span className="kicker">ADMINISTRACIÓN</span><h1>Gestión de usuarios</h1><p>Busca un usuario y gestiona sus datos, seguridad, perfiles y solicitudes desde una sola ficha.</p></header>
+    <nav className="admin-tabs" aria-label="Secciones del mantenedor"><button className={tab === 'users' ? 'active' : ''} aria-current={tab === 'users' ? 'page' : undefined} onClick={() => setTab('users')}>Usuarios</button><button className={tab === 'requests' ? 'active' : ''} aria-current={tab === 'requests' ? 'page' : undefined} onClick={() => setTab('requests')}>Solicitudes pendientes ({pending.length})</button></nav>
+    <div hidden={tab !== 'users'}><AdminAccountManagement mode="unified" openUserId={openUserId} onChanged={() => setRefresh(value => value + 1)} /></div>
+    {tab === 'requests' && <>
+      {error && <p className="admin-message error" role="alert">{error} <button onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>}{notice && <p className="admin-message" role="status">{notice}</p>}
+      <AdminVerificationRequests requests={pending} observations={observations} loading={loading} busy={busy} onObservation={(id, value) => setObservations(current => ({ ...current, [id]: value }))} onDecide={decide} onOpenUser={request => { setOpenUserId({ id: request.user_id }); setTab('users') }} />
     </>}
-
-    {tab === 'requests' && <section className="admin-requests"><h2>Solicitudes pendientes</h2>{pending.length === 0 && <p className="admin-empty">No hay solicitudes pendientes.</p>}{pending.map(request => <article className="admin-request" key={request.id}>
-      <div><strong>{request.display_name}</strong><small>{request.email} · Solicita {roleLabels[request.requested_role]}</small></div>
-      <InfluencerApplicationDetails request={request} /><label>Observación administrativa<textarea value={observations[request.id] || ''} onChange={event => setObservations(current => ({ ...current, [request.id]: event.target.value }))} minLength={10} maxLength={1000} disabled={busy} /></label><div className="admin-request-actions"><button className="button primary" disabled={busy || (observations[request.id] || '').trim().length < 10} onClick={() => decide(request, 'approve')}>Aprobar</button><button className="button" disabled={busy || (observations[request.id] || '').trim().length < 10} onClick={() => decide(request, 'reject')}>Rechazar</button></div>
-    </article>)}</section>}
-
-
   </div>
 }

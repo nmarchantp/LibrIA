@@ -40,3 +40,57 @@
 .account-management input, .account-management textarea { max-width: 100%; padding: .65rem; border: 1px solid var(--border, #ccc); border-radius: .5rem; background: var(--surface, white); color: inherit; }
 .account-avatar-preview { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; }
 .account-danger { border: 1px solid #b86c6c; border-radius: 1rem; padding: 1rem; }
+/* Clear spacing and grouping for account settings. */
+.settings-page .account-page { grid-template-columns: minmax(0, 1fr); }
+.settings-page .account-management { gap: 24px; }
+.settings-page .account-management > section { width: 100%; max-width: none; margin: 0; padding: clamp(20px, 3vw, 32px); }
+.settings-page .account-management h2 { margin-bottom: 10px; }
+.settings-page .account-section-description { margin: 0 0 24px; color: var(--muted); }
+.settings-page .account-identity-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 20px; }
+.settings-page .account-management label { margin: 0; }
+.settings-page .account-management form { display: grid; gap: 16px; margin: 20px 0 0; }
+.settings-page .account-management fieldset { gap: 16px; }
+.settings-page .account-management input:read-only { color: var(--muted); background: var(--soft); }
+.settings-page .account-management textarea { min-height: 100px; }
+.settings-page .account-page .account-management form .button { width: auto; justify-self: start; }
+.settings-page .account-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 4px; }
+.settings-page .account-photo-section { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 4px; }
+.settings-page .account-avatar-preview { margin: 8px 0; }
+.settings-page .account-management input[type="file"] { cursor: pointer; padding: 10px; }
+.settings-page .account-management input[type="file"]::file-selector-button { padding: 8px 12px; margin-right: 12px; border: 1px solid var(--line); border-radius: 8px; background: #f7eee0; color: #332a23; font: inherit; cursor: pointer; }
+.settings-page .account-security > form { border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.settings-page .account-security form h3 { margin: 0; font: 600 15px/1.5 'DM Sans', sans-serif; }
+.settings-page .account-security form p { margin: 0; color: var(--muted); }
+.settings-page .account-session-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.settings-page .account-session-row .button { flex-shrink: 0; }
+.settings-page .account-management .account-checkbox { display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; }
+.settings-page .account-management .account-checkbox input { width: 18px; min-height: 18px; height: 18px; padding: 0; margin-top: 2px; flex-shrink: 0; }
+.settings-page .account-management > .account-danger { border-color: var(--error-line); }
+.settings-page .account-danger h2 { color: var(--error-text); }
+.settings-page .account-page .account-danger-button { color: var(--error-text); background: var(--error-bg); border: 1px solid var(--error-line); }
+.settings-page .account-management button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 600px) {
+  .settings-page .account-identity-fields { grid-template-columns: minmax(0, 1fr); }
+  .settings-page .account-security > form { padding: 16px; }
+  .settings-page .account-page .account-management form .button { width: 100%; justify-self: stretch; }
+  .settings-page .account-action-group { align-items: stretch; flex-direction: column; }
+  .settings-page .account-session-row { align-items: stretch; flex-direction: column; }
+}
+.settings-page .account-access-settings { margin-top: 20px; }
+.settings-page .account-access-row { display:flex; justify-content:space-between; align-items:center; gap:18px; padding:18px 0; border-bottom:1px solid var(--line); }
+.settings-page .account-access-row > div:first-child { min-width:0; }
+.settings-page .account-access-row h3 { margin:0 0 6px; font:600 15px/1.5 'DM Sans',sans-serif; }
+.settings-page .account-access-row p { margin:0; color:var(--muted); }
+.settings-page .account-access-row .button { flex-shrink:0; }
+.settings-page .account-access-status { display:inline-block; margin-top:8px; font-size:12px; color:var(--muted); }
+.settings-page .account-access-flow { margin-top:20px; padding:20px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
+.settings-page .account-access-flow-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.settings-page .account-access-flow-heading h3 { margin:0; font:600 15px/1.5 'DM Sans',sans-serif; }
+.settings-page .account-access-flow p { margin:12px 0; }
+.settings-page .account-access-flow .google-account-panel.is-compact { background:transparent; box-shadow:none; border:0; padding:0; margin:0; max-width:none; }
+.settings-page .google-account-panel h2[hidden] { display:none; }
+.settings-page .account-access-flow .google-verification-form { max-width:none; }
+.settings-page .account-password-disclosure { padding:20px 0; border-bottom:1px solid var(--line); }
+.settings-page .account-password-disclosure summary { cursor:pointer; font-weight:600; font-size:14px; }
+.settings-page .account-password-disclosure form { margin-top:16px; }
+@media(max-width:650px) { .settings-page .account-access-row { flex-direction:column; align-items:stretch; } .settings-page .account-access-flow { padding:16px; } }

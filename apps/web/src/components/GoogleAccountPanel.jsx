@@ -10,7 +10,7 @@ const messages = {
 }
 const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
-export default function GoogleAccountPanel() {
+export default function GoogleAccountPanel({ compact = false }) {
   const [params] = useSearchParams()
   const [status, setStatus] = useState(null)
   const [email, setEmail] = useState('')
@@ -73,21 +73,21 @@ export default function GoogleAccountPanel() {
       window.location.assign(result.url)
     } catch (cause) { setError(cause.message); setBusy(false) }
   }
-  return <section className="google-account-panel" aria-labelledby="google-account-heading">
-    <h2 id="google-account-heading"><Link2 size={22} aria-hidden="true" />Cuentas vinculadas</h2>
+  return <section className={`google-account-panel ${compact ? 'is-compact' : ''}`} aria-labelledby="google-account-heading">
+    <h2 hidden={compact} id="google-account-heading"><Link2 size={22} aria-hidden="true" />Cuentas vinculadas</h2>
     {!status && !error && <p role="status">Consultando vinculación…</p>}
-    {status?.linked ? <p role="status">Cuenta de Google vinculada: <strong>{status.email}</strong>. Puedes ingresar con Google o con tu contraseña.</p> : <>
+    {status?.linked ? <p role="status">Cuenta de Google vinculada: <strong>{status.email}</strong>. Puedes ingresar con Google o con tu contraseña.</p> : status && <>
       <p>Ingresa el correo que quieres vincular. Te enviaremos un código para verificarlo.</p>
-      <form className="google-verification-form" onSubmit={send}>
+      {!status.code_sent && !status.email_verified && <form className="google-verification-form" onSubmit={send}>
         <label>Correo de tu cuenta de Google<input type="email" autoComplete="email" placeholder="tucorreo@gmail.com" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} /></label>
         <button type="submit" className="button" disabled={busy || !status || seconds > 0}>{seconds > 0 ? `Reenviar en ${seconds} s` : status?.code_sent ? 'Enviar un nuevo código' : 'Enviar código de verificación'}</button>
-      </form>
+      </form>}
       {status?.code_sent && <form className="google-verification-form" onSubmit={confirm}>
         <p>Ingresa el código enviado a <strong>{status.email}</strong>.</p>
         <p className="verification-countdown" role="timer" aria-label="Tiempo restante para verificar">Tiempo para verificar: <strong>{countdown}</strong></p>
         {remaining === 0 && <p role="alert">El código venció. Solicita uno nuevo para continuar.</p>}
         <label>Código de 6 dígitos<input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required disabled={busy} /></label>
-        <button type="submit" className="button primary" disabled={busy || remaining === 0}>Verificar y vincular cuenta</button>
+        <div className="account-action-group"><button type="submit" className="button primary" disabled={busy || remaining === 0}>Verificar y vincular cuenta</button><button type="button" className="button" disabled={busy || seconds > 0} onClick={send}>{seconds > 0 ? `Reenviar en ${seconds} s` : 'Reenviar código'}</button></div>
       </form>}
       {status?.email_verified && <><p>Correo verificado: <strong>{status.email}</strong>.</p>
         <button className="button primary" type="button" disabled={busy} onClick={link}>{busy ? 'Conectando…' : 'Confirmar vinculación con Google'}</button></>}

@@ -1,3 +1,4 @@
+import ManualBookRegistration from '../components/ManualBookRegistration'
 import RatingStar from '../components/RatingStar'
 import { ArrowUpRight, BookOpen, ChevronRight, Cloud, Database, FileText, LayoutGrid, List, Search, TrendingUp, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -102,6 +103,7 @@ export default function BooksPage() {
       <h1 className="books-title">Busca tu próxima lectura</h1>
       <p className="books-lead">Encuentra la obra por título, autor o ISBN y selecciona el resultado correcto.</p>
 
+      <ManualBookRegistration />
       <div className="catalog-search-panel">
         <form className="catalog-search-input" role="search" onSubmit={event => { event.preventDefault(); inputRef.current?.blur() }}>
           <Search className="catalog-search-icon" aria-hidden="true" />

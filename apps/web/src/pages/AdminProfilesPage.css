@@ -10,7 +10,9 @@
 .admin-filters label, .admin-form label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
 .admin-filters label:first-child { flex: 1 1 270px; }
 .admin-filters label:nth-child(2) { flex: 0 1 190px; }
-.admin-filters input, .admin-filters select, .admin-form input, .admin-form textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 12px; font: inherit; }
+.admin-filters input, .admin-filters select, .admin-form input, .admin-form select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
+.admin-form textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 12px; font: inherit; }
+.admin-form select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
 .admin-form textarea { resize: vertical; }
 .admin-count { color: var(--muted); font-size: 12px; margin: 22px 0 12px; }
 .admin-layout { display: grid; grid-template-columns: minmax(350px, 1fr) minmax(350px, 1fr); align-items: start; gap: 22px; }
@@ -52,3 +54,44 @@
 .admin-request-actions { display: flex; gap: 10px; }
 @media (max-width: 900px) { .admin-layout { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .admin-profiles { padding: 24px 0 100px; } .admin-tabs { gap: 16px; } .admin-filters { align-items: stretch; } .admin-filters label { flex: 1 1 100% !important; } .admin-profile-row { flex-wrap: wrap; } .admin-profile-meta { margin-left: 50px; text-align: left; } .admin-requests, .admin-bookstore, .admin-detail { padding: 18px; } }
+/* Verification review cards */
+.admin-requests { max-width: none; padding: 0; background: transparent; border: 0; }
+.requests-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.requests-heading h2 { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
+.requests-heading p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.requests-count { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 8px; background: var(--soft); color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600; }
+.requests-heading-icon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--muted); }
+.admin-requests .admin-request { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 0; margin-bottom: 20px; overflow: hidden; }
+.request-heading { display: flex; align-items: center; gap: 12px; padding: 24px 24px 16px; }
+.request-avatar { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; background: var(--soft); color: var(--ink); font-weight: 700; font-size: 18px; }
+.request-identity { flex: 1; min-width: 0; }
+.request-identity h3 { margin: 0; font-size: 16px; }
+.request-identity p { margin: 5px 0 0; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.request-pending { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 20px; color: var(--muted); background: var(--soft); font-size: 11px; white-space: nowrap; }
+.request-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 0 24px 20px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
+.request-meta strong { display: inline-block; margin-left: 8px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); font-size: 11px; }
+.request-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.request-background, .request-decision { min-width: 0; padding: 24px; }
+.request-background { background: var(--soft); overflow-wrap: anywhere; }
+.request-body h4 { margin: 0 0 20px; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.request-background p { margin: 0 0 18px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.request-background strong { margin-bottom: 5px; font-size: 12px; }
+.request-background ul { padding-left: 18px; font-size: 12px; line-height: 1.8; }
+.request-background a { color: var(--ink); text-underline-offset: 3px; }
+.request-decision label { display: block; margin-bottom: 9px; font-size: 12px; font-weight: 600; }
+.request-decision label span { color: var(--muted); font-weight: 400; }
+.request-decision textarea { display: block; box-sizing: border-box; width: 100%; min-height: 116px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; line-height: 1.6; resize: vertical; }
+.request-decision textarea::placeholder { color: var(--muted); }
+.request-note-help { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.request-note-help > span:last-child { white-space: nowrap; }
+.admin-request-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.admin-request-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 16px; }
+.admin-request-actions .request-reject { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.admin-request-actions .request-reject:hover:not(:disabled) { background: var(--error-bg); color: var(--error-text); }
+.admin-request-actions button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.admin-requests textarea:focus-visible, .admin-requests button:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+.requests-empty { display: grid; justify-items: center; padding: 56px 24px; border: 1px dashed var(--line); border-radius: 16px; background: var(--surface); text-align: center; color: var(--muted); }
+.requests-empty h3 { color: var(--ink); margin: 16px 0 8px; }
+.requests-empty p { margin: 0; font-size: 13px; }
+@media (max-width: 800px) { .request-body { grid-template-columns: minmax(0, 1fr); } .request-background { border-bottom: 1px solid var(--line); } }
+@media (max-width: 480px) { .requests-heading h2 { font-size: 24px; } .requests-heading-icon { display: none; } .request-heading { flex-wrap: wrap; padding: 18px 18px 12px; } .request-pending { margin-left: 56px; } .request-meta { padding: 0 18px 16px; } .request-background, .request-decision { padding: 18px; } .admin-request-actions .button { flex: 1; } }

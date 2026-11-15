@@ -9,9 +9,9 @@ import '../../src/styles.css'
 import '../../src/pages/AccountPage.css'
 
 const id = '00000000-0000-4000-8000-000000000001'
-let account = { id, username: 'reader_test', display_name: 'Lector de prueba', email: 'reader@example.com', role: 'lector', biography: 'Historia guardada', avatar_url: null, account_status: 'active', suspended: false, google_linked: true, email_verified: true }
+let account = { id, username: 'reader_test', display_name: 'Lector de prueba', email: 'reader@example.com', role: 'lector', biography: 'Historia guardada', avatar_url: null, account_status: 'active', suspended: false, google_linked: true, email_verified: !new URLSearchParams(location.search).has('unverified') }
 const session = { session_id: '00000000-0000-4000-8000-000000000002', inactivity_expires_at: new Date(Date.now()+3600000).toISOString(), absolute_expires_at: new Date(Date.now()+7200000).toISOString() }
-window.accountTest = { calls: [], failPassword: false }
+window.accountTest = { calls: [], failPassword: false, failEmail: true, failSuspension: false }
 window.fetch = async (input, options = {}) => {
   const url = new URL(input, location.href)
   const path = url.pathname.replace(/^\/api/, '')
@@ -26,9 +26,17 @@ window.fetch = async (input, options = {}) => {
   if (path === '/auth/logout') return result(null, 204)
   if (path === '/accounts/me') { if (method === 'PATCH') account = { ...account, ...body }; return result(account) }
   if (path === '/accounts/me/sessions') return result([{ id: session.session_id, last_activity_at: new Date().toISOString() }])
+  if (path === '/accounts/me/email/request') return window.accountTest.failEmail ? result({ detail: 'Verifica tu contraseña' }, 400) : result({ status: 'sent' })
+  if (path === '/accounts/me/email/verify/request') return result({ status: 'sent' })
+  if (path === '/accounts/me/email/verify/confirm') { account.email_verified = true; return result(null, 204) }
   if (path === '/accounts/me/password') return window.accountTest.failPassword ? result({ detail: 'No fue posible verificar tu identidad' }, 400) : result(null, 204)
   if (path === '/accounts/admin') return result({ items: [account], total: 1 })
+  if (path.endsWith('/requests')) return result([])
+  if (path === `/accounts/admin/${id}`) return result(account)
   if (path.endsWith('/history')) return result([{ id: 'audit-1', action: 'profile_updated', created_at: new Date().toISOString(), before: {}, after: {}, correlation_id: 'correlation-test' }])
+  if (path.endsWith('/verification')) return result({ detail: 'Ya hay una solicitud pendiente' }, 409)
+  if (path.endsWith('/suspension') && window.accountTest.failSuspension) return result({ detail: 'No se pudo suspender la cuenta' }, 409)
+  if (path.startsWith('/roles/profiles/') && method === 'PATCH') { account = { ...account, ...body }; return result(account) }
   if (path.endsWith('/suspension')) { account = { ...account, suspended: body.suspended }; return result(account) }
   if (path === '/accounts/recovery/request') return result({ status: 'sent' })
   if (path === '/accounts/recovery/deletion') return result({ status: 'recovered', suspended: true })
@@ -36,4 +44,4 @@ window.fetch = async (input, options = {}) => {
   return result({ detail: 'Unexpected test endpoint: ' + path }, 404)
 }
 const recovery = new URLSearchParams(location.search).has('recovery')
-createRoot(document.getElementById('root')).render(<BrowserRouter>{recovery ? <RecoverAccountPage /> : <AuthProvider><AccountManagement /><AdminAccountManagement /></AuthProvider>}</BrowserRouter>)
+createRoot(document.getElementById('root')).render(<BrowserRouter>{recovery ? <RecoverAccountPage /> : <AuthProvider><AccountManagement /><AdminAccountManagement mode={new URLSearchParams(location.search).has('admin-users') ? 'users' : new URLSearchParams(location.search).has('unified') ? 'unified' : 'accounts'} /></AuthProvider>}</BrowserRouter>)

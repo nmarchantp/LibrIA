@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, SmallInteger, String, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, SmallInteger, String, Text, UniqueConstraint, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -93,3 +93,11 @@ class CatalogQuery(Base):
     query: Mapped[str] = mapped_column(Text, primary_key=True)
     payload: Mapped[dict] = mapped_column(JSONB)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class EditionCover(Base):
+    __tablename__ = "portadas_ediciones"
+    __table_args__ = {"schema": "app"}
+    edition_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("app.ediciones.id", ondelete="CASCADE"), primary_key=True)
+    content_type: Mapped[str] = mapped_column(String(30))
+    data: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
