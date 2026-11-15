@@ -32,7 +32,7 @@ export const environmentHelp = {
   SMTP_USERNAME: 'Cuenta utilizada para autenticarse en el servidor de correo.',
   SMTP_PASSWORD: 'Contraseña o contraseña de aplicación para autenticarse en el servidor de correo.',
   SMTP_FROM: 'Dirección remitente de los correos enviados. Debe estar autorizada por el proveedor SMTP.',
-  LIBRIA_DEMO_PASSWORD: 'Contraseña utilizada por los scripts de creación de cuentas y datos de demostración. No cambia automáticamente las contraseñas de usuarios existentes.',
+  LIBRIA_DEMO_ADMIN_PASSWORD: 'Contraseña utilizada por los scripts de creación de cuentas y datos de demostración. No cambia automáticamente las contraseñas de usuarios existentes.',
   ANALYTICS_SCHEDULER_ENABLED: 'true habilita las tareas programadas de analítica cuando se ejecuta el proceso de programación. No inicia ese proceso desde la API.',
   PROJECTION_SCHEDULER_ENABLED: 'true habilita las tareas programadas de proyecciones cuando se ejecuta el proceso de programación. No inicia ese proceso desde la API.',
   GEMINI_WORKER_ENABLED: 'true habilita el procesamiento de trabajos de IA por el worker de Gemini. El proceso del worker debe ejecutarse por separado.',

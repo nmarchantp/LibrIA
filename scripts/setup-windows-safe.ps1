@@ -73,7 +73,7 @@ if ([string]::IsNullOrWhiteSpace($envMap['DATABASE_URL'])) {
 }
 
 if ([string]::IsNullOrWhiteSpace($envMap['JWT_SECRET'])) { Set-EnvValue $envPath 'JWT_SECRET' (New-RandomSecret 64) }
-if ([string]::IsNullOrWhiteSpace($envMap['LIBRIA_DEMO_PASSWORD'])) { Set-EnvValue $envPath 'LIBRIA_DEMO_PASSWORD' (New-RandomSecret 24) }
+if ([string]::IsNullOrWhiteSpace($envMap['LIBRIA_DEMO_ADMIN_PASSWORD'])) { Set-EnvValue $envPath 'LIBRIA_DEMO_ADMIN_PASSWORD' (New-RandomSecret 24) }
 foreach ($line in Get-Content -LiteralPath (Join-Path $backendPath '.env.example')) {
     if ($line -match '^([A-Z][A-Z0-9_]*)=(.*)$') {
         $current = Get-EnvMap $envPath

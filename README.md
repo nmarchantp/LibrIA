@@ -333,7 +333,7 @@ GEMINI_FREE_TEST_MODE=false
 
 En una URL, caracteres como `@`, `:`, `/`, `#` y `%` requieren codificación porcentual. El asistente evita hacerlo a mano. No uses `CLAVE_CODIFICADA` como contraseña real.
 
-Setup genera `JWT_SECRET` y `LIBRIA_DEMO_PASSWORD` aleatorios si están vacíos. Para elegir la contraseña del administrador inicial, configura `LIBRIA_DEMO_PASSWORD` con al menos ocho caracteres antes de migrar. En `apps/web/.env`, conserva `VITE_API_URL=http://localhost:8000/api`.
+Setup genera `JWT_SECRET` y `LIBRIA_DEMO_ADMIN_PASSWORD` aleatorios si están vacíos. Para elegir la contraseña del administrador inicial, configura `LIBRIA_DEMO_ADMIN_PASSWORD` con al menos ocho caracteres antes de migrar. En `apps/web/.env`, conserva `VITE_API_URL=http://localhost:8000/api`.
 
 Los `.env` están excluidos de Git. Las variables `VITE_*` son públicas en el navegador: **nunca pongas allí claves Gemini, secretos OAuth ni contraseñas**.
 
@@ -353,7 +353,7 @@ Para crear el esquema nuevo o actualizar uno existente:
 
 El script exige escribir **`MIGRAR-POR-EXPLICITO`**, requiere `pg_dump`, crea un respaldo SQL en `backups/` y después ejecuta `alembic upgrade head` y la semilla inicial. No continúes si termina con error.
 
-Cuenta inicial: **`demo.admin@example.com`**, contraseña local `LIBRIA_DEMO_PASSWORD`. En el modo de catálogo predeterminado se preparan diez lecturas terminadas, valoradas y reseñadas. Con `CATALOG_DISCOVERY_ENABLED=true`, se prepara solo la cuenta; para cargar su biblioteca debes importar ediciones autorizadas y usar el mapa descrito por `python -m scripts.seed_default_admin --help`. Esta cuenta inicial es distinta del generador de ocho perfiles demo.
+Cuenta inicial: **`demo.admin@example.com`**, contraseña local `LIBRIA_DEMO_ADMIN_PASSWORD`. En el modo de catálogo predeterminado se preparan diez lecturas terminadas, valoradas y reseñadas. Con `CATALOG_DISCOVERY_ENABLED=true`, se prepara solo la cuenta; para cargar su biblioteca debes importar ediciones autorizadas y usar el mapa descrito por `python -m scripts.seed_default_admin --help`. Esta cuenta inicial es distinta del generador de ocho perfiles demo.
 
 ### 6. Iniciar, comprobar y detener
 
@@ -425,7 +425,7 @@ docker compose version
 if (-not (Test-Path apps\backend\.env)) { Copy-Item apps\backend\.env.example apps\backend\.env }
 ```
 
-En `apps/backend/.env` configura `JWT_SECRET` aleatorio, `LIBRIA_DEMO_PASSWORD` de al menos ocho caracteres y `FRONTEND_ORIGINS=http://localhost:8080`. Para generar cada secreto puedes usar:
+En `apps/backend/.env` configura `JWT_SECRET` aleatorio, `LIBRIA_DEMO_ADMIN_PASSWORD` de al menos ocho caracteres y `FRONTEND_ORIGINS=http://localhost:8080`. Para generar cada secreto puedes usar:
 
 ```powershell
 $secretBytes = New-Object byte[] 32
@@ -487,7 +487,7 @@ Listas completas: [backend/.env.example](apps/backend/.env.example) y [web/.env.
 | `JWT_SECRET`, `JWT_ALGORITHM` | Firma JWT con secreto aleatorio propio; algoritmo predeterminado `HS256`. |
 | `FRONTEND_ORIGINS` | Origen CORS exacto: `http://localhost:5173` nativo o `http://localhost:8080` Docker. |
 | `VITE_API_URL` | URL API frontend. Cambiar variables Vite exige reiniciar desarrollo o reconstruir la aplicación compilada. |
-| `LIBRIA_DEMO_PASSWORD` | Clave local para cuenta inicial/cuentas propias de demo; no reemplaza contraseñas existentes. |
+| `LIBRIA_DEMO_ADMIN_PASSWORD` | Clave local para cuenta inicial/cuentas propias de demo; no reemplaza contraseñas existentes. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | OAuth opcional; callback debe coincidir exactamente con el registrado. No son credenciales Gemini. |
 | `GOOGLE_BOOKS_API_KEY`, `VITE_GOOGLE_BOOKS_API_KEY` | Integración opcional de catálogo servidor/navegador; la segunda es pública. |
 | `OPEN_LIBRARY_CONTACT` | Identificación del responsable para uso regular de Open Library; no requiere otra API key. |
@@ -507,7 +507,7 @@ Listas completas: [backend/.env.example](apps/backend/.env.example) y [web/.env.
 6. Espera al siguiente cierre o ejecuta, como administrador, el ETL manual en `/admin/etl`. Revisa éxito, corte y validaciones.
 7. Para recomendaciones, inicia/reanuda actividad autenticada para sincronizar la versión preparada. Con worker habilitado, consulta el estado hasta disponer del resultado persistido.
 
-**Demo opcional:** Administración > Configuración > Modo demostración. Requiere `CATALOG_DISCOVERY_ENABLED=true`, catálogo compatible y `LIBRIA_DEMO_PASSWORD`. Selección actual: doce títulos curados y ocho perfiles, con portadas verificadas y procedencia registrada. Empieza apagada; desactivarla detiene nuevas operaciones y conserva historial. No llama directamente a Gemini ni garantiza elegibilidad IA: cada consumidor filtra sus fuentes. Sigue [modo demostración](docs/demo-mode.md) antes de activarla.
+**Demo opcional:** Administración > Configuración > Modo demostración. Requiere `CATALOG_DISCOVERY_ENABLED=true`, catálogo compatible y `LIBRIA_DEMO_ADMIN_PASSWORD`. Selección actual: doce títulos curados y ocho perfiles, con portadas verificadas y procedencia registrada. Empieza apagada; desactivarla detiene nuevas operaciones y conserva historial. No llama directamente a Gemini ni garantiza elegibilidad IA: cada consumidor filtra sus fuentes. Sigue [modo demostración](docs/demo-mode.md) antes de activarla.
 
 Para dar administración a una cuenta ya registrada, desde `apps/backend`:
 

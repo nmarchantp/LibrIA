@@ -23,7 +23,7 @@ def stable_id(key):
 
 def configured_passwords(settings, fallback=None):
     """Return credentials only to the seeder, never to logs or public responses."""
-    common = settings.libria_demo_password if fallback is None else fallback
+    common = settings.libria_demo_admin_password if fallback is None else fallback
     return {entry['key']: getattr(settings, f"libria_demo_{entry['key']}_password", '') or common
             for entry in MANIFEST['accounts']}
 
@@ -36,7 +36,7 @@ def seed(db, password, keys=None, *, passwords=None):
     credentials = {entry['key']: (passwords or {}).get(entry['key'], password) for entry in entries}
     for key, credential in credentials.items():
         if not isinstance(credential, str) or len(credential) < 8:
-            raise ValueError(f"Configura LIBRIA_DEMO_{key.upper()}_PASSWORD o LIBRIA_DEMO_PASSWORD con al menos 8 caracteres")
+            raise ValueError(f"Configura LIBRIA_DEMO_{key.upper()}_PASSWORD o LIBRIA_DEMO_ADMIN_PASSWORD con al menos 8 caracteres")
     for entry in entries:
         key = entry["key"]
         credential = credentials[key]
@@ -106,8 +106,8 @@ def main():
         # Evita carreras entre dos cargas del mismo manifiesto.
         from sqlalchemy import text
         db.execute(text("SELECT pg_advisory_xact_lock(96347)"))
-        accounts = seed(db, settings.libria_demo_password, keys=args.role, passwords=configured_passwords(settings))
-    print("Cuentas demo listas. Usan LIBRIA_DEMO_<PERFIL>_PASSWORD o, si está vacía, LIBRIA_DEMO_PASSWORD:")
+        accounts = seed(db, settings.libria_demo_admin_password, keys=args.role, passwords=configured_passwords(settings))
+    print("Cuentas demo listas. Usan LIBRIA_DEMO_<PERFIL>_PASSWORD o, si está vacía, LIBRIA_DEMO_ADMIN_PASSWORD:")
     for email in accounts:
         print(email)
 

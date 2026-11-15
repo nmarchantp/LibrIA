@@ -11,7 +11,7 @@
 #
 #     smtp_password: str = ""
 #     smtp_from: str = ""
-#     libria_demo_password: str = ""
+#     libria_demo_admin_password: str = ""
 #     analytics_scheduler_enabled: bool = True
 #     ai_worker_enabled: bool = True
 #     ollama_base_url: str = "http://127.0.0.1:11434"

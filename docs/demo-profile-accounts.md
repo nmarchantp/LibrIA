@@ -9,7 +9,7 @@
 | Librería | demo.libreria@example.com | LIBRIA_DEMO_LIBRERIA_PASSWORD |
 | Editorial | demo.editorial@example.com | LIBRIA_DEMO_EDITORIAL_PASSWORD |
 
-Las contraseñas se configuran en `apps/backend/.env`, excluido de Git. No se imprimen en consola ni se guardan en este documento. Si una variable individual está vacía, se usa `LIBRIA_DEMO_PASSWORD` por compatibilidad. En esta instalación se configuraron seis contraseñas distintas: la de administrador conserva su valor anterior y las otras cinco se generaron de forma aleatoria.
+Las contraseñas se configuran en `apps/backend/.env`, excluido de Git. No se imprimen en consola ni se guardan en este documento. Si una variable individual está vacía, se usa `LIBRIA_DEMO_ADMIN_PASSWORD` por compatibilidad. En esta instalación se configuraron seis contraseñas distintas: la de administrador conserva su valor anterior y las otras cinco se generaron de forma aleatoria.
 
 ## Preparar o sincronizar las cuentas
 

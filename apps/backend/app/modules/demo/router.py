@@ -47,8 +47,8 @@ def status(db: DB, admin: Admin, response: Response):
 def configure(data: DemoUpdate, db: DB, admin: Admin, response: Response):
     response.headers['Cache-Control'] = 'no-store'
     settings = get_settings()
-    if data.enabled and (not settings.catalog_discovery_enabled or len(settings.libria_demo_password) < 8):
-        raise HTTPException(422, 'Configura el catálogo en modo descubrimiento y LIBRIA_DEMO_PASSWORD de al menos 8 caracteres.')
+    if data.enabled and (not settings.catalog_discovery_enabled or len(settings.libria_demo_admin_password) < 8):
+        raise HTTPException(422, 'Configura el catálogo en modo descubrimiento y LIBRIA_DEMO_ADMIN_PASSWORD de al menos 8 caracteres.')
     mode = db.scalar(select(DemoMode).where(DemoMode.id == 1).with_for_update())
     mode.enabled = data.enabled
     mode.interval_seconds = data.interval_seconds
