@@ -35,12 +35,12 @@ class DemoProfileAccountsTest(unittest.TestCase):
         self.client.close(); app.dependency_overrides.clear()
         self.db.close(); self.transaction.rollback(); self.connection.close()
 
-    def test_optional_per_profile_passwords_fall_back_to_existing_common_key(self):
-        settings = Settings(_env_file=None, libria_demo_password='common-password', libria_demo_admin_password='admin-password', libria_demo_editorial_password='editorial-password')
+    def test_optional_per_profile_passwords_fall_back_to_admin_key(self):
+        settings = Settings(_env_file=None, libria_demo_admin_password='admin-password', libria_demo_editorial_password='editorial-password')
         passwords = configured_passwords(settings)
         self.assertEqual(passwords['admin'], 'admin-password')
         self.assertEqual(passwords['editorial'], 'editorial-password')
-        self.assertEqual(passwords['lector'], 'common-password')
+        self.assertEqual(passwords['lector'], 'admin-password')
         self.assertEqual(len(passwords), 6)
 
     def test_six_distinct_accounts_can_login_with_correct_roles_and_permissions(self):

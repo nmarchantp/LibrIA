@@ -6,7 +6,7 @@ from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.modules.auth.models import AuthAccount
 from app.modules.books.models import CatalogSource, Edition, Work
 from app.modules.demo.models import DemoMode
@@ -44,9 +44,9 @@ def ensure_enabled():
 
 
 def prepare_actors():
-    password = get_settings().libria_demo_password
+    password = get_settings().libria_demo_admin_password
     if len(password) < 8:
-        raise ValueError('Falta configurar LIBRIA_DEMO_PASSWORD')
+        raise ValueError('Falta configurar LIBRIA_DEMO_ADMIN_PASSWORD')
     with SessionLocal.begin() as db:
         for key, name, role in PERSONAS:
             user_id = identifier('user:' + key)
@@ -69,7 +69,11 @@ def prepare_actors():
                     db.add(ProfileCapability(profile_id=profile.id, capability=capability))
             elif account is None or user.account_status != 'active' or user.suspended_at is not None:
                 raise ValueError('Una cuenta demo fue deshabilitada o modificada; revisa sus permisos')
-            # Existing accounts/passwords are preserved. No real account is reset.
+            elif not verify_password(password, account.password_hash):
+                # Only the stable showcase identities above use the generator credential.
+                from app.modules.users.account_service import revoke_all
+                account.password_hash = hash_password(password)
+                revoke_all(db, user.id, 'demo_credentials_changed')
 
 
 @dataclass(frozen=True)

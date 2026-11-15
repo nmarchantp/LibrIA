@@ -69,7 +69,7 @@ def main():
         raise SystemExit("La carga ficticia solo está habilitada en desarrollo")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470016)"))
-        result = seed_reviews(db, settings.libria_demo_password, passwords=configured_passwords(settings))
+        result = seed_reviews(db, settings.libria_demo_admin_password, passwords=configured_passwords(settings))
     print(json.dumps(result))
 
 

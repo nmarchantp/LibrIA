@@ -65,7 +65,7 @@ python -m scripts.grant_admin --email admin@ejemplo.com
 
 La instalación autorizada crea además la cuenta estable
 `demo.admin@example.com` y le asigna diez lecturas terminadas, valoradas y reseñadas.
-La contraseña corresponde a `LIBRIA_DEMO_PASSWORD` en el `.env` local. La carga es
+La contraseña corresponde a `LIBRIA_DEMO_ADMIN_PASSWORD` en el `.env` local. La carga es
 idempotente: reutiliza el catálogo existente y no reemplaza lecturas ni reseñas
 creadas después. También puede repetirse manualmente con:
 

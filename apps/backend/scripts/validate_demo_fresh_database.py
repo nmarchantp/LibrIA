@@ -56,7 +56,7 @@ async def exercise_owned():
     print('Empty catalog confirmed; testing administrator login and switch.', flush=True)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://fresh-demo.test') as client:
         login = await client.post('/api/auth/login', json={'email': 'demo.admin@example.com',
-                                                        'password': get_settings().libria_demo_admin_password or get_settings().libria_demo_password})
+                                                        'password': get_settings().libria_demo_admin_password})
         assert login.status_code == 200, login.text
         headers = {'Authorization': 'Bearer ' + login.json()['access_token']}
         enabled = await client.patch('/api/admin/demo', json={'enabled': True, 'interval_seconds': 10}, headers=headers)
@@ -167,7 +167,7 @@ def main():
             connection.execute(sql.SQL('COMMENT ON DATABASE {} IS {}').format(sql.Identifier(name), sql.Literal(marker)))
         env = os.environ.copy()
         env.update(DATABASE_URL=f'postgresql+psycopg://demo_validator@127.0.0.1:{port}/{name}',
-            APP_ENV='test', LIBRIA_DEMO_PASSWORD=uuid.uuid4().hex, JWT_SECRET=uuid.uuid4().hex * 2,
+            APP_ENV='test', LIBRIA_DEMO_ADMIN_PASSWORD=uuid.uuid4().hex, JWT_SECRET=uuid.uuid4().hex * 2,
             PYTHONUTF8='1', PYTHONIOENCODING='utf-8', LIBRIA_FRESH_DEMO_MARKER=marker,
             LIBRIA_FRESH_DEMO_CACHE=str(root / 'covers'), LIBRIA_FRESH_DEMO_RESULT=str(root / 'result.json'),
             GEMINI_WORKER_ENABLED='false', ANALYTICS_SCHEDULER_ENABLED='false', PROJECTION_SCHEDULER_ENABLED='false')

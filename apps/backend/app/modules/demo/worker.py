@@ -46,7 +46,7 @@ class DemoAPI:
         for attempt in range(2):
             if actor not in self.tokens:
                 result = await self.client.post(get_settings().api_prefix + '/auth/login', json={
-                    'email': f'showcase.{actor}@example.com', 'password': get_settings().libria_demo_password})
+                    'email': f'showcase.{actor}@example.com', 'password': get_settings().libria_demo_admin_password})
                 if result.status_code != 200:
                     raise RuntimeError(f'No se pudo iniciar la cuenta demo {actor} (HTTP {result.status_code}).')
                 self.tokens[actor] = result.json()['access_token']

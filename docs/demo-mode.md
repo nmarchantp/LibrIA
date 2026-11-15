@@ -18,7 +18,7 @@ migración explícita; reiniciar el backend con el código actualizado.
 
 En **Administración > Configuración > Modo demostración**, un administrador
 puede activar o desactivar la generación sin reiniciar. Necesita
-`CATALOG_DISCOVERY_ENABLED=true` y `LIBRIA_DEMO_PASSWORD` de al menos ocho
+`CATALOG_DISCOVERY_ENABLED=true` y `LIBRIA_DEMO_ADMIN_PASSWORD` de al menos ocho
 caracteres. La contraseña permite iniciar únicamente las cuentas propias de
 esta demo; el servicio no cambia contraseñas de cuentas existentes.
 
@@ -84,7 +84,7 @@ python -m scripts.generate_posts --disable
 python -m scripts.generate_posts
 ```
 
-Usa por defecto `demo.admin@example.com` y `LIBRIA_DEMO_PASSWORD` para
+Usa por defecto `demo.admin@example.com` y `LIBRIA_DEMO_ADMIN_PASSWORD` para
 autenticarse. Para otras cuentas, usa el panel con su sesión administradora.
 `run-local.ps1 -DemoPosts` activa este mismo modo después de esperar a la API.
 No se necesita mantener otra ventana de generador abierta.

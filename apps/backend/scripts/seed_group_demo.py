@@ -91,7 +91,7 @@ def main():
         raise SystemExit("La cohorte ficticia solo se carga en desarrollo")
     with SessionLocal.begin() as db:
         db.execute(text("SELECT pg_advisory_xact_lock(963470017)"))
-        print(json.dumps(seed_group(db, settings.libria_demo_password, passwords=configured_passwords(settings))))
+        print(json.dumps(seed_group(db, settings.libria_demo_admin_password, passwords=configured_passwords(settings))))
 
 
 if __name__ == "__main__":
