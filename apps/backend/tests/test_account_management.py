@@ -197,6 +197,16 @@ class AccountManagementTest(unittest.TestCase):
         self.assertEqual(self.client.delete('/api/accounts/me/avatar', headers=self.headers).status_code, 204)
         self.assertTrue(self.db.scalar(select(AccountAudit.id).where(AccountAudit.user_id == self.user.id, AccountAudit.action == 'avatar_updated')))
 
+    def test_admin_can_open_account_by_id(self):
+        path = f'/api/accounts/admin/{self.user.id}'
+        self.assertEqual(self.client.get(path, headers=self.headers).status_code, 403)
+        admin = self.admin()
+        response = self.client.get(path, headers=admin)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()['id'], str(self.user.id))
+        self.assertEqual(response.json()['email'], self.user.auth_account.email)
+        self.assertEqual(self.client.get(f'/api/accounts/admin/{uuid.uuid4()}', headers=admin).status_code, 404)
+
     def test_admin_permissions_suspension_and_reactivation(self):
         path = f'/api/accounts/admin/{self.user.id}/suspension'
         body = {"suspended": True, "reason": "Revisión administrativa"}

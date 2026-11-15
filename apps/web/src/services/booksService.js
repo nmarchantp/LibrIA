@@ -1,4 +1,4 @@
-import { apiRequest } from '../api/client'
+import { apiRequest, apiAssetUrl } from '../api/client'
 import { displayBookEdition, displayBookTitle } from '../utils/bookTitles.js'
 
 export function normalizeGoogleBook(item) {
@@ -57,7 +57,7 @@ export function normalizeGoogleBook(item) {
     color: '#173f35',
     accent: '#ffb65c',
     initial: title.trim().charAt(0).toUpperCase() || 'L',
-    image: text(info.imageLinks?.thumbnail, text(info.imageLinks?.smallThumbnail)).replace(/^http:/, 'https:') || null,
+    image: apiAssetUrl(text(info.imageLinks?.thumbnail, text(info.imageLinks?.smallThumbnail)).replace(/^http:/, 'https:')) || null,
   }
 }
 
@@ -67,8 +67,9 @@ export async function searchGoogleBooks(query) {
   return (Array.isArray(data.items) ? data.items : []).map(normalizeGoogleBook).filter(Boolean)
 }
 
-export async function searchBookCatalog(query, searchBy = 'all', { signal, refresh = false, startIndex = 0, provider = 'google_books', page = 1 } = {}) {
+export async function searchBookCatalog(query, searchBy = 'all', { signal, refresh = false, startIndex = 0, localOnly = false, provider = 'google_books', page = 1 } = {}) {
   const params = new URLSearchParams({ q: query?.trim() || '', search_by: searchBy })
+  if (localOnly) params.set('local_only', 'true')
   if (refresh) params.set('refresh', 'true')
   if (startIndex) params.set('start_index', String(startIndex))
   if (provider !== 'google_books') { params.set('provider', provider); params.set('page', String(page)) }

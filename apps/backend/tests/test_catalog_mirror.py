@@ -17,6 +17,18 @@ from app.modules.books.router import google_request, store_volume
 
 
 class CatalogMirrorTest(unittest.TestCase):
+    def test_local_only_search_never_discovers_external_books(self):
+        with patch('app.modules.books.router.local_works', return_value=[self.volume]) as local, \
+             patch('app.modules.books.router.google_request') as google, \
+             patch('app.modules.books.discovery.search') as discovery:
+            response = self.client.get('/api/books', params={'q': 'Una obra', 'search_by': 'title', 'local_only': 'true'})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(response.json()['items'], [self.volume])
+            local.assert_called_once_with(self.db, 'Una obra', 'title')
+            google.assert_not_called()
+            discovery.assert_not_called()
+            self.fallback.assert_not_called()
+
     def setUp(self):
         fallback = patch('app.modules.books.router.open_library.search', return_value={'items': [], 'has_more': False, 'next_page': None})
         self.fallback = fallback.start()

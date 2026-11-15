@@ -35,14 +35,14 @@ function BookLinker({ value, onChange }) {
     const controller = new AbortController()
     const timer = setTimeout(async () => {
       setLoading(true); setError('')
-      try { setResults((await searchBookCatalog(query, 'title', { signal: controller.signal })).books.slice(0, 6)) }
+      try { setResults((await searchBookCatalog(query, 'title', { signal: controller.signal, localOnly: true })).books.slice(0, 6)) }
       catch (cause) { if (cause.name !== 'AbortError') setError('No se pudo buscar en el catálogo.') }
       finally { if (!controller.signal.aborted) setLoading(false) }
     }, 350)
     return () => { clearTimeout(timer); controller.abort() }
   }, [open, query])
   const choose = book => {
-    onChange({ ref: String(book.externalId || book.id), title: book.originalTitle || book.title, author: book.author, cover: book.image })
+    onChange({ ref: String(book.workId || book.id), work_id: book.workId || book.id, edition_id: book.editionId || null, title: book.originalTitle || book.title, author: book.author, cover: book.image })
     setOpen(false); setQuery('')
   }
   if (!open && value) return <div className="composer-book is-linked">
@@ -55,10 +55,10 @@ function BookLinker({ value, onChange }) {
     <span className="composer-book-icon"><BookOpen aria-hidden="true" /></span><span>Enlazar una obra <small>(opcional)</small></span>
   </button>
   return <div className="composer-book is-searching">
-    <label className="composer-book-search"><Search aria-hidden="true" /><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Busca la obra por título…" aria-label="Buscar la obra a enlazar" /></label>
+    <label className="composer-book-search"><Search aria-hidden="true" /><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Busca en el catálogo de LibrIA…" aria-label="Buscar la obra a enlazar" /></label>
     <button type="button" className="composer-pill" onClick={() => { setOpen(false); setQuery('') }}>Cancelar</button>
     {(loading || error || results.length > 0 || query.trim().length >= 2) && <div className="composer-book-results" role="status" aria-live="polite">
-      {loading ? <p>Buscando…</p> : error ? <p>{error}</p> : results.length ? <ul>{results.map(book => <li key={book.id}><button type="button" onClick={() => choose(book)}><strong>{book.title}</strong><small>{book.author}</small></button></li>)}</ul> : <p>No encontramos obras con ese título.</p>}
+      {loading ? <p>Buscando…</p> : error ? <p>{error}</p> : results.length ? <ul>{results.map(book => <li key={book.id}><button type="button" onClick={() => choose(book)}><strong>{book.title}</strong><small>{book.author}</small></button></li>)}</ul> : <p>No encontramos obras con ese título en LibrIA.</p>}
     </div>}
   </div>
 }
@@ -119,14 +119,17 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
     try {
       const form = new FormData()
       const publication = { source: type === 'event' ? 'event' : 'community', publication_type: type, kind: 'community',
-        author_profile_id: profileId, title: title.trim(), body: body.trim(), book_ref: book?.ref || '', book_title: book?.title || '' }
+        author_profile_id: profileId, title: title.trim(), body: body.trim(), book_ref: book?.ref || '', book_title: book?.title || '', work_id: book?.work_id || '', edition_id: book?.edition_id || '' }
       if(initialPost) {
         publication.work_id=book?.work_id||'';publication.edition_id=book?.edition_id||''
         publication.existing_image_ids=JSON.stringify(existingImages.map(path=>path.split('/').at(-1)))
         publication.cover_mode=coverMode==='catalog'?'catalog':coverFile?'custom':'keep'
       }
       if(type==='event'&&eventValues.start_date)publication.event_details=JSON.stringify({...eventValues,end_date:eventValues.end_date||null,end_time:eventValues.end_time||null})
-      Object.entries(publication).forEach(([key, value]) => form.append(key, value))
+      Object.entries(publication).forEach(([key, value]) => {
+        if (!initialPost && ['work_id', 'edition_id'].includes(key) && !value) return
+        form.append(key, value)
+      })
       images.forEach(image => form.append('images', image))
       if(book&&coverMode==='custom'&&coverFile)form.append('book_cover',coverFile)
       const saved=await apiRequest(initialPost?`/posts/${initialPost.id}`:'/posts', { method: initialPost?'PUT':'POST', headers: { Authorization: `Bearer ${localStorage.getItem('libria_token')}`, ...(initialPost?.moderation_version ? { 'If-Match': String(initialPost.moderation_version) } : {}) }, body: form })
@@ -138,8 +141,7 @@ export default function PostComposer({ role, profileId, onCreated, initialPost =
     } catch (cause) {
       if (cause.status === 403) retry()
       setError(cause.status === 403 ? 'Tu perfil ya no tiene permiso para este tipo de publicación.'
-        : cause.status === 422 && book && cause.message?.toLowerCase().includes('obra') ? 'Esa obra no está disponible en el catálogo de LibrIA. Prueba con otra o publica sin enlazarla.'
-          : [413,415,422].includes(cause.status) ? cause.message : 'No se pudo publicar. Inténtalo de nuevo.')
+        : [413,415,422].includes(cause.status) ? cause.message : 'No se pudo publicar. Inténtalo de nuevo.')
     } finally { publishing.current=false;setBusy(false) }
   }
 

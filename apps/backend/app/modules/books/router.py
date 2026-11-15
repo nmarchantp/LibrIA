@@ -5,7 +5,7 @@ import uuid
 from typing import Annotated, Literal
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, Header, Request
 from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
@@ -20,6 +20,54 @@ from app.modules.books.models import AlternateTitle, Author, CatalogQuery, Catal
 from app.modules.books.service import equivalent_work_ids, verified_original_publication, verified_work_for_import
 
 router = APIRouter(prefix="/books", tags=["books"])
+
+from app.modules.auth.dependencies import get_current_user
+from app.modules.users.models import User
+from app.modules.books.manual import ManualBookInput
+
+
+@router.post('/manual', status_code=201)
+async def register_manual_book(request: Request, user: Annotated[User, Depends(get_current_user)],
+                         db: Annotated[Session, Depends(get_db)],
+                         idempotency_key: Annotated[str, Header(min_length=1, max_length=200)]):
+    from sqlalchemy.exc import IntegrityError
+    from app.modules.books.manual import create_manual_book
+    from app.modules.books.policy import execute_catalog_command
+    from pydantic import ValidationError
+    from starlette.formparsers import MultiPartException
+    cover = None
+    try:
+        if request.headers.get('content-type', '').startswith('multipart/form-data'):
+            async with request.form(max_files=1, max_fields=1) as form:
+                import json
+                data = ManualBookInput.model_validate(json.loads(form.get('data') or '{}'))
+                if form.get('cover'):
+                    from app.modules.social.post_covers import read_cover
+                    cover = await read_cover(form.get('cover'))
+                    if cover[0] not in {'image/png', 'image/jpeg'}:
+                        raise HTTPException(415, 'Usa una portada PNG o JPG')
+                    if data.cover_url:
+                        raise HTTPException(422, 'Elige una URL o un archivo de portada, no ambos')
+        else:
+            data = ManualBookInput.model_validate(await request.json())
+    except (ValidationError, ValueError, TypeError, MultiPartException):
+        raise HTTPException(422, 'Revisa el ISBN y los datos del libro') from None
+    actor_id = user.id
+    try:
+        return execute_catalog_command(db, lambda: create_manual_book(db, actor_id, idempotency_key, data, cover))
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, 'El ISBN o los datos del libro coinciden con otro registro. Busca el libro antes de reintentar.') from None
+
+
+@router.get('/editions/{edition_id}/cover')
+def edition_cover(edition_id: uuid.UUID, db: Annotated[Session, Depends(get_db)]):
+    from app.modules.books.models import EditionCover
+    cover = db.get(EditionCover, edition_id)
+    if not cover:
+        raise HTTPException(404, 'Portada no encontrada')
+    return Response(cover.data, media_type=cover.content_type,
+                    headers={'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'public, max-age=86400'})
 
 
 def publication_sort_key(value):
@@ -362,9 +410,12 @@ def search_books(response: Response, db: Annotated[Session, Depends(get_db)], q:
                  search_by: Literal["all", "title", "author", "isbn"] = "all",
                  refresh: bool = False, start_index: int = Query(default=0, ge=0, le=1000),
                  provider: Literal["google_books", "open_library"] = "google_books",
-                 page: int = Query(default=1, ge=1, le=1000)):
+                 page: int = Query(default=1, ge=1, le=1000), local_only: bool = False):
     response.headers["Cache-Control"] = "no-store"
     query = q.strip()
+    if local_only:
+        items = local_works(db, query, search_by)
+        return {"items": items, "totalItems": len(items), "has_more": False}
     if get_settings().catalog_discovery_enabled:
         from app.modules.books.discovery import search
         return search(db, query, search_by, provider, refresh, start_index, page)

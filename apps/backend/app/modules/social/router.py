@@ -122,7 +122,7 @@ async def create_post(request: Request, response: Response, user: Annotated[User
         payload = {}
         for field in PostCreate.model_fields:
             value = form.get(field)
-            if isinstance(value, str) and not value.strip() and field in {"title", "book_ref", "book_title", "publication_type"}:
+            if isinstance(value, str) and not value.strip() and field in {"title", "book_ref", "book_title", "publication_type", "work_id", "edition_id", "author_profile_id"}:
                 value = None
             if value is not None:
                 payload[field] = value
@@ -205,12 +205,21 @@ async def create_post(request: Request, response: Response, user: Annotated[User
             raise HTTPException(422,'La edición no corresponde a la obra')
         resolved_work=edition.work_id
     if data.book_ref:
-        matches=db.scalars(select(Edition).join(CatalogSource,CatalogSource.edition_id==Edition.id)
-          .where(CatalogSource.external_id==data.book_ref).order_by(Edition.id)).all()
-        works={e.work_id for e in matches}
-        if len(works)!=1 or (resolved_work and resolved_work not in works):
-            raise HTTPException(422,'El libro debe corresponder a una obra inequívoca del catálogo de LibrIA')
-        resolved_work=next(iter(works));resolved_edition=resolved_edition or matches[0].id
+        try:
+            internal_work = uuid.UUID(data.book_ref)
+        except ValueError:
+            internal_work = None
+        if internal_work and db.get(Work, internal_work):
+            if resolved_work and resolved_work != internal_work:
+                raise HTTPException(422, 'La obra enlazada no corresponde')
+            resolved_work = internal_work
+        else:
+            matches=db.scalars(select(Edition).join(CatalogSource,CatalogSource.edition_id==Edition.id)
+              .where(CatalogSource.external_id==data.book_ref).order_by(Edition.id)).all()
+            works={e.work_id for e in matches}
+            if len(works)!=1 or (resolved_work and resolved_work not in works):
+                raise HTTPException(422,'El libro debe corresponder a una obra inequívoca del catálogo de LibrIA')
+            resolved_work=next(iter(works));resolved_edition=resolved_edition or matches[0].id
     if resolved_work and not db.get(Work,resolved_work):
         raise HTTPException(422,'Obra no encontrada en el catálogo de LibrIA')
     if cover_data and not (resolved_work or data.book_ref):

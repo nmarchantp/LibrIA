@@ -35,3 +35,7 @@ tmp/
 .tmp/
 temp/
 /apps/backend/var/demo-covers/
+
+# Temporary browser profiles used by UI tests (caches, extensions, downloaded models).
+/artifacts/login-browser/
+/artifacts/login-edge/
