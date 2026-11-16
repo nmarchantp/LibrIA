@@ -1,0 +1,25 @@
+.sidebar-collapse-toggle,.sidebar-compact-brand { display:none; }
+@media(min-width:701px) {
+  :root .social-shell .social-sidebar { padding-top:44px; }
+  .sidebar-collapse-toggle { position:absolute; top:8px; right:8px; z-index:2; display:grid; place-items:center; width:32px; height:32px; padding:0; border:1px solid var(--line); border-radius:10px; color:var(--primary); background:var(--surface); cursor:pointer; }
+  .sidebar-collapse-toggle:hover { background:var(--soft); }
+  .sidebar-collapse-toggle:focus-visible { outline:2px solid var(--primary); outline-offset:3px; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed { grid-template-columns:80px minmax(0,1fr); }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .social-sidebar { padding-inline:12px; gap:12px; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .brand-link { display:grid; place-items:center; padding:12px 0; margin:0; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .brand-link::before,
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .brand-link::after { display:none; }
+  .sidebar-collapsed .brand-logo { display:none; }
+  .sidebar-collapsed .sidebar-compact-brand { display:block; color:var(--primary); }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .social-nav a { justify-content:center; padding:12px 0; gap:0; }
+  .sidebar-collapsed .social-nav a > span:not(.navigation-galaxy),
+  .sidebar-collapsed .account-link > span:not(.avatar),
+  .sidebar-collapsed .logout-button > span { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .sidebar-navigation::after { content:none; display:none; background-image:none; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .sidebar-account { margin-top:auto; padding:16px 0 0; }
+  .sidebar-collapsed .account-link { justify-content:center; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .logout-button { justify-content:center; width:100%; min-height:44px; padding:12px 0; }
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .sidebar-candle-reactor,
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .social-sidebar img,
+  :root[data-theme] .social-shell[data-interior-style].sidebar-collapsed .sidebar-account::before { display:none; }
+}

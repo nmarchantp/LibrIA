@@ -84,12 +84,12 @@ class AccountManagementTest(unittest.TestCase):
     def test_public_updates_preserve_identity_and_profile(self):
         old_username = self.user.username
         response = self.client.patch('/api/accounts/me', headers=self.headers,
-            json={"display_name": "Otro nombre", "biography": "📚" * 70})
+            json={"display_name": "Otro nombre", "biography": "📚" * 300})
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()['username'], old_username)
         self.assertEqual(response.json()['id'], str(self.user.id))
         self.assertEqual(self.db.scalar(select(Profile.display_name).where(Profile.owner_user_id == self.user.id)), "Otro nombre")
-        for extra in ({"username": "otro"}, {"role": "admin"}, {"biography": "📚" * 71}):
+        for extra in ({"username": "otro"}, {"role": "admin"}, {"biography": "📚" * 301}):
             result = self.client.patch('/api/accounts/me', headers=self.headers, json={"display_name": "Otro nombre", **extra})
             self.assertEqual(result.status_code, 422)
 

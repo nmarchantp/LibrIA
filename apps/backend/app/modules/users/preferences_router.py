@@ -44,7 +44,7 @@ def choices(db, user_id):
 
 def own_response(db, user):
     profile = personal_profile(db, user)
-    return {"profile_visibility": user.profile_visibility, "public_sections": user.public_sections, "story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
+    return {"literary_crush": (user.literary_highlights or {}).get('literary_crush'), "essential_books": (user.literary_highlights or {}).get('essential_books', []), "profile_visibility": user.profile_visibility, "public_sections": user.public_sections, "story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
 
 
 @router.get("/preference-catalogs", response_model=PreferenceCatalogs)
@@ -97,7 +97,25 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
             raise HTTPException(status_code=422, detail="El gusto destacado debe ser una categoría configurada")
     else:
         featured_id = previous_featured if previous_featured in selected_ids else None
+    crush = None
+    if 'literary_crush' in supplied and data.literary_crush:
+        from app.modules.books.models import LiteraryCharacter, Work
+        from app.modules.books.characters_router import character_image
+        selection = data.literary_crush
+        character = db.get(LiteraryCharacter, selection.character_id)
+        if not character or not character.active or character.work_id != selection.work_id:
+            raise HTTPException(422, 'Elige un personaje disponible del libro seleccionado')
+        work = db.get(Work, character.work_id)
+        crush = {'character_id': str(character.id), 'work_id': str(work.id), 'name': character.name,
+                 'book': work.title, 'description': selection.description, 'image_url': character_image(character)}
     try:
+        highlights = dict(owner.literary_highlights or {})
+        if 'literary_crush' in supplied:
+            highlights['literary_crush'] = crush
+        if 'essential_books' in supplied:
+            highlights['essential_books'] = [item.model_dump() for item in data.essential_books]
+        if {'literary_crush', 'essential_books'} & supplied:
+            owner.literary_highlights = highlights
         for field in ('profile_visibility', 'public_sections'):
             if field in supplied:
                 setattr(owner, field, getattr(data, field))
@@ -160,6 +178,8 @@ def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, r
             "follows_you": visitor is not None and db.get(ProfileFollow, (visitor, owner.id)) is not None,
             "visible_sections": sections, "story_illustration": owner.story_illustration if 'biography' in sections else 'none',
             "biography": owner.biography if 'biography' in sections else None,
+            "literary_crush": (owner.literary_highlights or {}).get('literary_crush') if 'biography' in sections else None,
+            "essential_books": (owner.literary_highlights or {}).get('essential_books', []) if 'biography' in sections else [],
             "favorite_quotes": owner.favorite_quotes if 'favorite_quotes' in sections else [],
             "featured_category_id": values.get('featured_category_id') if 'intensities' in sections else None,
             **{key: values.get(key, []) if key in sections else [] for key in ('genres', 'tropes', 'intensities', 'interests')}}

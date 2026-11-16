@@ -49,7 +49,36 @@ class FavoriteQuote(BaseModel):
     source: Annotated[str, StringConstraints(strip_whitespace=True, max_length=150)] = ""
 
 
+ImageUrl = Annotated[str, StringConstraints(max_length=2000, pattern=r'^(https?://|/api/|/images/characters/)')]
+
+
+class LiteraryCrush(BaseModel):
+    character_id: uuid.UUID | None = None
+    work_id: uuid.UUID | None = None
+    model_config = ConfigDict(extra="forbid")
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    book: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] = ''
+    description: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] = ''
+    image_url: ImageUrl | None = None
+
+
+class EssentialBook(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: Annotated[str, StringConstraints(min_length=1, max_length=200)]
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
+    image_url: ImageUrl | None = None
+
+
+class CharacterChoice(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    character_id: uuid.UUID
+    work_id: uuid.UUID
+    description: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] = ''
+
+
 class LiteraryPreferences(BaseModel):
+    literary_crush: 'LiteraryCrush | None' = None
+    essential_books: list['EssentialBook'] = Field(default_factory=list)
     profile_visibility: Literal['public', 'private'] = 'public'
     public_sections: list[ProfileSection] = Field(default_factory=list)
     story_illustration: StoryIllustration = "flowers"
@@ -64,6 +93,8 @@ class LiteraryPreferences(BaseModel):
 
 
 class PublicProfile(BaseModel):
+    literary_crush: 'LiteraryCrush | None' = None
+    essential_books: list['EssentialBook'] = Field(default_factory=list)
     profile_visibility: Literal['public', 'private'] = 'public'
     visible_sections: list[ProfileSection] = Field(default_factory=list)
     can_view: bool = True
@@ -107,17 +138,26 @@ class ReadingGenreStatistics(BaseModel):
 
 
 class PreferencesUpdate(BaseModel):
+    literary_crush: CharacterChoice | None = None
+    essential_books: list[EssentialBook] = Field(default_factory=list, max_length=4)
     profile_visibility: Literal['public', 'private'] = 'public'
     public_sections: list[ProfileSection] = Field(default_factory=list, max_length=6)
     story_illustration: StoryIllustration = "flowers"
     model_config = ConfigDict(extra="forbid")
     favorite_quotes: list[FavoriteQuote | Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]] = Field(default_factory=list, max_length=4)
-    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=70)] | None = None
+    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] | None = None
     genre_ids: list[Identifier] | None = Field(default=None, max_length=5)
     trope_ids: list[Identifier] | None = None
     intensities: list[IntensitySelection] | None = Field(default=None, max_length=5)
     interest_ids: list[Identifier] | None = None
     featured_category_id: Identifier | None = None
+
+    @field_validator('essential_books')
+    @classmethod
+    def unique_essential_books(cls, value):
+        if len({item.id for item in value}) != len(value):
+            raise ValueError('No puedes repetir libros imprescindibles')
+        return value
 
     @field_validator("genre_ids", "trope_ids", "interest_ids")
     @classmethod

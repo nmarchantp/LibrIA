@@ -1,4 +1,5 @@
 import { literaryThemes } from './literaryThemes'
+import panoramaAssets from './profilePanoramaAssets.json'
 
 // Visual assets only. Keep the existing persisted theme IDs unchanged.
 export const defaultProfileBanner = {
@@ -20,6 +21,11 @@ export const profileBanners = {
   'rosa-antiguo': { src: '/images/theme-refresh-v1/rosa-antiguo/banner.webp', position: 'center', mobilePosition: '70% center' },
 }
 
-export function getProfileBanner(theme) {
-  return profileBanners[theme] || defaultProfileBanner
+export const profilePanoramas = {
+  ...panoramaAssets,
+  'dark-blood':{src:'/images/blood-universe/gothic-study-panorama-v3.webp',position:'right center',mobilePosition:'42% center'},
+}
+
+export function getProfileBanner(theme, panoramic = false) {
+  return (panoramic && profilePanoramas[theme]) || profileBanners[theme] || defaultProfileBanner
 }

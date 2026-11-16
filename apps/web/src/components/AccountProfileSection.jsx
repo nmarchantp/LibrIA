@@ -4,7 +4,7 @@ import { API_URL } from '../api/client'
 import { accountRequest } from '../services/accountService'
 
 const avatarTypes = ['image/jpeg', 'image/png', 'image/webp']
-const biographyLimit = 70
+const biographyLimit = 300
 
 export default function AccountProfileSection({ account, busy, run }) {
   const fileRef = useRef(null)

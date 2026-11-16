@@ -23,11 +23,11 @@
   :is(.global-header-action,.mobile-nav-toggle) { color:#D7B2F3; }
   .mobile-nav-toggle svg { stroke:#D7B2F3; }
   .social-topbar.is-scrolled::before { background:rgb(23 20 33 / 92%); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
-  .social-sidebar { background:radial-gradient(ellipse at 40% 74%,rgb(96 51 122 / 23%),transparent 48%),radial-gradient(ellipse at 58% 4%,rgb(109 79 163 / 23%),transparent 27%),linear-gradient(155deg,#211B2E,#1B1526 70%); border-color:#604769; }
+  .social-sidebar { background:var(--sidebar-bg); border-color:#604769; }
   .social-nav a { border-radius:22px; gap:12px; font-size:14px; min-height:46px; }
   .social-nav a.active { background:linear-gradient(135deg,#79528F,#493354); border:1px solid #B98ED5; box-shadow:inset 0 1px 10px rgb(205 183 255 / 22%),0 5px 18px rgb(15 10 25 / 20%); }
   .social-sidebar > .brand-link { background:none; padding:10px 8px 20px; border-color:#594064; }
-  .social-sidebar > .brand-link::before { content:''; position:absolute; width:100%; height:55px; top:20px; right:0; border-bottom:1px solid #B985D2; border-radius:50%; transform:rotate(-13deg); opacity:.42; pointer-events:none; z-index:-1; }
+  .social-sidebar > .brand-link::before,.social-sidebar > .brand-link::after { content:none; display:none; }
   .brand-logo-ai { fill:#CDB7FF; }
   .brand-logo-star { fill:#C7A0F0; filter:drop-shadow(0 0 6px rgb(188 128 229 / 65%)); }
   .sidebar-navigation::after {

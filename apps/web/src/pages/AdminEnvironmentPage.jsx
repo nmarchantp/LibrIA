@@ -79,7 +79,7 @@ export default function AdminEnvironmentPage() {
     setTab(tabs[next].id)
     document.getElementById(`application-tab-${tabs[next].id}`)?.focus()
   }
-  return <section className="environment-page"><h1>Configuración de la aplicación</h1>
+  return <section className="page-width page environment-page"><h1>Configuración de la aplicación</h1>
     <p>Administración de las variables de backend y web. Disponible para todas las cuentas con permiso de administrador.</p>
     <p>Las claves y contraseñas actuales permanecen ocultas. Guardar modifica los archivos del servidor; no reinicia servicios automáticamente.</p>
     <p><Link to="/settings?tab=moderation">Moderación de contenido</Link></p>

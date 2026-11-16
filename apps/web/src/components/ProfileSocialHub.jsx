@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Users, UserRoundPlus, UserRoundCheck, ShieldCheck, Share2, Compass, Copy, Search } from 'lucide-react'
+import { BookOpen, Users, UserRoundPlus, UserRoundCheck, ShieldCheck, Share2, Compass, Copy, Search, Star, CalendarDays } from 'lucide-react'
 import { apiRequest, apiAssetUrl } from '../api/client'
 import ProfileEditModal from './ProfileEditModal'
+import ProfileHeader from './ProfileHeader'
 import ProfilePrivacySettings from './ProfilePrivacySettings'
 import { useTheme } from '../context/ThemeContext'
 import { createProfileQr } from '../services/profileQr'
@@ -87,7 +88,7 @@ function ShareProfile({ profileId, displayName }) {
   </div>
 }
 
-export default function ProfileSocialHub({ preferences, displayName }) {
+export default function ProfileSocialHub({ preferences, displayName, user, panoramic = false }) {
   const [summary, setSummary] = useState(null)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
@@ -113,16 +114,22 @@ export default function ProfileSocialHub({ preferences, displayName }) {
   }
   const current = modal && details[modal]
   const Icon = current?.icon
-  return <section className="profile-social-hub" aria-label="Tu comunidad lectora">
-    <div className="profile-community-counters">
+  const counters=<div className="profile-community-counters" role="group" aria-label="Estadísticas del perfil">
       <Link to="/profile?tab=library" className="profile-community-counter"><BookOpen size={18} aria-hidden="true" /><strong>{summary?.finished_books ?? '—'}</strong><span>Libros leídos</span></Link>
       <button type="button" className="profile-community-counter" aria-haspopup="dialog" onClick={() => setModal('followers')}><Users size={18} aria-hidden="true" /><strong>{summary?.followers ?? '—'}</strong><span>Seguidores</span></button>
       <button type="button" className="profile-community-counter" aria-haspopup="dialog" onClick={() => setModal('following')}><UserRoundCheck size={18} aria-hidden="true" /><strong>{summary?.following ?? '—'}</strong><span>Seguidos</span></button>
+      {panoramic && <><Link to="/profile?tab=library&section=reviews" className="profile-community-counter"><Star size={18} aria-hidden="true" /><strong>{summary?.reviews ?? '—'}</strong><span>Reseñas</span></Link><Link to="/profile?tab=events" className="profile-community-counter"><CalendarDays size={18} aria-hidden="true" /><strong>{summary?.events ?? '—'}</strong><span>Eventos</span></Link></>}
     </div>
+  const statistics=<div className="profile-community-header">
+    {counters}
+    <div className="profile-community-actions" role="group" aria-label="Acciones del perfil"><button type="button" aria-haspopup="dialog" onClick={() => setModal('privacy')}><ShieldCheck size={16} />Editar privacidad</button><button type="button" aria-haspopup="dialog" disabled={!summary?.profile_id && !preferences.data?.profile_id} onClick={() => setModal('share')}><Share2 size={16} />Compartir perfil</button><button type="button" aria-haspopup="dialog" onClick={() => setModal('discover')}><Compass size={16} />Descubrir personas</button></div>
+  </div>
+  return <>
+    <ProfileHeader user={user} statistics={statistics} panoramic={panoramic} />
+    <section className="profile-social-hub" aria-label="Tu comunidad lectora">
     {error && <div className="profile-summary-error" role="alert">{error}<button type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></div>}
-    <div className="profile-community-actions"><button type="button" aria-haspopup="dialog" onClick={() => setModal('privacy')}><ShieldCheck size={16} />Editar privacidad</button><button type="button" aria-haspopup="dialog" disabled={!summary?.profile_id && !preferences.data?.profile_id} onClick={() => setModal('share')}><Share2 size={16} />Compartir perfil</button><button type="button" aria-haspopup="dialog" onClick={() => setModal('discover')}><Compass size={16} />Descubrir personas</button></div>
     <ProfileEditModal open={Boolean(current)} title={current?.title} icon={Icon && <Icon />} description={current?.description} readOnly onClose={() => setModal(null)} onSubmit={event => event.preventDefault()} className={`profile-community-modal profile-community-modal-${modal}`}>
       {modal === 'privacy' ? <ProfilePrivacySettings preferences={preferences} /> : modal === 'share' ? <ShareProfile profileId={summary?.profile_id || preferences.data?.profile_id} displayName={displayName} /> : modal && <PeopleList key={modal} kind={modal} onFollowChange={() => setAttempt(value => value + 1)} />}
     </ProfileEditModal>
-  </section>
+  </section></>
 }

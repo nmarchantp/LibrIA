@@ -48,9 +48,9 @@
 .reader-profile-stat dd { margin:0; color:var(--ink); font-size:20px; font-weight:700; }
 .reader-profile-stat-icon { display:grid; place-items:center; flex:0 0 43px; height:43px; border-radius:50%; background:var(--soft); color:var(--accent-text); }
 .reader-profile-stat-notice { margin:0 0 18px; color:var(--muted); font-size:12px; line-height:1.6; }
-.reader-profile .reader-profile-tabs { display:flex; flex-wrap:wrap; gap:6px 15px; margin:0; border-bottom:1px solid var(--line); overflow:visible; }
-.reader-profile-tabs button { min-height:54px; padding:13px 8px; font-size:12px; color:var(--muted); }
-.reader-profile-tabs button.active { color:var(--ink); border-color:var(--primary); }
+.reader-profile .reader-profile-tabs:not(.mural-audiences) { display:flex; flex-wrap:wrap; gap:6px 15px; margin:0; border-bottom:1px solid var(--line); overflow:visible; }
+.reader-profile-tabs:not(.mural-audiences) button { min-height:54px; padding:13px 8px; font-size:12px; color:var(--muted); }
+.reader-profile-tabs:not(.mural-audiences) button.active { color:var(--ink); border-color:var(--primary); }
 .reader-profile-tabs button svg { flex-shrink:0; }
 .reader-profile-content { min-width:0; }
 .reader-profile-content[hidden] { display:none!important; }

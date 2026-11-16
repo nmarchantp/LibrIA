@@ -1,5 +1,5 @@
 .login-page.auth-page { position:relative; isolation:isolate; min-height:100vh; min-height:100dvh; padding:88px 24px 32px; background:#221738; overflow-x:clip; color:#30223f; }
-.login-universe { position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none; user-select:none; background:#24113e url('/images/login-universe/fantasy-sky-v1.webp') center center / cover no-repeat; }
+.login-universe { position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none; user-select:none; background:#292535 url('/images/login-universe/fantasy-twilight-v3.jpg') center center / cover no-repeat; }
 .login-nebula { position:absolute; width:70%; height:60%; border-radius:50%; opacity:.35; filter:blur(45px); animation:login-nebula-drift 65s ease-in-out infinite alternate; }
 .login-nebula-one { top:-10%; left:-20%; background:radial-gradient(ellipse,#b486c266,transparent 68%); }
 .login-nebula-two { right:-20%; bottom:0; background:radial-gradient(ellipse,#9874d477,transparent 70%); animation-delay:-30s; }
@@ -43,7 +43,7 @@
 .login-page .login-email input,.login-page .login-password input { padding-left:40px; background:#f8f1fc; border:1px solid #d6b9e9; }
 .login-page .login-card > label { font-size:14px; }
 .login-page .login-card .google-login { background:transparent; border:1px solid #be86df; border-radius:12px; color:#3c205b; min-height:46px; }
-@media(max-width:767px) { .login-universe { background-image:url('/images/login-universe/fantasy-sky-small-v1.webp'); } }
+@media(max-width:767px) { .login-universe { background-image:url('/images/login-universe/fantasy-twilight-small-v3.jpg'); } }
 /* Animated effects stay above the illustration and behind the opaque card. */
 .login-universe { z-index:0; }
 .login-stars { z-index:1; }

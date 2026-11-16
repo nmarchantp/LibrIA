@@ -5,7 +5,6 @@ import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import LibraryPage from './LibraryPage'
 import InsightsPage from './InsightsPage'
-import ProfileHeader from '../components/ProfileHeader'
 import ProfilePanels from '../components/ProfilePanels'
 import ProfileEvents from '../components/ProfileEvents'
 import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
@@ -13,6 +12,7 @@ import ProfileAboutSection from '../components/ProfileAboutSection'
 import ProfileSocialHub from '../components/ProfileSocialHub'
 import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
 import './ProfilePage.css'
+import './ProfilePanorama.css'
 
 function ProfileActivity({ userId }) {
   const [posts, setPosts] = useState([])
@@ -60,13 +60,12 @@ export default function ProfilePage() {
   }
   }
 
-  return <div className="profile-page page-width reader-profile">
-    <div className="reader-profile-main">
-      <ProfileHeader key={`header-${user.id}`} user={user} />
-      <ProfileSocialHub key={`social-${user.id}`} preferences={preferences} displayName={user.display_name} />
-      <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['activity', 'Mi actividad', UserRound], ['events', 'Mis eventos', CalendarDays], ['analysis', 'Mis análisis', BrainCircuit]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
-      <ProfilePanels key={`panels-${user.id}`} active={tab} renderPanel={renderPanel} />
+  return <div className="profile-page page-width reader-profile reader-profile--panoramic">
+    <div className="reader-profile-top">
+      <ProfileSocialHub key={`social-${user.id}`} user={user} preferences={preferences} displayName={user.display_name} panoramic />
+      <nav className="mural-audiences reader-profile-tabs" aria-label="Secciones de mi perfil">{[['about', 'Sobre mí', BookOpen], ['library', 'Mi biblioteca', Library], ['activity', 'Mi actividad', UserRound], ['events', 'Mis eventos', CalendarDays], ['analysis', 'Mis análisis', BrainCircuit]].map(([value, label, Icon]) => <button key={value} className={tab === value ? 'active' : ''} aria-pressed={tab === value} onClick={() => setParams(current => { const next = new URLSearchParams(current); next.set('tab', value); return next })}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>
     </div>
+    <div className="reader-profile-main"><ProfilePanels key={`panels-${user.id}`} active={tab} renderPanel={renderPanel} /></div>
     <ProfilePersonalColumn key={user.id} preferencesState={preferences} editMode={editMode && tab === 'about'} />
   </div>
 }

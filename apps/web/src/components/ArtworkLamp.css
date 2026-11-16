@@ -1,0 +1,24 @@
+/* Desk lamps have a downward beam and an intermittent electrical response.
+   These selectors never affect lanterns or candle flames. */
+.artwork-lamp { pointer-events:none; }
+.artwork-lamp-hit { pointer-events:all; }
+.artwork-lamp-illumination { opacity:.65; pointer-events:none; }
+.artwork-lamp-beam { filter:blur(.7px); }
+.artwork-lamp:hover .artwork-lamp-illumination {
+  animation:artwork-lamp-intermittent 1.25s steps(1,end) 1 both !important;
+}
+.sidebar-artwork--lamp .sidebar-artwork-light { animation:none !important; opacity:.15; pointer-events:none; }
+@keyframes artwork-lamp-intermittent {
+  0% { opacity:.7; }
+  5% { opacity:.04; }
+  10% { opacity:1; }
+  16% { opacity:.08; }
+  23% { opacity:.85; }
+  31% { opacity:.2; }
+  39% { opacity:1; }
+  48% { opacity:.1; }
+  56% { opacity:.8; }
+  72% { opacity:.3; }
+  81% { opacity:1; }
+  100% { opacity:.65; }
+}

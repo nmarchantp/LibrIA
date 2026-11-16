@@ -33,7 +33,13 @@ def social_summary(db: DB, user: Viewer, response: Response):
         .where(ProfileFollow.user_id == user.id, *active))
     finished = db.scalar(select(func.count(func.distinct(Reading.work_id))).join(LibraryEntry, LibraryEntry.id == Reading.library_entry_id)
         .where(LibraryEntry.user_id == user.id, Reading.status == 'finished'))
-    return {'profile_id': mine.id, 'finished_books': finished, 'followers': followers, 'following': following}
+    from app.modules.social.models import Review, EventAttendance
+    reviews = db.scalar(select(func.count()).select_from(Review).where(
+        Review.author_profile_id == mine.id, Review.status == 'published'))
+    events = db.scalar(select(func.count()).select_from(EventAttendance).where(
+        EventAttendance.user_id == user.id, EventAttendance.attending.is_(True)))
+    return {'profile_id': mine.id, 'finished_books': finished, 'followers': followers, 'following': following,
+            'reviews': reviews, 'events': events}
 
 
 @router.get('/profiles/discover/people')

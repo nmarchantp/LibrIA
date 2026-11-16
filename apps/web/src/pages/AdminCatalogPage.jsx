@@ -45,7 +45,7 @@ export default function AdminCatalogPage() {
   if (!access?.catalog_preview) return <p>El mantenedor de libros está deshabilitado para esta cuenta.</p>
   const picked = Object.values(selected)
   const total = data?.total || 0
-  return <section className="admin-catalog catalog-maintainer">
+  return <section className="page-width page admin-catalog catalog-maintainer">
     <header className="catalog-header"><div><span className="catalog-eyebrow">Administración · LibrIAverse</span><h1>Mantenedor de libros</h1><p>Corrige las fichas del catálogo, administra sus ediciones y reúne los registros de una misma obra.</p></div>
       {canManage && <button className="catalog-primary" onClick={() => setEditor('new')}><Plus size={17} />Nuevo libro</button>}</header>
     <nav className="catalog-main-tabs" aria-label="Administración de libros"><button aria-current={tab === 'books' ? 'page' : undefined} onClick={() => setTab('books')}><BookOpen size={17} />Libros y ediciones</button>

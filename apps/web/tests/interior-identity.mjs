@@ -33,7 +33,7 @@ try {
  for(const theme of selectedThemes) {
   await evaluate(`localStorage.setItem('libria_theme','${theme}');window.dispatchEvent(new StorageEvent('storage',{key:'libria_theme',newValue:'${theme}'}))`)
   await until(`document.documentElement.dataset.theme==='${theme}'`)
-  const expectedBanner=await evaluate(`import('/src/theme/profileBanners.js').then(m=>m.getProfileBanner('${theme}').src)`)
+  const expectedBanner=await evaluate(`import('/src/theme/profileBanners.js').then(m=>m.getProfileBanner('${theme}',true).src)`)
   await evaluate(`history.pushState({},'','/');window.dispatchEvent(new PopStateEvent('popstate'))`)
   await until(`Boolean(document.querySelector('.mural-heading'))`)
   const contrast=await evaluate(`(()=>{
@@ -45,8 +45,9 @@ try {
   console.log(theme,JSON.stringify(contrast))
   if(!process.env.IDENTITY_BASELINE) {
    const footer=await evaluate(`(()=>{const s=getComputedStyle(document.querySelector('.profile-starfield'),'::after');return {image:s.backgroundImage,pointer:s.pointerEvents,animation:s.animationName}})()`)
-   const expected=theme==='dark'?'/images/theme-refresh-v1/dark/footer-v2.webp':'/images/theme-footers-v1/'+theme+'/footer.webp'
-   assert.ok(footer.image.includes(expected),`${theme}: own footer artwork`)
+   const expected=await evaluate(`import('/src/theme/themeFooters.js').then(m=>m.getThemeFooterAssets('${theme}'))`)
+   assert.ok(footer.image.includes(expected.corner),`${theme}: own footer corner`)
+   assert.ok(footer.image.includes(expected.strip),`${theme}: own horizontal footer strip`)
    assert.equal(footer.pointer,'none',`${theme}: footer does not intercept controls`)
    assert.equal(footer.animation,'none',`${theme}: static footer`)
   }

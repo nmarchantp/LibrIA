@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { ThemeProvider, useTheme } from '/src/context/ThemeContext'
-import ProfileHeader from '/src/components/ProfileHeader'
 import ProfileSocialHub from '/src/components/ProfileSocialHub'
 import '/src/styles.css'
 import '/src/theme/themes.css'
@@ -44,6 +43,6 @@ window.fetch = async (url, options = {}) => {
 function Fixture() {
   const [data, setData] = useState({ profile_id: 'profile-me', profile_visibility: 'public', public_sections: ['biography', 'genres'] })
   const preferences = { data, save: async fields => { window.socialTest.saves.push(fields); setData(previous => ({ ...previous, ...fields })) } }
-  return <MemoryRouter><ThemeProvider><ThemeControls /><div className="social-main"><main className="profile-page page-width reader-profile reader-community-profile"><div className="reader-profile-main"><ProfileHeader user={{ display_name: 'Valentina Lectora', created_at: '2026-01-02', avatar_url: null }} /><ProfileSocialHub preferences={preferences} displayName="Valentina Lectora" /><nav className="profile-tabs reader-profile-tabs"><button>Sobre mí</button><button>Mi biblioteca</button><button>Mi actividad</button></nav></div></main></div></ThemeProvider></MemoryRouter>
+  return <MemoryRouter><ThemeProvider><ThemeControls /><div className="social-main"><main className="profile-page page-width reader-profile reader-community-profile"><div className="reader-profile-main"><ProfileSocialHub user={{ display_name: 'Valentina Lectora', created_at: '2026-01-02', avatar_url: null }} preferences={preferences} displayName="Valentina Lectora" /><nav className="profile-tabs reader-profile-tabs"><button>Sobre mí</button><button>Mi biblioteca</button><button>Mi actividad</button></nav></div></main></div></ThemeProvider></MemoryRouter>
 }
 createRoot(document.getElementById('root')).render(<Fixture />)

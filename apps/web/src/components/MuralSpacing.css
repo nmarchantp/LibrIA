@@ -1,0 +1,14 @@
+/* A slightly shorter welcome card and tighter spacing across mural themes. */
+:root[data-theme] .social-shell[data-interior-style] .mural-screen {
+  --mural-card-gap:12px;
+  .reader-summary { min-height:288px; padding:22px 22px 16px; }
+  .reader-summary h2 { margin-block:16px; }
+  .reader-summary p { margin-bottom:36px; }
+  .aside-reading { margin-top:26px; }
+  .publication-create-shortcut { margin-bottom:14px; }
+  .community-note { margin-top:36px; }
+  .mural-categories { gap:28px; }
+}
+@media(max-width:700px) {
+  :root[data-theme] .social-shell[data-interior-style] .mural-screen .mural-categories { gap:22px; }
+}

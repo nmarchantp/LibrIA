@@ -1,4 +1,6 @@
 /* Deliberately limited to the mural and the two established palettes. */
+:root[data-theme="dark"] .social-shell .mural-audiences { background:linear-gradient(110deg,#2B2236,#211B2E); border-color:#604A79; }
+:root[data-theme="dark"] .social-shell .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#604175,#3A2B4B); border-color:#C4A2F0; box-shadow:inset 0 0 12px rgb(205 183 255 / 15%),0 0 9px rgb(169 138 232 / 14%); }
 /* Depth study: local tokens keep the remaining pages and palettes unchanged. */
 
 :root[data-theme="dark"] .social-shell[data-mural="true"] {
@@ -34,9 +36,9 @@
   .mural-heading .kicker { color:var(--accent-text); }
   .social-sidebar > .brand-link {
     position:relative; isolation:isolate; padding:18px 8px 24px; border-radius:18px 18px 0 0;
-    background:radial-gradient(ellipse at 70% 20%,var(--mural-nebula),transparent 75%);
+    background:none;
   }
-  .social-sidebar > .brand-link::after { content:''; position:absolute; width:72px; height:24px; right:10px; top:3px; border-top:1px solid var(--accent); border-radius:50%; transform:rotate(-15deg); opacity:.55; pointer-events:none; }
+  .social-sidebar > .brand-link::before,.social-sidebar > .brand-link::after { content:none; display:none; }
   .social-nav a.active { background:linear-gradient(100deg,var(--soft),var(--surface-raised)); box-shadow:inset 3px 0 var(--primary),0 3px 12px var(--shadow-color); font-weight:700; }
   .reader-summary {
     position:relative; isolation:isolate; overflow:hidden; padding:30px 26px;
@@ -64,8 +66,6 @@
   .mural-heading h1 { font-size:clamp(34px,3.4vw,48px); max-width:76%; margin-block:18px 14px; text-wrap:balance; }
   .mural-heading p { color:var(--ink); }
   .mural-heading .kicker { font-weight:700; }
-  .mural-audiences { background:linear-gradient(110deg,#2B2236,#211B2E); border-color:#604A79; }
-  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#604175,#3A2B4B); border-color:#C4A2F0; box-shadow:inset 0 0 12px rgb(205 183 255 / 15%),0 0 9px rgb(169 138 232 / 14%); }
   :is(.feed-card,.mural-activity-card,.bulletin-card) { background:linear-gradient(145deg,#2D243B,#241D30); border-color:#594767; box-shadow:0 6px 16px rgb(15 10 25 / 14%); }
   .aside-reading { background:linear-gradient(145deg,#30263D,#251E30); border-color:#604A79; }
   .reader-summary {

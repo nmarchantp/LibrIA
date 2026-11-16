@@ -1,6 +1,6 @@
 .auth-journey { position:fixed; inset:0; z-index:10000; overflow:hidden; pointer-events:none; background:#231237; }
 .auth-journey-landscape,.auth-journey-library,.auth-journey-light { position:absolute; inset:0; pointer-events:none; }
-.auth-journey-landscape { background:#24113e url('/images/login-universe/fantasy-sky-v1.webp') center / cover no-repeat; }
+.auth-journey-landscape { background:#292535 url('/images/login-universe/fantasy-twilight-v3.jpg') center / cover no-repeat; }
 .auth-journey-library { background:#281a3b url('/images/login-universe/magic-library-v1.webp') center / cover no-repeat; opacity:0; }
 .auth-journey[data-scene="castle"] .auth-journey-landscape { transform-origin:94% 65%; animation:auth-enter-castle 1100ms cubic-bezier(.22,.61,.36,1) both; }
 .auth-journey[data-scene="book"] .auth-journey-landscape { transform-origin:86% 17%; animation:auth-enter-book 1100ms ease-in-out both; }
@@ -28,7 +28,7 @@
 @keyframes auth-return-library { from { opacity:1; } to { opacity:0; } }
 @keyframes auth-simple-fade { from { opacity:.4; } to { opacity:1; } }
 @keyframes auth-register-arrive { from { opacity:.5; } to { opacity:1; } }
-@media(max-width:767px) { .register-page.auth-page { padding:24px 16px; } .register-page .register-card { padding:26px 24px; } .register-library-scene,.auth-journey-library { background-image:url('/images/login-universe/magic-library-small-v1.webp'); } .auth-journey-landscape { background-image:url('/images/login-universe/fantasy-sky-small-v1.webp'); } }
+@media(max-width:767px) { .register-page.auth-page { padding:24px 16px; } .register-page .register-card { padding:26px 24px; } .register-library-scene,.auth-journey-library { background-image:url('/images/login-universe/magic-library-small-v1.webp'); } .auth-journey-landscape { background-image:url('/images/login-universe/fantasy-twilight-small-v3.jpg'); } }
 @media(prefers-reduced-motion:reduce) { .register-card { animation:none !important; } }
 .auth-journey { animation:auth-scene-reveal 160ms ease both; }
 .auth-journey[data-reduced="true"] { animation:auth-simple-fade 450ms ease both; }

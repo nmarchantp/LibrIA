@@ -1,4 +1,5 @@
 import { literaryThemes, applyLiteraryTokens } from './literaryThemes'
+import { applyThemeFooter } from './themeFooters'
 
 // Stable IDs can also identify future theme assets without changing consumers.
 export const themes = [
@@ -34,6 +35,7 @@ export function applyTheme(id) {
     root.style.setProperty(`--${role}`, theme.roles?.[role] ?? theme.colors[index])
   })
   applyLiteraryTokens(root, theme)
+  applyThemeFooter(root,theme.id)
   root.dataset.theme = theme.id
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.colors[0])
 }

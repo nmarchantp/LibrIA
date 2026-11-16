@@ -1,0 +1,201 @@
+[
+  {
+    "id": "lavanda",
+    "name": "Jardin de Macarons",
+    "src": "/images/theme-refresh-v1/lavanda/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Jardin de Macarons. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-ee2a1306-bdc9-419b-9e2d-c4c671bd8aa8.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/lavanda.webp"
+  },
+  {
+    "id": "otono",
+    "name": "Tintas del Equinoccio",
+    "src": "/images/theme-refresh-v1/otono/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Tintas del Equinoccio. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-1fc8324e-7abb-4071-9d05-ec4fa426b6fb.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/otono.webp"
+  },
+  {
+    "id": "invierno",
+    "name": "Alas de Cristal",
+    "src": "/images/theme-refresh-v1/invierno/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Alas de Cristal. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-5c537ebb-cfa8-40e0-8d0c-7d96fe393267.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/invierno.webp"
+  },
+  {
+    "id": "dark",
+    "name": "Reino de Sombras",
+    "src": "/images/theme-refresh-v1/dark/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Reino de Sombras. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-19b2b717-b10a-410e-9fa9-4f9c7c6ee0df.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/dark.webp"
+  },
+  {
+    "id": "dark-dorado",
+    "name": "Biblioteca de Medianoche",
+    "src": "/images/theme-refresh-v1/dark-dorado/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Biblioteca de Medianoche. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-57bb8285-b354-402c-a961-987930f8c68a.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/dark-dorado.webp"
+  },
+  {
+    "id": "bosque",
+    "name": "Bosque feerico",
+    "src": "/images/theme-refresh-v1/bosque/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT, as an outpainted panoramic background for a very wide, shallow profile header. Target canvas aspect ratio 5:1, around 3000x600. The original composition should occupy roughly the LEFT 60% at the SAME subject scale, with genuinely NEW scenery filling the RIGHT 40%. Preserve the original palette, lighting, illustrated quality and recognizable subjects. Continue perspective and scene naturally to the right with matching architecture, landscape, shelves or foliage as appropriate. Do NOT magnify the original, stretch it, crop important subjects, mirror it, duplicate the main subject, paste panels or add borders. Keep objects modest in scale with room above and below so a shallow header can show them. Do not bake in new blur, darkness or fades over the central or right scenery; UI supplies edge fades. No text, UI or lettering. This is a continuous illustration, not a screenshot.\nTheme: Bosque feerico. Keep all its existing distinctive details.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-99be35fd-82c3-43ed-86d8-1785f380733a.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/bosque.webp"
+  },
+  {
+    "id": "rosa-antiguo",
+    "name": "Algodon de azucar",
+    "src": "/images/theme-refresh-v1/rosa-antiguo/banner.webp",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Algodon de azucar.  Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-4278252e-3275-45cb-927c-7da28aa80438.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/rosa-antiguo.webp"
+  },
+  {
+    "id": "dark-rosado",
+    "name": "Rosas y Espinas",
+    "src": "/images/rose-universe/moonlit-garden-v1.png",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Rosas y Espinas.  Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-e255cb2c-9bd9-406d-a3af-f955c2bacfbe.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/dark-rosado.webp"
+  },
+  {
+    "id": "cronicas-tiempo",
+    "name": "Crónicas del Tiempo",
+    "src": "/images/themes/cronicas-tiempo/banner.webp",
+    "concept": "steampunk library with monumental clock, carefully crafted mechanical machinery",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Crónicas del Tiempo. steampunk library with monumental clock, carefully crafted mechanical machinery Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-a8071d5a-60f8-4347-a533-ed7cc8c7f824.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/cronicas-tiempo.webp"
+  },
+  {
+    "id": "reino-celestial",
+    "name": "Reino Celestial",
+    "src": "/images/themes/reino-celestial/banner.webp",
+    "concept": "floating marble library among luminous clouds and columns",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Reino Celestial. floating marble library among luminous clouds and columns Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-f038514a-0ea4-466b-a546-90975ee4a65d.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/reino-celestial.webp"
+  },
+  {
+    "id": "arenas-destino",
+    "name": "Arenas del Destino",
+    "src": "/images/themes/arenas-destino/banner.webp",
+    "concept": "archaeological library with sandstone columns and distant Egyptian pyramids",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Arenas del Destino. archaeological library with sandstone columns and distant Egyptian pyramids Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-da21ae0e-3f54-41d2-8898-7f4ef9622770.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/arenas-destino.webp"
+  },
+  {
+    "id": "susurros-sakura",
+    "name": "Susurros de Sakura",
+    "src": "/images/themes/susurros-sakura/banner.webp",
+    "concept": "cherry blossom garden with a small traditional wooden library and pond",
+    "prompt": "Extend this existing illustration to the RIGHT as a continuous ultra-wide, shallow profile header panorama. Canvas aspect ratio 5:1, around 3000x600. The original reference composition occupies approximately the LEFT 60% at its SAME subject scale; add truly NEW scenery in the RIGHT 40%. Preserve original colors, lighting, style, quality, characters and recognizable subjects. Continue perspective naturally with appropriate scenery or architecture. Do NOT zoom, stretch, mirror, duplicate main subjects, crop important objects, paste panels or add borders. Keep objects modest with room above/below. Do not bake new blur or dark overlays into the center/right; UI supplies edge fades. No lettering or UI.\nTheme Susurros de Sakura. cherry blossom garden with a small traditional wooden library and pond Preserve the reference theme.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-4dee5db0-4c0d-4f37-a571-af8449f68d16.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/susurros-sakura.webp"
+  },
+  {
+    "id": "archivo-galactico",
+    "name": "Archivo Galáctico",
+    "src": "/images/themes/archivo-galactico/banner.webp",
+    "concept": "space library with huge windows overlooking a galaxy and distant planets",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Archivo Galáctico: space library with huge windows overlooking a galaxy and distant planets.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-5842d7c7-35ef-4377-ba04-6df0179e74e4.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/archivo-galactico.webp"
+  },
+  {
+    "id": "olimpo-eterno",
+    "name": "Olimpo Eterno",
+    "src": "/images/themes/olimpo-eterno/banner.webp",
+    "concept": "grand classical Greek marble library inspired by ancient temples",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Olimpo Eterno: grand classical Greek marble library inspired by ancient temples.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-775523be-5ec2-4ae1-8ba7-8319507b553a.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/olimpo-eterno.webp"
+  },
+  {
+    "id": "otono-encantado",
+    "name": "Otoño Encantado",
+    "src": "/images/themes/otono-encantado/banner.webp",
+    "concept": "cozy wooden library with a window overlooking an autumn forest",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Otoño Encantado: cozy wooden library with a window overlooking an autumn forest.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-ca9d8a73-47a3-4eba-8665-3308e2b96535.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/otono-encantado.webp"
+  },
+  {
+    "id": "oraculo-luna",
+    "name": "Oráculo de la Luna",
+    "src": "/images/themes/oraculo-luna/banner.webp",
+    "concept": "esoteric astrology library under starry sky with moon phases and zodiac motifs",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Oráculo de la Luna: esoteric astrology library under starry sky with moon phases and zodiac motifs.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-e7d6d0ae-46e7-42f2-ac6c-49f55502426a.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/oraculo-luna.webp"
+  },
+  {
+    "id": "runas-norte",
+    "name": "Runas del Norte",
+    "src": "/images/themes/runas-norte/banner.webp",
+    "concept": "grand Norse timber hall with a library and snowy Scandinavian mountain panorama",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Runas del Norte: grand Norse timber hall with a library and snowy Scandinavian mountain panorama.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-0a5b3677-0200-4a79-8975-a32452f9b7cb.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/runas-norte.webp"
+  },
+  {
+    "id": "reino-hongos",
+    "name": "Reino de los Hongos",
+    "src": "/images/themes/reino-hongos/banner.webp",
+    "concept": "tiny magical village built inside giant mushrooms among moss and modest forest trees",
+    "prompt": "Outpaint this exact illustration to the RIGHT into a continuous ultra-wide 5:1 panorama (around 3000x600) for a shallow profile header. Keep the original scene and main subject at the SAME SCALE in the left 60%, adding NEW matching scenery to the right 40%. Preserve original palette, atmosphere, detailed painterly style and perspective. Continue architectural shelves/columns/windows or natural landscape as implied by the reference. No zoom, stretching, mirroring, duplicated main subjects, visible seams or borders. Keep meaningful subjects small enough to remain visible in a shallow strip, with ample space above/below. No new central/right fade or blur; UI handles edge fades. No text or interface.\nTheme Reino de los Hongos: tiny magical village built inside giant mushrooms among moss and modest forest trees.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-8b152415-aa07-4a09-b9db-d5c4ff42c8a9.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/reino-hongos.webp"
+  },
+  {
+    "id": "catedral-cristal",
+    "name": "Catedral de Cristal",
+    "src": "/images/themes/catedral-cristal/banner.webp",
+    "concept": "grand gothic library with vaulted stone and luminous multicolored stained glass windows",
+    "prompt": "Extend this illustration toward the RIGHT as a seamless ultra-wide 5:1 panorama around 3000x600 for a shallow website profile header. The existing scene should fit into approximately the LEFT 60% with main objects at unchanged scale, adding genuinely NEW coherent scenery to the RIGHT 40%. Retain exact reference palette, lighting, atmosphere and recognizable subjects/characters; do not duplicate them. Continue landscape, architecture and perspective naturally. No zooming, stretching, mirroring, tiled panels, borders, cropped heads or enlarged objects. Leave vertical breathing room for a shallow header crop. No baked new blur/darkness/fades in the central or right area, no text or UI.\nTheme Catedral de Cristal: grand gothic library with vaulted stone and luminous multicolored stained glass windows.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-2818d840-9b06-400d-bcb0-bb5aecf6c819.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/catedral-cristal.webp"
+  },
+  {
+    "id": "mil-una-historias",
+    "name": "Las Mil y Una Historias",
+    "src": "/images/themes/mil-una-historias/banner.webp",
+    "concept": "fantastic palatial library with decorated arches, turquoise mosaics and a courtyard",
+    "prompt": "Extend this illustration toward the RIGHT as a seamless ultra-wide 5:1 panorama around 3000x600 for a shallow website profile header. The existing scene should fit into approximately the LEFT 60% with main objects at unchanged scale, adding genuinely NEW coherent scenery to the RIGHT 40%. Retain exact reference palette, lighting, atmosphere and recognizable subjects/characters; do not duplicate them. Continue landscape, architecture and perspective naturally. No zooming, stretching, mirroring, tiled panels, borders, cropped heads or enlarged objects. Leave vertical breathing room for a shallow header crop. No baked new blur/darkness/fades in the central or right area, no text or UI.\nTheme Las Mil y Una Historias: fantastic palatial library with decorated arches, turquoise mosaics and a courtyard.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-c598b5fa-e628-4b7f-a5d2-ec2ae7df3310.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/mil-una-historias.webp"
+  },
+  {
+    "id": "canto-sirenas",
+    "name": "Canto de Sirenas",
+    "src": "/images/themes/canto-sirenas/banner-v2.png",
+    "concept": "sirena sobre rocas ante el océano nocturno, luna llena, olas luminosas y castillo costero distante",
+    "prompt": "Extend this illustration toward the RIGHT as a seamless ultra-wide 5:1 panorama around 3000x600 for a shallow website profile header. The existing scene should fit into approximately the LEFT 60% with main objects at unchanged scale, adding genuinely NEW coherent scenery to the RIGHT 40%. Retain exact reference palette, lighting, atmosphere and recognizable subjects/characters; do not duplicate them. Continue landscape, architecture and perspective naturally. No zooming, stretching, mirroring, tiled panels, borders, cropped heads or enlarged objects. Leave vertical breathing room for a shallow header crop. No baked new blur/darkness/fades in the central or right area, no text or UI.\nTheme Canto de Sirenas: sirena sobre rocas ante el océano nocturno, luna llena, olas luminosas y castillo costero distante.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-03221e92-dcee-456b-be20-6a45a682e949.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/canto-sirenas.webp"
+  },
+  {
+    "id": "ecos-sombras",
+    "name": "Ecos de las Sombras",
+    "src": "/images/themes/ecos-sombras/banner.webp",
+    "concept": "castillo abandonado, luna llena, árboles secos, niebla y entidades fantasmales",
+    "prompt": "Extend this illustration toward the RIGHT as a seamless ultra-wide 5:1 panorama around 3000x600 for a shallow website profile header. The existing scene should fit into approximately the LEFT 60% with main objects at unchanged scale, adding genuinely NEW coherent scenery to the RIGHT 40%. Retain exact reference palette, lighting, atmosphere and recognizable subjects/characters; do not duplicate them. Continue landscape, architecture and perspective naturally. No zooming, stretching, mirroring, tiled panels, borders, cropped heads or enlarged objects. Leave vertical breathing room for a shallow header crop. No baked new blur/darkness/fades in the central or right area, no text or UI.\nTheme Ecos de las Sombras: castillo abandonado, luna llena, árboles secos, niebla y entidades fantasmales.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-afc2c58c-c309-4e7f-8cca-96fad3b721e9.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/ecos-sombras.webp"
+  },
+  {
+    "id": "aquelarre-medianoche",
+    "name": "Aquelarre de Medianoche",
+    "src": "/images/themes/aquelarre-medianoche/banner-v2.png",
+    "concept": "bruja leyendo un grimorio bajo la luna llena, castillo distante, árboles y partículas mágicas",
+    "prompt": "Extend this illustration toward the RIGHT as a seamless ultra-wide 5:1 panorama around 3000x600 for a shallow website profile header. The existing scene should fit into approximately the LEFT 60% with main objects at unchanged scale, adding genuinely NEW coherent scenery to the RIGHT 40%. Retain exact reference palette, lighting, atmosphere and recognizable subjects/characters; do not duplicate them. Continue landscape, architecture and perspective naturally. No zooming, stretching, mirroring, tiled panels, borders, cropped heads or enlarged objects. Leave vertical breathing room for a shallow header crop. No baked new blur/darkness/fades in the central or right area, no text or UI.\nTheme Aquelarre de Medianoche: bruja leyendo un grimorio bajo la luna llena, castillo distante, árboles y partículas mágicas.",
+    "generated": "C:\\Users\\nikoo\\.codex\\generated_images\\01a1e43d-c280-7663-af27-bdea6a4944c1\\exec-29e6e008-8c80-4d7c-994d-8dc4fbf8547c.png",
+    "output": "apps/web/public/images/profile-panoramas-v4/aquelarre-medianoche.webp"
+  }
+]

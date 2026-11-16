@@ -1,0 +1,65 @@
+.reader-literary-crush { grid-area:crush; }
+.reader-essential-books { grid-area:essentials; }
+.literary-crush-content { display:flex; align-items:center; gap:15px; min-width:0; }
+.literary-crush-portrait { width:150px; height:195px; flex-shrink:0; overflow:hidden; border-radius:10px; background:var(--soft); }
+.literary-crush-portrait img { width:100%; height:100%; object-fit:cover; }
+.literary-crush-content h3 { margin:0 0 5px; font:22px/1.2 'DM Serif Display',serif; overflow-wrap:anywhere; }
+.reader-about-section .literary-crush-content p { margin:5px 0; font:italic 14px/1.45 Georgia,serif; overflow-wrap:anywhere; }
+.literary-crush-book { color:var(--muted); }
+.literary-essential-shelf { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; align-items:start; }
+.literary-essential-shelf a { display:block; aspect-ratio:2/3; overflow:hidden; border-radius:6px; background:var(--soft); color:var(--ink); box-shadow:0 3px 10px var(--shadow-color); }
+.literary-essential-shelf img { width:100%; height:100%; object-fit:cover; }
+.literary-highlight-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; height:100%; padding:8px; box-sizing:border-box; color:var(--accent-text); font-size:11px; text-align:center; overflow-wrap:anywhere; }
+.reader-about-section :is(.reader-literary-crush,.reader-essential-books) { padding:18px; border-radius:15px; }
+.reader-about-section :is(.reader-literary-crush,.reader-essential-books) .reader-card-heading { margin-bottom:10px; }
+.reader-about-section :is(.reader-literary-crush,.reader-essential-books) h2 { font-size:20px; }
+.reader-about-section .reader-personal-card.reader-literary-crush { container:literary-crush / inline-size; position:relative; overflow:hidden; padding:22px; border:1px solid color-mix(in srgb,var(--accent-text) 65%,var(--line)); border-radius:24px; background:radial-gradient(ellipse at 45% 95%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),linear-gradient(135deg,var(--surface),var(--paper)); box-shadow:inset 0 0 24px color-mix(in srgb,var(--accent) 7%,transparent),0 4px 16px var(--shadow-color); }
+.reader-literary-crush .reader-card-heading { position:relative; z-index:1; }
+.reader-about-section .reader-literary-crush .reader-card-heading { margin-bottom:20px; }
+.reader-about-section .reader-literary-crush .reader-card-heading h2 { align-items:center; font-size:clamp(20px,2vw,25px); }
+.reader-literary-crush .reader-card-heading h2::after { content:'✦'; display:block; flex:1; min-width:20px; margin-left:8px; color:var(--accent-text); font:14px/1 Georgia,serif; background:linear-gradient(90deg,transparent,var(--line),transparent) center/100% 1px no-repeat; text-align:center; }
+.reader-literary-crush .literary-crush-content { position:relative; z-index:1; gap:22px; }
+.reader-literary-crush .literary-crush-portrait { width:36%; max-width:190px; height:auto; aspect-ratio:3/4; border:1px solid color-mix(in srgb,var(--accent-text) 75%,var(--line)); border-radius:20px; box-shadow:0 0 18px color-mix(in srgb,var(--accent) 16%,transparent); }
+.literary-crush-details { position:relative; flex:1; min-width:0; padding-left:22px; }
+.literary-crush-details::before { content:''; position:absolute; inset:0 auto 0 0; width:1px; background:linear-gradient(transparent,var(--accent-text),transparent); opacity:.7; }
+.reader-literary-crush .literary-crush-details h3 { margin:0 0 12px; font-size:clamp(28px,3vw,40px); font-weight:400; }
+.reader-about-section .reader-literary-crush .literary-crush-book { font-size:16px; color:var(--muted); }
+.literary-crush-divider { display:flex; align-items:center; gap:8px; width:min(150px,100%); margin:16px 0; color:var(--accent-text); font:20px/1 Georgia,serif; }
+.literary-crush-divider::before,.literary-crush-divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--accent-text),transparent); }
+.reader-about-section .reader-literary-crush .literary-crush-description { font-size:17px; color:var(--ink); }
+.literary-crush-ornament { position:absolute; right:7px; top:8px; width:100px; height:90px; color:var(--accent-text); opacity:.2; stroke:currentColor; stroke-width:1; pointer-events:none; }
+.literary-crush-ornament.is-bottom { top:auto; bottom:4px; right:4px; transform:rotate(90deg); }
+.literary-crush-ornament path:not(:first-child) { fill:color-mix(in srgb,currentColor 25%,transparent); }
+@container literary-crush (max-width:380px) {
+  .reader-literary-crush .literary-crush-content { gap:12px; }
+  .literary-crush-details { padding-left:12px; }
+  .reader-literary-crush .literary-crush-details h3 { font-size:28px; }
+  .reader-about-section .reader-literary-crush .literary-crush-book,.reader-about-section .reader-literary-crush .literary-crush-description { font-size:14px; }
+  .literary-crush-divider { margin:10px 0; }
+}
+.literary-highlight-fields,.literary-highlight-fields label { display:grid; gap:8px; }
+.literary-highlight-fields { gap:16px; }
+.literary-highlight-fields input:not([type="radio"]),.literary-highlight-fields textarea { box-sizing:border-box; width:100%; min-height:42px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--field-bg,var(--surface)); color:var(--ink); font:inherit; }
+.literary-highlight-selected,.literary-highlight-results { list-style:none; padding:0; display:grid; gap:8px; }
+.literary-highlight-selected li { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.literary-highlight-selected button { border:0; background:transparent; color:var(--ink); cursor:pointer; }
+.literary-highlight-results { max-height:300px; overflow-y:auto; }
+.literary-highlight-results button { display:flex; align-items:center; gap:12px; width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--surface); text-align:left; cursor:pointer; }
+.literary-highlight-results button:disabled { opacity:.5; cursor:default; }
+.literary-highlight-results img,.literary-highlight-results .literary-highlight-placeholder { width:36px; height:54px; object-fit:cover; flex-shrink:0; }
+.literary-highlight-results small { display:block; margin-top:4px; color:var(--muted); }
+.literary-highlight-status { grid-column:1/-1; margin:0; }
+.literary-crush-selected-book { display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--soft); }
+.literary-crush-selected-book strong { flex:1; font-size:14px; overflow-wrap:anywhere; }
+.literary-crush-selected-book button { flex-shrink:0; padding:6px; border:0; background:transparent; color:var(--accent-text); cursor:pointer; }
+.literary-character-picker { min-width:0; margin:0; padding:0; border:0; }
+.literary-character-picker > div { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; margin-top:10px; }
+.literary-character-picker label { position:relative; display:flex; flex-direction:column; align-items:stretch; gap:8px; padding:6px; border:1px solid var(--line); border-radius:12px; background:var(--surface); cursor:pointer; text-align:center; }
+.literary-character-picker label:has(input:checked) { border-color:var(--accent-text); background:var(--soft); box-shadow:0 0 0 1px var(--accent-text); }
+.literary-character-picker input { position:absolute; left:12px; top:12px; accent-color:var(--accent-text); }
+.literary-character-picker img,.literary-character-picker .literary-highlight-placeholder { width:100%; height:160px; object-fit:cover; border-radius:8px; }
+.literary-character-picker label > span:last-child { font-size:13px; }
+@container reader-about (max-width:660px) {
+  .reader-about-section .reader-about-grid { grid-template-areas:"history" "crush" "essentials" "genres" "tropes" "featured" "statistics"; }
+  .reader-about-section.is-public .reader-about-grid { grid-template-areas:"history" "crush" "essentials" "genres" "tropes" "featured"; }
+}

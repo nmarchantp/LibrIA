@@ -1,0 +1,26 @@
+/* Desktop baseline matches the former layout at 90% browser zoom.
+   Keep viewport-sized scenery and the sticky sidebar at full window height. */
+@media (min-width:1000px) {
+  :root:has(.social-shell) {
+    --desktop-density:.9;
+    --desktop-viewport-height:calc(100dvh / var(--desktop-density));
+    zoom:var(--desktop-density);
+  }
+
+  .social-shell { min-height:var(--desktop-viewport-height); }
+  .social-shell .social-page-column { --content-left-gutter:28px; --main-max-width:100%; }
+  /* Use the available desktop width with small, consistent outer gutters.
+     Flexible content grows while the mural's aside retains its own width. */
+  .social-shell .social-page-column .social-main > :is(.page-width,.mural-layout) {
+    width:calc(100% - var(--content-left-gutter) - var(--main-gutter));
+    max-width:none;
+    margin-left:var(--content-left-gutter);
+    margin-right:var(--main-gutter);
+  }
+  .social-shell .social-topbar { padding-left:var(--content-left-gutter); padding-right:var(--main-gutter); }
+  .social-shell .social-sidebar { height:var(--desktop-viewport-height); }
+  .social-shell .social-viewport-background {
+    height:var(--desktop-viewport-height);
+    margin-bottom:calc(-1 * var(--desktop-viewport-height));
+  }
+}

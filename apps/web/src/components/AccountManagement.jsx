@@ -53,8 +53,8 @@ export default function AccountManagement() {
       <form onSubmit={event => { event.preventDefault(); run(() => accountRequest('/me', 'PATCH', { display_name: name, biography: biography || null }), 'Perfil actualizado.') }}>
         <fieldset disabled={busy}><label>Nombre para mostrar<input value={name} onChange={e => setName(e.target.value)} minLength={2} maxLength={100} required /></label>
         <label>Biografía<textarea value={biography} onChange={e => setBiography(e.target.value)} aria-describedby="account-bio-count" /></label>
-        <small id="account-bio-count">{count}/70 caracteres</small>
-        <button className="button primary" disabled={count > 70}>Guardar perfil</button></fieldset>
+        <small id="account-bio-count">{count}/300 caracteres</small>
+        <button className="button primary" disabled={count > 300}>Guardar perfil</button></fieldset>
       </form>
       <div className="account-photo-section"><h3>Fotografía de perfil</h3>
       {account.avatar_url && <img className="account-avatar-preview" src={account.avatar_url.startsWith('/api/') ? new URL(account.avatar_url, API_URL).href : account.avatar_url} alt="Mi fotografía de perfil" />}
