@@ -1,0 +1,6 @@
+{
+  "mode": "built-in imagegen edit",
+  "targets": ["dark/sidebar-decoration", "dark-dorado/sidebar-decoration", "otono/sidebar-decoration"],
+  "prompt": "Edit this illustration only to remove the opaque pale white/pink/cream cloud or aura behind and around the objects. Preserve every book, lantern, ornament, leaf and its existing composition, colors, materials and detailed lighting. Replace the entire backdrop and opaque cloud halo with genuine full transparency, including gaps around lantern handles and between objects. Keep only a very faint warm translucent local light immediately near lantern glass, no sticker outline, no cloud, no pale matte, no solid background. Do not crop or change the objects. Production sidebar cutout on a dark website.",
+  "transparent_background": true
+}

@@ -1,0 +1,302 @@
+{
+  "cronicas-tiempo": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 142816
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 125986
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 56196
+    }
+  },
+  "reino-celestial": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 110456
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 147080
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 54798
+    }
+  },
+  "arenas-destino": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 146228
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 129570
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 82384
+    }
+  },
+  "susurros-sakura": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 180468
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 171638
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 58010
+    }
+  },
+  "archivo-galactico": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 106440
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 111404
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 44276
+    }
+  },
+  "olimpo-eterno": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 127596
+    },
+    "sidebar": {
+      "width": 513,
+      "height": 720,
+      "transparent": true,
+      "bytes": 132530
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 68756
+    }
+  },
+  "otono-encantado": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 144272
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 136938
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 73822
+    }
+  },
+  "oraculo-luna": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 138050
+    },
+    "sidebar": {
+      "width": 576,
+      "height": 720,
+      "transparent": true,
+      "bytes": 190874
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 66148
+    }
+  },
+  "runas-norte": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 129596
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 123714
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 51772
+    }
+  },
+  "reino-hongos": {
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 138036
+    },
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 141552
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 63108
+    }
+  },
+  "catedral-cristal": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 146766
+    },
+    "sidebar": {
+      "width": 480,
+      "height": 720,
+      "transparent": true,
+      "bytes": 133042
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 59186
+    }
+  },
+  "mil-una-historias": {
+    "sidebar": {
+      "width": 503,
+      "height": 720,
+      "transparent": true,
+      "bytes": 164874
+    },
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 188790
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 84452
+    }
+  },
+  "canto-sirenas": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 127498
+    },
+    "sidebar": {
+      "width": 600,
+      "height": 900,
+      "transparent": true,
+      "bytes": 211258
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 60802
+    }
+  },
+  "ecos-sombras": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 77446
+    },
+    "sidebar": {
+      "width": 600,
+      "height": 900,
+      "transparent": true,
+      "bytes": 211924
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 49814
+    }
+  },
+  "aquelarre-medianoche": {
+    "banner": {
+      "width": 1800,
+      "height": 600,
+      "transparent": false,
+      "bytes": 112042
+    },
+    "sidebar": {
+      "width": 600,
+      "height": 900,
+      "transparent": true,
+      "bytes": 285812
+    },
+    "corner": {
+      "width": 600,
+      "height": 750,
+      "transparent": false,
+      "bytes": 60988
+    }
+  }
+}

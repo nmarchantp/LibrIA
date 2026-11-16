@@ -1,0 +1,48 @@
+/* Artwork refresh only: preserve every existing palette and behavior. */
+/* Pale replacement art uses the existing blue text role, instead of the former white overlay. */
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+ .header-greeting-title { color:#173B66; }
+ .mural-heading :is(h1,p,.kicker) { color:var(--ink); text-shadow:none; }
+ .reader-summary { --ink:#173B66; --muted:#36587B; --primary:#326A9D; --accent-text:#326A9D; color:var(--ink); }
+ .reader-summary a { background:var(--surface); color:var(--ink); border-color:var(--control-border); }
+}
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"] .header-greeting-title { color:var(--ink); }
+:root[data-theme="lavanda"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/lavanda/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/lavanda/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/lavanda/corner.webp'); }
+:root[data-theme="dark"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/dark/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/dark/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/dark/corner.webp'); }
+:root[data-theme="otono"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/otono/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/otono/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/otono/corner.webp'); }
+:root[data-theme="invierno"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/invierno/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/invierno/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/invierno/corner.webp'); }
+:root[data-theme="rosa-antiguo"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/rosa-antiguo/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/rosa-antiguo/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/rosa-antiguo/corner.webp'); }
+:root[data-theme="bosque"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/bosque/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/bosque/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/bosque/corner.webp'); }
+:root[data-theme="dark-dorado"] .social-shell { --refresh-banner:url('/images/theme-refresh-v1/dark-dorado/banner.webp'); --refresh-sidebar:url('/images/theme-refresh-v1/dark-dorado/sidebar-decoration.webp'); --refresh-corner:url('/images/theme-refresh-v1/dark-dorado/corner.webp'); }
+:root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"] {
+ .profile-starfield::before { background:linear-gradient(90deg,color-mix(in srgb,var(--paper) 85%,transparent),color-mix(in srgb,var(--paper) 30%,transparent)),var(--refresh-banner) right center/cover no-repeat; }
+ .sidebar-navigation::after { background:var(--refresh-sidebar) center bottom/contain no-repeat; mask-image:none; transform:none; }
+ .reader-summary { background:linear-gradient(90deg,color-mix(in srgb,var(--paper) 82%,transparent),color-mix(in srgb,var(--paper) 8%,transparent)),var(--refresh-corner) right center/cover no-repeat; }
+ .reader-summary::before,.reader-summary::after { display:none; }
+}
+@media(min-width:701px) {
+ :root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"] .sidebar-navigation::after { margin-inline:-20px; }
+}
+@media(min-width:701px) and (max-width:1200px) {
+ :root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"] .sidebar-navigation::after { margin-inline:-14px; }
+}
+:root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"][data-mural="true"] {
+ .reader-summary { background:linear-gradient(90deg,color-mix(in srgb,var(--paper) 82%,transparent),color-mix(in srgb,var(--paper) 8%,transparent)),var(--refresh-corner) right center/cover no-repeat; }
+ .reader-summary::before,.reader-summary::after { display:none; }
+}
+:root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before {
+ background:linear-gradient(90deg,color-mix(in srgb,var(--paper) 90%,transparent),color-mix(in srgb,var(--paper) 8%,transparent) 80%),var(--refresh-banner) right top/100% auto no-repeat;
+ height:auto; min-height:var(--mural-scene-height,304px); aspect-ratio:3 / 1; opacity:1;
+ mask-image:linear-gradient(#000 0%,#000 65%,transparent),linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); mask-composite:intersect;
+}
+@media(min-width:1000px) {
+ :root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before {
+ --scene-right-space:calc(300px + max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)));
+ inset:0 var(--scene-right-space) auto auto; width:calc(100% - var(--scene-right-space));
+ }
+}
+@media(max-width:700px) {
+ :root:is([data-theme="lavanda"],[data-theme="dark"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"]) .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before {
+ height:var(--mural-scene-height,360px); aspect-ratio:auto; min-height:340px; background-position:left top,70% top; background-size:auto,auto 100%;
+ }
+}

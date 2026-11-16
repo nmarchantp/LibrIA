@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LibrIAverse · Fondo continuo</title>
+<style>body{margin:24px;background:#181721;color:#f6f0fc;font:16px/1.6 system-ui}h1{font-size:26px}label{display:inline-block;margin:0 20px 20px 0}select{font:inherit;padding:8px}img{display:block;max-width:100%;height:auto;border:1px solid #666271}</style>
+<h1>Mural con fondo continuo</h1>
+<label>Tema <select id="theme"><option value="dark">Reino de Sombras</option><option value="lavanda">Jardín de Macarons</option><option value="dark-blood">Pacto de Sangre</option></select></label>
+<label>Ancho <select id="width"><option>1440</option><option>390</option></select></label>
+<img id="capture" alt="Mural sin banner frontal, con la imagen integrada en el fondo">
+<script>const theme=document.getElementById('theme'),width=document.getElementById('width');function update(){document.getElementById('capture').src=`../artifacts/continuous-mural/${theme.value}-${width.value}-mural.png`}theme.addEventListener('change',update);width.addEventListener('change',update);update()</script></html>

@@ -1,0 +1,28 @@
+/* One viewport of scenery; the document keeps its normal vertical scrolling. */
+.social-shell .social-viewport-background {
+  position:sticky;
+  top:0;
+  height:100dvh;
+  margin-bottom:-100dvh;
+  width:100%;
+  overflow:clip;
+  pointer-events:none;
+  user-select:none;
+  z-index:0;
+}
+.social-shell .social-viewport-background .profile-starfield { position:absolute; inset:0; }
+/* Blend the scene into the right column within its existing bounds. */
+@media(min-width:1000px) {
+  :root .social-shell[data-interior-style="literary"][data-mural="true"] .social-viewport-background .profile-starfield::before {
+    mask-image:linear-gradient(#000 0%,#000 60%,transparent),linear-gradient(90deg,transparent,#000 5%,#000 calc(100% - 150px),transparent);
+    mask-composite:intersect;
+  }
+  .social-shell[data-interior-style="literary"][data-mural="true"] .mural-aside { background:transparent; }
+}
+@media(max-width:700px) {
+  .social-shell .social-viewport-background {
+    top:68px;
+    height:calc(100dvh - 68px);
+    margin-bottom:calc(68px - 100dvh);
+  }
+}

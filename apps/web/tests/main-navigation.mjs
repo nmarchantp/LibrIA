@@ -65,7 +65,7 @@ try {
   await until(`Boolean(document.querySelector('.settings-page .account-details'))`)
   assert.equal(await evaluate(`document.querySelector('#main-navigation a[href="/settings"]').getAttribute('aria-current')`), 'page')
   await click('.settings-navigation a[href="/settings?tab=personalization"]')
-  await until(`document.querySelectorAll('.settings-page .theme-option').length===9`)
+  await until(`document.querySelectorAll('.settings-page .theme-option').length===24`)
   assert.equal(await evaluate(`!document.querySelector('.settings-page .account-details')`), true)
   for (const legacy of ['account', 'personalization']) {
     await evaluate(`history.pushState({},'', '/profile?tab=${legacy}');window.dispatchEvent(new PopStateEvent('popstate'))`)

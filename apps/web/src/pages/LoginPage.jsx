@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Mail, LockKeyhole } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuthJourney } from '../context/AuthJourneyContext'
 import { useAuth } from '../context/AuthContext'
 import GoogleLoginButton from '../components/GoogleLoginButton'
 import { profileDestination } from '../services/profileDestination'
@@ -15,21 +16,21 @@ const googleErrors = {
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const { run: journey, motionEnabled, setMotionEnabled } = useAuthJourney()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [error, setError] = useState('')
   const googleError = googleErrors[params.get('google_error')] || ''
   const [busy, setBusy] = useState(false)
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const [motionEnabled, setMotionEnabled] = useState(true)
   const submit = async event => {
     event.preventDefault()
+    if (busy) return
     setError('')
     setBusy(true)
     const form = new FormData(event.currentTarget)
     try {
-      await login({ email: form.get('email'), password: form.get('password') })
-      navigate(profileDestination(params.toString()))
+      await journey('castle', () => login({ email: form.get('email'), password: form.get('password') }), () => navigate(profileDestination(params.toString())))
     } catch {
       setError('No fue posible iniciar sesión. Revisa tus datos y que la API esté activa.')
     } finally {
@@ -49,7 +50,7 @@ export default function LoginPage() {
       <p className="auth-divider">o</p>
       <GoogleLoginButton />
       <p className="login-google-help">Para usar Google, primero verifica tu correo y vincúlalo en Mi cuenta.</p>
-      <p>¿No tienes cuenta? <Link to={profileDestination(params.toString()) !== '/' ? `/register?next=${encodeURIComponent(profileDestination(params.toString()))}` : '/register'}>Regístrate</Link></p>
+      <p>¿No tienes cuenta? <Link onClick={event => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); if (!busy) journey('book', null, () => navigate(profileDestination(params.toString()) !== '/' ? `/register?next=${encodeURIComponent(profileDestination(params.toString()))}` : '/register')) }} to={profileDestination(params.toString()) !== '/' ? `/register?next=${encodeURIComponent(profileDestination(params.toString()))}` : '/register'}>Regístrate</Link></p>
     </form>
     <button className="login-motion-toggle" type="button" aria-pressed={motionEnabled} onClick={() => setMotionEnabled(value => !value)}>{motionEnabled ? 'Pausar animaciones' : 'Activar animaciones'}</button>
   </main>

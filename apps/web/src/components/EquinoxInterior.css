@@ -1,0 +1,100 @@
+/* Tintas del Equinoccio: leather surroundings and readable parchment content. */
+:root[data-theme="otono"] :is(.social-shell[data-interior-style="literary"],.reader-profile-modal[open],.content-management-dialog[open]) {
+  --paper:#26190F; --surface:#3A2618; --surface-raised:#4B311C;
+  --ink:#F7E8CB; --muted:#E0C8A3; --line:#946B38; --panel-border:#B58A4D;
+  --primary:#F2C36D; --accent-text:#F2C36D; --soft:#47301C;
+  --orange:#F2C36D; --on-feature:#F7E8CB;
+  --button-bg:#F3D9A9; --on-primary:#301B0C; --primary-hover:#FFE8C1;
+  --neutral-button-bg:#F0D4A0; --neutral-button-hover:#FFE4B1;
+  --control-border:#8C632D; --field-bg:#FFF3D9; --focus:#F8CC78; --sidebar-bg:#24180F;
+}
+:root[data-theme="otono"] .social-shell[data-interior-style="literary"] {
+  background:var(--paper);
+  .social-page-column { position:relative; isolation:isolate; background:var(--paper); --main-top-space:18px; }
+  .literary-atmosphere { display:none; pointer-events:none; }
+  .profile-starfield { background:radial-gradient(ellipse at 80% 35%,rgb(148 91 34 / 21%),transparent 65%),linear-gradient(135deg,#1C130C,#342314 70%,#21160D); }
+  .profile-starfield::before { content:''; position:absolute; inset:0 0 auto; height:160px; pointer-events:none; opacity:.75; background:linear-gradient(90deg,rgb(38 25 15 / 80%),rgb(38 25 15 / 30%)),url('/images/equinox-universe/explorer-study-v2.webp') 65% top/max(100%,1100px) auto no-repeat; mask-image:linear-gradient(#000,transparent); }
+  .social-topbar::before { background:linear-gradient(rgb(38 25 15 / 30%),transparent); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .social-topbar.is-scrolled::before { background:rgb(38 25 15 / 94%); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .header-greeting-title { color:var(--ink); font-family:'DM Serif Display',serif; }
+  :is(.global-header-action,.mobile-nav-toggle) { color:#F2C36D; }
+  .mobile-nav-toggle svg { stroke:#F2C36D; }
+  .social-sidebar { background:radial-gradient(ellipse at 55% 65%,rgb(138 75 26 / 25%),transparent 65%),linear-gradient(145deg,#2D1B0E,#1D140D); border-right:1px solid #AA7839; }
+  .social-sidebar .social-nav a { min-height:46px; border-radius:8px; gap:12px; font-size:14px; color:var(--ink); }
+  .social-sidebar .social-nav a.active { background:linear-gradient(145deg,#653913,#3A220F); border:1px solid #F0BD58; box-shadow:inset 0 0 0 2px #472A12,inset 0 0 0 3px rgb(240 189 88 / 45%),0 3px 12px rgb(15 9 3 / 25%); font-weight:700; }
+  .social-sidebar .social-nav a:is(:hover,:focus-visible):not(.active) { background:linear-gradient(135deg,#50331C,#3B2616); color:#F7E8CB; box-shadow:inset 0 0 0 1px #AC7D3D; }
+  .social-sidebar .navigation-galaxy-link:is(:hover,:focus-visible)::before { background:none; box-shadow:none; }
+  .social-sidebar .navigation-galaxy { opacity:.45; }
+  .social-sidebar > .brand-link { position:relative; padding:10px 8px 20px; border-bottom:1px solid #AA7839; }
+  .social-sidebar > .brand-link::after { content:''; position:absolute; bottom:-3px; left:calc(50% - 3px); width:6px; height:6px; background:#E4B65F; transform:rotate(45deg); pointer-events:none; }
+  .brand-logo-ai,.brand-logo-star { fill:#F2C36D; }
+  .brand-logo-orbit { stroke:#F2C36D; }
+  .sidebar-navigation::after { content:''; display:block; flex:1 1 260px; min-height:0; max-height:340px; order:1; background:url('/images/equinox-universe/compass-journal-v1.webp') center bottom/contain no-repeat,radial-gradient(ellipse at 45% 65%,rgb(224 159 56 / 16%),transparent 70%); mask-image:linear-gradient(transparent,#000 14%,#000 82%,transparent),linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-composite:intersect; pointer-events:none; }
+  .sidebar-navigation .sidebar-account { order:2; flex-shrink:0; border-top:1px solid #AA7839; padding-top:18px; }
+  .sidebar-account .avatar { background:linear-gradient(145deg,#BA6B18,#6F350B); color:#FFF0D0; border:1px solid #F2C36D; }
+  .sidebar-account .account-link { color:var(--ink); }
+  .sidebar-account .account-link small { color:var(--muted); }
+  .sidebar-account .logout-button { color:#F2C36D; }
+  .publication-create-shortcut { background:linear-gradient(135deg,#F7E7C9,#EED5A9); color:#301B0C; border:1px solid #D2A34E; box-shadow:inset 0 0 0 1px rgb(255 248 222 / 65%),0 4px 12px rgb(14 8 2 / 20%); }
+  .publication-create-shortcut:hover { background:#FFE8C1; }
+  .mural-carousel-arrow { color:#5C3011; }
+  .mural-carousel-arrow::before { background:#EED2A1; border-color:#B68A43; }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject) { background:var(--neutral-button-bg); color:#301B0C; border:1px solid var(--control-border); box-shadow:none; }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject):hover:not(:disabled) { background:var(--neutral-button-hover); }
+  .button.primary { background:var(--button-bg); color:var(--on-primary); border:1px solid transparent; }
+  .button.primary:hover:not(:disabled) { background:var(--primary-hover); transform:none; }
+  :is(.button.danger,.account-danger-button,.request-reject,.account-danger .button) { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
+  :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]) { background-color:var(--field-bg); color:#2D1A0E; border-color:var(--control-border); font-size:16px; }
+  :is(input,textarea)::placeholder { color:#705337; opacity:1; }
+  :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  /* These surfaces deliberately switch their text roles to dark ink. */
+  :is(.catalog-result-card,.catalog-search-panel,.reader-book-card,.reader-personal-card,.recommendation-card,.agenda-event,.analysis-card,.account-personal-info,.role-panel,.google-account-panel,.account-management > section,.feed-card,.mural-activity-card,.bulletin-card,.aside-reading,.agenda-calendar,.agenda-detail,.reader-profile-stat,.navigation-tools-menu,.admin-list,.admin-detail,.accounts-directory,.account-detail) {
+    --surface:#F3E0BD; --surface-raised:#FFF0D2; --ink:#2D1A0E; --muted:#63472C; --line:#B88F57; --soft:#E8CC9C;
+    --primary:#8A4A17; --accent-text:#784011; --orange:#784011; --on-feature:#2D1A0E; --button-bg:#8A4A17; --on-primary:#FFF2D8; --primary-hover:#71390E;
+    --neutral-button-bg:#EED2A1; --neutral-button-hover:#E5C38C; --focus:#8A4A17;
+    background:radial-gradient(ellipse at 10% 0,rgb(255 250 232 / 60%),transparent 70%),linear-gradient(135deg,#F7E7C9,#EED5A9);
+    color:var(--ink); border-color:#BE944F; box-shadow:inset 0 0 0 1px rgb(255 248 222 / 65%),0 5px 16px rgb(14 8 2 / 22%);
+  }
+  :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:24px; border:1px solid #AA7839; border-radius:12px; background:radial-gradient(ellipse at 100% 0,rgb(190 127 41 / 18%),transparent 65%),linear-gradient(145deg,#3B2411,#26190F); }
+  .reader-library-empty { background:var(--soft); color:var(--ink); border-color:#AA7839; }
+}
+:root[data-theme="otono"] :is(.reader-profile-modal[open],.content-management-dialog[open]) {
+  --surface:#F3E0BD; --surface-raised:#FFF0D2; --ink:#2D1A0E; --muted:#63472C; --primary:#8A4A17; --accent-text:#784011;
+  --button-bg:#8A4A17; --on-primary:#FFF2D8; --primary-hover:#71390E; --focus:#8A4A17;
+  background:var(--surface); color:var(--ink); border-color:var(--control-border);
+  :is(input,select,textarea) { background:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px; }
+  :is(button,a,input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  .reader-modal-footer > button { background:var(--neutral-button-bg); color:#301B0C; border:1px solid var(--control-border); }
+  .reader-modal-footer > button[type="submit"] { background:var(--button-bg); color:var(--on-primary); }
+}
+:root[data-theme="otono"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-heading { min-height:210px; }
+  .mural-heading h1 { font-size:clamp(34px,3.4vw,48px); max-width:76%; margin-block:18px 14px; text-wrap:balance; }
+  .mural-heading p { color:var(--ink); max-width:440px; }
+  .mural-heading .kicker { color:#F2C36D; }
+  .mural-audiences { background:linear-gradient(135deg,#F7E7C9,#EED5A9); border-color:#B68A43; box-shadow:inset 0 0 0 1px rgb(255 248 222 / 65%); }
+  .mural-audiences button { color:#2D1A0E; }
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#6C3E16,#3D240F); color:#FFF0D2; border-color:#E4AC45; box-shadow:inset 0 0 0 2px #472A12,inset 0 0 0 3px rgb(240 189 88 / 45%); }
+  .reader-summary { min-height:330px; padding:26px 24px 20px; display:flex; flex-direction:column; align-items:flex-start; background:linear-gradient(90deg,rgb(38 25 15 / 62%),rgb(38 25 15 / 5%)),url('/images/equinox-universe/leather-compass-v1.webp') center top/cover no-repeat,#3B2411; border:1px solid #D2A34E; border-radius:12px; color:var(--ink); box-shadow:0 7px 22px rgb(14 8 2 / 25%); }
+  .reader-summary h2 { color:var(--ink); margin-block:18px; max-width:90%; font:32px/1.15 'DM Serif Display',serif; }
+  .reader-summary .kicker { color:#F2C36D; }
+  .reader-summary p { color:var(--ink); margin-bottom:68px; }
+  .reader-summary a { color:#F2C36D; padding:9px 11px; border:1px solid #AA7839; border-radius:8px; margin-top:auto; background:rgb(38 25 15 / 65%); font-size:12px; }
+  .community-note { border-top:1px solid #AA7839; padding-top:24px; }
+}
+@media(max-width:700px) {
+  :root[data-theme="otono"] .social-shell[data-interior-style="literary"] {
+    .social-page-column { --main-top-space:14px; isolation:auto; }
+    .social-sidebar { background:var(--sidebar-bg); }
+    .social-sidebar .brand-link { max-width:min(170px,calc(100vw - 248px)); padding:0; border:0; }
+    .social-sidebar > .brand-link::after,.sidebar-navigation::after { display:none; }
+    .sidebar-navigation { background:linear-gradient(#2D1B0E,#21160D); }
+    .social-sidebar .social-nav a.active { box-shadow:inset 0 2px #F2C36D; }
+    :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:18px; }
+  }
+  :root[data-theme="otono"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+    .mural-heading { min-height:270px; }
+    .mural-heading h1 { max-width:100%; font-size:36px; }
+    .mural-heading p { max-width:250px; }
+  }
+}

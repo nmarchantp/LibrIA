@@ -98,3 +98,5 @@ Tras integrar el selector en el perfil se verificaron las cinco pestañas, los c
 filtros, retirada y cambio de estado con respuestas API interceptadas en un perfil
 de navegador aislado, sin mutaciones reales. Se comprobaron las seis paletas en
 1536, 1280, 1024, 768, 390 y 320 px, persistencia, estados vacíos y errores de carga.
+
+El tema predeterminado es `dark` (Reino de Sombras). El acceso r?pido del encabezado alterna `dark` y `lavanda` (Jard?n de Macarons); una elecci?n guardada sigue vigente al recargar. Los otros temas contin?an disponibles en Personalizaci?n.

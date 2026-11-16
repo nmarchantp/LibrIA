@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LibrIAverse · Alas de cristal</title>
+<style>body{margin:24px;background:#D9EAF7;color:#173B66;font:16px/1.6 system-ui}h1{font-size:26px}label{display:inline-block;margin:0 20px 20px 0}select{font:inherit;padding:8px}img{display:block;max-width:100%;height:auto;border:1px solid #93B8D4}</style>
+<h1>Alas de cristal</h1><p>Capturas de navegador con datos simulados.</p>
+<label>Página <select id="page"><option value="mural">Mural</option><option value="profile">Mi perfil</option><option value="profile-tab-library">Biblioteca</option><option value="readingbook-fixture">Lectura</option><option value="books-q-Historias">Explorar libros</option><option value="events">Eventos</option><option value="recommendations">Recomendaciones IA</option><option value="settings">Configuración</option><option value="adminprofiles">Administración</option></select></label>
+<label>Ancho <select id="width"><option>1440</option><option>390</option></select></label>
+<img id="capture" alt="Captura de la página seleccionada con el tema Alas de cristal">
+<script>const page=document.getElementById('page'),width=document.getElementById('width');function update(){document.getElementById('capture').src=`../artifacts/crystal-interior/invierno-${width.value}-${page.value}.png`}page.addEventListener('change',update);width.addEventListener('change',update);update()</script></html>

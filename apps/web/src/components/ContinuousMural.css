@@ -1,0 +1,56 @@
+:root[data-theme="otono"] .social-shell {
+  --mural-scene:url('/images/equinox-universe/explorer-study-v2.webp');
+  --mural-scene-shade:rgb(38 25 15 / 86%);
+  --mural-scene-clear:rgb(38 25 15 / 16%);
+}
+/* A single scene behind the topbar and mural, with no foreground banner. */
+:root[data-theme="dark"] .social-shell {
+  --mural-scene:url('/images/mural-universe/literary-sky-v1.webp');
+  --mural-scene-shade:rgb(23 20 33 / 76%);
+  --mural-scene-clear:rgb(23 20 33 / 12%);
+}
+:root[data-theme="lavanda"] .social-shell {
+  --mural-scene:url('/images/macaron-universe/literary-dawn-v1.webp');
+  --mural-scene-shade:rgb(255 250 255 / 82%);
+  --mural-scene-clear:rgb(255 250 255 / 12%);
+}
+:root[data-theme="dark-blood"] .social-shell {
+  --mural-scene:url('/images/blood-universe/gothic-study-v2.webp');
+  --mural-scene-shade:rgb(16 9 13 / 86%);
+  --mural-scene-clear:rgb(16 9 13 / 20%);
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"],[data-theme="dark-blood"],[data-theme="otono"]) .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .profile-starfield::before {
+    height:360px; opacity:1;
+    background:linear-gradient(90deg,var(--mural-scene-shade),var(--mural-scene-clear) 65%),var(--mural-scene) center top/100% auto no-repeat;
+    mask-image:linear-gradient(#000 0%,#000 70%,transparent 100%);
+    pointer-events:none;
+  }
+  .social-main .mural-heading {
+    background:none; border:0; border-radius:0; box-shadow:none;
+    padding:26px 0 34px; overflow:visible;
+  }
+  .social-main .mural-heading::before,.social-main .mural-heading::after { display:none; }
+}
+@media(min-width:1000px) {
+  :root:is([data-theme="dark"],[data-theme="lavanda"],[data-theme="dark-blood"],[data-theme="otono"]) .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before {
+    /* Reserve the right column; scale the whole scene instead of cropping it. */
+    --scene-right-space:calc(300px + max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2)));
+    inset:0 var(--scene-right-space) auto auto;
+    width:min(1000px,calc(100% - var(--scene-right-space))); height:auto; aspect-ratio:3 / 1;
+    background-position:left top,right top;
+    background-size:auto,100% auto;
+    mask-image:linear-gradient(#000 0%,#000 80%,transparent 100%),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+    mask-composite:intersect;
+  }
+}
+@media(max-width:700px) {
+  :root:is([data-theme="dark"],[data-theme="lavanda"],[data-theme="dark-blood"],[data-theme="otono"]) .social-shell[data-interior-style="literary"][data-mural="true"] {
+    .profile-starfield::before {
+      height:440px;
+      background:linear-gradient(90deg,var(--mural-scene-shade),var(--mural-scene-shade) 35%,var(--mural-scene-clear)),var(--mural-scene) 76% top/auto 100% no-repeat;
+      mask-image:linear-gradient(#000 0%,#000 65%,transparent 100%);
+    }
+    .social-main .mural-heading { padding:24px 0 28px; }
+  }
+}

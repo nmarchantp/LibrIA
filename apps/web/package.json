@@ -27,7 +27,10 @@
     "test:navigation": "node --experimental-websocket tests/main-navigation.mjs",
     "test:themes": "node --experimental-websocket tests/themes.mjs",
     "test:magical-background": "node --experimental-websocket tests/magical-background.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:auth-journey": "node --experimental-websocket tests/auth-journey.mjs",
+    "test:interior-identity": "node --experimental-websocket tests/interior-identity.mjs",
+    "test:theme-refinements": "node --experimental-websocket tests/theme-refinements.mjs"
   },
   "dependencies": {
     "lucide-react": "0.468.0",

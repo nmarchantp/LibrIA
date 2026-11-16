@@ -1,13 +1,15 @@
+@import "./refinements.css";
 /* Palette roles are initialized in themes.js before React mounts.
    Legacy names stay available so pages consume the same semantic colors. */
 :root {
-  color-scheme:light;
-  --paper:#F4EFF9;
-  --surface:#FFFCFF;
-  --primary:#7856A4;
-  --secondary:#DFD1EF;
-  --accent:#B38BCD;
-  --ink:#332743;
+  color-scheme:dark;
+  --neutral-button-bg:var(--soft);
+  --paper:#181721;
+  --surface:#292535;
+  --primary:#C2A4F3;
+  --secondary:#453854;
+  --accent:#9776CF;
+  --ink:#F6F0FC;
   --on-primary:#fff;
   --button-bg:var(--primary);
   --muted:color-mix(in srgb,var(--ink) 78%,var(--surface));
@@ -110,3 +112,15 @@ input::placeholder,textarea::placeholder { color:var(--muted); opacity:1; }
 .button.primary,.skip-link,.brand-icon,.avatar,.profile-avatar { background:var(--button-bg); }
 /* Filled controls that predate --button-bg need the same readable blood red. */
 :root[data-theme="dark-blood"] :is(.unread-count,.search-clear,.reader-avatars>span) { background:var(--button-bg); }
+:root:is([data-theme="lavanda"],[data-theme="otono"],[data-theme="invierno"],[data-theme="rosa-antiguo"],[data-theme="bosque"]) { color-scheme:light; --neutral-button-bg:#f7eee0; }
+
+/* Semantic modes for the new catalog only; original themes retain their rules. */
+:root[data-theme-pack="literary"][data-theme-mode="light"] { color-scheme:light; }
+:root[data-theme-pack="literary"][data-theme-mode="dark"] {
+  color-scheme:dark;
+  --success-text:#A8E2BF; --success-bg:#203B30; --success-line:#638B74;
+  --error-text:#FFC0B8; --error-bg:#482B30; --error-line:#A7676E;
+  --warning-text:#F4D391; --warning-bg:#403522;
+  --info-text:#BED9FF; --info-bg:#27374D; --info-line:#6F8EB4;
+  --rating:#F4BF45;
+}

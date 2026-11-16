@@ -1,0 +1,126 @@
+/* Rosas y Espinas: plum surfaces, pink accents and reference-inspired garden art. */
+:root[data-theme="dark-rosado"] :is(.social-shell[data-interior-style="literary"],.reader-profile-modal[open],.content-management-dialog[open]) {
+  --paper:#25151F; --surface:#3B2431; --surface-raised:#482C3B;
+  --ink:#F9E9EF; --muted:#D9BEC9; --line:#805366; --panel-border:#805366;
+  --control-border:#B37D95; --field-bg:#2C1924; --soft:#4D2A3B;
+  --accent-text:#F0A5C5; --focus:#F0A5C5; --button-bg:#F0A5C5;
+  --primary-hover:#F5BAD4; --on-primary:#2A1721;
+  --neutral-button-bg:#48283A; --neutral-button-hover:#5C344A; --sidebar-bg:#21141D;
+}
+:root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"] {
+  background:var(--paper);
+  .social-page-column { position:relative; isolation:isolate; background:var(--paper); --main-top-space:18px; }
+  .literary-atmosphere { display:none; pointer-events:none; }
+  .profile-starfield { background:radial-gradient(ellipse at 90% 15%,rgb(115 47 78 / 23%),transparent 45%),var(--paper); }
+  .profile-starfield::before { content:''; position:absolute; inset:0 0 auto; height:160px; pointer-events:none; opacity:.65; background:linear-gradient(90deg,rgb(37 21 31 / 75%),rgb(37 21 31 / 45%)),url('/images/rose-universe/moonlit-garden-v1.png') 65% top/max(100%,1100px) auto no-repeat; mask-image:linear-gradient(#000,transparent); }
+  .social-topbar::before { background:linear-gradient(rgb(37 21 31 / 35%),transparent); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .social-topbar.is-scrolled::before { background:rgb(37 21 31 / 94%); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .header-greeting { color:var(--accent-text); }
+  .header-greeting-title { color:var(--accent-text); }
+  :is(.global-header-action,.mobile-nav-toggle) { color:#F0A5C5; }
+  .mobile-nav-toggle svg { stroke:#F0A5C5; }
+  .social-sidebar { background:radial-gradient(ellipse at 60% 75%,rgb(133 58 94 / 22%),transparent 50%),linear-gradient(145deg,#301B26,#21141D); border-color:#805366; }
+  .social-sidebar .social-nav a { min-height:46px; border-radius:10px; gap:12px; font-size:14px; color:var(--ink); }
+  .social-sidebar .social-nav a.active { background:linear-gradient(135deg,#482B3A,#2E1B27); border:1px solid #E799BA; box-shadow:inset 0 0 13px rgb(232 160 194 / 25%),0 0 12px rgb(163 78 118 / 15%); color:var(--ink); font-weight:700; }
+  .social-sidebar .social-nav a:is(:hover,:focus-visible):not(.active) { background:#48283A; color:var(--ink); box-shadow:none; }
+  .social-sidebar .navigation-galaxy-link:is(:hover,:focus-visible)::before { background:none; box-shadow:none; }
+  .social-sidebar > .brand-link { position:relative; isolation:isolate; padding:10px 8px 20px; border-bottom:1px solid var(--panel-border); }
+  .social-sidebar > .brand-link::after { content:''; position:absolute; bottom:-3px; left:calc(50% - 3px); width:6px; height:6px; transform:rotate(45deg); background:#C88BA6; pointer-events:none; }
+  .brand-logo-ai,.brand-logo-star { fill:#E59BBE; }
+  .brand-logo-orbit { stroke:#E59BBE; }
+  .sidebar-navigation::after { content:''; display:block; flex:1 1 260px; min-height:0; max-height:340px; order:1; background:url('/images/rose-universe/rose-books-sidebar-v2.png') center bottom/contain no-repeat; mask-image:linear-gradient(transparent,#000 12%,#000 78%,transparent),linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-composite:intersect; pointer-events:none; }
+  .sidebar-navigation .sidebar-account { order:2; flex-shrink:0; border-top:1px solid var(--panel-border); padding-top:18px; }
+  .sidebar-account .avatar { background:linear-gradient(145deg,#E8A0C2,#C77FA1); color:var(--on-primary); }
+  .sidebar-account .logout-button { color:var(--accent-text); }
+  :is(.catalog-result-card,.reader-book-card,.reader-personal-card,.recommendation-card,.agenda-event,.analysis-card,.account-personal-info,.role-panel,.google-account-panel,.account-management > section,.feed-card,.mural-activity-card,.bulletin-card) { background:linear-gradient(145deg,#482B3B,#32202C); border-color:var(--panel-border); box-shadow:0 5px 18px rgb(20 9 17 / 20%); }
+  :is(.agenda-calendar,.agenda-detail,.reader-profile-stat,.navigation-tools-menu,.admin-list,.admin-detail,.accounts-directory,.account-detail) { background:var(--surface); border-color:var(--panel-border); }
+  :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:24px; border:1px solid var(--panel-border); border-radius:14px; background:radial-gradient(ellipse at 100% 0,rgb(163 78 118 / 25%),transparent 65%),linear-gradient(145deg,#402535,#2B1925); }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject) { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); box-shadow:none; }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject):hover:not(:disabled) { background:var(--neutral-button-hover); }
+  .button.primary { background:var(--button-bg); color:var(--on-primary); border:1px solid transparent; }
+  .button.primary:hover:not(:disabled) { background:var(--primary-hover); transform:none; }
+  :is(.button.danger,.account-danger-button,.request-reject,.account-danger .button) { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
+  :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]) { background-color:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px; }
+  :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+  :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+}
+:root[data-theme="dark-rosado"] :is(.reader-profile-modal[open],.content-management-dialog[open]) {
+  background:var(--surface-raised); color:var(--ink); border-color:var(--panel-border);
+  :is(input,select,textarea) { background:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px; }
+  :is(button,a,input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  .reader-modal-footer > button { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); }
+  .reader-modal-footer > button[type="submit"] { background:var(--button-bg); color:var(--on-primary); }
+}
+:root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-heading { position:relative; isolation:isolate; overflow:hidden; min-height:210px; padding:26px 32px 34px; border-radius:14px; border:1px solid #805366; background:linear-gradient(90deg,rgb(37 21 31 / 85%),rgb(37 21 31 / 48%) 58%,transparent 90%),url('/images/rose-universe/moonlit-garden-v1.png') right bottom/cover no-repeat,#281822; box-shadow:0 8px 22px rgb(20 9 17 / 22%); }
+  .mural-heading::after,.mural-heading .mural-brand-star { display:none; }
+  .mural-heading h1 { color:var(--ink); font-size:clamp(34px,3.4vw,48px); max-width:76%; margin-block:18px 14px; text-wrap:balance; }
+  .mural-heading h1::before { display:none; }
+  .mural-heading .kicker { color:var(--accent-text); }
+  .mural-heading p { color:var(--muted); max-width:440px; }
+  .mural-audiences { background:linear-gradient(110deg,#482B3B,#32202C); border-color:var(--panel-border); }
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#640D25,#310D19); color:var(--ink); border-color:#E59BBE; box-shadow:inset 0 0 10px rgb(232 160 194 / 25%); }
+  .reader-summary { min-height:330px; padding:26px 24px 20px; display:flex; flex-direction:column; align-items:flex-start; background:linear-gradient(90deg,rgb(37 21 31 / 78%),rgb(37 21 31 / 15%)),url('/images/rose-universe/lantern-corner-v1.png') center top/cover no-repeat,#281822; border:1px solid var(--panel-border); border-radius:14px; color:var(--ink); box-shadow:0 8px 22px rgb(20 9 17 / 22%); }
+  .reader-summary::before,.reader-summary::after { display:none; }
+  .reader-summary h2 { color:var(--ink); margin-block:18px; max-width:90%; font:32px/1.15 'DM Serif Display',serif; }
+  .reader-summary .kicker { color:var(--ink); }
+  .reader-summary p { color:var(--ink); margin-bottom:68px; }
+  .reader-summary a { color:var(--accent-text); padding:9px 11px; border:1px solid var(--control-border); border-radius:8px; margin-top:auto; background:rgb(37 21 31 / 78%); font-size:12px; }
+  .aside-reading { background:linear-gradient(145deg,#482B3B,#32202C); border-color:var(--panel-border); }
+  .community-note { border-top:1px solid var(--panel-border); padding-top:24px; }
+  .community-note p { font-family:'DM Serif Display',serif; font-style:italic; font-size:18px; }
+}
+@media(max-width:700px) {
+  :root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"] {
+    .social-page-column { --main-top-space:14px; isolation:auto; }
+    .social-sidebar { background:var(--sidebar-bg); }
+    .social-sidebar .brand-link { max-width:min(170px,calc(100vw - 248px)); padding:0; border:0; }
+    .social-sidebar > .brand-link::after,.sidebar-navigation::after { display:none; }
+    .profile-starfield::before { height:150px; }
+    .sidebar-navigation { background:linear-gradient(#301C28,#21141D); }
+    .social-sidebar .social-nav a.active { box-shadow:inset 0 2px #E59BBE; }
+    :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:18px; }
+  }
+  :root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+    .mural-heading { min-height:270px; padding:24px 20px 28px; background:linear-gradient(90deg,rgb(37 21 31 / 90%),rgb(37 21 31 / 62%)),url('/images/rose-universe/moonlit-garden-v1.png') 77% bottom/auto 100% no-repeat,#281822; }
+    .mural-heading h1 { max-width:100%; font-size:36px; }
+    .mural-heading p { max-width:250px; }
+  }
+}
+
+
+:root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"] {
+  --primary:#F0A5C5;
+  .social-topbar { background:transparent; }
+  .social-sidebar .social-nav a.active { box-shadow:inset 2px 0 #F0A5C5,0 3px 10px rgb(20 9 17 / 12%); }
+  .social-sidebar .navigation-galaxy { display:none; }
+  .sidebar-navigation::after { margin-inline:-20px; }
+  .publication-create-shortcut { color:var(--accent-text); background:linear-gradient(#482C3B,#35202D); border-color:#A86D88; box-shadow:0 3px 12px rgb(20 9 17 / 15%); }
+  .global-header-action { color:var(--accent-text); }
+  .global-header-action > svg { width:22px; height:22px; }
+  .global-header-action > :is(.message-bubble-icon,.notification-bell-icon) { width:28px; height:28px; }
+  :is(.message-envelope,.notification-bell) > :is(rect,path) { fill:none; }
+  .social-nav a > svg { width:22px; height:22px; color:var(--ink); }
+  .mural-category-icon { background:#582C42; color:var(--accent-text); }
+  .social-page-column[data-magical-background="enabled"]::after { content:''; position:absolute; inset:auto 0 0 auto; width:min(380px,40%); height:400px; background:url('/images/rose-universe/thorn-roses-v1.png') left bottom/contain no-repeat; transform:scaleX(-1); opacity:.4; pointer-events:none; z-index:0; }
+}
+:root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .social-main .mural-heading { background:none; border:0; border-radius:0; box-shadow:none; padding:26px 0 34px; }
+  .mural-heading h1 { color:var(--ink); }
+  .profile-starfield::before { height:var(--mural-scene-height,304px); opacity:1; background:linear-gradient(90deg,rgb(37 21 31 / 75%),rgb(37 21 31 / 10%) 75%),url('/images/rose-universe/moonlit-garden-v1.png') right top/100% auto no-repeat; mask-image:linear-gradient(#000 0%,#000 65%,transparent); }
+  .mural-audiences { background:linear-gradient(#482B3B,#35202E); border-color:#A86D88; }
+  .mural-audiences button { color:var(--ink); }
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(#563044,#38202F); color:var(--ink); border-color:#E799BA; box-shadow:inset 0 0 0 1px rgb(240 165 197 / 15%); }
+  .reader-summary { --on-feature:#F9E9EF; color:var(--ink); border-color:#A86D88; background-position:left top,right center; }
+  .reader-summary a { background:rgb(37 21 31 / 75%); }
+}
+@media(min-width:701px) {
+  :root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before { height:auto; min-height:var(--mural-scene-height,304px); aspect-ratio:3 / 1; mask-image:linear-gradient(#000 0%,#000 55%,rgb(0 0 0 / 45%) 77%,transparent),linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); mask-composite:intersect; }
+}
+@media(min-width:1000px) {
+  :root[data-theme="dark-rosado"] .social-shell[data-mural="true"] .profile-starfield::before { --scene-right-space:calc(300px + max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2))); inset:0 var(--scene-right-space) auto auto; width:calc(100% - var(--scene-right-space)); }
+}
+@media(max-width:700px) {
+  :root[data-theme="dark-rosado"] .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before { background-position:left top,72% top; background-size:auto,auto 100%; }
+  :root[data-theme="dark-rosado"] .social-shell .social-page-column[data-magical-background="enabled"]::after { opacity:.2; height:220px; }
+}

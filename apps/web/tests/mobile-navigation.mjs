@@ -26,11 +26,12 @@ try{
 await mkdir(artifacts,{recursive:true})
 await send('Emulation.setFocusEmulationEnabled',{enabled:true});await send('Page.bringToFront')
 await resize(1440)
-await send('Page.navigate',{url:`${app}/tests/fixtures/profile-modals.html?role=admin&group`})
+await send('Page.navigate',{url:`${app}/tests/fixtures/theme-refinements.html?role=admin&group`})
 await until(`!!document.querySelector('.navigation-tools')`)
 await evaluate('document.fonts.ready.then(()=>true)')
 const themes=await evaluate(`import('/src/theme/themes.js').then(m=>m.themes.map(t=>t.id))`)
-for(const theme of themes){
+const selectedThemes=process.env.NAVIGATION_THEMES?.split(',')
+for(const theme of themes.filter(theme=>!selectedThemes||selectedThemes.includes(theme))){
  await evaluate(`import('/src/theme/themes.js').then(m=>m.applyTheme(${JSON.stringify(theme)}))`)
  for(const width of [320,375,390,430,768,1024,1440]){
   await resize(width)
@@ -52,7 +53,7 @@ for(const theme of themes){
    await evaluate(`window.scrollTo(0,200)`);await pause(60)
    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.social-sidebar')).backgroundColor`),headerBackground,'Mobile header stays solid on scroll')
    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.social-topbar .global-header-actions'),'::before').content`),'none','No mobile glass overlay on scroll')
-   assert.equal(await evaluate(`(()=>{const probe=document.createElement('div');probe.style.background='var(--surface)';document.body.append(probe);const color=getComputedStyle(probe).backgroundColor;probe.remove();return getComputedStyle(document.querySelector('.social-sidebar')).backgroundColor===color})()`),true,'Opaque themed header')
+   assert.equal(await evaluate(`(()=>{const probe=document.createElement('div');probe.style.background='var(--surface)';document.querySelector('.social-sidebar').append(probe);const colors=[getComputedStyle(probe).backgroundColor];probe.style.background='var(--surface-raised,var(--surface))';colors.push(getComputedStyle(probe).backgroundColor);probe.style.background='var(--sidebar-bg,var(--surface))';colors.push(getComputedStyle(probe).backgroundColor);probe.remove();return colors.includes(getComputedStyle(document.querySelector('.social-sidebar')).backgroundColor)})()`),true,'Opaque themed header')
    await evaluate(`window.scrollTo(0,0)`);await pause(60)
    const before=await evaluate(`document.querySelector('#main-content').getBoundingClientRect().top`)
    await open()
@@ -93,5 +94,5 @@ await resize(390);await send('Emulation.setEmulatedMedia',{features:[{name:'pref
 assert.equal(await evaluate(`getComputedStyle(document.querySelector('.sidebar-navigation')).transitionDuration`),'0s','Reduced motion')
 await key('Escape','Escape',{windowsVirtualKeyCode:27});await closed()
 await writeFile(new URL('results.json',artifacts),JSON.stringify(report,null,2))
-console.log('PASS 63 theme/viewport combinations; desktop at 768/1024/1440'+(originalCss?' matches original CSS;':';')+' 44px targets, no overflow/layout shift, focus trap/return, Escape/X/outside/navigation close, vertical scroll, resize cleanup and reduced motion.')
+console.log(`PASS ${report.length} theme/viewport combinations; desktop at 768/1024/1440`+(originalCss?' matches original CSS;':';')+' 44px targets, no overflow/layout shift, focus trap/return, Escape/X/outside/navigation close, vertical scroll, resize cleanup and reduced motion.')
 }finally{ws.close();await fetch(`${cdp}/json/close/${target.id}`)}
