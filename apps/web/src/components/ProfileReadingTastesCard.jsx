@@ -8,6 +8,7 @@ import './ProfileReadingTastesCard.css'
 
 export default function ProfileReadingTastesCard({ intensities = [], featuredCategoryId = null, editable = false, onSave }) {
   const featured = intensities.find(item => item.id === featuredCategoryId)
+  const otherTastes = intensities.filter(item => item.id !== featured?.id)
   const [editing, setEditing] = useState(false)
   const title = featured ? `Mi nivel de ${featured.name}` : 'Mis gustos'
   const [selected, setSelected] = useState([])
@@ -66,11 +67,15 @@ export default function ProfileReadingTastesCard({ intensities = [], featuredCat
   return <section className="reader-personal-card reader-reading-tastes">
     <div className="reader-card-heading"><h2><TasteIcon name={featured?.icon} size={19} aria-hidden="true" />{title}</h2>{editable && <button className="reader-edit-button" type="button" aria-label="Editar Mis gustos" onClick={edit}><Pencil size={15} aria-hidden="true" /></button>}</div>
     <p className="reader-card-description">{featured?.id === 'spicy' ? 'Mi nivel de comodidad con contenido romántico explícito.' : featured?.id === 'terror' ? 'La intensidad de miedo que busco en mis lecturas.' : featured?.id === 'romance' ? 'El protagonismo que prefiero para las historias de amor.' : 'La intensidad que busco en esta experiencia de lectura.'}</p><span className="reader-featured-decoration-slot" data-decoration-slot="featured-reading-companion" aria-hidden="true" />
-    {featured ? <div className="reader-taste-highlight" aria-label="Gusto destacado"><IntensityIndicator option={featured} level={featured.level} /></div> : <p className="reader-module-empty">{editable ? 'Usa el lápiz para elegir cuál de tus gustos quieres mostrar aquí. Puedes configurar hasta cinco y destacar uno, o ninguno.' : 'Aún no hay un gusto destacado.'}</p>}
-    <ProfileEditModal open={editable && editing} title="Editar Mis gustos" icon={<TasteIcon />} description="Configura hasta cinco experiencias y elige la que quieres mostrar en Sobre mí."
+    {intensities.length > 0 && <div className="reader-saved-tastes">
+      {featured && <div className="reader-taste-highlight" aria-label="Gusto destacado"><h3>{featured.name}</h3><IntensityIndicator option={featured} level={featured.level} /></div>}
+      {otherTastes.map(item => <div className="reader-saved-taste" key={item.id}><h3>{item.name}</h3><IntensityIndicator option={item} level={item.level} /></div>)}
+    </div>}
+    {!intensities.length && <p className="reader-module-empty">{editable ? 'Usa el lápiz para elegir hasta cinco gustos y sus intensidades.' : 'Aún no hay gustos seleccionados.'}</p>}
+    <ProfileEditModal open={editable && editing} title="Editar Mis gustos" icon={<TasteIcon />} description="Configura hasta cinco experiencias para mostrar en Sobre mí."
       dirty={initial !== JSON.stringify({ intensities: selected, featured_category_id: featuredId })} busy={busy} saveDisabled={!catalogs} onSubmit={save} onClose={() => { setEditing(false); setError('') }}>
-      <p>Elige hasta cinco experiencias y pulsa sus iconos para indicar cuánto buscas de cada una. Se guardarán todas tus valoraciones; solo se mostrará la que elijas destacar.</p>
-      <p>Solo un gusto puede mostrarse en Sobre mí. Puedes cambiarlo o no destacar ninguno.</p>
+      <p>Elige hasta cinco experiencias y pulsa sus iconos para indicar cuánto buscas de cada una. Todas tus valoraciones aparecerán en Sobre mí.</p>
+      <p>Puedes destacar un gusto para que aparezca primero, o no destacar ninguno.</p>
       {!catalogs && !catalogError && <p role="status">Cargando gustos…</p>}
       {catalogError && <div><p role="alert" className="reader-field-error">{catalogError}</p><button type="button" className="reader-edit-button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></div>}
       <div className="reader-intensity-grid">{selected.map((item, index) => {
@@ -83,7 +88,7 @@ export default function ProfileReadingTastesCard({ intensities = [], featuredCat
             <button type="button" disabled={busy} aria-label={`Quitar ${option.name}`} onClick={() => remove(item.category_id)}><X size={15} /></button>
           </div></div>
           <IntensityIndicator option={option} level={item.level} disabled={busy} onChange={level => setSelected(current => current.map(value => value.category_id === item.category_id ? { ...value, level } : value))} />
-          <button className="reader-feature-choice" type="button" disabled={busy} aria-pressed={featuredId === item.category_id} aria-label={`${featuredId === item.category_id ? 'Dejar de mostrar' : 'Mostrar'} ${option.name} en Sobre mí`} onClick={() => setFeaturedId(current => current === item.category_id ? null : item.category_id)}><Star size={14} aria-hidden="true" />Mostrar en Sobre mí</button>
+          <button className="reader-feature-choice" type="button" disabled={busy} aria-pressed={featuredId === item.category_id} aria-label={`${featuredId === item.category_id ? 'Dejar de destacar' : 'Destacar'} ${option.name} en Sobre mí`} onClick={() => setFeaturedId(current => current === item.category_id ? null : item.category_id)}><Star size={14} aria-hidden="true" />{featuredId === item.category_id ? 'Gusto destacado' : 'Destacar gusto'}</button>
         </div>
       })}</div>
       <label htmlFor={categoryId}>Agregar categoría ({selected.length}/5)</label>

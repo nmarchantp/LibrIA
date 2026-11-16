@@ -1,45 +1,23 @@
-:root[data-theme="dark"] { --theme-footer-art:url('/images/theme-refresh-v1/dark/footer-v2.webp'); }
-:root[data-theme="lavanda"] { --theme-footer-art:url('/images/theme-footers-v1/lavanda/footer.webp'); }
-:root[data-theme="otono"] { --theme-footer-art:url('/images/theme-footers-v1/otono/footer.webp'); }
-:root[data-theme="invierno"] { --theme-footer-art:url('/images/theme-footers-v1/invierno/footer.webp'); }
-:root[data-theme="rosa-antiguo"] { --theme-footer-art:url('/images/theme-footers-v1/rosa-antiguo/footer.webp'); }
-:root[data-theme="bosque"] { --theme-footer-art:url('/images/theme-footers-v1/bosque/footer.webp'); }
-:root[data-theme="dark-dorado"] { --theme-footer-art:url('/images/theme-footers-v1/dark-dorado/footer.webp'); }
-:root[data-theme="dark-blood"] { --theme-footer-art:url('/images/theme-footers-v1/dark-blood/footer.webp'); }
-:root[data-theme="dark-rosado"] { --theme-footer-art:url('/images/theme-footers-v1/dark-rosado/footer.webp'); }
-:root[data-theme="cronicas-tiempo"] { --theme-footer-art:url('/images/theme-footers-v1/cronicas-tiempo/footer.webp'); }
-:root[data-theme="reino-celestial"] { --theme-footer-art:url('/images/theme-footers-v1/reino-celestial/footer.webp'); }
-:root[data-theme="arenas-destino"] { --theme-footer-art:url('/images/theme-footers-v1/arenas-destino/footer.webp'); }
-:root[data-theme="susurros-sakura"] { --theme-footer-art:url('/images/theme-footers-v1/susurros-sakura/footer.webp'); }
-:root[data-theme="archivo-galactico"] { --theme-footer-art:url('/images/theme-footers-v1/archivo-galactico/footer.webp'); }
-:root[data-theme="olimpo-eterno"] { --theme-footer-art:url('/images/theme-footers-v1/olimpo-eterno/footer.webp'); }
-:root[data-theme="otono-encantado"] { --theme-footer-art:url('/images/theme-footers-v1/otono-encantado/footer.webp'); }
-:root[data-theme="oraculo-luna"] { --theme-footer-art:url('/images/theme-footers-v1/oraculo-luna/footer.webp'); }
-:root[data-theme="runas-norte"] { --theme-footer-art:url('/images/theme-footers-v1/runas-norte/footer.webp'); }
-:root[data-theme="reino-hongos"] { --theme-footer-art:url('/images/theme-footers-v1/reino-hongos/footer.webp'); }
-:root[data-theme="catedral-cristal"] { --theme-footer-art:url('/images/theme-footers-v1/catedral-cristal/footer.webp'); }
-:root[data-theme="mil-una-historias"] { --theme-footer-art:url('/images/theme-footers-v1/mil-una-historias/footer.webp'); }
-:root[data-theme="canto-sirenas"] { --theme-footer-art:url('/images/theme-footers-v1/canto-sirenas/footer.webp'); }
-:root[data-theme="ecos-sombras"] { --theme-footer-art:url('/images/theme-footers-v1/ecos-sombras/footer.webp'); }
-:root[data-theme="aquelarre-medianoche"] { --theme-footer-art:url('/images/theme-footers-v1/aquelarre-medianoche/footer.webp'); }
-/* One fixed vignette replaces the former page-bottom accents. */
+/* Two independently scaled assets: a detailed corner and a repeating low border. */
 :root[data-theme] .social-shell[data-interior-style="literary"] .social-page-column[data-magical-background="enabled"]::after { content:none; }
-/* Theme-specific transparent artwork; shared placement matches the approved dark footer. */
-:root .social-shell[data-interior-style="literary"] .profile-starfield::after {
+:root[data-theme] .social-shell[data-interior-style="literary"] .social-viewport-background .profile-starfield::after {
   content:'';
   position:absolute;
-  /* Bleed past the clipped viewport to hide transparent canvas margins. */
-  inset:auto -12px -14px -18px;
-  height:100%;
-  background:var(--theme-footer-art,none) right bottom/100% auto no-repeat;
-  opacity:.78;
+  inset:auto -6px -8px -6px;
+  width:auto;
+  height:360px;
+  background-image:var(--theme-footer-corner,none),var(--theme-footer-strip,none);
+  background-position:right bottom,left bottom;
+  background-size:auto 360px,960px 320px;
+  background-repeat:no-repeat,repeat-x;
+  opacity:.55;
+  filter:saturate(.72) brightness(.86) blur(.6px);
   pointer-events:none;
 }
 @media(max-width:700px) {
-  :root .social-shell[data-interior-style="literary"] .profile-starfield::after {
-    inset:auto -6px -4px -6px;
+  :root[data-theme] .social-shell[data-interior-style="literary"] .social-viewport-background .profile-starfield::after {
     height:180px;
-    background-size:auto 100%;
-    opacity:.72;
+    background-size:auto 180px,720px 240px;
+    opacity:.45;
   }
 }

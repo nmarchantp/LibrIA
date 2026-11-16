@@ -88,7 +88,7 @@ try {
     // Reload the isolated fixture document (its router rewrites the visible URL).
     await send('Page.navigate', { url: fixture })
     await until(`Boolean(document.querySelector('.reader-profile'))&&document.documentElement.dataset.theme==='${id}'`)
-    const expected = await evaluate(`import('/src/theme/profileBanners.js').then(m=>m.getProfileBanner('${id}').src)`)
+    const expected = await evaluate(`import('/src/theme/profileBanners.js').then(m=>m.getProfileBanner('${id}',true).src)`)
     await until(`(()=>{const img=document.querySelector('.reader-profile-cover img');return img?.getAttribute('src')==='${expected}'&&img.complete&&img.naturalWidth>0})()`)
   }
   console.log('PASS 24 selections apply immediately, survive reload, preserve legacy IDs and load the expected banner')

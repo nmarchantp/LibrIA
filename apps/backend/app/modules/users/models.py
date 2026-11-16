@@ -43,6 +43,7 @@ class User(Base):
     profile_visibility: Mapped[str] = mapped_column(String(16), default="public", server_default="public")
     public_sections: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["biography", "genres", "tropes", "intensities", "interests"], server_default='["biography","genres","tropes","intensities","interests"]')
     favorite_quotes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    literary_highlights: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     auth_account: Mapped["AuthAccount"] = relationship(back_populates="user", cascade="all, delete-orphan")

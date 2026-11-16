@@ -98,6 +98,8 @@ app.include_router(analytics_router, prefix=settings.api_prefix)
 app.include_router(insights_router, prefix=settings.api_prefix)
 app.include_router(reviews_router, prefix=settings.api_prefix)
 app.include_router(books_router, prefix=settings.api_prefix)
+from app.modules.books.characters_router import router as characters_router
+app.include_router(characters_router, prefix=settings.api_prefix)
 app.include_router(catalog_admin_router, prefix=settings.api_prefix)
 app.include_router(adaptive_router, prefix=settings.api_prefix)
 

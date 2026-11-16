@@ -25,6 +25,18 @@ class Work(EditableMixin, Base):
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("app.usuarios.id", ondelete="SET NULL"), index=True)
 
 
+class LiteraryCharacter(Base):
+    __tablename__ = 'personajes_literarios'
+    __table_args__ = (UniqueConstraint('work_id', 'name', name='uq_personaje_obra_nombre'), {'schema': 'app'})
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    work_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.obras.id', ondelete='CASCADE'), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    portrait_url: Mapped[str | None] = mapped_column(String(500))
+    portrait_data: Mapped[bytes | None] = mapped_column(LargeBinary)
+    portrait_type: Mapped[str | None] = mapped_column(String(30))
+    active: Mapped[bool] = mapped_column(default=True, server_default='true')
+
+
 class Author(EditableMixin, Base):
     __tablename__ = "autores"
     __table_args__ = {"schema": "app"}

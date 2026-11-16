@@ -1,0 +1,272 @@
+[
+  {
+    "id": "lavanda",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/lavanda/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme lavanda, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: soft lavender and cream, delicate pink/lilac blossoms and lavender sprigs, pale antique books, a quill and tiny brass inkpot. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "lavanda",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/lavanda/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme lavanda, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of flower petals, tiny lilac blossoms and trailing lavender. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "otono",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/otono/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme otono, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: warm aged brown leather books, antique oil lantern, parchment scroll, small brass compass, slender olive ivy on right. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "otono",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/otono/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme otono, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of aged parchment ribbon, small leaves, tiny brass compass medallions. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "invierno",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/invierno/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme invierno, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: icy pale blue antique books, silver lantern with icy light, crystal shards, a slender frost-covered branch on right. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "invierno",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/invierno/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme invierno, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of small snow drifts, icy blue crystals, frost leaves. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "rosa-antiguo",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/rosa-antiguo/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme rosa-antiguo, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: dusty blush pink books, pale rose-gold lantern, small glass candy jar, delicate pink blossom branch. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "rosa-antiguo",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/rosa-antiguo/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme rosa-antiguo, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny pink petals, pearl-like candy and blush blossoms. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "bosque",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/bosque/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme bosque, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: deep moss green books, tiny brass lantern, glowing mushrooms, winding ivy branch on right. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "bosque",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/bosque/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme bosque, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of moss, tiny mushrooms, small leaves and a few violet flowers. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "dark",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-refresh-v1/dark/footer-v2.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme dark, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: deep plum antique books, warm brass lantern, a winding delicate violet flower vine on right. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "dark",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-refresh-v1/dark/footer-v2.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme dark, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of violet petals, tiny purple flowers and dark trailing vine. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "dark-rosado",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-rosado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme dark-rosado, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: burgundy antique books, rose-gold lantern, pink roses and thorny rose vine climbing right. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "dark-rosado",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-rosado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme dark-rosado, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of dusty rose petals, small pink roses and thin thorny vines. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "dark-blood",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-blood/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme dark-blood, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: dark burgundy antique books, one exposed red wax candle in brass holder, rich red roses and thorny vine. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "dark-blood",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-blood/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme dark-blood, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of deep red rose petals, tiny crimson roses and delicate black thorny vines. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "dark-dorado",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-dorado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme dark-dorado, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: midnight blue antique books, warm gold lantern, delicate trailing green ivy and tiny brass stars. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "dark-dorado",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/dark-dorado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme dark-dorado, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of dark ivy leaves, tiny antique gold stars and thin gold filigree. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "cronicas-tiempo",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/cronicas-tiempo/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme cronicas-tiempo, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: brown leather books, antique brass lantern and pocket watch, thin copper ivy branch. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "cronicas-tiempo",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/cronicas-tiempo/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme cronicas-tiempo, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny brass gears, copper leaves, fine old clockwork trim. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "reino-celestial",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/reino-celestial/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme reino-celestial, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: ivory books, slender white classical column with gold spiral, small celestial globe, tiny gold stars. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "reino-celestial",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/reino-celestial/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme reino-celestial, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of soft white cloud wisps, tiny gold stars and celestial filigree. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "arenas-destino",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/arenas-destino/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme arenas-destino, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: teal/gold Egyptian antique books, small gold oil lamp, papyrus scroll and slender reed stalks. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "arenas-destino",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/arenas-destino/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme arenas-destino, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of fine golden sand, little gold scarabs and restrained Egyptian gold/teal trim. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "susurros-sakura",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/susurros-sakura/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme susurros-sakura, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: dusty pink Japanese books, small warm paper lantern, pale pink cherry blossom branch. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "susurros-sakura",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/susurros-sakura/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme susurros-sakura, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny pale pink sakura flowers, petals and fine dark twigs. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "archivo-galactico",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/archivo-galactico/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme archivo-galactico, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: navy antique books, tiny blue brass desk lamp, celestial globe, slender orbit trail with tiny planets. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "archivo-galactico",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/archivo-galactico/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme archivo-galactico, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny blue stars, delicate orbital lines and small glowing blue gems. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "olimpo-eterno",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/olimpo-eterno/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme olimpo-eterno, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: ivory antique books, small gold oil lamp, white classical column and slender olive branches. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "olimpo-eterno",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/olimpo-eterno/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme olimpo-eterno, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of small olive leaves, fragments of ivory marble and thin antique gold trim. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "otono-encantado",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/otono-encantado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme otono-encantado, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: warm russet antique books, brass lantern, steaming teacup, tiny pumpkins and maple branch. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "otono-encantado",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/otono-encantado/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme otono-encantado, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny warm orange maple leaves and fine curling twigs. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "oraculo-luna",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/oraculo-luna/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme oraculo-luna, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: deep purple books with subtle gold celestial motifs, short ivory candles, purple crystals, slender crescent moon vine. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "oraculo-luna",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/oraculo-luna/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme oraculo-luna, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny violet flowers, small gold stars, purple crystals and slender lunar filigree. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "runas-norte",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/runas-norte/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme runas-norte, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: grey blue antique books, small iron lantern, upright carved runestone, pine twigs, sparse snow. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "runas-norte",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/runas-norte/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme runas-norte, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of small snow drifts, grey pebbles, sparse pine sprigs and tiny carved runestones. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "reino-hongos",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/reino-hongos/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme reino-hongos, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: moss green antique books, several tiny luminous amber mushrooms, winding slender green plant. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "reino-hongos",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/reino-hongos/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme reino-hongos, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of low soft moss, tiny amber mushrooms, little green leaves. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "catedral-cristal",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/catedral-cristal/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme catedral-cristal, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: dark blue antique books, three ivory candles, tall narrow gothic stained glass window with lavender/pale blue pieces. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "catedral-cristal",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/catedral-cristal/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme catedral-cristal, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of subtle antique gold and lavender stained-glass trim, tiny violet flowers. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "mil-una-historias",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/mil-una-historias/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme mil-una-historias, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: teal antique books, ornate warm gold lantern, slender golden Moorish arch and turquoise vine ornaments. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "mil-una-historias",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/mil-una-historias/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme mil-una-historias, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of delicate teal and gold arabesque trim, tiny turquoise flowers. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "ecos-sombras",
+    "part": "corner",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/ecos-sombras/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE standalone high-detail lower-right corner illustration for theme ecos-sombras, based on the supplied existing footer's style and motif. This reference is style guidance, not a composition to copy. New composition: dark grey antique books, gothic iron lantern, thin bare crooked branch with tiny ghost and cobweb. Square canvas with true transparent alpha. Arrange objects in bottom-right quarter to bottom-right half, with the slender climbing element up the far right; upper-left 65 percent quiet completely transparent. This is the CORNER ONLY: do not draw a horizontal strip across the canvas, no rectangular background, no cloudy aura. Rich detailed elegant painterly literary fantasy asset, excellent fine texture readable at 300px display. Restrained theme-matching colors, warm light confined inside lantern/candle, clean object silhouette and transparent gaps. No letters, no logo, no UI, no baked shadow or fog outside objects."
+  },
+  {
+    "id": "ecos-sombras",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/ecos-sombras/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme ecos-sombras, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of tiny grey leaves, thin cobweb filaments and small charcoal stones. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  },
+  {
+    "id": "aquelarre-medianoche",
+    "part": "strip",
+    "ref": "C:/nmarchant/DUOC/LibrIA/apps/web/public/images/theme-footers-v1/aquelarre-medianoche/footer.webp",
+    "prompt": "Use case: stylized-concept. Create ONE separate high-detail HORIZONTAL bottom border for theme aquelarre-medianoche, based on supplied footer's palette, texture and motifs. Wide 3:1 canvas with true transparent alpha. ONLY a sparse low continuous connecting path of small dark plum leaves, tiny violet flowers, small purple crystals and thin curling witchwood twigs. All decoration confined to BOTTOM 15 to 20 percent of image; upper 80 percent fully transparent. Similar low ground level at both ends so the pattern can repeat horizontally. NO corner centerpiece, no tall object, no large book stack or lantern, no background scene, no cloudy aura or rectangular panel. Match the original's sophisticated literary-fantasy painterly illustration and small fine details, restrained colors. Beautiful readable textures at 960px width, not a flat vector pattern. No text, no logo, no opaque background, no watermark."
+  }
+]

@@ -36,6 +36,8 @@ profileService.save = async fields => {
   qa.saves.push(structuredClone(fields))
   preferences = {
     ...preferences,
+    ...(Object.hasOwn(fields, 'literary_crush') ? { literary_crush: fields.literary_crush ? { ...fields.literary_crush, name: 'Rhysand', book: 'Libro 1', image_url: '/images/characters/rhysand-v1.webp' } : null } : {}),
+    ...(Object.hasOwn(fields, 'essential_books') ? { essential_books: fields.essential_books } : {}),
     ...(Object.hasOwn(fields, 'story_illustration') ? { story_illustration: fields.story_illustration } : {}),
     ...(Object.hasOwn(fields, 'favorite_quotes') ? { favorite_quotes: fields.favorite_quotes } : {}),
     ...(Object.hasOwn(fields, 'biography') ? { biography: fields.biography } : {}),

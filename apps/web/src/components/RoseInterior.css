@@ -28,7 +28,7 @@
   .social-sidebar > .brand-link::after { content:''; position:absolute; bottom:-3px; left:calc(50% - 3px); width:6px; height:6px; transform:rotate(45deg); background:#C88BA6; pointer-events:none; }
   .brand-logo-ai,.brand-logo-star { fill:#E59BBE; }
   .brand-logo-orbit { stroke:#E59BBE; }
-  .sidebar-navigation::after { content:''; display:block; flex:1 1 260px; min-height:0; max-height:340px; order:1; background:url('/images/rose-universe/rose-books-sidebar-v2.png') center bottom/contain no-repeat; mask-image:linear-gradient(transparent,#000 12%,#000 78%,transparent),linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-composite:intersect; pointer-events:none; }
+  .sidebar-navigation::after { content:''; display:block; flex:1 1 260px; min-height:0; max-height:340px; order:1; background:url('/images/rose-universe/rose-books-sidebar-v3.png') center bottom/contain no-repeat; mask-image:linear-gradient(transparent,#000 12%,#000 78%,transparent),linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-composite:intersect; pointer-events:none; }
   .sidebar-navigation .sidebar-account { order:2; flex-shrink:0; border-top:1px solid var(--panel-border); padding-top:18px; }
   .sidebar-account .avatar { background:linear-gradient(145deg,#E8A0C2,#C77FA1); color:var(--on-primary); }
   .sidebar-account .logout-button { color:var(--accent-text); }

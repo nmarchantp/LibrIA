@@ -47,6 +47,7 @@ class CommunityProfilesTest(unittest.TestCase):
 
     def test_public_profile_only_returns_selected_sections(self):
         self.author.biography = 'Hidden biography'
+        self.author.literary_highlights = {'literary_crush': {'name': 'Private character'}, 'essential_books': [{'id': 'private-book', 'title': 'Private book'}]}
         self.author.favorite_quotes = ['Visible quote']
         self.author.public_sections = ['favorite_quotes']
         self.db.flush()
@@ -55,6 +56,8 @@ class CommunityProfilesTest(unittest.TestCase):
         self.assertEqual(data['visible_sections'], ['favorite_quotes'])
         self.assertEqual(data['favorite_quotes'], ['Visible quote'])
         self.assertIsNone(data['biography'])
+        self.assertIsNone(data['literary_crush'])
+        self.assertEqual(data['essential_books'], [])
         self.assertEqual(data['genres'], [])
         self.assertEqual(data['story_illustration'], 'none')
         self.assertNotIn('email', data)
@@ -130,7 +133,7 @@ class CommunityProfilesTest(unittest.TestCase):
         self.as_user(self.author)
         response = self.client.get('/api/profiles/me/social-summary')
         self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json(), {'profile_id': str(self.profiles[self.author.id].id), 'finished_books': 1, 'followers': 1, 'following': 0})
+        self.assertEqual(response.json(), {'profile_id': str(self.profiles[self.author.id].id), 'finished_books': 1, 'followers': 1, 'following': 0, 'reviews': 1, 'events': 0})
         self.assertEqual(response.headers['cache-control'], 'private, no-store')
         self.as_user(self.viewer)
         data = self.client.get('/api/profiles/me/social-summary').json()

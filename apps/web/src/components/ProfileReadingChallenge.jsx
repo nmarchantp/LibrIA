@@ -2,11 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { BookHeart, BookOpen, CalendarDays, Info, Pencil, Sparkles, Target } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import ProfileEditModal from './ProfileEditModal'
+import { useTheme } from '../context/ThemeContext'
+import { getStoryArtwork } from '../theme/storyArtwork'
 import './ProfileReadingChallenge.css'
 
 const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
 
 export default function ProfileReadingChallenge() {
+  const { theme } = useTheme()
+  const artwork = getStoryArtwork(theme)
+  const startImage = theme === 'dark-blood' ? '/images/challenge-art-v2/blood-start.webp' : '/images/challenge-start.png'
   const [data, setData] = useState(null), [error, setError] = useState('')
   const [refresh, setRefresh] = useState(0), [editing, setEditing] = useState(false)
   const [target, setTarget] = useState('12'), [initial, setInitial] = useState('12')
@@ -55,7 +60,7 @@ export default function ProfileReadingChallenge() {
       {data.completed && <p className="reading-challenge-result">{data.exceeded ? '¡Meta superada!' : '¡Reto completado!'}</p>}
       <progress max="100" value={data.percentage} aria-label={`${data.percentage} % del reto anual completado`} />
       {data.completed ? <div className="reading-challenge-completed"><img src="/images/challenge-badge.png" alt="" aria-hidden="true" /><div><strong>Reto lector {data.year}</strong><span>Has completado tu meta anual de lectura.</span></div></div> : <><p className="reading-challenge-remaining"><BookOpen size={17} aria-hidden="true" />{data.remaining} {data.remaining === 1 ? 'libro restante' : 'libros restantes'}</p><div className="reading-challenge-encouragement"><Sparkles className="reading-challenge-sparkles" size={23} aria-hidden="true" /><div><strong>¡Vas muy bien!</strong><p>Tu meta está cada vez más cerca.</p></div><img className="reading-challenge-art is-progress" src="/images/challenge-progress.png" alt="" aria-hidden="true" /></div></>}
-    </div> : <><img className="reading-challenge-art is-start" src="/images/challenge-start.png" alt="" aria-hidden="true" /><h3>Cada gran aventura comienza con una página</h3><p className="reader-module-empty">Elige cuántos libros quieres leer este año y sigue tu progreso</p><button type="button" className="reading-challenge-action" onClick={edit}>Crear mi reto</button></>)}
+    </div> : <><img className="reading-challenge-art is-start" src={startImage} style={{ filter: artwork.filter }} alt="" aria-hidden="true" /><h3>Cada gran aventura comienza con una página</h3><p className="reader-module-empty">Elige cuántos libros quieres leer este año y sigue tu progreso</p><button type="button" className="reading-challenge-action" onClick={edit}>Crear mi reto</button></>)}
     <ProfileEditModal open={editing} className="reading-challenge-modal" saveLabel="Guardar reto" title="Configurar mi reto de lectura" icon={<Target size={28} />} description="Elige cuántos libros quieres leer este año." dirty={target !== initial} busy={busy} saveDisabled={!valid} onClose={() => setEditing(false)} onSubmit={save}>
       <div className="reading-challenge-suggestions" role="group" aria-label="Metas sugeridas">{[5, 12, 20, 30, 50].map(value => <button type="button" key={value} disabled={busy} aria-label={`${value} libros`} aria-pressed={Number(target) === value} onClick={() => setTarget(String(value))}><BookOpen size={16} aria-hidden="true" />{value}</button>)}</div>
       <label className="reading-challenge-custom" htmlFor="reading-challenge-target"><span>O ingresa una cantidad personalizada:</span><input id="reading-challenge-target" type="number" min="1" max="1000" step="1" inputMode="numeric" required value={target} disabled={busy} onChange={event => setTarget(event.target.value)} aria-describedby="reading-challenge-limit" title="Entre 1 y 1000 libros" /></label>

@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=100)]
-Biography = Annotated[str, StringConstraints(max_length=70)]
+Biography = Annotated[str, StringConstraints(max_length=300)]
 Password = Annotated[str, Field(min_length=8, max_length=128)]
 Reason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=10, max_length=1000)]
 

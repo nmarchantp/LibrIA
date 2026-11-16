@@ -99,7 +99,7 @@ class AdminProfilePage(BaseModel):
 class AdminProfileUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     display_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=100)]
-    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=70)] | None = None
+    biography: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] | None = None
     reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=10, max_length=1000)]
 
 

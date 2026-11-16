@@ -32,6 +32,7 @@ def process_expired_accounts(db, *, batch_size=50):
         user.display_name = "Cuenta eliminada"
         user.biography = user.avatar_url = None
         user.favorite_quotes = []
+        user.literary_highlights = {}
         user.story_illustration = "flowers"
         user.account_status, user.anonymized_at = "anonymized", now()
         user.deletion_requested_at = user.deletion_scheduled_at = None

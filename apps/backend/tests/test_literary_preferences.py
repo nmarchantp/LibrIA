@@ -17,6 +17,37 @@ from app.modules.users.preference_models import FavoriteGenre, FavoriteTrope, Ge
 
 
 class LiteraryPreferencesTest(unittest.TestCase):
+    def test_literary_highlights_save_validate_and_preserve_other_fields(self):
+        from app.modules.books.models import Work, LiteraryCharacter
+        work = Work(title='Obra de prueba')
+        other_work = Work(title='Otra obra de prueba')
+        self.db.add_all([work, other_work]); self.db.flush()
+        character = LiteraryCharacter(work_id=work.id, name='Personaje de prueba', portrait_url='/images/characters/jacks-v1.webp')
+        self.db.add(character); self.db.flush()
+        choice = {'character_id': str(character.id), 'work_id': str(work.id), 'description': 'Lealtad'}
+        crush = {**choice, 'name': character.name, 'book': work.title, 'image_url': character.portrait_url}
+        books = [{'id': 'book-one', 'title': 'Libro imprescindible', 'image_url': None}]
+        response = self.save({'literary_crush': choice, 'essential_books': books})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()['literary_crush'], crush)
+        self.assertEqual(response.json()['essential_books'], books)
+        self.save({'biography': 'Otra historia'})
+        self.assertEqual(self.mine()['essential_books'], books)
+        self.assertEqual(self.save({'essential_books': books * 2}).status_code, 422)
+        self.assertEqual(self.save({'essential_books': [{'id': str(n), 'title': 'Libro'} for n in range(5)]}).status_code, 422)
+        self.assertEqual(self.save({'literary_crush': {'name': 'Nombre', 'image_url': 'javascript:alert(1)'}}).status_code, 422)
+        self.assertEqual(self.save({'literary_crush': {**choice, 'work_id': str(other_work.id)}}).status_code, 422)
+        self.assertEqual(self.save({'literary_crush': {**choice, 'character_id': str(uuid.uuid4())}}).status_code, 422)
+        listed = self.client.get(f'/api/books/{work.id}/characters', headers=self.headers)
+        self.assertEqual(listed.status_code, 200, listed.text)
+        self.assertEqual([item['name'] for item in listed.json()['items']], [character.name])
+        self.assertEqual(self.client.get(f'/api/books/{other_work.id}/characters', headers=self.headers).json()['items'], [])
+        self.assertEqual(self.client.get(f'/api/books/{work.id}/characters').status_code, 401)
+        self.assertEqual(self.client.post(f'/api/admin/catalog/works/{work.id}/characters', headers=self.headers).status_code, 403)
+        self.assertEqual(self.save({'literary_crush': None, 'essential_books': []}).status_code, 200)
+        self.assertIsNone(self.mine()['literary_crush'])
+        self.assertEqual(self.mine()['essential_books'], [])
+
     @classmethod
     def setUpClass(cls):
         if get_settings().app_env not in {"development", "test"}:
@@ -134,7 +165,7 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.mine()["biography"], "Entre libros")
         public = self.client.get(f"/api/profiles/{mine['profile_id']}", headers=self.auth(self.other))
         self.assertEqual(public.status_code, 200, public.text)
-        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration", "profile_visibility", "visible_sections", "can_view", "is_owner", "following", "follows_you", "favorite_quotes"})
+        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration", "profile_visibility", "visible_sections", "can_view", "is_owner", "following", "follows_you", "favorite_quotes", "literary_crush", "essential_books"})
         self.assertEqual(public.json()["genres"], mine["genres"])
         self.assertEqual(public.json()["tropes"], mine["tropes"])
         self.assertNotEqual(mine["profile_id"], self.owner["user"]["id"])
@@ -154,13 +185,13 @@ class LiteraryPreferencesTest(unittest.TestCase):
             self.assertEqual(self.mine(), before)
 
     def test_omission_empty_null_and_maximum_biography(self):
-        self.assertEqual(self.save({"biography": "x" * 70, "genre_ids": ["fantasia"], "trope_ids": ["magia"]}).status_code, 200)
-        self.assertEqual(self.save({"biography": "x" * 71}).status_code, 422)
+        self.assertEqual(self.save({"biography": "x" * 300, "genre_ids": ["fantasia"], "trope_ids": ["magia"]}).status_code, 200)
+        self.assertEqual(self.save({"biography": "x" * 301}).status_code, 422)
         self.save({"genre_ids": []})
         data = self.mine()
         self.assertEqual(data["genres"], [])
         self.assertEqual([x["id"] for x in data["tropes"]], ["magia"])
-        self.assertEqual(data["biography"], "x" * 70)
+        self.assertEqual(data["biography"], "x" * 300)
         self.assertEqual(self.save({}).json(), data)
         self.save({"biography": None, "trope_ids": []})
         self.assertIsNone(self.mine()["biography"])

@@ -1,0 +1,125 @@
+{
+  "generator": "built-in ImageGen",
+  "themes": [
+    {
+      "theme": "lavanda",
+      "corner": "apps/web/public/images/theme-footers-v2/lavanda/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/lavanda/strip.webp"
+    },
+    {
+      "theme": "otono",
+      "corner": "apps/web/public/images/theme-footers-v2/otono/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/otono/strip.webp"
+    },
+    {
+      "theme": "invierno",
+      "corner": "apps/web/public/images/theme-footers-v2/invierno/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/invierno/strip.webp"
+    },
+    {
+      "theme": "rosa-antiguo",
+      "corner": "apps/web/public/images/theme-footers-v2/rosa-antiguo/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/rosa-antiguo/strip.webp"
+    },
+    {
+      "theme": "bosque",
+      "corner": "apps/web/public/images/theme-footers-v2/bosque/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/bosque/strip.webp"
+    },
+    {
+      "theme": "dark",
+      "corner": "apps/web/public/images/theme-footers-v2/dark/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/dark/strip.webp"
+    },
+    {
+      "theme": "dark-rosado",
+      "corner": "apps/web/public/images/theme-footers-v2/dark-rosado/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/dark-rosado/strip.webp"
+    },
+    {
+      "theme": "dark-blood",
+      "corner": "apps/web/public/images/theme-footers-v2/dark-blood/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/dark-blood/strip.webp"
+    },
+    {
+      "theme": "dark-dorado",
+      "corner": "apps/web/public/images/theme-footers-v2/dark-dorado/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/dark-dorado/strip.webp"
+    },
+    {
+      "theme": "cronicas-tiempo",
+      "corner": "apps/web/public/images/theme-footers-v2/cronicas-tiempo/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/cronicas-tiempo/strip.webp"
+    },
+    {
+      "theme": "reino-celestial",
+      "corner": "apps/web/public/images/theme-footers-v2/reino-celestial/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/reino-celestial/strip.webp"
+    },
+    {
+      "theme": "arenas-destino",
+      "corner": "apps/web/public/images/theme-footers-v2/arenas-destino/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/arenas-destino/strip.webp"
+    },
+    {
+      "theme": "susurros-sakura",
+      "corner": "apps/web/public/images/theme-footers-v2/susurros-sakura/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/susurros-sakura/strip.webp"
+    },
+    {
+      "theme": "archivo-galactico",
+      "corner": "apps/web/public/images/theme-footers-v2/archivo-galactico/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/archivo-galactico/strip.webp"
+    },
+    {
+      "theme": "olimpo-eterno",
+      "corner": "apps/web/public/images/theme-footers-v2/olimpo-eterno/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/olimpo-eterno/strip.webp"
+    },
+    {
+      "theme": "otono-encantado",
+      "corner": "apps/web/public/images/theme-footers-v2/otono-encantado/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/otono-encantado/strip.webp"
+    },
+    {
+      "theme": "oraculo-luna",
+      "corner": "apps/web/public/images/theme-footers-v2/oraculo-luna/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/oraculo-luna/strip.webp"
+    },
+    {
+      "theme": "runas-norte",
+      "corner": "apps/web/public/images/theme-footers-v2/runas-norte/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/runas-norte/strip.webp"
+    },
+    {
+      "theme": "reino-hongos",
+      "corner": "apps/web/public/images/theme-footers-v2/reino-hongos/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/reino-hongos/strip.webp"
+    },
+    {
+      "theme": "catedral-cristal",
+      "corner": "apps/web/public/images/theme-footers-v2/catedral-cristal/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/catedral-cristal/strip.webp"
+    },
+    {
+      "theme": "mil-una-historias",
+      "corner": "apps/web/public/images/theme-footers-v2/mil-una-historias/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/mil-una-historias/strip.webp"
+    },
+    {
+      "theme": "ecos-sombras",
+      "corner": "apps/web/public/images/theme-footers-v2/ecos-sombras/corner.webp",
+      "strip": "apps/web/public/images/theme-footers-v2/ecos-sombras/strip.webp"
+    },
+    {
+      "theme": "aquelarre-medianoche",
+      "corner": "apps/web/public/images/themes/aquelarre-medianoche/corner-v2.png",
+      "strip": "apps/web/public/images/theme-footers-v2/aquelarre-medianoche/strip.webp"
+    },
+    {
+      "theme": "canto-sirenas",
+      "corner": "apps/web/public/images/themes/canto-sirenas/corner-v2.png",
+      "strip": "apps/web/public/images/themes/canto-sirenas/footer-strip-v1.png"
+    }
+  ]
+}

@@ -56,7 +56,7 @@ try {
   await delay(700)
   await until(`document.querySelector('.profile-community-counter strong')?.textContent==='7'`)
   assert.deepEqual(await evaluate(`[...document.querySelectorAll('.profile-community-counter strong')].map(node=>node.textContent)`), ['7', '2', '3'])
-  assert.equal(await evaluate(`(()=>{const joined=document.querySelector('.reader-profile-joined').getBoundingClientRect(),stats=document.querySelector('.profile-community-counters').getBoundingClientRect(),tabs=document.querySelector('.reader-profile-tabs').getBoundingClientRect();return joined.bottom<stats.top&&stats.bottom<tabs.top&&[...document.querySelectorAll('.profile-community-counter')].every(node=>node.querySelector('strong').getBoundingClientRect().bottom<=node.querySelector('span').getBoundingClientRect().top)})()`), true)
+  assert.equal(await evaluate(`(()=>{const name=document.querySelector('.reader-profile-name h1').getBoundingClientRect(),stats=document.querySelector('.profile-community-counters').getBoundingClientRect();return Boolean(document.querySelector('.reader-profile-title-row .profile-community-counters'))&&name.right<=stats.left+1&&name.top<stats.bottom&&stats.top<name.bottom&&[...document.querySelectorAll('.profile-community-counter')].every(node=>{const s=getComputedStyle(node);return s.borderTopWidth==='0px'&&s.boxShadow==='none'&&s.backgroundColor==='rgba(0, 0, 0, 0)'})})()`), true)
   let shot = await send('Page.captureScreenshot', { format: 'png' })
   await writeFile(path.join(artifacts, 'profile-desktop.png'), Buffer.from(shot.result.data, 'base64'))
   await evaluate(`document.querySelectorAll('.profile-community-counter')[1].click()`)

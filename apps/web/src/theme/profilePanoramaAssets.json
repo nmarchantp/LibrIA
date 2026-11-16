@@ -1,0 +1,117 @@
+{
+    "lavanda":  {
+                    "position":  "right center",
+                    "mobilePosition":  "42% center",
+                    "src":  "/images/profile-panoramas-v4/lavanda.webp"
+                },
+    "otono":  {
+                  "position":  "right center",
+                  "mobilePosition":  "42% center",
+                  "src":  "/images/profile-panoramas-v4/otono.webp"
+              },
+    "invierno":  {
+                     "position":  "right center",
+                     "mobilePosition":  "42% center",
+                     "src":  "/images/profile-panoramas-v4/invierno.webp"
+                 },
+    "dark":  {
+                 "position":  "right center",
+                 "mobilePosition":  "42% center",
+                 "src":  "/images/profile-panoramas-v4/dark.webp"
+             },
+    "dark-dorado":  {
+                        "position":  "right center",
+                        "mobilePosition":  "42% center",
+                        "src":  "/images/profile-panoramas-v4/dark-dorado.webp"
+                    },
+    "bosque":  {
+                   "position":  "right center",
+                   "mobilePosition":  "42% center",
+                   "src":  "/images/profile-panoramas-v4/bosque.webp"
+               },
+    "rosa-antiguo":  {
+                         "position":  "right center",
+                         "mobilePosition":  "42% center",
+                         "src":  "/images/profile-panoramas-v4/rosa-antiguo.webp"
+                     },
+    "dark-rosado":  {
+                        "position":  "right center",
+                        "mobilePosition":  "42% center",
+                        "src":  "/images/profile-panoramas-v4/dark-rosado.webp"
+                    },
+    "cronicas-tiempo":  {
+                            "position":  "right center",
+                            "mobilePosition":  "42% center",
+                            "src":  "/images/profile-panoramas-v4/cronicas-tiempo.webp"
+                        },
+    "reino-celestial":  {
+                            "position":  "right center",
+                            "mobilePosition":  "42% center",
+                            "src":  "/images/profile-panoramas-v4/reino-celestial.webp"
+                        },
+    "arenas-destino":  {
+                           "position":  "right center",
+                           "mobilePosition":  "42% center",
+                           "src":  "/images/profile-panoramas-v4/arenas-destino.webp"
+                       },
+    "susurros-sakura":  {
+                            "position":  "right center",
+                            "mobilePosition":  "42% center",
+                            "src":  "/images/profile-panoramas-v4/susurros-sakura.webp"
+                        },
+    "archivo-galactico":  {
+                              "position":  "right center",
+                              "mobilePosition":  "42% center",
+                              "src":  "/images/profile-panoramas-v4/archivo-galactico.webp"
+                          },
+    "olimpo-eterno":  {
+                          "position":  "right center",
+                          "mobilePosition":  "42% center",
+                          "src":  "/images/profile-panoramas-v4/olimpo-eterno.webp"
+                      },
+    "otono-encantado":  {
+                            "position":  "right center",
+                            "mobilePosition":  "42% center",
+                            "src":  "/images/profile-panoramas-v4/otono-encantado.webp"
+                        },
+    "oraculo-luna":  {
+                         "position":  "right center",
+                         "mobilePosition":  "42% center",
+                         "src":  "/images/profile-panoramas-v4/oraculo-luna.webp"
+                     },
+    "runas-norte":  {
+                        "position":  "right center",
+                        "mobilePosition":  "42% center",
+                        "src":  "/images/profile-panoramas-v4/runas-norte.webp"
+                    },
+    "reino-hongos":  {
+                         "position":  "right center",
+                         "mobilePosition":  "42% center",
+                         "src":  "/images/profile-panoramas-v4/reino-hongos.webp"
+                     },
+    "catedral-cristal":  {
+                             "position":  "right center",
+                             "mobilePosition":  "42% center",
+                             "src":  "/images/profile-panoramas-v4/catedral-cristal.webp"
+                         },
+    "mil-una-historias":  {
+                              "position":  "right center",
+                              "mobilePosition":  "42% center",
+                              "src":  "/images/profile-panoramas-v4/mil-una-historias.webp"
+                          },
+    "canto-sirenas":  {
+                          "position":  "right center",
+                          "mobilePosition":  "42% center",
+                          "src":  "/images/profile-panoramas-v4/canto-sirenas.webp"
+                      },
+    "ecos-sombras":  {
+                         "position":  "right center",
+                         "mobilePosition":  "42% center",
+                         "src":  "/images/profile-panoramas-v4/ecos-sombras.webp"
+                     },
+    "aquelarre-medianoche":  {
+                                 "position":  "right center",
+                                 "mobilePosition":  "42% center",
+                                 "src":  "/images/profile-panoramas-v4/aquelarre-medianoche.webp"
+                             }
+}

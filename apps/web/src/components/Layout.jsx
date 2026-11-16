@@ -1,5 +1,5 @@
 import ModerationNotice from './ModerationNotice'
-import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
+import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -16,6 +16,7 @@ import HeaderGreeting from './HeaderGreeting'
 import MagicalBackground from './MagicalBackground'
 import LiteraryAtmosphere from './LiteraryAtmosphere'
 import SidebarCandle from './SidebarCandle'
+import SidebarArtwork from './SidebarArtwork'
 import './LayoutNavigation.css'
 import './DarkInterior.css'
 import './LightInterior.css'
@@ -32,6 +33,12 @@ import './LiteraryThemePack.css'
 import './RefreshedThemeArtwork.css'
 import './ViewportBackground.css'
 import './ThemeFooters.css'
+import './DesktopDensity.css'
+import './CollapsibleSidebar.css'
+import './SidebarMotion.css'
+import './ReferenceThemeArtwork.css'
+import './MuralSpacing.css'
+import './HeaderIcons.css'
 import { EventAttendanceProvider } from '../context/EventAttendanceContext'
 
 
@@ -50,6 +57,14 @@ export default function Layout() {
   const navigate = useNavigate()
   const { theme, magicalBackground, magicalBackgroundMotion } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('libria_sidebar_collapsed') === 'true' } catch { return false }
+  })
+  function toggleSidebar() {
+    const next = !sidebarCollapsed
+    setSidebarCollapsed(next)
+    try { localStorage.setItem('libria_sidebar_collapsed', String(next)) } catch { /* Storage may be unavailable. */ }
+  }
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width:700px)').matches)
   const drawerRef = useRef(null)
@@ -126,22 +141,24 @@ export default function Layout() {
     return () => { active = false }
   }, [user.id])
   const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
-  return <div className={`social-shell${hasTools ? ' has-navigation-tools' : ''}`} data-interior-style="literary" data-mural={pathname === '/' ? 'true' : undefined}>
+  return <div className={`social-shell${sidebarCollapsed ? ' sidebar-collapsed' : ''}${hasTools ? ' has-navigation-tools' : ''}`} data-interior-style="literary" data-mural={pathname === '/' ? 'true' : undefined}>
     <a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className={`social-sidebar${menuOpen ? ' mobile-menu-open' : ''}`}>
-      <Link className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /></Link>
+      <Link className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /><BookOpen className="sidebar-compact-brand" size={28} aria-hidden="true" /></Link>
+      <button className="sidebar-collapse-toggle" type="button" aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'} title={sidebarCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'} aria-expanded={!sidebarCollapsed} aria-controls="sidebar-navigation" onClick={toggleSidebar}>{sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}</button>
       <button className={`mobile-nav-backdrop${menuOpen ? ' mobile-nav-backdrop--open' : ''}`} type="button" aria-label="Cerrar menú principal" tabIndex={-1} aria-hidden="true" onClick={() => setMenuOpen(false)} />
       <div ref={drawerRef} id="sidebar-navigation" className={`sidebar-navigation${menuOpen ? ' sidebar-navigation--open' : ''}`} role={mobile ? 'dialog' : undefined} aria-modal={mobile && menuOpen ? true : undefined} aria-label={mobile ? 'Menú principal' : undefined} aria-hidden={mobile && !menuOpen ? true : undefined} inert={mobile && !menuOpen ? true : undefined} onClick={event => { if (event.target.closest('a')) setMenuOpen(false) }}>
       <div className="mobile-drawer-heading"><span>Menú principal</span><button ref={closeRef} type="button" aria-label="Cerrar menú principal" onClick={() => setMenuOpen(false)}><X size={22} aria-hidden="true" /></button></div>
       <nav id="main-navigation" className="social-nav" aria-label="Navegación principal">
-        <NavLink to="/" end className="navigation-galaxy-link"><Home size={22} /><span>Mural</span><NavigationGalaxy /></NavLink>
-        <NavLink to="/profile" className="navigation-galaxy-link"><UserRound size={22} /><span>Mi perfil</span><NavigationGalaxy /></NavLink>
-        <NavLink to="/books" className="navigation-galaxy-link"><NavigationIcon variant="book" /><span>Explorar libros</span><NavigationGalaxy /></NavLink>
-        <NavLink to="/events" className="navigation-galaxy-link"><CalendarDays size={22} /><span>Eventos</span><NavigationGalaxy /></NavLink>
-        <NavLink to="/recommendations" className="navigation-galaxy-link"><NavigationIcon variant="wand" /><span>Recomendaciones IA</span><NavigationGalaxy /></NavLink>
-        <NavLink to="/settings" className="navigation-galaxy-link"><Settings2 size={22} /><span>Configuración</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Mural' : undefined} to="/" end className="navigation-galaxy-link"><Home size={22} /><span>Mural</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Mi perfil' : undefined} to="/profile" className="navigation-galaxy-link"><UserRound size={22} /><span>Mi perfil</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Explorar libros' : undefined} to="/books" className="navigation-galaxy-link"><NavigationIcon variant="book" /><span>Explorar libros</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Eventos' : undefined} to="/events" className="navigation-galaxy-link"><CalendarDays size={22} /><span>Eventos</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Recomendaciones IA' : undefined} to="/recommendations" className="navigation-galaxy-link"><NavigationIcon variant="wand" /><span>Recomendaciones IA</span><NavigationGalaxy /></NavLink>
+        <NavLink title={sidebarCollapsed && !mobile ? 'Configuración' : undefined} to="/settings" className="navigation-galaxy-link"><Settings2 size={22} /><span>Configuración</span><NavigationGalaxy /></NavLink>
       </nav>
-      <div className="sidebar-account">{theme === 'dark-blood' && <SidebarCandle animated={magicalBackground && magicalBackgroundMotion} />}<Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" disabled={holding} aria-busy={holding} onClick={() => journey('exit', logout, () => navigate('/login', { replace: true }))}><LogOut size={18} /> Cerrar sesión</button></div>
+      <SidebarArtwork theme={theme} />
+      <div className="sidebar-account">{theme === 'dark-blood' && <SidebarCandle animated={magicalBackground && magicalBackgroundMotion} />}<Link to="/profile" className="account-link" title={sidebarCollapsed && !mobile ? user.display_name : undefined}><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" title={sidebarCollapsed && !mobile ? 'Cerrar sesión' : undefined} disabled={holding} aria-busy={holding} onClick={() => journey('exit', logout, () => navigate('/login', { replace: true }))}><LogOut size={18} /><span>Cerrar sesión</span></button></div>
       </div>
     </aside>
     <div ref={pageRef} className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined} data-starfield-motion={magicalBackgroundMotion ? 'enabled' : 'disabled'}>

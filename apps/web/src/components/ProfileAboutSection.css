@@ -9,7 +9,7 @@
 .reader-about-section .reader-about-grid {
   display:grid;
   grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-  grid-template-areas:"history genres" "tropes featured" "statistics .";
+  grid-template-areas:"history history" "crush essentials" "genres tropes" "featured featured" "statistics statistics";
   align-items:stretch;
   gap:22px;
 }
@@ -25,7 +25,7 @@
 .reader-about-grid>.reader-tastes { grid-area:tropes; }
 .reader-about-section .reader-about-grid>.reader-reading-tastes { grid-area:featured; }
 .reader-about-grid>.reader-most-read { grid-area:statistics; }
-.reader-about-section.is-public .reader-about-grid { grid-template-areas:"history genres" "tropes featured"; }
+.reader-about-section.is-public .reader-about-grid { grid-template-areas:"history history" "crush essentials" "genres tropes" "featured featured"; }
 .reader-about-section .reader-personal-card { position:relative; isolation:isolate; padding:26px; border:1px solid color-mix(in srgb,var(--line) 58%,var(--surface)); border-radius:22px; background:linear-gradient(140deg,var(--surface),color-mix(in srgb,var(--surface) 97%,var(--secondary))); box-shadow:0 5px 22px color-mix(in srgb,var(--shadow-color) 45%,transparent); }
 .reader-about-section .reader-card-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; margin-bottom:18px; }
 .reader-about-section .reader-personal-card h2 { align-items:flex-start; min-width:0; margin:0; gap:11px; font-size:23px; line-height:1.3; letter-spacing:-.015em; }
@@ -82,8 +82,8 @@
 .reader-about-section .reader-reading-tastes .reader-preferences-form>.reader-intensity-grid { grid-template-columns:minmax(0,1fr); }
 .reader-about-section .reader-personal-card .reader-save-status { font-size:12px; margin-top:16px; }
 @container reader-about (max-width:660px) {
-  .reader-about-section .reader-about-grid { grid-template-columns:minmax(0,1fr); grid-template-areas:"history" "genres" "tropes" "featured" "statistics"; gap:18px; }
-  .reader-about-section.is-public .reader-about-grid { grid-template-areas:"history" "genres" "tropes" "featured"; }
+  .reader-about-section .reader-about-grid { grid-template-columns:minmax(0,1fr); grid-template-areas:"history" "crush" "essentials" "genres" "tropes" "featured" "statistics"; gap:18px; }
+  .reader-about-section.is-public .reader-about-grid { grid-template-areas:"history" "crush" "essentials" "genres" "tropes" "featured"; }
   .reader-about-section .reader-personal-card { padding:24px; }
   .reader-about-section .reader-story:not(.is-editing),.reader-about-section .reader-reading-tastes:not(.is-editing) { min-height:0; }
   .reader-about-section .reader-story .reader-biography { max-width:none; padding-right:20px; }
