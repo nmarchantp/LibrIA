@@ -1,9 +1,18 @@
 // Isolated browser fixture and real layout/providers; no backend writes.
 import assert from 'node:assert/strict'
 const cdp = process.env.CDP_URL || 'http://127.0.0.1:9224'
-const fixture = `${process.env.VITE_URL || 'http://127.0.0.1:5173'}/tests/fixtures/profile-modals.html`
+const fixture = `${process.env.VITE_URL || 'http://127.0.0.1:5173'}/tests/fixtures/theme-refinements.html`
 const key = 'libriaverse-magical-background'
-const target = await (await fetch(`${cdp}/json/new?about:blank`, { method: 'PUT' })).json()
+const version = await (await fetch(`${cdp}/json/version`)).json()
+const browser = new WebSocket(version.webSocketDebuggerUrl)
+await new Promise(resolve => { browser.onopen=resolve })
+let browserSequence=0
+const browserPending=new Map()
+browser.onmessage=event=>{const message=JSON.parse(event.data);browserPending.get(message.id)?.(message.result)}
+const browserCall=(method,params={})=>new Promise(resolve=>{const id=++browserSequence;browserPending.set(id,resolve);browser.send(JSON.stringify({id,method,params}))})
+const {browserContextId}=await browserCall('Target.createBrowserContext')
+const {targetId}=await browserCall('Target.createTarget',{url:'about:blank',browserContextId})
+const target=(await (await fetch(`${cdp}/json/list`)).json()).find(item=>item.id===targetId)
 const ws = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject })
 let sequence = 0
@@ -35,7 +44,7 @@ try {
   // Do not inherit the host OS accessibility preference for the duration
   // assertion. Reduced motion is tested explicitly later in this file.
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
-  const init = await send('Page.addScriptToEvaluateOnNewDocument', { source: `localStorage.removeItem('${key}')` })
+  const init = await send('Page.addScriptToEvaluateOnNewDocument', { source: `localStorage.removeItem('${key}');localStorage.setItem('libria_theme','otono');localStorage.setItem('libriaverse-magical-background-motion','true')` })
   await send('Page.navigate', { url: fixture })
   await until(`document.querySelectorAll('.profile-starfield').length===1`)
   await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: init.result.identifier })
@@ -48,14 +57,22 @@ try {
     assert.equal(await evaluate(`document.querySelectorAll('.profile-starfield').length===1&&document.querySelector('.profile-starfield')===window.__background`), true, path)
     assert.equal(await evaluate(`document.querySelector('.profile-starfield-layer').getAnimations()[0]===window.__starAnimation`), true, 'Navigation must not restart animation')
   }
-  console.log('PASS default enabled, one persistent instance and uninterrupted animations across twelve authenticated views')
+  console.log('PASS explicitly enabled motion, one persistent instance and uninterrupted animations across twelve authenticated views')
 
   const ids = await evaluate(`import('/src/theme/themes.js').then(m=>m.themes.map(t=>t.id))`)
   await navigate('/settings?tab=personalization')
-  await until(`document.querySelectorAll('.theme-option').length===9&&Boolean(document.querySelector('.visual-effects-switch input'))`)
+  await until(`document.querySelectorAll('.theme-option').length===24&&Boolean(document.querySelector('.visual-effects-switch input'))`)
   for (const id of ids) {
     await evaluate(`document.querySelector('[data-theme-option="${id}"]').click()`)
     const theme = await evaluate(`localStorage.getItem('libria_theme')`)
+    assert.deepEqual(await evaluate(`[...document.querySelectorAll('.profile-starfield-layer')].map(e=>{const s=getComputedStyle(e);return [s.display,s.opacity,s.animationPlayState,s.backgroundImage!=='none']})`),[['block','0.28','running',true],['block','0.4','running',true],['block','0.55','running',true]],`${id}: all particle layers remain visible and moving`)
+    await evaluate(`document.querySelectorAll('.visual-effects-switch input')[1].click()`)
+    await until(`document.querySelector('.profile-starfield').dataset.motion==='disabled'`)
+    assert.equal(await evaluate(`[...document.querySelectorAll('.profile-starfield-layer')].every(e=>getComputedStyle(e).animationPlayState==='paused'&&getComputedStyle(e).display!=='none')`),true,`${id}: pause preserves visible dots`)
+    assert.equal(await evaluate(`localStorage.getItem('libriaverse-magical-background-motion')`),'false')
+    await evaluate(`document.querySelectorAll('.visual-effects-switch input')[1].click()`)
+    await until(`document.querySelector('.profile-starfield').dataset.motion==='enabled'`)
+
     await evaluate(`document.querySelector('.visual-effects-switch input').click()`)
     await until(`document.querySelectorAll('.profile-starfield').length===0&&localStorage.getItem('${key}')==='false'`)
     assert.equal(await evaluate(`document.querySelector('.visual-effects-switch input').checked`), false)
@@ -74,7 +91,7 @@ try {
     await navigate('/settings?tab=personalization')
     await until(`Boolean(document.querySelector('.visual-effects-switch input'))`)
   }
-  console.log('PASS independent theme/preference storage, immediate toggle, full unmount and enabled/disabled persistence in nine themes')
+  console.log('PASS independent theme/preference storage, immediate toggle, full unmount and enabled/disabled persistence in 24 themes')
 
   for (const width of [1440, 768, 390, 320]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 })
@@ -90,7 +107,10 @@ try {
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   assert.equal(await evaluate(`[...document.querySelectorAll('.profile-starfield-layer')].every(e=>getComputedStyle(e).animationName==='profile-starfield-rise')`), true, 'The explicit visual preference overrides the global reduced-motion fallback when motion is enabled')
   await navigate('/profile')
-  await evaluate(`document.querySelector('.reader-edit-button').click()`)
+  await until(`Boolean(document.querySelector('.reader-about-edit-toggle'))`)
+  await evaluate(`document.querySelector('.reader-about-edit-toggle').click()`)
+  await until(`Boolean(document.querySelector('[aria-label="Editar Mi historia"]'))`)
+  await evaluate(`document.querySelector('[aria-label="Editar Mi historia"]').click()`)
   await until(`Boolean(document.querySelector('dialog[open]'))`)
   await evaluate(`document.querySelector('dialog button').click()`)
   await evaluate(`document.querySelector('.logout-button').click()`)
@@ -100,5 +120,5 @@ try {
 } finally {
   await send('Emulation.setEmulatedMedia', { features: [] })
   ws.close()
-  await fetch(`${cdp}/json/close/${target.id}`)
+  await browserCall('Target.disposeBrowserContext',{browserContextId});browser.close()
 }

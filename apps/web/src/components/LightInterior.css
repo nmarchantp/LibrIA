@@ -1,0 +1,83 @@
+/* Jardín de Macarons: one light identity across authenticated routes. */
+:root[data-theme="lavanda"] :is(.social-shell[data-interior-style="literary"],.reader-profile-modal[open],.content-management-dialog[open]) {
+  --surface-raised:#FFFCFF; --sidebar-bg:#FFFAFF; --panel-border:#D5BFE8;
+  --control-border:#8B789E; --field-bg:#F9F5FC;
+  --neutral-button-bg:#F1E9F8; --neutral-button-hover:#E8DCEF;
+  --button-bg:var(--primary); --button-hover:var(--primary-hover);
+}
+:root[data-theme="lavanda"] .social-shell[data-interior-style="literary"] {
+  background:var(--paper);
+  .social-page-column { background:var(--paper); --main-top-space:18px; }
+  .literary-atmosphere { display:none; }
+  .profile-starfield { background:linear-gradient(145deg,#FFFAFF,var(--paper) 65%); }
+  .profile-starfield::before {
+    content:''; position:absolute; inset:0 0 auto; height:160px; pointer-events:none;
+    background:linear-gradient(90deg,rgb(255 250 255 / 55%),transparent 75%),url('/images/macaron-universe/literary-dawn-v1.webp') 70% top/max(100%,1100px) auto no-repeat;
+    mask-image:linear-gradient(#000 0%,#000 35%,transparent 100%);
+  }
+  .social-topbar::before { background:linear-gradient(rgb(255 250 255 / 30%),transparent); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .social-topbar.is-scrolled::before { background:rgb(255 250 255 / 94%); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  :is(.global-header-action,.mobile-nav-toggle) { color:var(--primary); }
+  .mobile-nav-toggle svg { stroke:var(--primary); }
+  .social-sidebar { background:radial-gradient(ellipse at 45% 74%,rgb(217 183 241 / 35%),transparent 48%),radial-gradient(ellipse at 55% 0,rgb(217 183 241 / 48%),transparent 30%),#FFFAFF; border-color:var(--panel-border); }
+  .social-sidebar .social-nav a { border-radius:22px; gap:12px; font-size:14px; min-height:46px; color:var(--ink); }
+  .social-sidebar .social-nav a.active { color:var(--ink); background:linear-gradient(135deg,#EBD8FB,#D6B7F2); border:1px solid #B58BD6; box-shadow:inset 0 1px 9px rgb(255 255 255 / 55%),0 4px 12px rgb(120 86 164 / 14%); font-weight:700; }
+  .social-sidebar > .brand-link { position:relative; isolation:isolate; padding:10px 8px 20px; border-bottom:1px solid var(--panel-border); background:none; }
+  .social-sidebar > .brand-link::before { content:''; position:absolute; width:100%; height:55px; top:20px; right:0; border-bottom:1px solid #B58BD6; border-radius:50%; transform:rotate(-13deg); opacity:.55; pointer-events:none; z-index:-1; }
+  .social-sidebar > .brand-link::after { content:''; position:absolute; width:72px; height:24px; right:10px; top:3px; border-top:1px solid var(--accent); border-radius:50%; transform:rotate(-15deg); opacity:.65; pointer-events:none; }
+  .brand-logo-star { fill:var(--primary); filter:drop-shadow(0 0 6px rgb(179 139 205 / 35%)); }
+  .sidebar-navigation::after {
+    content:''; display:block; flex:1 1 260px; min-height:0; max-height:340px; order:1;
+    background:url('/images/macaron-universe/lantern-books-v1.webp') center bottom/contain no-repeat,
+      radial-gradient(ellipse at 53% 43%,rgb(255 211 145 / 35%),transparent 64%),
+      radial-gradient(ellipse at 46% 62%,rgb(204 159 234 / 27%),transparent 73%);
+    mask-image:linear-gradient(transparent,#000 14%,#000 74%,transparent 98%),linear-gradient(90deg,transparent,#000 12%,#000 84%,transparent);
+    mask-composite:intersect; pointer-events:none;
+  }
+  .sidebar-navigation .sidebar-account { order:2; flex-shrink:0; border-top:1px solid var(--panel-border); padding-top:18px; }
+  .sidebar-account .avatar { background:var(--primary); color:var(--on-primary); }
+  .sidebar-account .logout-button { color:var(--accent-text); }
+  :is(.catalog-result-card,.reader-book-card,.reader-personal-card,.recommendation-card,.agenda-event,.analysis-card,.account-personal-info,.role-panel,.google-account-panel,.account-management > section,.feed-card,.mural-activity-card,.bulletin-card) {
+    background:linear-gradient(145deg,#FFFCFF,#FCF7FF); border-color:var(--panel-border); box-shadow:0 5px 15px rgb(120 86 164 / 8%);
+  }
+  :is(.agenda-calendar,.agenda-detail,.reader-profile-stat,.navigation-tools-menu,.admin-list,.admin-detail,.accounts-directory,.account-detail) { background:var(--surface-raised); border-color:var(--panel-border); }
+  :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:24px; border:1px solid var(--panel-border); border-radius:20px; background:radial-gradient(ellipse at 100% 0,rgb(217 183 241 / 32%),transparent 65%),linear-gradient(145deg,#FFFAFF,#F1E6FB); }
+}
+/* The two illustrated panels remain specific to the mural. */
+:root[data-theme="lavanda"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-heading { min-height:210px; padding:26px 32px 34px; border-radius:22px; border:1px solid var(--panel-border); background:linear-gradient(90deg,rgb(255 250 255 / 65%),rgb(255 250 255 / 24%) 58%,transparent 85%),url('/images/macaron-universe/literary-dawn-v1.webp') right bottom/cover no-repeat,#F1E6FB; box-shadow:0 5px 15px rgb(120 86 164 / 8%); }
+  .mural-heading::after,.mural-heading .mural-brand-star { display:none; }
+  .mural-heading h1 { font-size:clamp(34px,3.4vw,48px); max-width:76%; margin-block:18px 14px; text-wrap:balance; }
+  .mural-heading p { color:var(--ink); }
+  .mural-heading .kicker { color:var(--accent-text); font-weight:700; }
+  .mural-audiences { background:linear-gradient(110deg,#FFFCFF,#F8F0FF); border-color:var(--panel-border); box-shadow:0 4px 12px rgb(120 86 164 / 7%); }
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#F7EEFF,#E8D5F7); color:var(--ink); border-color:var(--primary); box-shadow:inset 0 1px 8px rgb(255 255 255 / 50%); }
+  .reader-summary { min-height:330px; padding:26px 24px 20px; display:flex; flex-direction:column; align-items:flex-start; background:linear-gradient(90deg,rgb(255 250 255 / 65%),rgb(255 250 255 / 10%)),url('/images/macaron-universe/quill-corner-v1.webp') center bottom/cover no-repeat,#F1E6FB; border:1px solid var(--panel-border); box-shadow:0 8px 22px rgb(120 86 164 / 12%); }
+  .reader-summary::before,.reader-summary::after { display:none; }
+  .reader-summary h2 { color:var(--ink); margin-block:18px; max-width:90%; }
+  .reader-summary .kicker { color:var(--accent-text); }
+  .reader-summary p { color:var(--ink); margin-bottom:68px; }
+  .reader-summary a { color:var(--accent-text); border:1px solid var(--control-border); border-radius:10px; padding:9px 11px; margin-top:auto; background:rgb(255 250 255 / 88%); font-size:12px; }
+  .aside-reading { background:linear-gradient(145deg,#FFFCFF,#F6ECFC); border-color:var(--panel-border); }
+  .mural-category-heading h2::after { content:''; display:inline-block; width:90px; height:12px; margin-left:12px; vertical-align:middle; opacity:.7; background:linear-gradient(90deg,var(--primary),transparent); mask-image:var(--literary-star),linear-gradient(#000,#000); mask-size:12px 12px,72px 1px; mask-position:left center,right center; mask-repeat:no-repeat; }
+  .community-note { border-top:1px solid var(--panel-border); padding-top:24px; }
+}
+@media(max-width:700px) {
+  :root[data-theme="lavanda"] .social-shell[data-interior-style="literary"] {
+    .social-page-column { --main-top-space:14px; }
+    .social-sidebar { background:var(--sidebar-bg); }
+    .sidebar-navigation::after { display:none; }
+    .social-sidebar > .brand-link { padding:0; border:0; }
+    .social-sidebar > .brand-link::before,.social-sidebar > .brand-link::after { display:none; }
+    .profile-starfield::before { height:150px; background-position:68% top; }
+    .sidebar-navigation { background:linear-gradient(#FFFAFF,#F4E8FD); }
+    .social-sidebar .social-nav a.active { box-shadow:inset 0 2px var(--primary); }
+    :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:18px; }
+  }
+  :root[data-theme="lavanda"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+    .mural-heading { min-height:270px; padding:24px 20px 28px; border-radius:18px; background:linear-gradient(90deg,rgb(255 250 255 / 88%),rgb(255 250 255 / 40%)),url('/images/macaron-universe/literary-dawn-v1.webp') 77% bottom/auto 100% no-repeat,#F1E6FB; }
+    .mural-heading h1 { max-width:100%; font-size:36px; }
+    .mural-heading p { max-width:250px; }
+    .mural-category-heading h2::after { display:none; }
+  }
+}

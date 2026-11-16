@@ -1,3 +1,5 @@
+import { literaryThemes, applyLiteraryTokens } from './literaryThemes'
+
 // Stable IDs can also identify future theme assets without changing consumers.
 export const themes = [
   { id: 'lavanda', name: 'Jardín de Macarons', group: 'light', colors: ['#F4EFF9', '#FFFCFF', '#7856A4', '#DFD1EF', '#B38BCD', '#332743'] },
@@ -9,10 +11,11 @@ export const themes = [
   { id: 'dark-rosado', name: 'Rosas y Espinas', group: 'dark', colors: ['#1C161E', '#382936', '#E8A0C2', '#30232F', '#B876A0', '#F7EAF1'] },
   { id: 'dark-blood', name: 'Pacto de Sangre', group: 'dark', colors: ['#050507', '#1D1D24', '#89001F', '#480014', '#C4183D', '#F5EDF0'], roles: { primary: '#EE7893' } },
   { id: 'dark-dorado', name: 'Biblioteca de Medianoche', group: 'dark', colors: ['#141416', '#2C2B2D', '#E2C17A', '#202023', '#B89550', '#F5F0E5'] },
+  ...literaryThemes,
 ]
 
 export const themeStorageKey = 'libria_theme'
-export const defaultTheme = 'lavanda'
+export const defaultTheme = 'dark'
 export const validTheme = value => themes.some(theme => theme.id === value)
 
 export function readTheme() {
@@ -23,13 +26,14 @@ export function readTheme() {
 }
 
 export function applyTheme(id) {
-  const theme = themes.find(item => item.id === id) || themes[0]
+  const theme = themes.find(item => item.id === id) || themes.find(item => item.id === defaultTheme)
   const root = document.documentElement
   // Preserve the reference palette; optional roles supply accessible variants
   // (Blood uses a luminous red for small text/SVGs, wine red for filled buttons).
   ;['paper', 'surface', 'primary', 'secondary', 'accent', 'ink'].forEach((role, index) => {
     root.style.setProperty(`--${role}`, theme.roles?.[role] ?? theme.colors[index])
   })
+  applyLiteraryTokens(root, theme)
   root.dataset.theme = theme.id
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.colors[0])
 }

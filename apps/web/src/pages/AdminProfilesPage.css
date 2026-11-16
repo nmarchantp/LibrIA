@@ -10,9 +10,7 @@
 .admin-filters label, .admin-form label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
 .admin-filters label:first-child { flex: 1 1 270px; }
 .admin-filters label:nth-child(2) { flex: 0 1 190px; }
-.admin-filters input, .admin-filters select, .admin-form input, .admin-form select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
-.admin-form textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 12px; font: inherit; }
-.admin-form select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
+.admin-filters input, .admin-filters select, .admin-form input, .admin-form textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 12px; font: inherit; }
 .admin-form textarea { resize: vertical; }
 .admin-count { color: var(--muted); font-size: 12px; margin: 22px 0 12px; }
 .admin-layout { display: grid; grid-template-columns: minmax(350px, 1fr) minmax(350px, 1fr); align-items: start; gap: 22px; }

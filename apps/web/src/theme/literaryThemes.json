@@ -1,0 +1,236 @@
+[
+  {
+    "id": "cronicas-tiempo",
+    "name": "Crónicas del Tiempo",
+    "group": "dark",
+    "colors": [
+      "#211C19",
+      "#332923",
+      "#D1A15E",
+      "#5B4030",
+      "#C77942",
+      "#F5E9D6"
+    ],
+    "concept": "steampunk library, bronze copper wood and amber light",
+    "sidebar": "antique books, intricate mechanical pocket clock, brass gears, copper lantern",
+    "banner": "steampunk library with monumental clock, carefully crafted mechanical machinery",
+    "corner": "inventor desk with books, blueprints, clocks and a warm lamp"
+  },
+  {
+    "id": "reino-celestial",
+    "name": "Reino Celestial",
+    "group": "light",
+    "colors": [
+      "#F0F1F8",
+      "#FFFFFF",
+      "#8A70BB",
+      "#DAD9F0",
+      "#C69B52",
+      "#34324A"
+    ],
+    "concept": "luminous celestial library, delicate clouds, gold stars, constellations, white marble",
+    "sidebar": "white books, celestial gold lantern, tiny golden stars",
+    "banner": "floating marble library among luminous clouds and columns",
+    "corner": "floating books, soft celestial light and fine gold details"
+  },
+  {
+    "id": "arenas-destino",
+    "name": "Arenas del Destino",
+    "group": "light",
+    "colors": [
+      "#EEE2CC",
+      "#FFF8EA",
+      "#A87530",
+      "#D4BD94",
+      "#218B8A",
+      "#473624"
+    ],
+    "concept": "ancient Egyptian archaeology, sand, papyrus, hieroglyphic decorative motifs, turquoise gold",
+    "sidebar": "explorer books, ancient oil lamp, papyrus scrolls, ornamental turquoise scarab",
+    "banner": "archaeological library with sandstone columns and distant Egyptian pyramids",
+    "corner": "archaeologist table with scrolls, compass and ancient small artifacts"
+  },
+  {
+    "id": "susurros-sakura",
+    "name": "Susurros de Sakura",
+    "group": "light",
+    "colors": [
+      "#F7EDF0",
+      "#FFFAFB",
+      "#A85D7A",
+      "#EACDD8",
+      "#C48D9C",
+      "#49333E"
+    ],
+    "concept": "spring Japanese garden, cherry blossom flowers, restrained traditional architecture",
+    "sidebar": "books, glowing Japanese paper lantern, sakura branches",
+    "banner": "cherry blossom garden with a small traditional wooden library and pond",
+    "corner": "small reading library next to a window with cherry blossom flowers"
+  },
+  {
+    "id": "archivo-galactico",
+    "name": "Archivo Galáctico",
+    "group": "dark",
+    "colors": [
+      "#0B1021",
+      "#171F36",
+      "#7B9EF5",
+      "#26365B",
+      "#61D7E8",
+      "#EDF4FF"
+    ],
+    "concept": "science fiction library, deep blue cosmos, cyan restrained holograms, planets",
+    "sidebar": "futuristic literary books, holographic reading lamp, small planet",
+    "banner": "space library with huge windows overlooking a galaxy and distant planets",
+    "corner": "reading station with subtle holograms and constellations"
+  },
+  {
+    "id": "olimpo-eterno",
+    "name": "Olimpo Eterno",
+    "group": "light",
+    "colors": [
+      "#F0EBDF",
+      "#FFFCF5",
+      "#92743F",
+      "#DCD0B7",
+      "#477A91",
+      "#343A40"
+    ],
+    "concept": "classical Greek mythology, white marble, columns, laurels, gold and Mediterranean blue",
+    "sidebar": "scrolls, ancient books, bronze oil lamp, laurel wreath",
+    "banner": "grand classical Greek marble library inspired by ancient temples",
+    "corner": "reading desk with scrolls and amphora by a Mediterranean coastal vista"
+  },
+  {
+    "id": "otono-encantado",
+    "name": "Otoño Encantado",
+    "group": "light",
+    "colors": [
+      "#F3E6D6",
+      "#FFF8EE",
+      "#A75D34",
+      "#DFC3A3",
+      "#B18A3D",
+      "#463326"
+    ],
+    "concept": "cozy autumn reading, copper leaves, warm wood, restrained tiny pumpkins, amber",
+    "sidebar": "books, warm lantern, autumn leaves, steaming tea cup",
+    "banner": "cozy wooden library with a window overlooking an autumn forest",
+    "corner": "comfortable reading armchair next to fireplace with a book and tea"
+  },
+  {
+    "id": "oraculo-luna",
+    "name": "Oráculo de la Luna",
+    "group": "dark",
+    "colors": [
+      "#18152B",
+      "#29233F",
+      "#C2A0DF",
+      "#43365F",
+      "#D6B56D",
+      "#F5EDFF"
+    ],
+    "concept": "astrology and destiny symbolism, lunar phases, zodiac, stars, no witch hat or cauldron",
+    "sidebar": "astrology books, candles, clear crystal, elegant tarot cards",
+    "banner": "esoteric astrology library under starry sky with moon phases and zodiac motifs",
+    "corner": "astrology reading table with tarot cards, crystal and antique book, no witches"
+  },
+  {
+    "id": "runas-norte",
+    "name": "Runas del Norte",
+    "group": "dark",
+    "colors": [
+      "#25313A",
+      "#35444D",
+      "#B7C9D1",
+      "#52646D",
+      "#C7A477",
+      "#F0F3F2"
+    ],
+    "concept": "Norse mythology, Scandinavian mountains, carved runes, aged timber, snow",
+    "sidebar": "legendary saga books, Viking style lantern, carved rune stones",
+    "banner": "grand Norse timber hall with a library and snowy Scandinavian mountain panorama",
+    "corner": "wooden table with manuscripts, rune stones and warm candles"
+  },
+  {
+    "id": "reino-hongos",
+    "name": "Reino de los Hongos",
+    "group": "light",
+    "colors": [
+      "#E7E9D8",
+      "#FAF9ED",
+      "#66815D",
+      "#C5D0AC",
+      "#BE8067",
+      "#344635"
+    ],
+    "concept": "cottagecore miniature mushroom village, moss and forest lights, not large elven trees",
+    "sidebar": "tiny storybooks, living plant lantern, luminous mushrooms",
+    "banner": "tiny magical village built inside giant mushrooms among moss and modest forest trees",
+    "corner": "tiny miniature library inside a mushroom cottage with warm reading light"
+  },
+  {
+    "id": "catedral-cristal",
+    "name": "Catedral de Cristal",
+    "group": "dark",
+    "colors": [
+      "#202333",
+      "#303449",
+      "#A8B5DE",
+      "#454963",
+      "#D4A96F",
+      "#F3F0F7"
+    ],
+    "concept": "gothic library architecture, colorful stained glass, vaulted stone, projected colored light",
+    "sidebar": "ancient books, candelabrum, jewel colored stained glass fragment",
+    "banner": "grand gothic library with vaulted stone and luminous multicolored stained glass windows",
+    "corner": "quiet reading nook beside a colorful stained glass window"
+  },
+  {
+    "id": "mil-una-historias",
+    "name": "Las Mil y Una Historias",
+    "group": "dark",
+    "colors": [
+      "#102B36",
+      "#1D4050",
+      "#D7AD72",
+      "#2B5964",
+      "#46A7A1",
+      "#FFF1D9"
+    ],
+    "concept": "legendary palace storytelling, turquoise mosaics, intricate arches, textiles and warm lamps",
+    "sidebar": "ornamented storybooks, traditional ornate brass lamp, scrolls",
+    "banner": "fantastic palatial library with decorated arches, turquoise mosaics and a courtyard",
+    "corner": "palace reading alcove with cushions, warm hanging lamps and books"
+  },
+  {
+    "id": "canto-sirenas",
+    "name": "Canto de Sirenas",
+    "group": "dark",
+    "colors": ["#071E2A", "#103440", "#83D1D3", "#24515C", "#E8BCA4", "#EFFBFC"],
+    "concept": "océanos, sirenas, corales y fantasía marina",
+    "sidebar": "libros antiguos, farol náutico iluminado, conchas, perlas, corales y estrellas de mar",
+    "banner": "sirena sobre rocas ante el océano nocturno, luna llena, olas luminosas y castillo costero distante",
+    "corner": "concha abierta con perla luminosa, corales y reflejos submarinos"
+  },
+  {
+    "id": "ecos-sombras",
+    "name": "Ecos de las Sombras",
+    "group": "dark",
+    "colors": ["#090A0C", "#1B1D20", "#C4C9CE", "#30343A", "#8A929C", "#F0F1F2"],
+    "concept": "fantasmas, arañas, niebla y terror sobrenatural",
+    "sidebar": "libros oscuros, farol gótico encendido, velas, fantasmas semitransparentes, arañas y telarañas",
+    "banner": "castillo abandonado, luna llena, árboles secos, niebla y entidades fantasmales",
+    "corner": "biblioteca embrujada con velas, libro abierto, sombras y pequeños fantasmas"
+  },
+  {
+    "id": "aquelarre-medianoche",
+    "name": "Aquelarre de Medianoche",
+    "group": "dark",
+    "colors": ["#171020", "#291D36", "#C391E5", "#493052", "#E2B976", "#F7EEFC"],
+    "concept": "brujería, pociones, gatos negros y hechicería",
+    "sidebar": "grimorios, gato negro, farol antiguo, velas, pociones y cristales violetas",
+    "banner": "bruja leyendo un grimorio bajo la luna llena, castillo distante, árboles y partículas mágicas",
+    "corner": "caldero con vapor violeta, libros de hechizos, cristales y velas"
+  }
+]

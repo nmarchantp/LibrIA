@@ -1,0 +1,66 @@
+﻿/* Refinements are deliberately scoped to the two existing themes and app UI.
+   Authentication and the other seven palettes do not match these selectors. */
+:root[data-theme="dark"] :is(.social-shell,.reader-profile-modal,.content-management-dialog) {
+  --surface-raised:#302A3D;
+  --field-bg:#211E2C;
+  --control-border:#9484A4;
+  --panel-border:#544961;
+  --neutral-button-bg:#362E43;
+  --neutral-button-hover:#453854;
+}
+:root[data-theme="lavanda"] :is(.social-shell,.reader-profile-modal,.content-management-dialog) {
+  --surface-raised:#FFFCFF;
+  --field-bg:#F9F5FC;
+  --control-border:#8B789E;
+  --panel-border:#D4C8DF;
+  --neutral-button-bg:#F1E9F8;
+  --neutral-button-hover:#E8DCEF;
+}
+/* One shared treatment for ordinary buttons; special icon/toggle controls remain local. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject) {
+  background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); box-shadow:none;
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject):hover:not(:disabled) {
+  background:var(--neutral-button-hover);
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button.primary {
+  background:var(--primary); color:var(--on-primary); border:1px solid transparent; box-shadow:0 3px 10px var(--shadow-color);
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button.primary:hover:not(:disabled) { background:var(--primary-hover); transform:none; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.account-danger-button,.button.danger,.admin-revoke .button,.account-danger .button,.request-reject) {
+  background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); box-shadow:none;
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button { line-height:1.5; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .button:disabled { cursor:not-allowed; transform:none; }
+/* Control boundaries are stronger than decorative card dividers. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) :is(.social-shell,.reader-profile-modal,.content-management-dialog) :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]) {
+  background-color:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px;
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .catalog-search-input { border-color:var(--control-border); background:var(--field-bg); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .catalog-search-input input { background:transparent; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) :is(.social-shell,.reader-profile-modal,.content-management-dialog) :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) :is(.social-shell,.reader-profile-modal,.content-management-dialog) :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline:2px solid var(--focus); outline-offset:3px;
+}
+/* Raised navigation and dialogs, quieter borders on reading surfaces. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.feed-card,.mural-activity-card,.catalog-result-card,.account-card,.account-panel,.admin-list,.admin-detail,.accounts-directory,.account-detail,.admin-request,.manual-book-registration) { border-color:var(--panel-border); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.navigation-tools-menu,.social-sidebar) { background:var(--surface-raised); border-color:var(--panel-border); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) :is(.reader-profile-modal,.content-management-dialog) { background:var(--surface-raised); border-color:var(--panel-border); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .social-nav a { color:var(--muted); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .social-nav a:is(.active,:hover) { background:var(--soft); color:var(--ink); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.event-date,.notification-icon) { background:var(--soft); color:var(--accent-text); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.post-text,.bulletin-copy,.catalog-result-author) { line-height:1.65; }
+/* Interior base surface. Particle appearance belongs to MagicalBackground.css. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .profile-starfield { background:var(--paper); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell :is(.post-author small,.bulletin-person time,.admin-profile-main small,.admin-profile-meta small,.request-note-help,.account-help) { font-size:12px; line-height:1.5; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell input[type="file"]::file-selector-button { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .reader-profile-modal .reader-modal-footer > button { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .reader-profile-modal .reader-modal-footer > button[type="submit"] { background:var(--primary); color:var(--on-primary); border-color:transparent; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .reader-profile-modal .reader-modal-footer > .reader-discard-button,
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .content-management-dialog[data-action="delete"] > footer .button.primary { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .navigation-galaxy-link::before { background:none; box-shadow:none; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .navigation-galaxy-dust { display:none; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .navigation-galaxy-star { filter:none; }
+@media(max-width:700px) {
+  :root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell .social-sidebar .brand-link { max-width:min(170px,calc(100vw - 248px)); }
+}

@@ -1,7 +1,8 @@
-﻿import React from 'react'
+import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '../../src/context/AuthContext'
+import AuthJourneyProvider from '../../src/components/AuthJourneyProvider'
 import LoginPage from '../../src/pages/LoginPage'
 import '../../src/styles.css'
 import { applyTheme } from '../../src/theme/themes'
@@ -14,4 +15,4 @@ window.fetch = async (input, options = {}) => {
   const data = path.endsWith('/auth/login') ? { detail: 'Test invalid credentials' } : { detail: 'Not authenticated' }
   return new Response(JSON.stringify(data), { status: 401, headers: { 'Content-Type': 'application/json' } })
 }
-createRoot(document.getElementById('root')).render(<BrowserRouter><AuthProvider><Routes><Route path="*" element={<LoginPage />} /></Routes></AuthProvider></BrowserRouter>)
+createRoot(document.getElementById('root')).render(<BrowserRouter><AuthProvider><AuthJourneyProvider><Routes><Route path="*" element={<LoginPage />} /></Routes></AuthJourneyProvider></AuthProvider></BrowserRouter>)

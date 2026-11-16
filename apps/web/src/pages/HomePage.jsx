@@ -18,6 +18,8 @@ import useMural from '../hooks/useMural'
 import { ActivityInteractionProvider, useActivityStore } from '../context/ActivityInteractionContext'
 import './HomePage.css'
 import './MuralPage.css'
+import './MuralIdentity.css'
+import MuralBrandStar from '../components/MuralBrandStar'
 
 const categories = [
   { id: 'progress', title: 'Entre páginas', description: 'El progreso más reciente de cada lectura compartida.', icon: ChartNoAxesColumnIncreasing },
@@ -48,6 +50,26 @@ function MuralContent() {
   const bulletin = bulletins[category?.id]
   const activeTab = publicationCategories.some(item => item.id === category?.id) ? category.id : audience
   const navigation = useRef(null)
+  useEffect(() => {
+    const tabs = navigation.current?.parentElement
+    const column = tabs?.closest('.social-page-column')
+    if (!tabs || !column) return
+    const update = () => {
+      const height = tabs.getBoundingClientRect().top - column.getBoundingClientRect().top
+      column.style.setProperty('--mural-scene-height', `${Math.max(0, height)}px`)
+    }
+    const observer = new ResizeObserver(update)
+    observer.observe(tabs.closest('.mural-feed'))
+    const topbar = column.querySelector('.social-topbar')
+    if (topbar) observer.observe(topbar)
+    window.addEventListener('resize', update)
+    update()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+      column.style.removeProperty('--mural-scene-height')
+    }
+  }, [])
   const [refresh, setRefresh] = useState(0)
   const [selected, setSelected] = useState(null)
   const [management,setManagement] = useState(null)
@@ -118,7 +140,7 @@ function MuralContent() {
 
   return <MuralManagementContext.Provider value={{edit:item=>setManagement({action:'edit',item}),remove:item=>setManagement({action:'delete',item})}}><div className="mural-layout mural-screen">
     <section className="mural-feed" aria-labelledby="mural-title">
-    <header className="mural-heading"><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
+    <header className="mural-heading"><MuralBrandStar /><span className="kicker">TU COMUNIDAD LECTORA</span><h1 id="mural-title">Entre libros y personas.</h1><p>Descubre lo que otros leen, sienten y comparten.</p></header>
     {profileError && <p role="alert">{profileError}</p>}
     {linkedError&&<p role="alert">{linkedError}</p>}
     {savedMessage&&<p role="status">{savedMessage}</p>}

@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { useTheme } from '../context/ThemeContext'
 
 export default function VisualEffectsSettings() {
-  const { magicalBackground, setMagicalBackground, magicalBackgroundMotion, setMagicalBackgroundMotion } = useTheme()
+  const { theme, magicalBackground, setMagicalBackground, magicalBackgroundMotion, setMagicalBackgroundMotion } = useTheme()
   const id = useId()
   const motionId = `${id}-motion`
   return <section className="visual-effects-settings" aria-labelledby={`${id}-heading`}>

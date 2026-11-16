@@ -2,7 +2,8 @@ import ModerationNotice from './ModerationNotice'
 import { BookOpen, CalendarDays, Database, Home, LogOut, Settings2, UserRound, BarChart3, Menu, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { apiRequest } from '../api/client'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthJourney } from '../context/AuthJourneyContext'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import BrandLogo from './BrandLogo'
@@ -10,9 +11,27 @@ import NavigationIcon from './NavigationIcon'
 import NavigationGalaxy from './NavigationGalaxy'
 import MessageBubbleIcon from './MessageBubbleIcon'
 import NotificationShortcut from './NotificationShortcut'
+import ThemeModeToggle from './ThemeModeToggle'
 import HeaderGreeting from './HeaderGreeting'
 import MagicalBackground from './MagicalBackground'
+import LiteraryAtmosphere from './LiteraryAtmosphere'
+import SidebarCandle from './SidebarCandle'
 import './LayoutNavigation.css'
+import './DarkInterior.css'
+import './LightInterior.css'
+import './BloodInterior.css'
+import './EquinoxInterior.css'
+import './CottonInterior.css'
+import './MidnightInterior.css'
+import './ForestInterior.css'
+import './CrystalInterior.css'
+import './RoseInterior.css'
+import './ContinuousMural.css'
+import './SidebarArtwork.css'
+import './LiteraryThemePack.css'
+import './RefreshedThemeArtwork.css'
+import './ViewportBackground.css'
+import './ThemeFooters.css'
 import { EventAttendanceProvider } from '../context/EventAttendanceContext'
 
 
@@ -27,7 +46,9 @@ function HeaderShortcut({ to, label, icon: Icon }) {
 
 export default function Layout() {
   const { user, access, logout } = useAuth()
-  const { magicalBackground, magicalBackgroundMotion } = useTheme()
+  const { run: journey, holding } = useAuthJourney()
+  const navigate = useNavigate()
+  const { theme, magicalBackground, magicalBackgroundMotion } = useTheme()
   const [groupAccess, setGroupAccess] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width:700px)').matches)
@@ -43,6 +64,7 @@ export default function Layout() {
   }, [])
   useEffect(() => {
     if (!mobile || !menuOpen) return
+    const returnFocusTarget = toggleRef.current
     const bodyOverflow = document.body.style.overflow
     const rootOverflow = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
@@ -72,7 +94,7 @@ export default function Layout() {
       document.body.style.overflow = bodyOverflow
       document.documentElement.style.overflow = rootOverflow
       background.forEach((node, index) => { node.inert = previousInert[index] })
-      if (window.matchMedia('(max-width:700px)').matches) toggleRef.current?.focus({ preventScroll: true })
+      if (window.matchMedia('(max-width:700px)').matches) returnFocusTarget?.focus({ preventScroll: true })
     }
   }, [mobile, menuOpen])
   const [headerScrolled, setHeaderScrolled] = useState(() => window.scrollY > 8)
@@ -104,7 +126,7 @@ export default function Layout() {
     return () => { active = false }
   }, [user.id])
   const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('')
-  return <div className={`social-shell${hasTools ? ' has-navigation-tools' : ''}`}>
+  return <div className={`social-shell${hasTools ? ' has-navigation-tools' : ''}`} data-interior-style="literary" data-mural={pathname === '/' ? 'true' : undefined}>
     <a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className={`social-sidebar${menuOpen ? ' mobile-menu-open' : ''}`}>
       <Link className="brand-link" to="/" aria-label="LibrIAverse, tu universo literario. Ir al mural"><BrandLogo /></Link>
@@ -119,13 +141,17 @@ export default function Layout() {
         <NavLink to="/recommendations" className="navigation-galaxy-link"><NavigationIcon variant="wand" /><span>Recomendaciones IA</span><NavigationGalaxy /></NavLink>
         <NavLink to="/settings" className="navigation-galaxy-link"><Settings2 size={22} /><span>Configuración</span><NavigationGalaxy /></NavLink>
       </nav>
-      <div className="sidebar-account"><Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" onClick={logout}><LogOut size={18} /> Cerrar sesión</button></div>
+      <div className="sidebar-account">{theme === 'dark-blood' && <SidebarCandle animated={magicalBackground && magicalBackgroundMotion} />}<Link to="/profile" className="account-link"><span className="avatar">{initials}</span><span>{user.display_name}<small>{roleLabels[user.role]}</small></span></Link><button className="logout-button" disabled={holding} aria-busy={holding} onClick={() => journey('exit', logout, () => navigate('/login', { replace: true }))}><LogOut size={18} /> Cerrar sesión</button></div>
       </div>
     </aside>
     <div ref={pageRef} className="social-page-column" data-magical-background={magicalBackground ? 'enabled' : undefined} data-starfield-motion={magicalBackgroundMotion ? 'enabled' : 'disabled'}>
-      {magicalBackground && <MagicalBackground motionEnabled={magicalBackgroundMotion} />}
+      {magicalBackground && <div className="social-viewport-background" aria-hidden="true">
+        <MagicalBackground motionEnabled={magicalBackgroundMotion} />
+        {!pathname.startsWith('/admin') && <LiteraryAtmosphere />}
+      </div>}
       <header className={`social-topbar${headerScrolled ? ' is-scrolled' : ''}`}><HeaderGreeting displayName={user?.display_name} /><nav className="global-header-actions" aria-label="Accesos del encabezado" onClick={event => { if (event.target.closest('a')) { setMenuOpen(false); if (toolsRef.current) toolsRef.current.open = false } }}>
         <HeaderShortcut to="/messages" label="Mensajes" icon={MessageBubbleIcon} />
+        <ThemeModeToggle />
         <NotificationShortcut key={user.id} />
         {hasTools && <details ref={toolsRef} className="navigation-tools" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); toolsRef.current.open = false; toolsRef.current.querySelector('summary').focus() } }}>
           <summary className="global-header-action" aria-label="Herramientas"><Settings2 size={21} aria-hidden="true" /><span className="global-header-tooltip" role="tooltip">Herramientas</span></summary>

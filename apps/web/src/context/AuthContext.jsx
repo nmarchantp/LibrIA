@@ -199,10 +199,11 @@ export function AuthProvider({ children }) {
     return applyResult(result)
   }
   const logout = async () => {
-    if (unsavedChanges && !window.confirm('Tienes una reseña, nota o teoría sin guardar. ¿Cerrar sesión y descartar esos cambios?')) return
+    if (unsavedChanges && !window.confirm('Tienes una reseña, nota o teoría sin guardar. ¿Cerrar sesión y descartar esos cambios?')) return false
     const token = localStorage.getItem(TOKEN_KEY)
     try { if (token) await authService.logout(token) } catch { /* local cleanup is still mandatory */ }
     clearLocalSession()
+    return true
   }
   const expiresAt = session?.inactivity_expires_at ? Date.parse(session.inactivity_expires_at) : 0
   const warning = user && expiresAt > now && expiresAt - now <= WARNING_MS

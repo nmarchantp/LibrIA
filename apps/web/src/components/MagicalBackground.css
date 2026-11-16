@@ -1,12 +1,12 @@
 /* From Uiverse.io by amir_6539: https://uiverse.io/amir_6539/red-duck-82
    MIT notice: docs/licenses/uiverse-profile-starfield-MIT.txt.
    Three descending particle planes adapted into lightweight repeating gradients.
-   Approved particle colors, density, opacity and timing are kept unchanged. */
+   Particle colors, density, opacity and timing are shared by every theme. */
 .social-page-column[data-magical-background="enabled"] { position:relative; }
 .social-page-column[data-magical-background="enabled"] .social-main { position:relative; z-index:1; }
 .social-page-column[data-magical-background="enabled"] .header-greeting { z-index:1; }
 .profile-starfield { position:absolute; inset:0; z-index:0; overflow:clip; pointer-events:none; user-select:none; background:radial-gradient(ellipse at bottom,color-mix(in srgb,var(--primary) 12%,var(--paper)) 0%,var(--paper) 100%); }
-.profile-starfield-layer { position:absolute; inset:0 0 -600px; pointer-events:none; background-size:600px 600px; background-repeat:repeat; will-change:transform; animation:profile-starfield-rise var(--starfield-duration) linear infinite; }
+.profile-starfield-layer { position:absolute; z-index:1; inset:0 0 -600px; pointer-events:none; background-size:600px 600px; background-repeat:repeat; will-change:transform; animation:profile-starfield-rise var(--starfield-duration) linear infinite; }
 .profile-starfield-layer--fine { opacity:.28; }
 .profile-starfield-layer--medium { opacity:.4; }
 .profile-starfield-layer--large { opacity:.55; }

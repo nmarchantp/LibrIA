@@ -1,0 +1,186 @@
+{
+  "lavanda": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 104802
+    }
+  },
+  "otono": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 80042
+    }
+  },
+  "invierno": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 114966
+    }
+  },
+  "rosa-antiguo": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 115776
+    }
+  },
+  "bosque": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 123898
+    }
+  },
+  "dark-dorado": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 99106
+    }
+  },
+  "dark-blood": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 80568
+    }
+  },
+  "dark-rosado": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 94740
+    }
+  },
+  "cronicas-tiempo": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 67420
+    }
+  },
+  "reino-celestial": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 98462
+    }
+  },
+  "arenas-destino": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 97400
+    }
+  },
+  "susurros-sakura": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 119568
+    }
+  },
+  "archivo-galactico": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 64462
+    }
+  },
+  "olimpo-eterno": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 77728
+    }
+  },
+  "otono-encantado": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 111218
+    }
+  },
+  "oraculo-luna": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 91514
+    }
+  },
+  "runas-norte": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 119136
+    }
+  },
+  "reino-hongos": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 119330
+    }
+  },
+  "catedral-cristal": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 83100
+    }
+  },
+  "mil-una-historias": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 121746
+    }
+  },
+  "canto-sirenas": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 119432
+    }
+  },
+  "ecos-sombras": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 96964
+    }
+  },
+  "aquelarre-medianoche": {
+    "footer": {
+      "width": 1800,
+      "height": 600,
+      "transparent": true,
+      "bytes": 101374
+    }
+  }
+}

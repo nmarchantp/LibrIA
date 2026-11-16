@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LibrIAverse · Tintas del Equinoccio</title>
+<style>body{margin:24px;background:#26190F;color:#F7E8CB;font:16px/1.6 system-ui}h1{font-size:26px}label{display:inline-block;margin:0 20px 20px 0}select{font:inherit;padding:8px}main{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0}img{width:100%;height:auto;border:1px solid #666271}figcaption{margin-bottom:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
+<h1>Tintas del Equinoccio de LibrIAverse</h1>
+<p>Capturas con datos simulados. La comparación conserva la misma vista y resolución.</p>
+<label>Tema <select id="theme"><option value="otono">Tintas del Equinoccio</option></select></label>
+<label>Pantalla <select id="page"><option value="mural">Mural</option><option value="profile">Perfil</option><option value="profile-tab-library">Biblioteca</option><option value="recommendations">Recomendaciones IA</option><option value="adminprofiles">Administración</option></select></label>
+<label>Ancho <select id="width"><option>1440</option><option>390</option></select></label>
+<main><figure><figcaption>Antes</figcaption><img id="before" alt="Vista anterior"></figure><figure><figcaption>Después</figcaption><img id="after" alt="Vista con identidad interior"></figure></main>
+<script>
+const controls=['theme','page','width'].map(id=>document.getElementById(id));
+function update(){const [theme,page,width]=controls.map(e=>e.value);for(const stage of ['before','after'])document.getElementById(stage).src=`../artifacts/equinox-${stage}/${theme}-${width}-${page}.png`}
+controls.forEach(e=>e.addEventListener('change',update));update();
+</script></html>

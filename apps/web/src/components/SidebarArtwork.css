@@ -1,0 +1,20 @@
+/* Keep artwork immediately before the account; spare space belongs above it. */
+@media(min-width:701px) {
+  :root:is([data-theme="dark"],[data-theme="lavanda"],[data-theme="dark-blood"],[data-theme="otono"],[data-theme="rosa-antiguo"],[data-theme="dark-dorado"],[data-theme="bosque"],[data-theme="invierno"],[data-theme="dark-rosado"]) .social-shell[data-interior-style="literary"] {
+    .sidebar-navigation .social-nav { flex-shrink:0; }
+    .sidebar-navigation::after { flex:0 1 340px; min-height:0; margin-top:auto; margin-bottom:0; mask-image:linear-gradient(transparent,#000 12%,#000 calc(100% - 4px),transparent),linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-composite:intersect; }
+    .sidebar-navigation .sidebar-account { margin-top:0; }
+  }
+}
+
+/* The new transparent illustrations use the same full sidebar width as crystal. */
+@media(min-width:701px) {
+  :root:is([data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"],[data-theme="invierno"],[data-theme="dark-rosado"]) .social-shell[data-interior-style="literary"] .sidebar-navigation::after {
+    margin-inline:-20px;
+    background-size:contain;
+    background-position:center bottom;
+  }
+}
+@media(min-width:701px) and (max-width:1200px) {
+  :root:is([data-theme="rosa-antiguo"],[data-theme="bosque"],[data-theme="dark-dorado"],[data-theme="invierno"],[data-theme="dark-rosado"]) .social-shell[data-interior-style="literary"] .sidebar-navigation::after { margin-inline:-14px; }
+}

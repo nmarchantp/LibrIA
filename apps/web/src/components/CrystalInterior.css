@@ -1,0 +1,158 @@
+/* Alas de cristal: pale ice surfaces and three reference-inspired illustrations. */
+:root[data-theme="invierno"] :is(.social-shell[data-interior-style="literary"],.reader-profile-modal[open],.content-management-dialog[open]) {
+  --paper:#D9EAF7; --surface:#EEF6FF; --surface-raised:#E3F0FC;
+  --ink:#173B66; --muted:#36587B; --line:#93B8D4; --panel-border:#93B8D4;
+  --primary:#326A9D; --accent-text:#326A9D; --focus:#255D91;
+  --soft:#D1E6F6; --field-bg:#F6FAFF; --control-border:#6386A5;
+  --button-bg:#326A9D; --primary-hover:#285A88; --on-primary:#FFFFFF;
+  --neutral-button-bg:#E3F0FC; --neutral-button-hover:#CCE2F4; --sidebar-bg:#D5EAF8;
+  --orange:#326A9D; --lavender-soft:#CBE2F5; --on-feature:#173B66;
+  --feature-start:#E3F0FC; --feature-end:#D9EAF7;
+  --crystal-scene:url('/images/crystal-universe/dragon-castle-v1.png');
+}
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"] {
+  background:var(--paper);
+  .social-page-column { position:relative; isolation:isolate; background:var(--paper); --main-top-space:18px; }
+  .literary-atmosphere { display:none; pointer-events:none; }
+  .profile-starfield { background:radial-gradient(ellipse at 75% 15%,#F3FAFF,transparent 65%),linear-gradient(#C3DFF1,#E5F1FB); }
+  .profile-starfield::before { content:''; position:absolute; inset:0 0 auto; height:160px; pointer-events:none; background:linear-gradient(90deg,rgb(7 13 29 / 80%),rgb(7 13 29 / 30%)),var(--crystal-scene) center 35%/cover no-repeat; opacity:.7; mask-image:linear-gradient(#000,transparent); }
+  .social-topbar::before { background:linear-gradient(rgb(7 13 29 / 35%),transparent); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .social-topbar.is-scrolled::before { background:rgb(7 13 29 / 94%); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .header-greeting-title { color:var(--primary); }
+  :is(.global-header-action,.mobile-nav-toggle) { color:var(--primary); }
+  .mobile-nav-toggle svg { stroke:var(--primary); }
+  .social-sidebar { background:radial-gradient(ellipse at 50% 78%,rgb(53 64 85 / 25%),transparent 50%),linear-gradient(#D9EAF7,#D5EAF8); border-color:var(--panel-border); }
+  .social-sidebar .social-nav a { min-height:46px; border-radius:14px; gap:12px; font-size:14px; color:var(--ink); }
+  .social-sidebar .social-nav a.active { background:linear-gradient(145deg,#E3F0FC,#D5E8F7); color:var(--ink); border:1px solid #FFFFFF; box-shadow:inset 0 -3px 8px rgb(121 208 255 / 20%),0 0 10px rgb(121 208 255 / 15%); font-weight:700; }
+  .social-sidebar .social-nav a:is(:hover,:focus-visible):not(.active) { background:#CBE2F5; color:var(--ink); box-shadow:none; }
+  .social-sidebar .navigation-galaxy-link::before { background:none; box-shadow:none; }
+  .social-sidebar .navigation-galaxy { opacity:.45; }
+  .social-sidebar > .brand-link { position:relative; padding:10px 8px 20px; border-bottom:1px solid var(--panel-border); }
+  .social-sidebar > .brand-link::after { content:''; position:absolute; bottom:-3px; left:calc(50% - 3px); width:6px; height:6px; transform:rotate(45deg); background:#326A9D; pointer-events:none; }
+  .brand-logo-ai,.brand-logo-star { fill:#326A9D; }
+  .brand-logo-orbit { stroke:#326A9D; }
+  .sidebar-navigation::after { content:''; display:block; flex:1 1 300px; min-height:0; max-height:340px; order:1; margin-inline:-20px; background:url('/images/crystal-universe/lantern-books-v2.png') center bottom/contain no-repeat; pointer-events:none; }
+  .sidebar-navigation .sidebar-account { order:2; flex-shrink:0; border-top:1px solid var(--panel-border); padding-top:18px; }
+  .sidebar-account .avatar { background:var(--primary); color:var(--on-primary); }
+  .sidebar-account .account-link { color:var(--ink); }
+  .sidebar-account .account-link small { color:var(--muted); }
+  .sidebar-account .logout-button { color:var(--accent-text); }
+  .publication-create-shortcut { background:linear-gradient(#F4FAFF,#D7EBFB); color:var(--ink); border-color:#6386A5; box-shadow:inset 0 -3px 8px rgb(121 208 255 / 15%); }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject) { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); box-shadow:none; }
+  .button:not(.primary):not(.text):not(.soft):not(.cream):not(.danger):not(.account-danger-button):not(.request-reject):hover:not(:disabled) { background:var(--neutral-button-hover); }
+  .button.primary { background:var(--button-bg); color:var(--on-primary); border:1px solid transparent; }
+  .button.primary:hover:not(:disabled) { background:var(--primary-hover); transform:none; }
+  :is(.button.danger,.account-danger-button,.request-reject,.account-danger .button) { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
+  :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]) { background:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px; }
+  :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+  :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  :is(.catalog-result-card,.reader-book-card,.reader-personal-card,.recommendation-card,.agenda-event,.analysis-card,.account-personal-info,.role-panel,.google-account-panel,.account-management > section,.feed-card,.mural-activity-card,.bulletin-card,.aside-reading) { background:linear-gradient(145deg,#F1F7FF,#E2EFFC); border-color:var(--panel-border); box-shadow:0 5px 18px rgb(51 101 148 / 16%); }
+  :is(.agenda-calendar,.agenda-detail,.reader-profile-stat,.navigation-tools-menu,.admin-list,.admin-detail,.accounts-directory,.account-detail) { background:var(--surface); border-color:var(--panel-border); }
+  :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:24px; border:1px solid var(--panel-border); border-radius:18px; background:radial-gradient(ellipse at 100% 0,rgb(47 66 107 / 30%),transparent 65%),linear-gradient(145deg,#F1F7FF,#D5E8F7); }
+  .reader-profile-cover { aspect-ratio:3 / 1; }
+}
+:root[data-theme="invierno"] :is(.reader-profile-modal[open],.content-management-dialog[open]) {
+  background:var(--surface-raised); color:var(--ink); border-color:var(--panel-border);
+  :is(input,select,textarea) { background:var(--field-bg); color:var(--ink); border-color:var(--control-border); font-size:16px; }
+  :is(button,a,input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
+  .reader-modal-footer > button { background:var(--neutral-button-bg); color:var(--ink); border:1px solid var(--control-border); }
+  .reader-modal-footer > button[type="submit"] { background:var(--button-bg); color:var(--on-primary); }
+}
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-heading { min-height:210px; background:none; border:0; box-shadow:none; padding:26px 0 34px; }
+  .mural-heading h1 { font-size:clamp(34px,3.4vw,48px); max-width:76%; margin-block:18px 14px; text-wrap:balance; }
+  .mural-heading .kicker { color:var(--primary); }
+  .mural-heading p { color:var(--ink); max-width:440px; }
+  .profile-starfield::before { inset:0 0 auto; height:var(--mural-scene-height,304px); opacity:1; background:linear-gradient(90deg,rgb(22 53 90 / 50%),transparent 70%),var(--crystal-scene) center/100% auto no-repeat; mask-image:linear-gradient(#000 0%,#000 86%,transparent),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent); mask-composite:intersect; }
+  .mural-audiences { background:linear-gradient(#F1F7FF,#E2EFFC); border-color:#8CAFCB; }
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#E3F0FC,#D5E8F7); color:var(--ink); border-color:#FFFFFF; box-shadow:inset 0 -3px 8px rgb(121 208 255 / 20%),0 0 10px rgb(121 208 255 / 15%); }
+  .mural-category-icon { color:#326A9D; border:1px solid #8CAFCB; box-shadow:inset 0 -2px 6px rgb(121 208 255 / 10%); }
+  .reader-summary { position:relative; isolation:isolate; overflow:hidden; min-height:330px; padding:26px 24px 20px; display:flex; flex-direction:column; align-items:flex-start; background:#D5EAF8; border:1px solid #6386A5; border-radius:18px; color:var(--ink); box-shadow:0 7px 22px rgb(51 101 148 / 16%); }
+  .reader-summary::before { content:''; position:absolute; inset:0; z-index:-2; background:url('/images/crystal-universe/ice-corner-v1.png') center/cover no-repeat; pointer-events:none; }
+  .reader-summary::after { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgb(10 37 70 / 55%),transparent); pointer-events:none; }
+  .reader-summary h2 { color:var(--ink); margin-block:18px; max-width:90%; font:32px/1.15 'DM Serif Display',serif; }
+  .reader-summary .kicker { color:var(--ink); }
+  .reader-summary p { color:var(--ink); margin-bottom:68px; }
+  .reader-summary a { color:var(--ink); padding:9px 11px; border:1px solid #FFFFFF; border-radius:16px; margin-top:auto; background:rgb(12 19 36 / 85%); font-size:12px; box-shadow:inset 0 -3px 8px rgb(121 208 255 / 20%),0 0 9px rgb(121 208 255 / 12%); }
+  .community-note { border-top:1px solid var(--panel-border); padding-top:24px; }
+}
+@media(min-width:1000px) {
+  :root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before { --scene-right-space:calc(300px + max(var(--main-gutter),calc((100% - var(--main-max-width)) / 2))); inset:0 var(--scene-right-space) auto auto; width:calc(100% - var(--scene-right-space)); }
+}
+/* Preserve the panorama's 3:1 proportions on wide screens. The extra height
+   fades behind the page instead of compressing the dragon into the hero. */
+@media(min-width:701px) {
+  :root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] .profile-starfield::before {
+    height:auto;
+    min-height:var(--mural-scene-height,304px);
+    aspect-ratio:3 / 1;
+    background-position:left top,right top;
+    background-size:auto,100% auto;
+    mask-image:linear-gradient(#000 0%,#000 55%,rgb(0 0 0 / 45%) 77%,transparent 100%),linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+  }
+}
+@media(max-width:700px) {
+  :root[data-theme="invierno"] .social-shell[data-interior-style="literary"] {
+    .social-page-column { --main-top-space:14px; isolation:auto; }
+    .social-sidebar { background:var(--sidebar-bg); }
+    .social-sidebar .brand-link { max-width:min(170px,calc(100vw - 248px)); padding:0; border:0; }
+    .social-sidebar > .brand-link::after,.sidebar-navigation::after { display:none; }
+    .sidebar-navigation { background:linear-gradient(#D5EAF8,#D9EAF7); }
+    .social-sidebar .social-nav a.active { box-shadow:inset 0 2px var(--primary); }
+    :is(.books-header,.agenda-header,.catalog-header,.admin-header,.etl-heading) { padding:18px; }
+  }
+  :root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+    .mural-heading { min-height:270px; padding:24px 0 28px; }
+    .mural-heading h1 { max-width:100%; font-size:36px; }
+    .mural-heading p { max-width:250px; }
+    .profile-starfield::before { background-position:left top,70% center; background-size:auto,auto 100%; }
+  }
+}
+
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"] {
+  .social-sidebar { box-sizing:border-box; background:radial-gradient(ellipse at 50% 65%,#F4FAFF,transparent 70%),linear-gradient(#D2E9F8,#BCD9ED); border-right:1px solid #FFFFFF; box-shadow:inset -2px 0 8px rgb(255 255 255 / 70%); }
+  .sidebar-navigation .social-nav { flex-shrink:0; overflow:visible; }
+  .sidebar-navigation::after { flex:1 1 0; }
+  .social-sidebar .social-nav a.active,.mural-audiences button[aria-pressed="true"] { color:#FFFFFF; background:linear-gradient(145deg,#3777AA,#286293); border-color:#FFFFFF; box-shadow:inset 0 0 8px rgb(166 240 255 / 65%),0 0 8px rgb(105 220 255 / 50%); }
+  .social-sidebar .social-nav a.active svg { color:#FFFFFF; }
+  .social-sidebar .social-nav a:hover:not(.active) { background:#C7E2F5; box-shadow:inset 0 0 0 1px #6386A5; }
+  .social-nav a > svg { width:22px; height:22px; color:#173B66; }
+  .global-header-action > svg { width:22px; height:22px; }
+  .global-header-action > :is(.message-bubble-icon,.notification-bell-icon) { width:28px; height:28px; }
+  :is(.message-envelope,.notification-bell) > :is(rect,path) { fill:none; }
+  .publication-create-shortcut { color:var(--ink); background:linear-gradient(#F6FBFF,#CBE4F9); border-color:#FFFFFF; box-shadow:inset 0 0 8px #FFFFFF,0 4px 14px rgb(42 91 139 / 22%); }
+  :is(.catalog-result-card,.reader-book-card,.reader-personal-card,.recommendation-card,.agenda-event,.analysis-card,.account-personal-info,.role-panel,.google-account-panel,.feed-card,.mural-activity-card,.bulletin-card,.aside-reading) { border-color:#FFFFFF; box-shadow:inset 0 0 0 1px rgb(126 177 214 / 28%),0 6px 18px rgb(51 101 148 / 16%); }
+  .social-topbar::before { background:rgb(218 235 249 / 95%); }
+  .mural-heading h1 { text-shadow:0 2px 4px rgb(12 40 74 / 65%); }
+  .social-page-column[data-magical-background="enabled"]::after { content:''; position:absolute; inset:auto 0 0 auto; width:min(380px,45%); height:240px; background:url('/images/crystal-universe/frost-crystals-v1.png') right bottom/contain no-repeat; opacity:.35; pointer-events:none; z-index:0; }
+}
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-heading { color:#FFFFFF; }
+  .mural-heading :is(h1,p,.kicker) { color:#FFFFFF; }
+  .social-topbar { --primary:#F6FBFF; --accent-text:#F6FBFF; --soft:#3F6E9C; color:#FFFFFF; }
+  .header-greeting-title { color:#FFFFFF; }
+  .social-topbar.is-scrolled { --primary:#326A9D; --accent-text:#326A9D; }
+  .social-topbar.is-scrolled .header-greeting-title { color:#173B66; }
+  .reader-summary { --ink:#FFFFFF; --muted:#E3F0FF; --primary:#D5ECFF; --accent-text:#FFFFFF; color:#FFFFFF; border-color:#E8FAFF; box-shadow:inset 0 0 7px rgb(165 228 255 / 65%),0 5px 20px rgb(38 89 139 / 30%); }
+  .reader-summary a { background:rgb(15 50 88 / 85%); box-shadow:inset 0 0 5px rgb(165 228 255 / 35%); }
+  .mural-audiences { border-color:#FFFFFF; box-shadow:inset 0 0 7px #FFFFFF,0 3px 12px rgb(51 101 148 / 15%); }
+  .mural-audiences button { color:#173B66; }
+  .mural-audiences button[aria-pressed="true"] { color:#FFFFFF; }
+}
+@media(max-width:700px) {
+  :root[data-theme="invierno"] .social-shell[data-interior-style="literary"] {
+    .social-sidebar { background:var(--sidebar-bg); box-shadow:none; }
+    .sidebar-navigation { background:linear-gradient(#E4F2FC,#C9E1F3); }
+    .social-page-column[data-magical-background="enabled"]::after { opacity:.18; }
+    .social-topbar .global-header-actions { --primary:#173B66; color:#173B66; }
+  }
+}
+
+:root[data-theme="invierno"] .social-shell[data-interior-style="literary"][data-mural="true"] {
+  .mural-audiences button[aria-pressed="true"] { background:linear-gradient(145deg,#3777AA,#286293); border-color:#FFFFFF; color:#FFFFFF; box-shadow:inset 0 0 8px rgb(166 240 255 / 65%),0 0 8px rgb(105 220 255 / 50%); }
+  .mural-activity-card { border-color:#FFFFFF; box-shadow:none; }
+}
+@media(min-width:1000px) {
+  :root[data-theme="invierno"] .social-shell[data-mural="true"] .global-header-actions { --primary:#173B66; color:#173B66; }
+  :root[data-theme="invierno"] .social-shell[data-mural="true"] .global-header-action { color:#173B66; }
+}

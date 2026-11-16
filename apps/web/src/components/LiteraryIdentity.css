@@ -1,0 +1,46 @@
+/* Interior identity uses existing theme colors and the star silhouette of BrandLogo. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-shell {
+  --literary-star:url('/images/literary-star.svg');
+  --literary-haze-opacity:.085;
+  --literary-star-opacity:.22;
+}
+:root[data-theme="lavanda"] .social-shell {
+  --literary-haze-opacity:.045;
+  --literary-star-opacity:.14;
+}
+.literary-atmosphere { display:none; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-page-column { position:relative; isolation:isolate; }
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .literary-atmosphere {
+  display:block; position:absolute; inset:0 0 auto; height:270px;
+  overflow:hidden; pointer-events:none; user-select:none; z-index:0;
+}
+.literary-atmosphere-haze {
+  position:absolute; inset:-90px 0 0; opacity:var(--literary-haze-opacity);
+  background:radial-gradient(ellipse at 68% 0,var(--accent),transparent 66%);
+}
+.literary-atmosphere-star {
+  position:absolute; top:74px; right:9%; width:15px; height:15px;
+  background:var(--primary); mask:var(--literary-star) center/contain no-repeat;
+  opacity:var(--literary-star-opacity);
+}
+.literary-atmosphere-star--distant { top:31px; right:32%; width:7px; height:7px; opacity:calc(var(--literary-star-opacity) * .6); }
+/* One editorial mark per principal section, never inside individual posts. */
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-main :is(.mural-heading h1,.books-header h1,.admin-header h1,.catalog-header h1,.agenda-header h1,.etl-heading h1,.community-page > .page-title,#settings-heading,#reader-library-heading,.reading-page-header > div > strong)::before {
+  content:''; display:block; width:17px; height:17px; margin-bottom:12px;
+  background:var(--accent-text); opacity:.65;
+  mask:var(--literary-star) center/contain no-repeat;
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-sidebar > .brand-link {
+  border-bottom:1px solid var(--panel-border); padding-bottom:18px;
+}
+:root:is([data-theme="dark"],[data-theme="lavanda"]) .social-nav a.active {
+  box-shadow:inset 3px 0 var(--primary);
+}
+@media(max-width:700px) {
+  /* Fixed header actions must share the sidebar's stacking context on mobile. */
+  :root:is([data-theme="dark"],[data-theme="lavanda"]) .social-page-column { isolation:auto; }
+  :root:is([data-theme="dark"],[data-theme="lavanda"]) .literary-atmosphere { height:180px; }
+  .literary-atmosphere-star--distant { display:none; }
+  :root:is([data-theme="dark"],[data-theme="lavanda"]) .social-sidebar > .brand-link { border-bottom:0; padding-bottom:0; }
+  :root:is([data-theme="dark"],[data-theme="lavanda"]) .social-nav a.active { box-shadow:inset 0 2px var(--primary); }
+}

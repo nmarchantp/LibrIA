@@ -23,9 +23,14 @@ import GroupInsightsPage from './pages/GroupInsightsPage'
 import LibraryBookPage from './pages/LibraryBookPage'
 import CommunityProfilePage from './pages/CommunityProfilePage'
 import SettingsPage from './pages/SettingsPage'
+import AuthJourneyProvider from './components/AuthJourneyProvider'
 
 // App contiene solamente el mapa de URLs del frontend.
 export default function App() {
+  return <AuthJourneyProvider><AppRoutes /></AuthJourneyProvider>
+}
+
+function AppRoutes() {
   return <Routes>
     <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
     <Route element={<SessionGate guest />}>
