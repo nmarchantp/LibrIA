@@ -11,8 +11,12 @@ const featured = [
   { isbn: '9786073902427', genre: 'Romantasy', year: 2023, tone: '#c4506b' },
   { isbn: '9781781101315', genre: 'Magia clásica', year: 1997, tone: '#c9853f' },
   { isbn: '9788401342585', genre: 'Realismo mágico', year: 1982, tone: '#3f9a89' },
+  { isbn: '9788401337208', genre: 'Fantasía épica', year: 2007, tone: '#b5643a' },
+  { isbn: '9788497596824', genre: 'Ciencia ficción', year: 1965, tone: '#c9a14a' },
+  { isbn: '9788499890944', title: '1984', genre: 'Distopía', year: 1949, tone: '#8a8f99' },
+  { isbn: '9788498381498', title: 'El principito', author: 'Antoine de Saint-Exupéry', genre: 'Fábula', year: 1943, tone: '#4f86c6' },
 ]
-const cacheKey = 'libria_featured_books_v2'
+const cacheKey = 'libria_featured_books_v3'
 const cacheTime = 30 * 60 * 1000
 
 function readCache() {
@@ -31,7 +35,7 @@ export default function FeaturedBooks({ fallback }) {
       if (controller.signal.aborted) return
       const found = results.flatMap((result, index) => {
         const book = result.status === 'fulfilled' && result.value.books[0]
-        return book ? [{ ...featured[index], id: book.id, title: featured[index].title || book.title, author: book.author, image: book.image, pageCount: book.pageCount, averageRating: book.averageRating, libria: book.catalogOrigin === 'libria' }] : []
+        return book ? [{ ...featured[index], id: book.id, title: featured[index].title || book.title, author: featured[index].author || book.author, image: book.image, pageCount: book.pageCount, averageRating: book.averageRating, libria: book.catalogOrigin === 'libria' }] : []
       })
       setBooks(found)
       try { if (found.length) sessionStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), books: found })) } catch { /* Only a convenience. */ }
@@ -44,7 +48,7 @@ export default function FeaturedBooks({ fallback }) {
     <div className="featured-books-heading">
       <div><h2 id="featured-books-heading"><Compass aria-hidden="true" />Inspiración para tu estantería</h2>
         <p>Elige una obra destacada en un clic o escribe arriba para explorar todo el catálogo.</p></div>
-      <span>Selección destacada · {featured.length} obras</span>
+      <span>Selección destacada · {books ? books.length : featured.length} obras</span>
     </div>
     <ul className="featured-books-grid">
       {books ? books.map(book => <li key={book.isbn}>

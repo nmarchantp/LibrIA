@@ -47,7 +47,7 @@ export default function PostGallery({ images, alt, onOpen, horizontal = false, e
   }
 
   return <>
-    {editorial ? <div className="post-gallery-editorial" style={{ gridTemplateColumns:`repeat(${Math.min(total,4)},minmax(0,1fr))`, maxWidth:Math.min(total,4)*180+(Math.min(total,4)-1)*8 }} aria-label="Fotografías adjuntas">
+    {editorial ? <div className="post-gallery-editorial" style={{ gridTemplateColumns:`repeat(${Math.min(total,4)},minmax(0,1fr))`, maxWidth:Math.min(total,4)*240+(Math.min(total,4)-1)*8 }} aria-label="Fotografías adjuntas">
       {images.slice(0,4).map((src,index)=><button type="button" key={`${index}-${src}`} className="post-gallery-tile" onClick={()=>openImage(index)} aria-label={`Ampliar imagen ${index+1} de ${total}`}><img src={src} alt={`${alt} (${index+1} de ${total})`} loading="lazy" />{index===3&&total>4&&<span className="post-gallery-overflow" aria-hidden="true">+{total-3}</span>}</button>)}
     </div> : <>
     <div className={horizontal ? 'post-gallery-horizontal' : undefined}>

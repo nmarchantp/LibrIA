@@ -31,7 +31,7 @@ export default function AccountProfileSection({ account, busy, run }) {
     catch { /* The field stays selectable when the clipboard is unavailable. */ }
   }
 
-  return <section className="account-panel" aria-labelledby="account-profile-heading">
+  return <section className="account-panel account-personal-info" aria-labelledby="account-profile-heading">
     <header className="account-panel-header">
       <div><h2 id="account-profile-heading">Mi perfil</h2><p>Información visible en tu tarjeta comunitaria y reseñas.</p></div>
     </header>
