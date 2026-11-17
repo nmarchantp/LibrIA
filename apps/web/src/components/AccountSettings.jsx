@@ -53,11 +53,11 @@ export default function AccountSettings({ preferences }) {
   const RoleIcon = role?.icon
 
   let content
-  if (!account) content = <section className="account-panel account-loading">
+  if (!account) content = <section className="account-panel account-personal-info account-loading">
     {error ? <><p role="alert">{error}</p><button type="button" className="button account-button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></> : <p role="status">Cargando cuenta…</p>}
   </section>
   else if (section === 'privacy') content = <ProfilePrivacySettings preferences={preferences} />
-  else if (section === 'security') content = <AccountSecuritySection account={account} sessions={sessions} currentSessionId={session?.session_id} busy={busy} run={run} />
+  else if (section === 'security') content = <AccountSecuritySection account={account} sessions={sessions} currentSessionId={session?.session_id} busy={busy} run={run} reload={() => { setAttempt(value => value + 1); retry() }} />
   else if (section === 'role') content = <RoleManagementPanel key={account.id} user={account} />
   else content = <AccountProfileSection key={account.id} account={account} busy={busy} run={run} />
 

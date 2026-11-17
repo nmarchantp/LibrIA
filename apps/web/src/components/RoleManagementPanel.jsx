@@ -36,7 +36,7 @@ export default function RoleManagementPanel({ user }) {
   const field = key => ({ value: form[key], disabled: busy, onChange: event => setForm(current => ({ ...current, [key]: event.target.value })) })
   const details = roleDetails[user.role] || roleDetails.lector
   const RoleIcon = details.icon
-  return <section className="account-panel account-role-panel" aria-labelledby="account-role-heading">
+  return <section className="account-panel account-personal-info account-role-panel" aria-labelledby="account-role-heading">
     <header className="account-role-header">
       <span className="account-role-icon"><RoleIcon size={24} aria-hidden="true" /></span>
       <div className="account-role-copy">
