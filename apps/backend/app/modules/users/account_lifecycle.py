@@ -33,6 +33,11 @@ def process_expired_accounts(db, *, batch_size=50):
         user.biography = user.avatar_url = None
         user.favorite_quotes = []
         user.literary_highlights = {}
+        user.onboarding = {}
+        user.visual_theme = None
+        from sqlalchemy import delete
+        from app.modules.users.preference_models import OnboardingFavorite
+        db.execute(delete(OnboardingFavorite).where(OnboardingFavorite.user_id == user.id))
         user.story_illustration = "flowers"
         user.account_status, user.anonymized_at = "anonymized", now()
         user.deletion_requested_at = user.deletion_scheduled_at = None

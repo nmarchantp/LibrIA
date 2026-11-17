@@ -33,7 +33,18 @@ def get_current_user(
     if not user:
         raise unauthorized
     request.state.auth_session = auth_session
+    enforce_onboarding(request, user)
     return user
+
+
+def enforce_onboarding(request, user):
+    from app.core.config import get_settings
+    path = request.url.path.removeprefix(get_settings().api_prefix)
+    allowed = (path.startswith('/auth/') or path.startswith('/account') or path.startswith('/roles/')
+               or path.startswith('/profiles/me/onboarding') or path == '/profiles/preference-catalogs'
+               or (request.method == 'GET' and path.startswith('/books')))
+    if user.onboarding_required and not allowed:
+        raise HTTPException(403, {'code': 'onboarding_required', 'message': 'Completa tu identidad literaria para continuar.'})
 
 
 def get_optional_current_user(
@@ -48,4 +59,7 @@ def get_optional_current_user(
     except SessionValidationError:
         return None
     request.state.auth_session = auth_session
-    return AuthRepository(db).get_user_by_id(auth_session.user_id)
+    user = AuthRepository(db).get_user_by_id(auth_session.user_id)
+    if user:
+        enforce_onboarding(request, user)
+    return user

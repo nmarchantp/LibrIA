@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Set MSN as your default homepage"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "en-us"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN Homepage"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en"
+   }
+}

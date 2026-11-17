@@ -1,0 +1,134 @@
+[
+  {
+    "id": "fantasia",
+    "name": "Fantasía"
+  },
+  {
+    "id": "romance",
+    "name": "Romance"
+  },
+  {
+    "id": "ciencia-ficcion",
+    "name": "Ciencia ficción"
+  },
+  {
+    "id": "misterio",
+    "name": "Misterio"
+  },
+  {
+    "id": "thriller",
+    "name": "Thriller"
+  },
+  {
+    "id": "terror",
+    "name": "Terror"
+  },
+  {
+    "id": "historica",
+    "name": "Ficción histórica"
+  },
+  {
+    "id": "aventura",
+    "name": "Aventura"
+  },
+  {
+    "id": "contemporanea",
+    "name": "Ficción contemporánea"
+  },
+  {
+    "id": "poesia",
+    "name": "Poesía"
+  },
+  {
+    "id": "ensayo",
+    "name": "Ensayo"
+  },
+  {
+    "id": "biografia",
+    "name": "Biografía y memorias"
+  },
+  {
+    "id": "no-ficcion",
+    "name": "No ficción"
+  },
+  {
+    "id": "infantil",
+    "name": "Literatura infantil"
+  },
+  {
+    "id": "juvenil",
+    "name": "Literatura juvenil"
+  },
+  {
+    "id": "romance-contemporaneo",
+    "name": "Romance contemporáneo"
+  },
+  {
+    "id": "romance-historico",
+    "name": "Romance histórico"
+  },
+  {
+    "id": "romance-juvenil",
+    "name": "Romance juvenil"
+  },
+  {
+    "id": "romance-adulto",
+    "name": "Romance adulto"
+  },
+  {
+    "id": "comedia-romantica",
+    "name": "Comedia romántica"
+  },
+  {
+    "id": "romance-deportivo",
+    "name": "Romance deportivo"
+  },
+  {
+    "id": "romance-universitario",
+    "name": "Romance universitario"
+  },
+  {
+    "id": "romance-paranormal",
+    "name": "Romance paranormal"
+  },
+  {
+    "id": "dark-romance",
+    "name": "Dark Romance"
+  },
+  {
+    "id": "romance-erotico",
+    "name": "Romance erótico"
+  },
+  {
+    "id": "mafia-romance",
+    "name": "Mafia Romance"
+  },
+  {
+    "id": "monster-romance",
+    "name": "Monster Romance"
+  },
+  {
+    "id": "bully-romance",
+    "name": "Bully Romance"
+  },
+  {
+    "id": "suspenso-romantico",
+    "name": "Suspenso romántico"
+  },
+  {
+    "id": "romantasy",
+    "name": "Romantasy"
+  },
+  {
+    "id": "dark-romantasy",
+    "name": "Dark Romantasy"
+  },
+  {
+    "id": "romance-fantastico",
+    "name": "Romance fantástico"
+  },
+  {
+    "id": "fantasia-paranormal",
+    "name": "Fantasía paranormal"
+  }
+]

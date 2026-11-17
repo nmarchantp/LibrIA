@@ -340,7 +340,7 @@ export default function LibraryBookPage() {
     </section>
 
     <nav className="reading-tabs" aria-label="Secciones de mi lectura">
-      {tabs.map(([value, label, Icon]) => <button type="button" key={value} aria-label={label} title={label} disabled={Boolean(busy)} className={activeTab === value ? 'active' : ''} aria-pressed={activeTab === value} onClick={() => { setMessage(''); setError(''); setActiveTab(value) }}><Icon /><span>{label}</span></button>)}
+      {tabs.map(([value, label, Icon]) => <button type="button" key={value} data-guide-notebook={value === 'notebook' ? '' : undefined} aria-label={label} title={label} disabled={Boolean(busy)} className={activeTab === value ? 'active' : ''} aria-pressed={activeTab === value} onClick={() => { setMessage(''); setError(''); setActiveTab(value) }}><Icon /><span>{label}</span></button>)}
     </nav>
 
     <ActionStatus busy={Boolean(busy)} message={busy || message} error={error} floating />

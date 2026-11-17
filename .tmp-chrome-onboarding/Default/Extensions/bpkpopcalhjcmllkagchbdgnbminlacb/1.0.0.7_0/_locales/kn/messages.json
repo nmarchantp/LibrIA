@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "MSN ಅನ್ನು ನಿಮ್ಮ ಡಿಫಾಲ್ಟ್ ಹೋಂಪುಟವನ್ನಾಗಿ ಮಾಡಿ"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "kn-in"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN ಮುಖಪುಟದ"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

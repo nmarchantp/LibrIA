@@ -29,6 +29,8 @@
     "test:magical-background": "node --experimental-websocket tests/magical-background.mjs",
     "preview": "vite preview",
     "test:auth-journey": "node --experimental-websocket tests/auth-journey.mjs",
+    "test:welcome-guide": "node --experimental-websocket tests/welcome-guide.mjs",
+    "test:onboarding-live": "node --experimental-websocket tests/onboarding-live.mjs",
     "test:interior-identity": "node --experimental-websocket tests/interior-identity.mjs",
     "test:theme-refinements": "node --experimental-websocket tests/theme-refinements.mjs"
   },

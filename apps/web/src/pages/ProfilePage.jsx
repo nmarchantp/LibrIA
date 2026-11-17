@@ -9,6 +9,7 @@ import ProfilePanels from '../components/ProfilePanels'
 import ProfileEvents from '../components/ProfileEvents'
 import ProfilePersonalColumn from '../components/ProfilePersonalColumn'
 import ProfileAboutSection from '../components/ProfileAboutSection'
+import InitialLiteraryDNA from '../components/InitialLiteraryDNA'
 import ProfileSocialHub from '../components/ProfileSocialHub'
 import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
 import './ProfilePage.css'
@@ -52,11 +53,11 @@ export default function ProfilePage() {
     case 'library':
       return <LibraryPage />
     case 'analysis':
-      return <InsightsPage active={active} />
+      return <InsightsPage active={active}><InitialLiteraryDNA /><button type="button" className="button text" onClick={() => window.dispatchEvent(new Event('libria:start-welcome-guide'))}>Conocer LibrIAverse: iniciar gu?a</button></InsightsPage>
     case 'activity':
       return <ProfileActivity userId={user.id} />
     default:
-      return <ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} />
+      return <><ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} /><InitialLiteraryDNA sharing /></>
   }
   }
 

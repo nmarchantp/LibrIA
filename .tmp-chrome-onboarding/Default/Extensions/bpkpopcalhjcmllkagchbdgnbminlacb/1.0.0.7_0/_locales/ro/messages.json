@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Setați MSN ca pagină de pornire implicită"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "ro-ro"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Pagina principală MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

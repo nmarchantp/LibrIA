@@ -1,0 +1,27 @@
+Validación de registro y onboarding — 17 de noviembre de 2026
+
+Backend: python -m scripts.test_onboarding
+202 pruebas aprobadas, sin omisiones; 93.932 s.
+Incluye 17 pruebas de onboarding, 7 de consulta directa y suites existentes de autenticación,
+Google, cuentas/recuperación, preferencias, Gemini, worker y análisis individuales.
+PostgreSQL 17 temporal en loopback; sin datos de producción.
+
+Migraciones:
+- Cadena completa hasta 0098 en base vacía: OK.
+- Cuenta creada en 0097 y actualización a 0098: conservada, onboarding opcional.
+
+Frontend:
+- npm run lint: 0 errores, 7 advertencias previas de Fast Refresh.
+- npm run build: OK; advertencia de tamaño del bundle.
+- test:auth-journey: OK, wizard completo y siete resoluciones.
+- test:themes: OK, 24 temas y tres variantes oscuras en nueve vistas.
+- tests/theme-mode.mjs: OK.
+- test:onboarding-live: OK con React, FastAPI y PostgreSQL reales.
+
+IA simulada: se verificó ledger, contratos, IDs, reintentos y fallback.
+Consulta directa: la misma petición devuelve ADN y recomendaciones sin ETL ni worker.
+Una prueba independiente real con Gemini devolvió ADN y tres recomendaciones
+con una sola llamada y cero ejecuciones ETL, usando una base temporal y preferencias
+ficticias. No se enviaron datos del usuario ni se habilitó configuración de pago.
+La exploración global inicial con .env local no terminó; los resultados
+anteriores corresponden al ejecutor aislado documentado en docs/literary-onboarding.md.

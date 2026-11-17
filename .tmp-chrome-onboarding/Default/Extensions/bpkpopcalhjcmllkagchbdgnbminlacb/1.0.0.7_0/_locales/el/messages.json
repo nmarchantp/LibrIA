@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Ορισμός του MSN ως προεπιλεγμένης αρχικής σελίδας"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "el-gr"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Αρχική σελίδα MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "el-gr"
+   }
+}

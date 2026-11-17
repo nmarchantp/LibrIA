@@ -44,6 +44,12 @@ class User(Base):
     public_sections: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["biography", "genres", "tropes", "intensities", "interests"], server_default='["biography","genres","tropes","intensities","interests"]')
     favorite_quotes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     literary_highlights: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    onboarding: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    visual_theme: Mapped[str | None] = mapped_column(String(64))
+
+    @property
+    def onboarding_required(self) -> bool:
+        return self.role == 'lector' and bool((self.onboarding or {}).get('required')) and self.onboarding.get('status') != 'completed'
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     auth_account: Mapped["AuthAccount"] = relationship(back_populates="user", cascade="all, delete-orphan")

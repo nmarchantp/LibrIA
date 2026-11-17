@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Itakda ang MSN bilang ang default mong homepage"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "fil-ph"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Homepage ng MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

@@ -1,0 +1,10 @@
+.welcome-guide { position: sticky; top: 76px; z-index: 30; display: flex; align-items: center; gap: 24px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid var(--primary, #9563c5); border-radius: 18px; background: var(--surface, #f7f1fc); color: var(--ink, #332743); box-shadow: 0 8px 24px #20102d26; }
+.welcome-guide-copy { flex: 1; min-width: 0; }
+.welcome-guide-kicker { color: var(--primary, #78449f); font-size: .75rem; }
+.welcome-guide h2 { margin: 4px 0 6px; font-size: 1.1rem; }
+.welcome-guide p { margin: 0; line-height: 1.5; font-size: .85rem; }
+.welcome-guide .welcome-guide-summary { margin-top: 8px; font-size: .78rem; }
+.welcome-guide-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.welcome-guide-actions .button { white-space: normal; text-align: center; }
+[data-welcome-focus="true"] { outline: 3px solid var(--primary, #9563c5); outline-offset: 5px; scroll-margin-top: 260px; }
+@media (max-width: 700px) { .welcome-guide { position: relative; top: auto; flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; } .welcome-guide-actions { flex-direction: row; flex-wrap: wrap; } .welcome-guide-actions .primary { flex: 1; } }

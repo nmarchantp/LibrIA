@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "MSN-i määramine vaikeavaleheks"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "et-ee"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN-i avaleht"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "et-ee"
+   }
+}

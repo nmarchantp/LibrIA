@@ -48,7 +48,7 @@ def own_response(db, user):
 
 
 @router.get("/preference-catalogs", response_model=PreferenceCatalogs)
-def catalogs(user: CurrentUser, db: SessionDB):
+def catalogs(db: SessionDB):
     result = {key: [{"id": x.id, "name": x.name, "group": x.group_name} for x in db.scalars(
         select(model).where(model.active.is_(True)).order_by(model.sort_order, model.id))]
         for key, model in (("genres", Genre), ("tropes", Trope), ("interests", Interest))}
@@ -155,6 +155,69 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
     except Exception:
         db.rollback()
         raise
+
+
+from app.modules.users.onboarding import ProgressUpdate, SharingUpdate, VisualPreference, GuideUpdate
+
+
+@router.get('/me/onboarding')
+def onboarding_progress(user: CurrentUser, db: SessionDB, response: Response):
+    from app.modules.users.onboarding import read_progress, EMOTIONS, HABITS
+    response.headers['Cache-Control'] = 'private, no-store'
+    return {**read_progress(db, user), 'emotions': EMOTIONS, 'habits': HABITS}
+
+
+@router.patch('/me/onboarding')
+def onboarding_save(data: ProgressUpdate, user: CurrentUser, db: SessionDB, response: Response):
+    from app.modules.users.onboarding import complete_with_generation
+    response.headers['Cache-Control'] = 'private, no-store'
+    return complete_with_generation(db, user, data)
+
+
+@router.patch('/me/onboarding/guide')
+def onboarding_guide(data: GuideUpdate, user: CurrentUser, db: SessionDB, response: Response):
+    from app.modules.users.onboarding import save_guide
+    response.headers['Cache-Control'] = 'private, no-store'
+    return save_guide(db, user, data)
+
+
+@router.post('/me/onboarding/library')
+def onboarding_library(user: CurrentUser, db: SessionDB):
+    from app.modules.users.onboarding import sync_favorites_library
+    return sync_favorites_library(db, user)
+
+
+@router.patch('/me/onboarding/sharing')
+def onboarding_sharing(data: SharingUpdate, user: CurrentUser, db: SessionDB):
+    owner = db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
+    owner.onboarding = {**(owner.onboarding or {}), 'shared': data.shared}
+    db.commit()
+    return {'shared': data.shared}
+
+
+@router.patch('/me/onboarding/theme')
+def visual_preference(data: VisualPreference, user: CurrentUser, db: SessionDB):
+    user.visual_theme = data.theme
+    db.commit()
+    return {'theme': user.visual_theme}
+
+
+@router.get('/{profile_id}/literary-dna')
+def public_literary_dna(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response):
+    from app.modules.users.profile_access import profile_access
+    from app.modules.users.onboarding import read_progress
+    response.headers['Cache-Control'] = 'private, no-store'
+    profile = db.get(Profile, profile_id)
+    owner = db.get(User, profile.owner_user_id) if profile and profile.kind == 'personal' else None
+    if not owner or owner.account_status != 'active' or owner.suspended_at or not profile_access(db, owner, user):
+        raise HTTPException(404, 'Perfil no disponible')
+    if owner.id != user.id and not (owner.onboarding or {}).get('shared', False):
+        return {'dna': None}
+    state = read_progress(db, owner)
+    # Public projection excludes answers, favorites, job state and recommendations.
+    dna = state['dna']
+    return {'dna': {key: dna[key] for key in ('profile_name', 'profile_description', 'preferred_genres', 'explanation')} if dna else None,
+            'generated_at': state['generated_at']}
 
 
 @router.get("/{profile_id}", response_model=PublicProfile)

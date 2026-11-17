@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Задайте MSN като своята начална страница по подразбиране"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "bg-bg"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Начална страница на MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

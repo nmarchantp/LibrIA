@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Imposta MSN come home page predefinita"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "it-it"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Home page MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "it-it"
+   }
+}

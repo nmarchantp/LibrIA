@@ -77,6 +77,7 @@ export default function BooksPage() {
           setBooks(current => cursor.append ? [...new Map([...current, ...results.books].map(book => [book.id, book])).values()] : results.books)
           setWarning(results.warning); setHasMore(results.hasMore); setNextStartIndex(results.nextStartIndex)
           setNextCursor({ provider: results.provider, page: results.nextPage, append: true })
+          if (results.books.length) window.dispatchEvent(new Event('libria:guide-search-results'))
         }
       } catch (cause) {
         if (active && cause.name !== 'AbortError') {

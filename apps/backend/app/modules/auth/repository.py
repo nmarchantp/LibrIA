@@ -40,7 +40,8 @@ class AuthRepository:
         return account.user
 
     def create_account(self, email: str, password_hash: str, display_name: str, role: PublicUserRole) -> User:
-        user = User(display_name=display_name.strip(), role=role)
+        user = User(display_name=display_name.strip(), role=role,
+                    onboarding={'required': role == 'lector', 'status': 'pending', 'step': 1, 'version': 1, 'answers': {}})
         user.auth_account = AuthAccount(email=email.lower(), password_hash=password_hash)
         self.db.add(user)
         try:

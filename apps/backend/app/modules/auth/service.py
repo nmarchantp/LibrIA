@@ -72,6 +72,7 @@ class AuthService:
         from app.modules.users.account_service import require_active
         require_active(user)
         public_user = UserResponse(
+            onboarding_required=user.onboarding_required, visual_theme=user.visual_theme,
             id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name, role=user.role,
             avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at,
         )

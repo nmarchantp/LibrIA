@@ -8,6 +8,8 @@ from app.modules.users.roles import UserRole
 
 
 class UserResponse(BaseModel):
+    onboarding_required: bool = False
+    visual_theme: str | None = None
     influencer_permissions_suspended: bool = False
     influencer_suspended_until: datetime | None = None
     id: uuid.UUID

@@ -16,7 +16,7 @@ const errors = {
   provider_error: 'Gemini rechazó la solicitud. Puedes volver a intentarlo.',
 }
 
-function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, active }) {
+function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, active, children }) {
   const isBook = scope === 'book'
   const base = isBook ? `/me/ai/books/${workId}` : '/me/ai/profile'
   const [data, setData] = useState(null)
@@ -112,12 +112,12 @@ function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, activ
     onRefresh: refresh, submitting, information, setInformation, onFeedback: sendFeedback,
     refreshDisabled: isBook ? loading : loading || jobStatus === 'processing' || (jobStatus === 'pending' && !scheduled),
     refreshLabel: isBook ? 'Actualizar estado' : scheduled ? 'Analizar ahora' : analysis ? 'Consultar análisis' : 'Solicitar análisis' }
-  if (!isBook) return <ReaderDna {...shared} history={history} historyBusy={historyBusy} onLoadHistory={loadHistory} />
+  if (!isBook) return <ReaderDna {...shared} intro={children} history={history} historyBusy={historyBusy} onLoadHistory={loadHistory} />
   return <BookExperience {...shared} workId={workId} onRetry={retryBook} onWriteReview={onWriteReview} history={history} historyBusy={historyBusy} onLoadHistory={loadHistory} />
 }
 
-export default function AdaptiveAnalysis({ workId, scope = 'profile', onWriteReview, evidenceRevision, active = true }) {
+export default function AdaptiveAnalysis({ workId, scope = 'profile', onWriteReview, evidenceRevision, active = true, children }) {
   const { user } = useAuth()
   if (scope === 'book' && !workId) return null
-  return <><AiUsageBar active={active} /><PrivateAnalysis key={`${user?.id}:${scope}:${workId || 'profile'}`} scope={scope} workId={workId} onWriteReview={onWriteReview} evidenceRevision={evidenceRevision} active={active} /></>
+  return <>{scope === 'book' && <AiUsageBar active={active} />}<PrivateAnalysis key={`${user?.id}:${scope}:${workId || 'profile'}`} scope={scope} workId={workId} onWriteReview={onWriteReview} evidenceRevision={evidenceRevision} active={active}>{children}</PrivateAnalysis></>
 }

@@ -19,6 +19,11 @@ export function ThemeProvider({ children }) {
     try { localStorage.setItem(themeStorageKey, theme) } catch { /* Storage may be disabled. */ }
   }, [theme])
   useEffect(() => {
+    const accountTheme = event => { if (validTheme(event.detail)) setTheme(event.detail) }
+    window.addEventListener('libria:account-theme', accountTheme)
+    return () => window.removeEventListener('libria:account-theme', accountTheme)
+  }, [])
+  useEffect(() => {
     const sync = event => {
       if (event.key === themeStorageKey || event.key === null) setTheme(readTheme())
       if (event.key === magicalBackgroundStorageKey || event.key === null) setMagicalBackground(readMagicalBackground())

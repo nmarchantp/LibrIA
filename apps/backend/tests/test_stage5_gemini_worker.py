@@ -233,7 +233,7 @@ class Stage5UnitTest(unittest.TestCase):
         legacy = (ROOT / "backend/app/modules/analytics/adaptive_ai.py").read_text(encoding="utf-8")
         self.assertIn("provider='gemini'", worker)
         from app.modules.analytics.gemini_worker import SUPPORTED_KINDS
-        self.assertEqual(set(SUPPORTED_KINDS), {'recommendation','reading_event_analysis','reader_profile'})
+        self.assertEqual(set(SUPPORTED_KINDS), {'recommendation','reading_event_analysis','reader_profile','onboarding'})
         self.assertIn("LegacyAIFlowDisabled", legacy)
         self.assertNotIn("/api/chat", legacy)
         router = (ROOT / "backend/app/modules/analytics/adaptive_router.py").read_text(encoding="utf-8")
@@ -302,7 +302,8 @@ class Stage5DatabaseTest(unittest.TestCase):
             "display_name": "Lectora etapa 5",
         })
         self.assertEqual(response.status_code, 201, response.text)
-        return response.json()
+        from tests.onboarding_support import existing_account
+        return existing_account(self.db, response)
 
     @staticmethod
     def auth(result):

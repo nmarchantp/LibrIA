@@ -116,7 +116,8 @@ try {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 700 })
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.theme-options')).gridTemplateColumns.split(' ').length`), columns)
     assert.equal(await evaluate(`document.documentElement.scrollWidth<=innerWidth`), true)
-    assert.equal(await evaluate(`[...document.querySelectorAll('.theme-option')].every(e=>{const r=e.getBoundingClientRect(),s=e.querySelector('.theme-swatches'),c=s.getBoundingClientRect();return r.height>=60&&r.height<=70&&c.width===44&&c.height===44&&getComputedStyle(s).backgroundImage.startsWith('linear-gradient(')&&e.scrollWidth<=e.clientWidth})`), true)
+    const rows = await evaluate(`[...document.querySelectorAll('.theme-option')].map(e=>{const r=getComputedStyle(e),s=e.querySelector('.theme-swatches'),c=getComputedStyle(s);return {height:parseFloat(r.height),swatchWidth:parseFloat(c.width),swatchHeight:parseFloat(c.height),gradient:c.backgroundImage.startsWith('linear-gradient('),scroll:e.scrollWidth,width:e.clientWidth}})`)
+    assert.equal(rows.every(row => row.height>=60&&row.height<=70&&Math.abs(row.swatchWidth-44)<.1&&Math.abs(row.swatchHeight-44)<.1&&row.gradient&&row.scroll<=row.width), true, JSON.stringify({width,rows}))
   }
   console.log('PASS single circular selector, compact 68px rows and responsive 5/2/1 columns without overflow')
   assert.deepEqual(browserErrors, [], 'No console errors or uncaught browser exceptions')

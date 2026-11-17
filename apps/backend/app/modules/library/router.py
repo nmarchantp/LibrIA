@@ -45,6 +45,15 @@ def my_readings(user: Annotated[User, Depends(get_current_user)],
                                             progress_percent=round(reading.current_page * 100 / reading.total_pages) if reading.total_pages else 0,
                                             started_at=reading.started_at, finished_at=reading.finished_at,
                                             notebook=reading.notebook or {})
+    # Questionnaire favorites are trusted works saved without an invented edition.
+    if (user.onboarding or {}).get('status') == 'completed':
+        favorites = set((user.onboarding.get('answers') or {}).get('favorite_work_ids', []))
+        if favorites:
+            from app.modules.books.library_view import library_states
+            represented = {value.reading_id for value in latest.values()}
+            for value in library_states(db, user.id):
+                if str(value.work_id) in favorites and value.reading_id not in represented:
+                    latest[value.book_ref] = value
     return list(latest.values())
 
 

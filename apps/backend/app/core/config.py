@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = "gemini-3.5-flash-lite"
     ai_timeout_seconds: int = Field(default=180, ge=5, le=300)
+    onboarding_ai_timeout_seconds: int = Field(default=45, ge=5, le=90)
     recommendation_prompt_version: str = "recommendations-v5-es"
     reader_dna_prompt_version: str = "reader-dna-v1-es"
     reading_analysis_prompt_version: str = "reading-event-v3-es"
