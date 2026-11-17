@@ -207,11 +207,11 @@ class AIJob(Base):
             name="jobs_status_check",
         ),
         CheckConstraint(
-            "job_kind IN ('adaptive_analysis', 'recommendation', 'reading_event_analysis', 'reader_profile')",
+            "job_kind IN ('adaptive_analysis', 'recommendation', 'reading_event_analysis', 'reader_profile', 'onboarding')",
             name="ck_ai_jobs_kind",
         ),
         CheckConstraint(
-            "(job_kind = 'adaptive_analysis' AND profile_version_id IS NULL AND reading_event_id IS NULL) "
+            "(job_kind IN ('adaptive_analysis','onboarding') AND profile_version_id IS NULL AND reading_event_id IS NULL) "
             "OR (job_kind IN ('recommendation','reader_profile') AND profile_version_id IS NOT NULL "
             "AND reading_event_id IS NULL AND model IS NOT NULL AND prompt_version IS NOT NULL) "
             "OR (job_kind = 'reading_event_analysis' AND reading_event_id IS NOT NULL "

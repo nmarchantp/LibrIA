@@ -8,6 +8,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 from app.core.database import Base
 
 
+class OnboardingFavorite(Base):
+    __tablename__ = 'onboarding_favoritos'
+    __table_args__ = {'schema': 'app'}
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.usuarios.id', ondelete='CASCADE'), primary_key=True)
+    work_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('app.obras.id', ondelete='RESTRICT'), primary_key=True, index=True)
+
+
 class Genre(Base):
     __tablename__ = "catalogo_generos"
     __table_args__ = {"schema": "app"}

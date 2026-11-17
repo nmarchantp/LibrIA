@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Призначити MSN головною сторінкою за замовчуванням"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "uk-ua"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Головна сторінка MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "uk-ua"
+   }
+}

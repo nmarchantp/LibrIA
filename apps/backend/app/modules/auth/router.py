@@ -123,7 +123,7 @@ def login(data: LoginRequest, response: Response,
 
 @router.get("/me", response_model=UserResponse)
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserResponse:
-    return UserResponse(id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
+    return UserResponse(onboarding_required=user.onboarding_required, visual_theme=user.visual_theme, id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name, role=user.role, avatar_url=user.avatar_url, biography=user.biography, created_at=user.created_at)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -147,7 +147,7 @@ def refresh(request: Request, response: Response,
 
 
 def service_token_response(user: User, grant) -> TokenResponse:
-    public = UserResponse(id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name,
+    public = UserResponse(onboarding_required=user.onboarding_required, visual_theme=user.visual_theme, id=user.id, username=user.username, email=user.auth_account.email, display_name=user.display_name,
                           role=user.role, avatar_url=user.avatar_url, biography=user.biography,
                           created_at=user.created_at)
     return TokenResponse(access_token=grant.access_token, refresh_token=grant.refresh_token,

@@ -48,7 +48,7 @@ from app.modules.analytics.call_accounting import (
 )
 
 LOGGER = logging.getLogger(__name__)
-SUPPORTED_KINDS = ("recommendation", "reading_event_analysis", "reader_profile")
+SUPPORTED_KINDS = ("recommendation", "reading_event_analysis", "reader_profile", "onboarding")
 
 
 @dataclass
@@ -64,6 +64,7 @@ class AttemptBudget:
     unsettled_tokens: int = 0
     job_id: uuid.UUID | None = None
     attempt: int | None = None
+    interactive: bool = False
 
     def reserve(self, estimated_input: int, output: int) -> None:
         if self.calls + 1 > self.max_calls:
@@ -100,7 +101,7 @@ def monthly_budget_snapshot(db: Session, settings: Settings) -> dict[str, Decima
     return monthly_snapshot(db, settings)
 
 
-def claim_next_job(db: Session, settings: Settings) -> dict[str, Any] | None:
+def claim_next_job(db: Session, settings: Settings, *, owner_id=None, target=None) -> dict[str, Any] | None:
     """Claim one due Gemini row or reclaim a lease left by a dead worker."""
     cooldown = db.execute(text('''SELECT EXISTS(SELECT 1 FROM ia.provider_cooldowns
       WHERE provider='gemini' AND model=:model AND until_at>now())'''),
@@ -116,7 +117,7 @@ def claim_next_job(db: Session, settings: Settings) -> dict[str, Any] | None:
     # terminalized after the lease instead of remaining processing forever.
     db.execute(text("""UPDATE ia.jobs SET status='failed',error_code='lease_attempts_exhausted',
       locked_at=NULL,updated_at=now() WHERE provider='gemini'
-      AND job_kind IN ('recommendation','reading_event_analysis','reader_profile')
+      AND job_kind IN ('recommendation','reading_event_analysis','reader_profile','onboarding')
       AND status='processing' AND attempts>=:max_attempts
       AND locked_at < now() - (:lease * interval '1 second')"""),
       {"max_attempts": settings.ai_job_max_attempts, "lease": settings.ai_job_lease_seconds})
@@ -133,19 +134,27 @@ def claim_next_job(db: Session, settings: Settings) -> dict[str, Any] | None:
         db.execute(text("""UPDATE ia.jobs SET status='pending',error_code='monthly_budget_exhausted',locked_at=NULL,
           not_before=date_trunc('month',now())+interval '1 month',updated_at=now()
           WHERE id=(SELECT id FROM ia.jobs WHERE provider='gemini'
-            AND job_kind IN ('recommendation','reading_event_analysis','reader_profile')
+            AND (CAST(:owner_id AS uuid) IS NULL OR owner_id=CAST(:owner_id AS uuid))
+            AND (CAST(:target AS text) IS NULL OR target=:target)
+            AND job_kind IN ('recommendation','reading_event_analysis','reader_profile','onboarding')
             AND ((status='pending' AND not_before<=now()) OR
                  (status='processing' AND locked_at < now()-(:lease * interval '1 second')))
             ORDER BY not_before,created_at,id FOR UPDATE SKIP LOCKED LIMIT 1)"""),
-          {"lease": settings.ai_job_lease_seconds})
+          {"lease": settings.ai_job_lease_seconds, "owner_id": owner_id, "target": target})
         db.commit()
         return None
     row = db.execute(text("""
         WITH candidate AS (
           SELECT id FROM ia.jobs
           WHERE provider='gemini'
-            AND job_kind IN ('recommendation','reading_event_analysis','reader_profile')
+            AND (CAST(:owner_id AS uuid) IS NULL OR owner_id=CAST(:owner_id AS uuid))
+            AND (CAST(:target AS text) IS NULL OR target=:target)
+            AND job_kind IN ('recommendation','reading_event_analysis','reader_profile','onboarding')
             AND attempts < :max_attempts
+            AND (job_kind<>'onboarding' OR NOT EXISTS (
+              SELECT 1 FROM ia.jobs running WHERE running.owner_id=jobs.owner_id
+                AND running.job_kind='onboarding' AND running.status='processing' AND running.id<>jobs.id
+                AND running.locked_at>=now()-(:lease * interval '1 second')))
             AND (
               (status='pending' AND not_before<=now()) OR
               (status='processing' AND locked_at < now() - (:lease * interval '1 second'))
@@ -157,7 +166,7 @@ def claim_next_job(db: Session, settings: Settings) -> dict[str, Any] | None:
           error_code=NULL,updated_at=now()
         FROM candidate c WHERE j.id=c.id RETURNING j.*
     """), {"max_attempts": settings.ai_job_max_attempts,
-            "lease": settings.ai_job_lease_seconds}).mappings().first()
+            "lease": settings.ai_job_lease_seconds, "owner_id": owner_id, "target": target}).mappings().first()
     db.commit()
     return dict(row) if row else None
 
@@ -212,17 +221,19 @@ def _acquire_global_slot(db: Session, settings: Settings, budget: AttemptBudget)
                     raise
                 return slot, time.monotonic()
         db.rollback()
+        if budget.interactive:
+            raise TransientJobError('provider_busy')
         if time.monotonic() - checked_at >= 5:
             _touch_lease(db, budget); checked_at = time.monotonic()
         time.sleep(0.05)
 
 
-def _release_global_slot(db: Session, settings: Settings, slot: int, started: float) -> None:
+def _release_global_slot(db: Session, settings: Settings, slot: int, started: float, *, wait_for_spacing=True) -> None:
     # Holding each slot until its share of the minute elapsed makes the aggregate
     # start rate no greater than AI_REQUESTS_PER_MINUTE across worker processes.
     spacing = 60 * settings.ai_max_concurrent_requests / settings.ai_requests_per_minute
     remaining = spacing - (time.monotonic() - started)
-    if remaining > 0:
+    if wait_for_spacing and remaining > 0:
         time.sleep(remaining)
     try:
         db.execute(text("SELECT pg_advisory_unlock(:namespace,:slot)"),
@@ -265,6 +276,8 @@ def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequ
                                        estimate, request.max_output_tokens or settings.ai_output_token_budget, settings)
                 break
             except LocalRateLimited:
+                if budget.interactive:
+                    raise TransientJobError('local_rpm_limit') from None
                 _touch_lease(db, budget)
                 time.sleep(.5)
         budget.calls += 1
@@ -285,7 +298,7 @@ def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequ
         settle_call(db, call_id, settings, usage=result.usage,
                     request_id=result.provider_request_id, finish_reason=result.finish_reason)
     finally:
-        _release_global_slot(db, settings, slot, started)
+        _release_global_slot(db, settings, slot, started, wait_for_spacing=not budget.interactive)
     if result.provider != "gemini":
         raise AIProviderInvalidResponseError("Unexpected provider for Gemini job")
     budget.add(result)
@@ -1003,27 +1016,32 @@ def _retry_attempt(db: Session, job: dict[str, Any], budget: AttemptBudget, star
 
 
 def process_one(*, provider: AIProvider | None = None, settings: Settings | None = None,
-                session_factory=SessionLocal) -> bool:
+                session_factory=SessionLocal, owner_id=None, target=None, interactive=False) -> bool:
     """Process at most one row. Dependency injection guarantees mock-only tests."""
     resolved = settings or get_settings()
+    if interactive:
+        if owner_id is None or not target or not target.startswith('onboarding:'):
+            raise ValueError('Interactive generation requires a specific onboarding owner and target')
+        resolved = resolved.model_copy(update={'ai_timeout_seconds': min(resolved.ai_timeout_seconds, resolved.onboarding_ai_timeout_seconds)})
     free_test_allowed = (
         resolved.gemini_free_test_mode
         and resolved.app_env in {"development", "test"}
     )
-    if provider is None and (not resolved.gemini_worker_enabled or (
+    if provider is None and ((not interactive and not resolved.gemini_worker_enabled) or (
         not resolved.gemini_paid_service_confirmed and not free_test_allowed
     )):
         raise RuntimeError("Gemini worker activation requires explicit paid-service approval or an allowed development free-test mode")
     with session_factory() as holder, holder.get_bind().connect() as pinned, Session(bind=pinned) as db:
-        job = claim_next_job(db, resolved)
+        job = claim_next_job(db, resolved, owner_id=owner_id, target=target)
         if not job:
             return False
         started = time.monotonic()
         budget = AttemptBudget(resolved.ai_max_calls_per_job, resolved.ai_job_token_budget,
-                               job_id=job["id"], attempt=job["attempts"])
+                               job_id=job["id"], attempt=job["attempts"], interactive=interactive)
         try:
             selected = provider or build_ai_provider(resolved)
             expected_prompt = {'recommendation':resolved.recommendation_prompt_version,
+                               'onboarding':'onboarding-v1',
                                'reader_profile':resolved.reader_dna_prompt_version,
                                'reading_event_analysis':resolved.reading_analysis_prompt_version}.get(job['job_kind'])
             if job['prompt_version'] != expected_prompt:
@@ -1034,6 +1052,9 @@ def process_one(*, provider: AIProvider | None = None, settings: Settings | None
                 _process_individual(db, selected, job, resolved, budget)
             elif job['job_kind'] == 'reader_profile':
                 _process_dna(db, selected, job, resolved, budget)
+            elif job['job_kind'] == 'onboarding':
+                from app.modules.users.onboarding import process_generation
+                process_generation(db, selected, job, resolved, budget)
             else:
                 raise PermanentJobError("unsupported_job_kind")
             _finish_attempt(db, job, budget, started, resolved, status="completed")

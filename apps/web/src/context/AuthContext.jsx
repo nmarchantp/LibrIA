@@ -25,6 +25,9 @@ function saveResult(result) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  useEffect(() => {
+    if (user?.visual_theme) window.dispatchEvent(new CustomEvent('libria:account-theme', { detail: user.visual_theme }))
+  }, [user?.id, user?.visual_theme])
   const [access, setAccess] = useState({ admin: false, catalog_preview: false })
   const [accessLoading, setAccessLoading] = useState(true)
   const [accessUser, setAccessUser] = useState(null)
@@ -208,6 +211,7 @@ export function AuthProvider({ children }) {
   const expiresAt = session?.inactivity_expires_at ? Date.parse(session.inactivity_expires_at) : 0
   const warning = user && expiresAt > now && expiresAt - now <= WARNING_MS
   const value = { user, access, accessLoading: Boolean(user) && (accessLoading || accessUser !== user.id), loading, sessionError, session, retry: () => setAttempt(current => current + 1), logout,
+    refreshUser: async () => { const current = await authService.me(localStorage.getItem(TOKEN_KEY)); setUser(current); return current },
     endSession: clearLocalSession,
     login: data => authenticate('login', data), register: data => authenticate('register', data),
     googleLogin: () => authenticate('google') }

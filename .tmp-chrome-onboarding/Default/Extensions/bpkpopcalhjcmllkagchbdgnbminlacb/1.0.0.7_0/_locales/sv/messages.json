@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Ange MSN som hemsida som standard"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "sv-se"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN hemsida"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "sv-se"
+   }
+}

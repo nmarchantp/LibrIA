@@ -75,7 +75,8 @@ class LiteraryPreferencesTest(unittest.TestCase):
         response = self.client.post("/api/auth/register", json={"email": f"{uuid.uuid4()}@example.com",
             "password": "test-password", "display_name": "Lector de prueba"})
         self.assertEqual(response.status_code, 201, response.text)
-        return response.json()
+        from tests.onboarding_support import existing_account
+        return existing_account(self.db, response)
 
     @staticmethod
     def auth(account):
@@ -210,8 +211,11 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.client.patch(f"/api/profiles/{profile_id}", headers=self.auth(self.other), json={"biography": "No"}).status_code, 405)
 
     def test_all_endpoints_require_authentication(self):
-        for path in (self.path, "/api/profiles/preference-catalogs", f"/api/profiles/{uuid.uuid4()}"):
+        for path in (self.path, f"/api/profiles/{uuid.uuid4()}"):
             self.assertEqual(self.client.get(path).status_code, 401)
+        public_catalogs = self.client.get('/api/profiles/preference-catalogs')
+        self.assertEqual(public_catalogs.status_code, 200)
+        self.assertEqual(set(public_catalogs.json()), {'genres', 'tropes', 'interests', 'intensities'})
         self.assertEqual(self.client.patch(self.path, json={"biography": "No"}).status_code, 401)
         self.assertEqual(self.client.get(f"/api/profiles/{uuid.uuid4()}", headers=self.headers).status_code, 404)
 

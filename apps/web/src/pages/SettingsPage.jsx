@@ -26,6 +26,7 @@ export default function SettingsPage() {
       <Link to="/settings?tab=publications" className={publications ? 'selected' : ''} aria-current={publications ? 'page' : undefined}><FileText size={18} aria-hidden="true" />Estado de publicaciones</Link>
       {canModerate && <Link to="/settings?tab=moderation" className={moderation ? 'selected' : ''} aria-current={moderation ? 'page' : undefined}><ShieldCheck size={18} aria-hidden="true" />Moderación de contenido</Link>}
     </nav>
+    <p><Link to="/register?edit=true">Editar mis preferencias literarias</Link></p>
     {publications ? <PrivateModerationStatus key={user.id} userId={user.id} /> : moderation ? <ModerationSection initiallyOpen /> : personalization ? <ThemeSelector /> : <AccountSettings preferences={preferences} />}
   </section>
 }

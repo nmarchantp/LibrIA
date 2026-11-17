@@ -1,0 +1,303 @@
+.register-page .register-card.registration-wizard { width: min(640px, 100%); max-width: 640px; overflow: hidden; gap: 12px; align-content: start; }
+.registration-progress { display: grid; gap: 10px; margin-bottom: 8px; font-size: .85rem; }
+.registration-progress progress { width: 100%; height: 7px; accent-color: #7856a4; }
+.registration-wizard h1 { font-size: clamp(1.35rem, 4vw, 1.9rem); outline: none; }
+.registration-viewport { overflow: hidden; transition: height 380ms ease; }
+.registration-track { display: flex; align-items: flex-start; transition: transform 380ms cubic-bezier(.22,.61,.36,1); }
+.registration-panel { flex: 0 0 100%; min-width: 0; overflow: visible; padding: 4px 3px 8px; box-sizing: border-box; transition: opacity 220ms ease; }
+.registration-panel[aria-hidden="true"] { opacity: .35; }
+.registration-panel label { display: grid; gap: 6px; }
+.registration-panel p { line-height: 1.55; }
+.registration-choices { display: flex; flex-wrap: wrap; gap: 10px; padding: 6px 0; }
+.registration-choices button { padding: 12px 15px; border: 1px solid #bda9d4; background: #f7f1fc; color: #3f2a57; border-radius: 15px; cursor: pointer; font: inherit; text-align: left; }
+.registration-choices button.selected { background: #7856a4; color: #fff; border-color: #563978; }
+.registration-wizard button:focus-visible { outline: 3px solid #9f66dc; outline-offset: 3px; }
+.registration-wizard button:disabled { opacity: .55; cursor: default; }
+.registration-wizard .registration-actions { display: flex; flex-direction: row; justify-content: flex-end; align-items: center; min-height: 0; border: 0; gap: 12px; padding: 8px 0 0; }
+.registration-panel--account { display: grid; gap: 12px; }
+.registration-panel--account > p { margin: 0; font-size: .8rem; }
+@media (min-width: 560px) {
+  .registration-panel--account { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .registration-panel--account > :not(label) { grid-column: 1 / -1; }
+  .registration-panel--account .registration-password-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+  .registration-panel--account .registration-password-fields > label:first-child { grid-column: 1; grid-row: 1; }
+  .registration-panel--account .registration-password-fields > label:last-of-type { grid-column: 2; grid-row: 1; }
+  .registration-panel--account .password-strength,
+  .registration-panel--account .password-help,
+  .registration-panel--account .password-match { grid-column: 1 / -1; }
+}
+.registration-save-state { min-height: 1.4em; margin-block: 4px; font-size: .8rem; }
+.registration-books { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; width: 100%; gap: 8px; margin-top: 12px; }
+.registration-books button { display: flex; align-items: center; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; gap: 12px; padding: 10px; border: 1px solid #bda9d4; border-radius: 12px; color: inherit; background: #faf5ff; text-align: left; font: inherit; }
+.registration-books img { width: 44px; height: 64px; object-fit: cover; flex: none; border-radius: 3px; box-shadow: 0 3px 8px #39224d26; }
+.registration-books button > span:first-of-type { min-width: 0; flex: 1; }
+.registration-books strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.35; }
+.registration-books button > span:last-child { flex: none; }
+.registration-book-picker { min-width: 0; width: 100%; }
+.registration-book-picker > p { margin-block: 6px; font-size: .85rem; line-height: 1.4; }
+.registration-book-picker > label { margin-block: 10px; }
+.registration-book-picker .registration-genre-pagination { margin-top: 8px; }
+@media (max-width: 800px) {
+  .register-page .registration-wizard--spread[data-step="5"] .registration-panel:not(.registration-panel--account) { padding: 16px; }
+  .registration-wizard--spread[data-step="5"] .registration-card-heading { gap: 4px; margin-bottom: 6px; }
+  .registration-wizard--spread[data-step="5"] .registration-card-heading h2 { font-size: 22px; line-height: 1.15; margin-top: 2px; }
+  .registration-wizard--spread[data-step="5"] .registration-card-divider { display: none; }
+  .registration-book-picker > p { font-size: .75rem; }
+  .registration-book-picker > label { margin-block: 6px; }
+  .registration-book-picker input { min-height: 42px; padding: 8px 10px; }
+}
+.registration-books small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+.registration-books small, .registration-themes small { display: block; }
+.registration-favorites { border-top: 1px solid #bda9d466; padding-top: 18px; margin-top: 10px; min-width: 0; }
+.registration-favorites-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.registration-favorites-heading h3 { margin: 0; font: 23px/1.2 'DM Serif Display', serif; }
+.registration-favorites-heading > span { color: #655972; font-size: .8rem; }
+.registration-cover-stack { --stack-cover-width: 140px; --stack-overlap: -80px; display: flex; align-items: flex-end; padding: 24px 8px 16px; min-height: 250px; }
+.registration-stacked-book { position: relative; flex: 0 0 var(--stack-cover-width); width: var(--stack-cover-width); margin: 0; z-index: var(--stack-order); transform: rotate(var(--stack-angle)); transform-origin: bottom center; transition: transform 180ms ease; }
+.registration-stacked-book + .registration-stacked-book { margin-left: var(--stack-overlap); }
+.registration-stacked-book:is(:hover,:focus-within) { z-index: 10; transform: translateY(-10px) rotate(0deg); }
+.registration-stacked-book .book-cover { width: 100%; height: 210px; margin: 0; border-radius: 5px 9px 9px 5px; box-shadow: -4px 7px 16px #2c12394d, inset 3px 0 3px #fff3; overflow: hidden; }
+.registration-stacked-book .book-cover-image { width: 100%; height: 100%; object-fit: cover; }
+.registration-remove-favorite { position: absolute; top: -12px; left: 8px; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 2px solid #f6edff; border-radius: 50%; background: #654184; color: #fff; box-shadow: 0 3px 8px #25112f40; cursor: pointer; z-index: 1; }
+.registration-remove-favorite:hover { background: #48265f; }
+.registration-stack-caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.registration-favorites .registration-favorites-hint { margin: 0; color: #655972; font-size: .78rem; line-height: 1.5; }
+.registration-favorites--mobile { display: none; }
+.registration-ai-progress { padding: 16px; border: 1px solid #bda9d4; border-radius: 14px; background: #faf5ff; }
+.registration-ai-progress strong { display: block; color: #563978; }
+.registration-ai-progress p { margin-bottom: 0; }
+.registration-recommendation-source { color: #655972; font-size: .82rem; }
+.registration-dna-details { margin-block: 10px; font-size: .85rem; }
+.registration-dna-details summary { color: #654184; cursor: pointer; }
+.initial-literary-dna article { display: flow-root; }
+@media (min-width: 801px) and (max-width: 1100px) { .registration-cover-stack { --stack-cover-width: 120px; --stack-overlap: -77px; } .registration-stacked-book .book-cover { height: 180px; } }
+@media (min-width: 801px) and (max-width: 950px) { .registration-cover-stack { --stack-cover-width: 108px; --stack-overlap: -81px; } .registration-remove-favorite { width: 28px; height: 28px; left: 0; } }
+@media (max-width: 800px) {
+  .registration-wizard--universe .registration-panel { padding: 16px; }
+  .registration-wizard--universe .registration-card-heading { gap: 4px; margin-bottom: 6px; }
+  .registration-wizard--universe .registration-card-heading h2 { font-size: 22px; line-height: 1.15; margin-top: 2px; }
+  .registration-wizard--universe .registration-card-divider { display: none; }
+  .registration-wizard--universe .registration-card-actions { padding-top: 4px; }
+  .registration-wizard--universe .registration-save-state { margin-block: 4px; }
+  .registration-favorites--desktop { display: none; }
+  .registration-favorites--mobile { display: block; margin-top: 20px; }
+  .registration-cover-stack { --stack-cover-width: 120px; --stack-overlap: -80px; min-height: 220px; }
+  .registration-stacked-book .book-cover { height: 180px; }
+}
+@media (max-width: 360px) { .registration-cover-stack { --stack-cover-width: 100px; --stack-overlap: -69px; } .registration-stacked-book .book-cover { height: 150px; } }
+@media (prefers-reduced-motion: reduce) { .registration-stacked-book { transition: none; } }
+.registration-no-motion .registration-stacked-book { transition: none; }
+.registration-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.registration-theme-preview { padding: 12px; border-radius: 16px; border: 2px solid #bda9d4; background: #f4eff9; color: #332743; text-align: left; font: inherit; cursor: pointer; }
+.registration-theme-preview.dark { background: #181721; color: #f6f0fc; }
+.registration-theme-preview.selected { outline: 3px solid #9f66dc; outline-offset: 2px; }
+.registration-mini-ui { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 12px; min-height: 130px; border-radius: 8px; background: #fffcff; margin-bottom: 12px; box-shadow: 0 3px 8px #0001; }
+.registration-mini-ui span { grid-column: 1/-1; font-size: .75rem; }
+.registration-mini-ui i { background: #dfd1ef; border-radius: 5px; min-height: 45px; }
+.dark .registration-mini-ui { background: #292535; }
+.dark .registration-mini-ui i { background: #453854; }
+.registration-no-motion :is(.registration-track,.registration-viewport,.registration-panel) { transition: none; }
+.registration-wizard dl { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.registration-wizard dd { margin: 0; }
+.initial-literary-dna { padding: 16px; border-radius: 16px; background: var(--surface, #f7f1fc); color: var(--ink, #332743); margin-block: 16px; }
+.initial-literary-dna article { padding-block: 12px; border-bottom: 1px solid #bda9d466; }
+.registration-cover-select { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 8px; }
+.registration-cover-select:focus-visible { outline: 3px solid #a765cf; outline-offset: 5px; }
+.registration-stacked-book.is-active { z-index: 9; transform: translateY(-10px) rotate(0deg); }
+.registration-recommended-stack { justify-content: center; }
+.initial-literary-dna h2 { margin-top: 0; }
+.initial-literary-dna h3 { margin-bottom: 8px; }
+.initial-literary-dna .registration-recommendation-detail { padding: 12px 16px; border: 1px solid #bda9d466; border-radius: 12px; background: #ffffff66; }
+.registration-recommendation-detail h4 { margin: 0; font-size: 1.05rem; }
+.registration-recommendation-detail .registration-recommendation-author { margin-top: 4px; font-size: .8rem; }
+.initial-literary-dna .registration-recommendation-detail .registration-recommendation-add { background: #7540a1; color: #fff; }
+.initial-literary-dna .registration-recommendation-detail .registration-recommendation-add:hover:not(:disabled) { background: #603184; }
+.initial-literary-dna .registration-recommendation-detail .registration-recommendation-add:disabled { background: #ded0e9; color: #503762; opacity: 1; }
+.registration-dna-future { border-left: 3px solid #a765cf; padding-left: 12px; margin-top: 16px; font-size: .85rem; }
+.registration-dna-future p { margin-bottom: 0; }
+.initial-literary-dna > h2 { font-size: 1.25rem; margin-bottom: 12px; }
+.initial-literary-dna > h3 { font-size: 1rem; margin-top: 0; }
+.initial-literary-dna p { margin-block: 8px; }
+.initial-literary-dna .registration-recommended-stack { min-height: 210px; padding-block: 18px 12px; }
+.registration-recommended-stack .book-cover { height: 180px; }
+.initial-literary-dna .registration-dna-future { margin-top: 10px; }
+@media (max-width: 480px) { .registration-wizard { padding: 22px 18px; } .registration-themes { gap: 10px; } .registration-theme-preview { padding: 8px; } }
+@media (prefers-reduced-motion: reduce) { .registration-track,.registration-viewport,.registration-panel { transition: none; } }
+
+.register-page .register-library-scene { position: fixed; inset: 0; height: 100dvh; background-size: cover; background-position: center; }
+.register-page.register-page--spread { align-content: start; gap: 12px; padding: 16px 24px 12px; }
+.registration-brand { position: relative; z-index: 1; text-align: center; color: #fff4db; }
+.registration-brand > span { display: flex; align-items: center; justify-content: center; gap: 12px; color: #e9c98f; font-size: 22px; }
+.registration-brand h2 { margin: 0; font: 42px/1.1 'DM Serif Display', serif; }
+.registration-brand p { margin: 4px 0 0; font: italic 16px/1.4 'DM Serif Display', serif; }
+.register-page .register-card.registration-wizard--spread { width: min(1120px, 100%); max-width: 1120px; padding: 0; gap: 0; border: 0; background: transparent; box-shadow: none; overflow: visible; }
+.registration-wizard--spread > .registration-progress,
+.registration-wizard--spread > #registration-heading { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.registration-wizard--spread .registration-track { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+.registration-wizard--spread .registration-viewport { overflow: visible; transition: none; }
+.registration-wizard--spread .registration-panel { display: flex; flex-direction: column; height: 708px; min-height: 708px; padding: 24px 30px; border: 1px solid #d6b9e9; border-radius: 24px; background: #f6edfffa; box-shadow: 0 18px 60px #150a2944; opacity: 1; }
+.registration-wizard--spread .registration-panel > * { flex-shrink: 0; }
+.registration-wizard--spread[data-step="5"] .registration-panel > p { margin-block: 6px; }
+.registration-wizard--spread[data-step="5"] .registration-books { margin-top: 8px; gap: 6px; }
+.registration-wizard--spread[data-step="5"] .registration-books button { padding: 6px; }
+.registration-wizard--spread[data-step="5"] .registration-books img { width: 36px; height: 48px; }
+.registration-wizard--spread[data-step="5"] .registration-card-actions { padding-top: 8px; }
+.registration-wizard--spread .registration-panel[aria-hidden="true"] { display: none; }
+.registration-wizard--spread .registration-panel--account { display: flex; flex-direction: column; gap: 10px; grid-column: 1; grid-row: 1; position: sticky; top: 20px; }
+@media (min-width: 801px) {
+  .registration-wizard--spread .registration-panel--account { transform: translateX(0); transition: transform 650ms cubic-bezier(.22,.61,.36,1); }
+  .registration-wizard--account-only .registration-panel--account { transform: translateX(calc(67.647% + 12px)); }
+  .registration-wizard--spread[data-step="1"] .registration-panel:not(.registration-panel--account) { animation-duration: 650ms; }
+}
+.registration-no-motion .registration-panel--account { transition: none; }
+@media (prefers-reduced-motion: reduce) { .registration-wizard--spread .registration-panel--account { transition: none; } }
+.registration-wizard--spread .registration-panel:not(.registration-panel--account) { grid-column: 2; grid-row: 1; animation: registration-question-enter 380ms ease both; }
+.registration-wizard--universe .registration-track { grid-template-columns: minmax(0, 1fr); }
+.registration-wizard--universe .registration-panel--account[aria-hidden="true"] { display: none; }
+.registration-wizard--universe .registration-panel:not(.registration-panel--account) { grid-column: 1 / -1; }
+.registration-favorites--universe .registration-cover-stack { --stack-cover-width: 56px; --stack-overlap: -14px; min-height: 96px; padding: 8px; }
+.registration-favorites--universe .registration-stacked-book .book-cover { height: 80px; }
+.registration-recommendation-covers { min-width: 0; }
+.registration-recommendation-covers .registration-genre-pagination { justify-content: center; }
+.registration-book-carousel { position: relative; height: 205px; overflow: hidden; isolation: isolate; }
+.registration-carousel-cover { position: absolute; top: 10px; left: calc(50% - 60px); width: 120px; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; transform: translateX(calc(var(--carousel-offset) * 100px)) scale(.82); opacity: .6; transition: transform 2400ms ease-in-out, opacity 2400ms ease-in-out; }
+.registration-carousel-cover[hidden] { display: none; }
+.registration-carousel-cover.is-current { transform: translateX(0) scale(1); opacity: 1; z-index: 2; }
+.registration-carousel-cover .book-cover { width: 120px; height: 180px; border-radius: 5px 9px 9px 5px; overflow: hidden; box-shadow: 0 6px 14px #2c123940; }
+.registration-carousel-cover .book-cover-image { width: 100%; height: 100%; object-fit: cover; }
+.registration-carousel-controls { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: .8rem; }
+.registration-carousel-controls button { min-width: 34px; height: 32px; padding: 4px 8px; border: 1px solid #bda9d4; border-radius: 9px; background: #faf5ff; color: #563978; cursor: pointer; font: inherit; }
+.registration-carousel-controls .registration-carousel-play { min-width: 76px; }
+@media (prefers-reduced-motion: reduce) { .registration-carousel-cover { transition: none; } }
+.registration-no-motion .registration-carousel-cover { transition: none; }
+@media (min-width: 801px) {
+  .register-page.register-page--universe { gap: 8px; padding-top: 8px; padding-bottom: 12px; }
+  .register-page--universe .registration-brand > span { display: none; }
+  .register-page--universe .registration-brand h2 { font-size: 28px; }
+  .register-page--universe .registration-brand p { font-size: 12px; }
+  .registration-wizard--universe .registration-card-divider { display: none; }
+  .registration-favorites--universe { display: flex; align-items: center; gap: 24px; }
+  .registration-favorites--universe .registration-favorites-heading { flex-direction: column; align-items: flex-start; }
+  .registration-favorites--universe .registration-cover-stack { flex: 1; }
+  .registration-favorites--universe .registration-favorites-hint { max-width: 180px; }
+  .registration-recommendation-gallery { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+  .registration-wizard--universe .initial-literary-dna { margin-block: 8px; padding: 14px 16px; }
+  .registration-wizard--universe .initial-literary-dna > h2 { display: inline; font-size: 1.1rem; margin-right: 16px; }
+  .registration-wizard--universe .initial-literary-dna > h3 { display: inline; font-size: .9rem; }
+  .registration-wizard--universe .registration-recommended-stack { --stack-cover-width: 128px; --stack-overlap: -54px; min-height: 215px; padding-block: 18px 12px; }
+  .registration-wizard--universe .registration-recommended-stack .book-cover { height: 185px; }
+  .registration-wizard--universe .registration-favorites { margin-top: 8px; padding-top: 4px; }
+  .registration-wizard--universe .registration-card-actions { padding-top: 4px; }
+  .registration-wizard--universe .registration-dna-future { display: flex; align-items: baseline; gap: 10px; margin-top: 8px; font-size: .78rem; }
+  .registration-wizard--universe .registration-dna-future strong { flex-shrink: 0; }
+  .registration-wizard--universe .registration-dna-future p { margin: 0; }
+}
+.registration-track[data-direction="backward"] { --question-offset: -24px; }
+@media (min-width: 801px) and (max-width: 1100px) {
+  .registration-wizard--universe .registration-recommended-stack { --stack-cover-width: 120px; --stack-overlap: -75px; }
+  .registration-wizard--universe .registration-recommended-stack .book-cover { height: 180px; }
+}
+@keyframes registration-question-enter { from { opacity: .4; transform: translateX(var(--question-offset, 24px)); } to { opacity: 1; transform: translateX(0); } }
+.registration-no-motion .registration-panel { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .registration-wizard--spread .registration-panel { animation: none !important; } }
+.registration-wizard--spread .registration-password-fields { display: grid; grid-template-columns: minmax(0, 1fr); }
+.registration-wizard--spread .registration-panel--account .registration-password-fields > label:first-child,
+.registration-wizard--spread .registration-panel--account .registration-password-fields > label:last-of-type { grid-column: 1; grid-row: auto; }
+.registration-card-heading { display: grid; gap: 8px; margin-bottom: 12px; }
+.registration-card-heading > span:first-child { font-size: .82rem; }
+.registration-card-heading progress { width: 100%; height: 6px; accent-color: #7856a4; }
+.registration-card-heading h2 { margin: 8px 0 0; text-align: center; font: 30px/1.2 'DM Serif Display', serif; }
+.registration-card-divider { display: flex; align-items: center; justify-content: center; gap: 10px; color: #7856a4; }
+.registration-card-divider::before, .registration-card-divider::after { content: ''; width: 45px; height: 1px; background: #bda9d4; }
+.registration-card-actions { margin-top: auto; padding-top: 16px; }
+.registration-card-actions .registration-actions { padding-top: 0; }
+.registration-card-actions .registration-actions .primary { flex: 1; background: linear-gradient(110deg, #a249bc, #603496); color: #fff; }
+.registration-wizard--spread .registration-choices { gap: 7px; }
+.registration-wizard--spread .registration-choices button { padding: 8px 10px; border-radius: 15px; font-size: .84rem; }
+.registration-wizard--spread > .button.text { justify-self: center; margin-top: 8px; color: #fff4db; }
+.registration-genre-picker { display: grid; gap: 12px; }
+.registration-genre-picker .registration-genre-search { font-size: .8rem; }
+.registration-genre-picker .registration-genre-search input { min-height: 40px; padding: 8px 10px; }
+.registration-genre-pagination { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .8rem; }
+.registration-genre-pagination button { width: 40px; height: 40px; border: 1px solid #bda9d4; border-radius: 10px; background: #faf5ff; color: #563978; font: inherit; cursor: pointer; }
+.registration-genre-count { margin-left: auto; color: #655972; }
+@media (min-width: 801px) and (max-height: 900px) {
+  .registration-wizard--universe .registration-panel { padding-block: 12px; }
+  .registration-wizard--universe .registration-recommended-stack { min-height: 185px; }
+  .registration-wizard--universe .registration-recommended-stack .book-cover { height: 160px; }
+  .registration-favorites--universe .registration-cover-stack { min-height: 76px; }
+  .registration-favorites--universe .registration-stacked-book .book-cover { height: 60px; }
+  .registration-wizard--universe > .button.text { margin-top: 4px; }
+  .registration-brand > span { font-size: 16px; }
+  .registration-brand > span svg { width: 24px; height: 24px; }
+  .registration-brand h2 { font-size: 34px; }
+  .registration-brand p { font-size: 14px; }
+  .registration-wizard--spread .registration-panel { padding: 18px 24px; }
+  .registration-wizard--spread .registration-panel--account { gap: 8px; }
+  .registration-card-heading { gap: 6px; margin-bottom: 8px; }
+  .registration-card-heading h2 { font-size: 26px; margin-top: 2px; }
+  .registration-wizard--spread .registration-panel input { min-height: 42px; padding: 8px 10px; }
+  .registration-wizard--spread .registration-password-fields { gap: 6px; }
+}
+@media (max-width: 800px) {
+  .registration-wizard--spread .registration-track { display: flex; flex-direction: column; align-items: stretch; gap: 20px; }
+  .registration-wizard--spread .registration-panel { flex: none; }
+  .registration-wizard--spread .registration-panel--account { position: static; }
+  .registration-wizard--spread .registration-panel:not(.registration-panel--account) { grid-column: 1; grid-row: 2; }
+  .register-page .register-card.registration-wizard--spread { max-width: 620px; }
+  .registration-brand h2 { font-size: 40px; }
+  .registration-brand p { font-size: 17px; }
+}
+@media (max-width: 800px) {
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account { position: sticky; top: 8px; z-index: 2; padding: 12px 16px; gap: 4px; }
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account .registration-card-heading { gap: 4px; margin: 0; }
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account h2 { margin: 0; font-size: 22px; }
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account .registration-card-divider,
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account > p:first-of-type,
+  .registration-wizard--spread[data-account-created="true"] .registration-panel--account > p:last-of-type { display: none; }
+}
+@media (max-width: 480px) {
+  .register-page.register-page--spread { padding: 24px 16px 80px; }
+  .registration-wizard--spread .registration-panel { padding: 24px 20px; }
+  .registration-card-heading h2 { font-size: 26px; }
+  .registration-wizard--account-only .registration-panel--account { padding: 18px 16px; gap: 6px; }
+  .registration-wizard--account-only .registration-card-heading { gap: 4px; margin-bottom: 8px; }
+  .registration-wizard--account-only .registration-panel input { min-height: 42px; padding: 8px 10px; }
+  .registration-wizard--account-only .registration-panel label { gap: 4px; }
+  .registration-wizard--account-only .registration-password-fields { gap: 6px; }
+}
+@media (max-width: 800px) {
+  .registration-wizard--universe .initial-literary-dna { padding: 10px; margin-block: 6px; }
+  .registration-wizard--universe .initial-literary-dna > h2,
+  .registration-wizard--universe .initial-literary-dna > h3 { display: inline; font-size: .9rem; margin-right: 8px; }
+  .registration-wizard--universe .initial-literary-dna p { font-size: .75rem; line-height: 1.4; margin-block: 6px; }
+  .registration-wizard--universe .registration-recommendation-gallery { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 10px; align-items: center; }
+  .registration-wizard--universe .registration-book-carousel { height: 145px; }
+  .registration-wizard--universe .registration-carousel-cover { width: 80px; left: calc(50% - 40px); }
+  .registration-wizard--universe .registration-carousel-cover .book-cover { width: 80px; height: 120px; }
+  .registration-wizard--universe .registration-carousel-controls { gap: 4px; flex-wrap: wrap; }
+  .registration-wizard--universe .registration-carousel-controls button { min-width: 24px; padding: 2px 4px; }
+  .registration-wizard--universe .registration-recommendation-detail { padding: 8px; }
+  .registration-wizard--universe .registration-recommendation-detail h4 { font-size: .85rem; }
+  .registration-wizard--universe .registration-recommendation-detail .button { font-size: .75rem; padding: 6px; }
+  .registration-favorites--universe { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 4px; }
+  .registration-favorites--universe .registration-favorites-heading { flex-direction: column; align-items: flex-start; }
+  .registration-favorites--universe .registration-favorites-heading h3 { font-size: 18px; }
+  .registration-favorites--universe .registration-favorites-hint { display: none; }
+  .registration-favorites--universe .registration-cover-stack { --stack-cover-width: 40px; --stack-overlap: -18px; min-height: 76px; }
+  .registration-favorites--universe .registration-stacked-book .book-cover { height: 60px; }
+  .register-page .registration-wizard--universe .registration-panel { padding: 16px; }
+  .registration-wizard--universe .registration-dna-future { font-size: .68rem; line-height: 1.3; margin-top: 6px; }
+  .registration-wizard--universe .registration-dna-future p { font: inherit; }
+  .registration-favorites--universe .registration-cover-stack { min-height: 50px; padding-block: 4px; }
+  .registration-favorites--universe .registration-stacked-book .book-cover { height: 40px; }
+  .registration-wizard--spread[data-step="5"] .registration-panel > p { font-size: .8rem; line-height: 1.35; margin-block: 6px; }
+  .registration-wizard--spread[data-step="5"] .registration-favorites--mobile { margin-top: 8px; padding-top: 8px; }
+  .registration-wizard--spread[data-step="5"] .registration-favorites-hint { display: none; }
+  .registration-wizard--spread[data-step="5"] .registration-cover-stack { --stack-cover-width: 80px; --stack-overlap: -40px; min-height: 125px; padding-block: 12px; }
+  .registration-wizard--spread[data-step="5"] .registration-stacked-book .book-cover { height: 100px; }
+  .registration-wizard--spread[data-step="5"] .registration-books img { width: 32px; height: 48px; }
+  .registration-wizard--spread[data-step="5"] .registration-books button { padding: 6px; }
+  .registration-wizard--universe .registration-dna-details { font-size: .7rem; margin-block: 6px; }
+  .registration-favorites--universe .registration-favorites-heading h3 { font-size: 16px; white-space: nowrap; }
+}

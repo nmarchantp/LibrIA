@@ -29,7 +29,7 @@ export function LibraryProvider({ children }) {
     setBooks([])
     setLoading(Boolean(user?.id))
     setLoadError('')
-    if (user?.id) {
+    if (user?.id && !user.onboarding_required) {
       const token = localStorage.getItem('libria_token')
       apiRequest('/readings/me', { headers: { Authorization: `Bearer ${token}` } }).then(data => {
         if (!active) return
@@ -47,7 +47,7 @@ export function LibraryProvider({ children }) {
         .finally(() => { if (active) setLoading(false) })
     }
     return () => { active = false }
-  }, [user?.id,identityRefresh])
+  }, [user?.id, user?.onboarding_required,identityRefresh])
   const recordEvent = async (book, event, extra = {}) => {
     const token = localStorage.getItem('libria_token')
     if (!token) throw new Error('Inicia sesión para registrar una lectura.')
@@ -124,6 +124,7 @@ export function LibraryProvider({ children }) {
     setBooks(current => current.some(item => item.workId === reading.work_id || String(item.id) === String(restored.id))
       ? current.map(item => item.workId === reading.work_id || String(item.id) === String(restored.id) ? withReading({ ...item, ...restored }, reading) : item)
       : [...current, withReading(restored, reading)])
+    window.dispatchEvent(new CustomEvent('libria:library-book-added', { detail: { bookRef: String(restored.id) } }))
     return reading
   }, [])
   const getBook = useCallback((id) => books.find(book => [book.id, book.workId, book.canonicalWorkId, book.externalId, book.rawVolume?.id, ...(book.references || [])]

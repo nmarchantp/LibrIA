@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "تعيين MSN كصفحة رئيسية افتراضية لديك"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "ar-sa"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "صفحة MSN الرئيسية"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "ar-xl"
+   }
+}

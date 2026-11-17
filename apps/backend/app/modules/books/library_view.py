@@ -29,6 +29,11 @@ def reading_state(db, reading):
                   "externalId": ("openlibrary:" if source and source.provider == "open-library" else "") + source.external_id if source else str(reading.work_id),
                   "catalogOrigin": "libria", "sourceProvider": source.provider if source else "libria",
                   "catalogFlow": "discovery-v1", "externalAliases": aliases + [str(root)]}}
+    if edition is None:
+        cover = db.scalar(select(Edition.cover_url).where(Edition.work_id == work.id, Edition.cover_url.is_not(None))
+                          .order_by(Edition.created_at, Edition.id).limit(1))
+        if cover:
+            volume['volumeInfo']['imageLinks'] = {'thumbnail': cover}
     return ReadingState(reading_id=reading.id, work_id=reading.work_id, edition_id=reading.edition_id,
         book_ref=str(reading.work_id), book_title=edition.title if edition else work.title, status=reading.status, current_page=reading.current_page,
         edition_optional=get_settings().catalog_editionless_enabled,

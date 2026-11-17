@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "MSN ला आपले डीफॉल्ट मुखपृष्ठ म्हणून सेट करा"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "mr-in"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN मुखपृष्ठ"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "mr-in"
+   }
+}

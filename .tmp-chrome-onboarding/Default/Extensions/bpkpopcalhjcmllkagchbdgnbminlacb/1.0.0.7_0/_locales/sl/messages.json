@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Nastavite MSN kot privzeto domačo stran"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "sl-si"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Domača stran MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

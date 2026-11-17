@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Nustatykite MSN kaip numatytąjį pagrindinį puslapį"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "lt-lt"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN pagrindinis puslapis"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

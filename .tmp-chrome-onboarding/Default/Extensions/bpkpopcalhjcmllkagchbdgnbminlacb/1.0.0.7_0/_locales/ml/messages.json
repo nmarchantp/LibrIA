@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "നിങ്ങളുടെ ഡിഫോള്‍ട്ട് പൂമുഖപേജ്ജായി MSN സജ്ജമാക്കുക"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "ml-in"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN പൂമുഖപേജ്"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

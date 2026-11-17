@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Поставите MSN као подразумевану матичну страницу"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "sr-cyrl"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN матична страница"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

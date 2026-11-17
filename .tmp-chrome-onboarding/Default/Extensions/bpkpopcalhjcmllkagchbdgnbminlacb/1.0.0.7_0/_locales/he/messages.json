@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "הגדר את MSN כדף הבית המוגדר כברירת מחדל"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "he-il"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "דף הבית של MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "he-il"
+   }
+}

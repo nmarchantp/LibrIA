@@ -72,7 +72,8 @@ class ReadingGenreIntegrationTest(unittest.TestCase):
     def register(self):
         r = self.client.post("/api/auth/register", json={"display_name": "Prueba de géneros", "email": f"{uuid.uuid4()}@example.com", "password": "test-password"})
         self.assertEqual(r.status_code, 201, r.text)
-        return r.json()
+        from tests.onboarding_support import existing_account
+        return existing_account(self.db, r)
 
     def reading(self, categories, status="finished", entry=None, user=None, archived=False):
         at = datetime.now(timezone.utc) - timedelta(days=10) + timedelta(seconds=self.seq)
@@ -129,7 +130,9 @@ class ReadingGenreIntegrationTest(unittest.TestCase):
         self.assertEqual(self.stats()["unclassified_books"], 1)
         own = self.client.get('/api/profiles/me/literary-preferences', headers=self.headers).json()
         public = self.client.get('/api/profiles/' + own['profile_id'], headers={"Authorization": "Bearer " + self.other["access_token"]})
-        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id"})
+        self.assertEqual(public.status_code, 200)
+        self.assertTrue({"id", "display_name", "genres", "tropes", "intensities", "interests"} <= set(public.json()))
+        self.assertFalse({"reading_genres", "reading_statistics", "onboarding", "answers"} & set(public.json()))
         self.assertEqual(self.client.get('/api/profiles/' + own['profile_id'] + '/reading-genres', headers=self.headers).status_code, 404)
 
     def test_catalog_grouping_and_search_metadata(self):

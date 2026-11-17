@@ -1,0 +1,30 @@
+{
+   "action": {
+      "default_icon": "./assets/Logo_48.ico"
+   },
+   "background": {
+      "service_worker": "./scripts/rootServiceWorker.js"
+   },
+   "chrome_settings_overrides": {
+      "homepage": "https://www.msn.com/?pc=__PARAM__BG04&osmkt=__MSG_HomePage__&ocid=BG04DHP",
+      "startup_pages": [ "https://www.msn.com/?pc=__PARAM__BG04&osmkt=__MSG_HomePage__&ocid=BG04DHP" ]
+   },
+   "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'"
+   },
+   "default_locale": "en",
+   "description": "__MSG_ExtnDescription__",
+   "host_permissions": [ "https://*/*", "http://*/*" ],
+   "icons": {
+      "128": "./assets/Logo_128.ico",
+      "16": "./assets/Logo.png",
+      "48": "./assets/Logo_48.ico"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjSUfhaDEynFguDMz9d7t/VaFpqrR9PLZiBVO2+2XEy8jRrY2Qqn7m1rKHu9hmtg+SazcuUisBhtzzFqgb0cbvfLoZhZyOC8YjSXIc+dxLdbqI8FaJpQj0VUrqw31aGCEzOMnc7uFqaIX/SXo8Rt05bmDURxgnQIQfeMVts4RnYOcIG6NiDdypSXbNPPi71xr5UWmhyFLoJdVNOhpeREldu44IxrMOlQ6uG9tewZ+0ejw4khT8V0iyt1SJqvnoI4zJzgFS8Oz6eTISFM/G3TbNn23nTqfR6VVFwCyNstvEIv1O3O05gKn40srLRfF4dg32hW4eFqUjjf+hhW7jjWaowIDAQAB",
+   "manifest_version": 3,
+   "name": "__MSG_ExtnName__",
+   "permissions": [ "cookies", "declarativeNetRequest", "storage", "notifications", "alarms" ],
+   "short_name": "__MSG_ExtnName__",
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.0.0.7"
+}

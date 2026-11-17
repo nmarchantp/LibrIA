@@ -1,0 +1,206 @@
+[
+  {
+    "id": "magia",
+    "name": "Magia"
+  },
+  {
+    "id": "vampiros",
+    "name": "Vampiros"
+  },
+  {
+    "id": "brujas",
+    "name": "Brujas"
+  },
+  {
+    "id": "dragones",
+    "name": "Dragones"
+  },
+  {
+    "id": "enemigos-a-amantes",
+    "name": "Enemigos a amantes"
+  },
+  {
+    "id": "amigos-a-amantes",
+    "name": "Amigos a amantes"
+  },
+  {
+    "id": "romance-lento",
+    "name": "Romance lento"
+  },
+  {
+    "id": "amor-prohibido",
+    "name": "Amor prohibido"
+  },
+  {
+    "id": "familia-encontrada",
+    "name": "Familia encontrada"
+  },
+  {
+    "id": "academias-magicas",
+    "name": "Academias mágicas"
+  },
+  {
+    "id": "viajes-en-el-tiempo",
+    "name": "Viajes en el tiempo"
+  },
+  {
+    "id": "mundos-distopicos",
+    "name": "Mundos distópicos"
+  },
+  {
+    "id": "criaturas-feericas",
+    "name": "Criaturas feéricas"
+  },
+  {
+    "id": "misterios-sobrenaturales",
+    "name": "Misterios sobrenaturales"
+  },
+  {
+    "id": "reinos-encantados",
+    "name": "Reinos encantados"
+  },
+  {
+    "id": "matrimonio-por-conveniencia",
+    "name": "Matrimonio por conveniencia"
+  },
+  {
+    "id": "segunda-oportunidad",
+    "name": "Segunda oportunidad"
+  },
+  {
+    "id": "proximidad-forzada",
+    "name": "Proximidad forzada"
+  },
+  {
+    "id": "amor-no-correspondido",
+    "name": "Amor no correspondido"
+  },
+  {
+    "id": "relacion-falsa",
+    "name": "Relación falsa"
+  },
+  {
+    "id": "triangulo-amoroso",
+    "name": "Triángulo amoroso"
+  },
+  {
+    "id": "grumpy-x-sunshine",
+    "name": "Grumpy x Sunshine"
+  },
+  {
+    "id": "rivales-academicos",
+    "name": "Rivales académicos"
+  },
+  {
+    "id": "hombres-lobo",
+    "name": "Hombres lobo"
+  },
+  {
+    "id": "profecias",
+    "name": "Profecías"
+  },
+  {
+    "id": "magia-oscura",
+    "name": "Magia oscura"
+  },
+  {
+    "id": "dioses-y-mitologia",
+    "name": "Dioses y mitología"
+  },
+  {
+    "id": "poderes-ocultos",
+    "name": "Poderes ocultos"
+  },
+  {
+    "id": "portales-a-otros-mundos",
+    "name": "Portales a otros mundos"
+  },
+  {
+    "id": "asesinatos",
+    "name": "Asesinatos"
+  },
+  {
+    "id": "secretos-familiares",
+    "name": "Secretos familiares"
+  },
+  {
+    "id": "desapariciones",
+    "name": "Desapariciones"
+  },
+  {
+    "id": "crimenes-sin-resolver",
+    "name": "Crímenes sin resolver"
+  },
+  {
+    "id": "narrador-poco-fiable",
+    "name": "Narrador poco fiable"
+  },
+  {
+    "id": "conspiraciones",
+    "name": "Conspiraciones"
+  },
+  {
+    "id": "investigacion-detectivesca",
+    "name": "Investigación detectivesca"
+  },
+  {
+    "id": "apocalipsis",
+    "name": "Apocalipsis"
+  },
+  {
+    "id": "supervivencia",
+    "name": "Supervivencia"
+  },
+  {
+    "id": "exploracion-espacial",
+    "name": "Exploración espacial"
+  },
+  {
+    "id": "realidades-paralelas",
+    "name": "Realidades paralelas"
+  },
+  {
+    "id": "inteligencia-artificial",
+    "name": "Inteligencia artificial"
+  },
+  {
+    "id": "rebeliones",
+    "name": "Rebeliones"
+  },
+  {
+    "id": "antiheroes",
+    "name": "Antihéroes"
+  },
+  {
+    "id": "villanos-complejos",
+    "name": "Villanos complejos"
+  },
+  {
+    "id": "redencion",
+    "name": "Redención"
+  },
+  {
+    "id": "traicion",
+    "name": "Traición"
+  },
+  {
+    "id": "venganza",
+    "name": "Venganza"
+  },
+  {
+    "id": "crecimiento-personal",
+    "name": "Crecimiento personal"
+  },
+  {
+    "id": "duelo-y-perdida",
+    "name": "Duelo y pérdida"
+  },
+  {
+    "id": "amistades-profundas",
+    "name": "Amistades profundas"
+  },
+  {
+    "id": "personajes-moralmente-grises",
+    "name": "Personajes moralmente grises"
+  }
+]

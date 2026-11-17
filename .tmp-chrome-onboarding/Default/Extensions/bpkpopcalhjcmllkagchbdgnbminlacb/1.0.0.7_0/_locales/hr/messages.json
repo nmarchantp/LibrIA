@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Postavite MSN kao svoju zadanu početnu stranicu"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "hr-hr"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Početna stranica MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

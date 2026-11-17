@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "உங்கள் இயல்புநிலை முகப்புப்பக்கமாக, MSN-ஐ அமைக்கவும்"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "ta-in"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN முகப்புப்பக்கம்"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

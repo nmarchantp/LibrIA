@@ -9,7 +9,8 @@ export default function SessionGate({ guest = false }) {
   const { holding } = useAuthJourney()
   if (loading) return <main className="session-state" role="status">Preparando tu espacio de lectura…</main>
   if (sessionError) return <main className="session-state"><h1>No pudimos recuperar tu sesión</h1><p>Comprueba que el servidor esté activo e inténtalo nuevamente.</p><button className="button primary" onClick={retry}>Reintentar</button><button className="button text" onClick={logout}>Volver al login</button></main>
-  if (guest) return user && !holding ? <Navigate to={profileDestination(location.search)} replace /> : <Outlet />
+  if (guest) return user && !holding && location.pathname !== '/register' ? <Navigate to={user.onboarding_required ? '/register' : profileDestination(location.search)} replace /> : <Outlet />
+  if (user?.onboarding_required) return <Navigate to="/register" replace />
   const destination = location.pathname + location.search
   const next = profileDestination(`next=${encodeURIComponent(destination)}`)
   return user ? <Outlet /> : <Navigate to={next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login'} replace />

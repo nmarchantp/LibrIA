@@ -191,7 +191,7 @@ function FeedbackCard({ working, submitting, information, setInformation, onFeed
   </article>
 }
 
-function GeminiProfile({ data, analysis, content, working, failed, message, error, notice, onRefresh,
+function GeminiProfile({ intro, data, analysis, content, working, failed, message, error, notice, onRefresh,
   submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory }) {
   const groups = [
     ['narrative_preferences', 'Preferencias narrativas'],
@@ -204,6 +204,7 @@ function GeminiProfile({ data, analysis, content, working, failed, message, erro
   ]
   return <section className="reader-dna-view" aria-label="Perfil lector persistido">
     <header className="dna-header"><div><span className="dna-kicker">Perfil nocturno</span><h2>ADN Lector &amp; Afinidades</h2><p>Interpretación Gemini vinculada al último perfil elegible del ETL.</p></div></header>
+    {intro}
     <StatusBar data={data} analysis={analysis} content={null} working={working} failed={failed} message={message} error={error} onRefresh={onRefresh} />
     {notice && <p className="dna-notice" role="status">{notice}</p>}
     <div className="dna-affinity-grid">{groups.map(([key, label]) => <article className="dna-card" key={key}><h3>{label}</h3>
@@ -218,10 +219,10 @@ function GeminiProfile({ data, analysis, content, working, failed, message, erro
   </section>
 }
 
-export default function ReaderDna({ data, analysis, working, failed, message, error, notice, onRefresh, submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory }) {
+export default function ReaderDna({ intro, data, analysis, working, failed, message, error, notice, onRefresh, submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory }) {
   const summary = data?.library_summary
   const content = analysis?.content
-  if (content?.narrative_preferences) return <GeminiProfile {...{data, analysis, content, working, failed, message, error, notice, onRefresh,
+  if (content?.narrative_preferences) return <GeminiProfile {...{intro, data, analysis, content, working, failed, message, error, notice, onRefresh,
     submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory}} />
   const evidence = data?.evidence || []
   const claims = content ? groups.flatMap(([group, label, icon]) => (content[group] || []).map((claim, index) => {
@@ -237,6 +238,7 @@ export default function ReaderDna({ data, analysis, working, failed, message, er
         <li><strong>{summary.pending}</strong> {summary.pending === 1 ? 'pendiente' : 'pendientes'}</li>
       </ul>}
     </header>
+    {intro}
     <StatusBar data={data} analysis={analysis} content={content} working={working} failed={failed} message={message} error={error} onRefresh={onRefresh} />
     {notice && <p className="dna-notice" role="status">{notice}</p>}
     {working && analysis && <p className="dna-muted">Mientras se procesa la actualización, puedes consultar la última versión válida.</p>}

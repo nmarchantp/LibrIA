@@ -6,6 +6,7 @@ import ProfileEvents from '../components/ProfileEvents'
 import ProfileHeader from '../components/ProfileHeader'
 import ProfileAboutSection from '../components/ProfileAboutSection'
 import ProfileFavoriteQuotes from '../components/ProfileFavoriteQuotes'
+import PublicLiteraryDNA from '../components/PublicLiteraryDNA'
 import useLiteraryPreferences from '../hooks/useLiteraryPreferences'
 import './ProfilePage.css'
 
@@ -46,6 +47,7 @@ export default function CommunityProfilePage() {
     {!data.can_view ? <section className="reader-personal-card profile-locked"><LockKeyhole size={32} aria-hidden="true" /><h2>Este perfil es privado</h2><p>Esta persona debe seguirte para que puedas ver este perfil.</p><p>{data.following ? 'Ya sigues a esta persona. Podrás ver su perfil cuando te siga.' : 'Síguela para que reciba una notificación y pueda seguirte.'}</p></section> : <>
       {eventsAllowed && <nav className="profile-tabs reader-profile-tabs" aria-label="Secciones del perfil">{[['about', 'Sobre mí'], ['events', 'Eventos']].map(([value, label]) => <button key={value} className={events === (value === 'events') ? 'active' : ''} aria-pressed={events === (value === 'events')} onClick={() => setParams({ tab: value })}>{label}</button>)}</nav>}
       {events ? <ProfileEvents profileId={profileId} /> : <>
+        <PublicLiteraryDNA profileId={profileId} />
         {data.visible_sections.some(section => ['biography', 'genres', 'tropes', 'intensities'].includes(section)) && <ProfileAboutSection preferences={data} publicOnly />}
         {data.visible_sections.includes('interests') && <section className="reader-personal-card"><h2>Intereses</h2>{data.interests.length ? <ul>{data.interests.map(item => <li key={item.id}>{item.name}</li>)}</ul> : <p>Sin intereses publicados.</p>}</section>}
         {data.visible_sections.includes('favorite_quotes') && <ProfileFavoriteQuotes publicView quotes={data.favorite_quotes} />}

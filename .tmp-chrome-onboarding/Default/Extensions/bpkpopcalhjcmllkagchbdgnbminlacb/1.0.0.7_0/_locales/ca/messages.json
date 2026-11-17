@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "Defineix l'MSN com a pàgina d'inici per defecte"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "ca-es"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "Pàgina d'inici de l'MSN"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "en-us"
+   }
+}

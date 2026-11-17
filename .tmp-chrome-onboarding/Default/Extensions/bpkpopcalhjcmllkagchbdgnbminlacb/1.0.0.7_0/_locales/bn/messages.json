@@ -1,0 +1,18 @@
+{
+   "ExtnDescription": {
+      "Description": "Extension Description",
+      "message": "MSN কে আপনার ডিফল্ট মূলপৃষ্ঠা হিসাবে সেট করুন"
+   },
+   "ExtnMarket": {
+      "Description": "Market",
+      "message": "bn-in"
+   },
+   "ExtnName": {
+      "Description": "Extension name",
+      "message": "MSN মূলপৃষ্ঠা"
+   },
+   "HomePage": {
+      "Description": "Homepage",
+      "message": "bn-in"
+   }
+}
