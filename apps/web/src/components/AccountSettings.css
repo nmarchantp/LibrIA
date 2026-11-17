@@ -18,6 +18,9 @@
 .account-role-tag { flex:none; padding:2px 8px; border:1px solid color-mix(in srgb,var(--primary) 50%,var(--line)); border-radius:999px; background:color-mix(in srgb,var(--primary) 16%,var(--surface)); color:var(--accent-text); font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
 
 /* Tarjetas */
+/* Inner boxes mix from the card's own colors, so they stay readable when a theme turns cards into light parchment. */
+.account-settings { --account-inset:color-mix(in srgb,var(--soft) 55%,var(--surface)); }
+.account-personal-info { --account-inset:color-mix(in srgb,var(--soft) 55%,var(--surface)); }
 .account-panel, .account-card { min-width:0; border:1px solid var(--line); background:var(--surface); box-shadow:0 4px 18px color-mix(in srgb,var(--shadow-color) 40%,transparent); }
 .account-panel { display:grid; gap:22px; padding:28px; border-radius:20px; }
 .account-card { display:grid; align-content:start; gap:14px; padding:22px; border-radius:18px; }
@@ -68,7 +71,7 @@
 
 /* Perfil */
 .account-profile-grid { display:grid; grid-template-columns:minmax(200px,240px) minmax(0,1fr); gap:24px; align-items:start; }
-.account-avatar-card { display:grid; justify-items:center; gap:4px; padding:22px 18px; border:1px solid var(--line); border-radius:16px; background:var(--paper); text-align:center; }
+.account-avatar-card { display:grid; justify-items:center; gap:4px; padding:22px 18px; border:1px solid var(--line); border-radius:16px; background:var(--account-inset); text-align:center; }
 .account-avatar { display:grid; place-items:center; width:92px; height:92px; margin-bottom:10px; overflow:hidden; border:3px solid color-mix(in srgb,var(--primary) 35%,var(--surface)); border-radius:50%; background:var(--button-bg); color:var(--on-primary); font:30px 'DM Serif Display',serif; }
 .account-avatar img { width:100%; height:100%; object-fit:cover; }
 .account-avatar-card strong { color:var(--ink); font-size:13px; }
@@ -78,26 +81,33 @@
 
 /* Seguridad */
 .account-security { display:grid; gap:20px; }
-.account-security-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
-.account-email-row { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px; }
-.account-email-copy { display:grid; gap:4px; min-width:0; }
-.account-settings .account-email { color:var(--muted); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px; }
-.account-email-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.account-toggle svg { transition:transform .18s; }
-.account-toggle.open svg { transform:rotate(180deg); }
-.account-email-panel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding-top:16px; border-top:1px solid var(--line); }
-.account-email-panel form { padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
-.account-email-panel fieldset { gap:10px; }
 .account-settings h3 { display:flex; align-items:center; gap:8px; color:var(--ink); font-size:14px; font-weight:700; }
-.account-email-panel h3 span { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:color-mix(in srgb,var(--primary) 20%,var(--surface)); color:var(--accent-text); font-size:11px; }
-.account-settings .account-email-panel p { color:var(--muted); font-size:12px; }
-.account-unlink { padding-top:14px; border-top:1px solid var(--line); }
-.account-google-linked { padding:10px 12px; border:1px solid var(--success-line); border-radius:11px; background:var(--success-bg); }
-.account-settings .account-google-linked { color:var(--success-text); }
-.account-google-card .verification-countdown { color:var(--muted); font-size:12px; }
+
+/* Correo y acceso: el flujo es AccountAccessSettings (correo, verificación y Google), una acción a la vez. */
+.account-access-settings { display:grid; }
+.account-access-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px 18px; padding:16px 0; border-bottom:1px solid var(--line); }
+.account-access-row:first-child { padding-top:4px; }
+.account-access-row > div:first-child { display:grid; gap:4px; min-width:0; }
+.account-settings .account-access-row p { color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+.account-access-status { justify-self:start; margin-top:4px; padding:2px 9px; border:1px solid var(--success-line); border-radius:999px; background:var(--success-bg); color:var(--success-text); font-size:10px; font-weight:700; }
+/* The flow uses one status class; an unverified email is the only row with two actions (verify and change). */
+.account-access-row:has(.account-action-group > .button:nth-child(2)) .account-access-status { border-color:color-mix(in srgb,var(--warning-text) 45%,transparent); background:var(--warning-bg); color:var(--warning-text); }
+.account-action-group { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.account-access-settings .button:not(.primary):not(.text) { border:1px solid var(--line); background:var(--soft); color:var(--ink); }
+.account-access-settings .button:not(.primary):not(.text):hover:not(:disabled) { border-color:var(--primary); }
+.account-access-flow { display:grid; gap:12px; margin-top:16px; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--account-inset); }
+.account-access-flow-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.account-access-flow form, .account-access-flow fieldset, .google-verification-form { display:grid; gap:12px; margin:0; }
+.account-settings .account-access-flow p { color:var(--muted); font-size:13px; }
+.account-access-flow label, .google-verification-form label { display:grid; gap:6px; min-width:0; color:var(--ink); font-size:13px; font-weight:600; }
+.account-settings :is(.account-access-flow,.google-account-panel) input { width:100%; min-width:0; min-height:44px; padding:10px 13px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--ink); font:400 14px/1.5 'DM Sans',sans-serif; box-sizing:border-box; }
+.account-settings .google-account-panel.is-compact { max-width:none; margin:0; padding:0; border:0; background:none; box-shadow:none; }
+.account-settings .verification-countdown { color:var(--muted); font-size:12px; }
+.account-access-settings > [role="status"], .account-access-settings > [role="alert"] { margin-top:14px; padding:10px 12px; border:1px solid var(--success-line); border-radius:11px; background:var(--success-bg); color:var(--success-text); font-size:13px; }
+.account-access-settings > [role="alert"] { border-color:var(--error-line); background:var(--error-bg); color:var(--error-text); }
 
 .account-sessions { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
-.account-sessions li { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px; padding:12px 14px; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+.account-sessions li { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px; padding:12px 14px; border:1px solid var(--line); border-radius:13px; background:var(--account-inset); }
 .account-session-copy { display:grid; gap:2px; min-width:0; }
 .account-session-copy strong { display:flex; align-items:center; gap:8px; color:var(--ink); font-size:13px; }
 .account-session-copy small { color:var(--muted); font-size:12px; }
@@ -115,7 +125,7 @@
 .account-role-copy p strong { color:var(--ink); }
 .account-settings .account-role-action { gap:8px; }
 .account-perks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0; padding:0; list-style:none; }
-.account-perks li { display:grid; align-content:start; gap:5px; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.account-perks li { display:grid; align-content:start; gap:5px; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--account-inset); }
 .account-perks small { color:var(--accent-text); font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
 .account-perks strong { color:var(--ink); font-size:14px; }
 .account-perks p { color:var(--muted); font-size:12px; line-height:1.55; }
@@ -123,7 +133,7 @@
 .account-settings .account-role-block > p { color:var(--muted); font-size:13px; }
 .account-requests { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
 .account-requests ul { margin:0; padding-left:18px; }
-.account-requests > li { display:grid; gap:8px; padding:14px 16px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.account-requests > li { display:grid; gap:8px; padding:14px 16px; border:1px solid var(--line); border-radius:13px; background:var(--account-inset); color:var(--ink); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
 .account-requests li p { margin:0; }
 .account-request-head { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
 .account-request-head small { color:var(--muted); font-size:12px; }
@@ -144,7 +154,7 @@
   .account-perks { grid-template-columns:minmax(0,1fr); }
 }
 @media(max-width:760px) {
-  .account-profile-grid, .account-security-grid, .account-email-panel { grid-template-columns:minmax(0,1fr); }
+  .account-profile-grid { grid-template-columns:minmax(0,1fr); }
 }
 @media(max-width:560px) {
   .account-settings-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -152,7 +162,8 @@
   .account-settings-nav-icon { width:30px; height:30px; }
   .account-panel { padding:20px 16px; }
   .account-card { padding:18px 16px; }
-  .account-email-actions, .account-email-actions .button, .account-settings .account-role-action { width:100%; }
+  .account-access-row, .account-action-group { flex-direction:column; align-items:stretch; }
+  .account-settings .account-role-action { width:100%; }
   .account-sessions li .button { width:100%; }
 }
-@media(prefers-reduced-motion:reduce) { .account-settings-nav a, .account-toggle svg { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .account-settings-nav a { transition:none; } }
