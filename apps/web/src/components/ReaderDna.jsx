@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import BookCover from './BookCover'
+import DnaProfileSections from './DnaProfileSections'
 import RatingStar from './RatingStar'
 import { presentBookCategories } from './bookCategories'
 import { formatAnalysisDate, sourceLabels } from './adaptiveAnalysisLabels'
@@ -193,23 +194,12 @@ function FeedbackCard({ working, submitting, information, setInformation, onFeed
 
 function GeminiProfile({ intro, data, analysis, content, working, failed, message, error, notice, onRefresh,
   submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory }) {
-  const groups = [
-    ['narrative_preferences', 'Preferencias narrativas'],
-    ['character_preferences', 'Personajes'],
-    ['themes_and_conflicts', 'Temas y conflictos'],
-    ['genres_and_styles', 'Géneros y estilos'],
-    ['emotional_patterns', 'Respuestas expresadas'],
-    ['interests_from_notes_and_theories', 'Intereses en notas y teorías'],
-    ['rating_patterns', 'Patrones de valoración'],
-  ]
   return <section className="reader-dna-view" aria-label="Perfil lector persistido">
     <header className="dna-header"><div><span className="dna-kicker">Perfil nocturno</span><h2>ADN Lector &amp; Afinidades</h2><p>Interpretación Gemini vinculada al último perfil elegible del ETL.</p></div></header>
     {intro}
     <StatusBar data={data} analysis={analysis} content={null} working={working} failed={failed} message={message} error={error} onRefresh={onRefresh} />
     {notice && <p className="dna-notice" role="status">{notice}</p>}
-    <div className="dna-affinity-grid">{groups.map(([key, label]) => <article className="dna-card" key={key}><h3>{label}</h3>
-      {content[key]?.length ? <ul>{content[key].map((item, index) => <li key={index}>{item}</li>)}</ul> : <p className="dna-muted">Sin hallazgos suficientemente respaldados.</p>}
-    </article>)}</div>
+    <DnaProfileSections content={content} />
     <details className="dna-card"><summary>Evidencias y metadatos</summary><p>Modelo: {analysis.model}</p><p>Generado: {formatAnalysisDate(analysis.created_at)}</p>
       <p>{content.evidence_ids.length} referencia(s) validadas; solo la titular puede consultar este resultado.</p></details>
     <FeedbackCard working={working} submitting={submitting} information={information} setInformation={setInformation} onFeedback={onFeedback} />

@@ -2,3 +2,6 @@
 .ai-usage p { margin: .5rem 0; }
 .ai-usage progress { display: block; width: 100%; height: 14px; accent-color: var(--primary, #9063d8); }
 .ai-usage small { display: block; margin-top: .5rem; opacity: .8; line-height: 1.5; }
+.ai-usage.is-compact { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0; border: 0; background: none; font-size: 13px; }
+.ai-usage-pill { padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--accent-text, #9063d8) 14%, transparent); color: var(--accent-text, inherit); font-size: 11px; font-weight: 600; }
+.ai-usage.is-compact progress { flex: 1 0 100%; height: 6px; }
