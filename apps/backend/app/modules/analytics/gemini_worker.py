@@ -30,16 +30,16 @@ from app.modules.analytics.gemini_context import (
     evidence_index, profile_evidence_units,
 )
 from app.modules.analytics.gemini_contracts import (
-    ProfileChunkSummary, ProfileInterpretation, RecommendationGeneration,
+    ProfileChunkSummary, ProfileInterpretation, RecommendationGeneration, reader_dna_transport_json_schema,
     RecommendationTransportGeneration, recommendation_transport_json_schema,
     ReadingAnalysis, reading_transport_json_schema, normalize_reading_transport,
 )
 from app.modules.analytics.gemini_prompts import (
-    CHUNK_SYSTEM, RECOMMENDATION_SYSTEM, REDUCE_SYSTEM, READING_SYSTEM,
+    CHUNK_SYSTEM, RECOMMENDATION_SYSTEM, REDUCE_SYSTEM, READING_SYSTEM, DNA_SYSTEM,
 )
 from app.modules.analytics.persistence import record_ai_usage, set_reader_profile_status
 from app.modules.analytics.providers.base import (
-    AIProvider, AIProviderError, AIProviderInvalidResponseError,
+    AIProvider, AIProviderError, AIProviderInvalidResponseError, AIProviderConfigurationError,
     PromptKind, StructuredGenerationRequest, TokenUsage,
 )
 from app.modules.analytics.providers.factory import build_ai_provider
@@ -58,6 +58,8 @@ class AttemptBudget:
     calls: int = 0
     usage: TokenUsage = field(default_factory=TokenUsage)
     request_ids: list[str] = field(default_factory=list)
+    provider_calls: list[dict] = field(default_factory=list)
+    call_cost: Decimal | None = None
     fragments: int = 0
     # A request can be billed even when no response or usage metadata reaches
     # LibrIA. Keep its conservative reservation until a response is accounted.
@@ -87,6 +89,9 @@ class AttemptBudget:
         )
         if result.provider_request_id:
             self.request_ids.append(result.provider_request_id)
+        if getattr(result, 'provider', None):
+            self.provider_calls.append({'provider': result.provider, 'model': result.model,
+                                        'request_id': result.provider_request_id})
         self.unsettled_tokens = 0
 
 
@@ -139,7 +144,7 @@ def claim_next_job(db: Session, settings: Settings, *, owner_id=None, target=Non
             AND job_kind IN ('recommendation','reading_event_analysis','reader_profile','onboarding')
             AND ((status='pending' AND not_before<=now()) OR
                  (status='processing' AND locked_at < now()-(:lease * interval '1 second')))
-            ORDER BY not_before,created_at,id FOR UPDATE SKIP LOCKED LIMIT 1)"""),
+            ORDER BY CASE WHEN job_kind='reader_profile' THEN 0 ELSE 1 END,not_before,created_at,id FOR UPDATE SKIP LOCKED LIMIT 1)"""),
           {"lease": settings.ai_job_lease_seconds, "owner_id": owner_id, "target": target})
         db.commit()
         return None
@@ -159,7 +164,7 @@ def claim_next_job(db: Session, settings: Settings, *, owner_id=None, target=Non
               (status='pending' AND not_before<=now()) OR
               (status='processing' AND locked_at < now() - (:lease * interval '1 second'))
             )
-          ORDER BY not_before,created_at,id
+          ORDER BY CASE WHEN job_kind='reader_profile' THEN 0 ELSE 1 END,not_before,created_at,id
           FOR UPDATE SKIP LOCKED LIMIT 1
         )
         UPDATE ia.jobs j SET status='processing',locked_at=now(),attempts=j.attempts+1,
@@ -185,6 +190,8 @@ def _estimated_cost(settings: Settings, usage: TokenUsage) -> Decimal:
 
 def _conservative_attempt_cost(settings: Settings, budget: AttemptBudget) -> Decimal:
     """Known usage plus a worst-rate reserve for the last ambiguous request."""
+    if budget.call_cost is not None:
+        return budget.call_cost.quantize(Decimal('0.00000001'))
     known = _estimated_cost(settings, budget.usage)
     rate = max(Decimal(str(settings.ai_input_cost_per_million_usd)),
                Decimal(str(settings.ai_output_cost_per_million_usd)))
@@ -244,8 +251,10 @@ def _release_global_slot(db: Session, settings: Settings, slot: int, started: fl
         raise
 
 
-def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequest,
+def _invoke_once(db: Session, provider: AIProvider, request: StructuredGenerationRequest,
             budget: AttemptBudget, settings: Settings):
+    if provider.name != 'gemini':
+        raise AIProviderConfigurationError('Solo Gemini está habilitado para el MVP')
     if budget.job_id:
         # Account lifecycle changes revoke access to queued work as well as HTTP
         # sessions. Check before every provider call, including chunked jobs.
@@ -282,27 +291,46 @@ def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequ
                 time.sleep(.5)
         budget.calls += 1
         budget.unsettled_tokens = estimate + (request.max_output_tokens or settings.ai_output_token_budget)
+        reservation_cost = usage_cost(settings, TokenUsage(input_tokens=estimate,
+            output_tokens=request.max_output_tokens or settings.ai_output_token_budget))
+        budget.call_cost = (budget.call_cost or Decimal(0)) + reservation_cost
+
+        def account_usage(usage):
+            if usage:
+                actual = usage_cost(settings, usage)
+                budget.call_cost += (actual if usage.verified else max(actual, reservation_cost)) - reservation_cost
+
         try:
             result = provider.generate_structured(request)
         except AIProviderError as error:
+            error.provider = provider.name
+            error.model = request.model
             settle_call(db, call_id, settings, usage=error.usage, error=error,
                         request_id=error.request_id, finish_reason=error.finish_reason)
             if error.usage:
+                account_usage(error.usage)
                 budget.add(type('UsageResult', (), {'usage':error.usage, 'provider_request_id':error.request_id})())
             elif error.status_code in {400,401,403,404,429}:
                 budget.unsettled_tokens = 0
+                budget.call_cost -= reservation_cost
             raise
         except Exception:
             settle_call(db, call_id, settings)
             raise
         settle_call(db, call_id, settings, usage=result.usage,
                     request_id=result.provider_request_id, finish_reason=result.finish_reason)
+        account_usage(result.usage)
     finally:
         _release_global_slot(db, settings, slot, started, wait_for_spacing=not budget.interactive)
-    if result.provider != "gemini":
-        raise AIProviderInvalidResponseError("Unexpected provider for Gemini job")
+    if result.provider != provider.name:
+        raise AIProviderInvalidResponseError("Unexpected structured generation provider")
     budget.add(result)
     return result.content
+
+
+def _invoke(db: Session, provider: AIProvider, request: StructuredGenerationRequest,
+            budget: AttemptBudget, settings: Settings):
+    return _invoke_once(db, provider, request, budget, settings)
 
 
 def _request(model, system: str, payload: Any, settings: Settings, kind: PromptKind):
@@ -316,8 +344,11 @@ def _request(model, system: str, payload: Any, settings: Settings, kind: PromptK
     )
 
 
-def _summary_request(system: str, payload: Any, settings: Settings, allowed: set[str], *, event=False):
+def _summary_request(system: str, payload: Any, settings: Settings, allowed: set[str], *, event=False, dna_units=None, dna_context=None):
     def validate(value):
+        if dna_units is not None:
+            from app.modules.analytics.reader_dna import validate_dna
+            return validate_dna(value, dna_units, dna_context)
         parsed = ProfileChunkSummary.model_validate(value).model_dump()
         if not set(parsed["evidence_ids"]).issubset(allowed):
             raise ValueError("Profile summary cites unsupported evidence")
@@ -325,12 +356,12 @@ def _summary_request(system: str, payload: Any, settings: Settings, allowed: set
 
     return StructuredGenerationRequest(
         prompt_kind=PromptKind.BOOK_ANALYSIS if event else PromptKind.READER_PROFILE,
-        accounting_phase=('event_' if event else 'dna_') + ('reduce' if system == REDUCE_SYSTEM else 'chunk'),
+        accounting_phase='dna_synthesis' if dna_units is not None else ('event_' if event else 'dna_') + ('reduce' if system == REDUCE_SYSTEM else 'chunk'),
         system_instruction=system,
         user_content=canonical_json(payload),
-        response_schema=ProfileChunkSummary.model_json_schema(), validator=validate,
+        response_schema=reader_dna_transport_json_schema() if dna_units is not None else ProfileChunkSummary.model_json_schema(), validator=validate,
         timeout_seconds=settings.ai_timeout_seconds,
-        max_output_tokens=settings.ai_output_token_budget,
+        max_output_tokens=settings.reader_dna_output_token_budget if dna_units is not None else settings.ai_output_token_budget,
     )
 
 
@@ -358,10 +389,20 @@ def _save_chunk(db: Session, owner: uuid.UUID, chunk_hash: str, content: dict[st
 
 
 def _summarize_profile(db: Session, provider: AIProvider, job: dict[str, Any], payload: dict[str, Any],
-                       settings: Settings, budget: AttemptBudget) -> tuple[dict[str, Any], list[dict[str, Any]], list[EvidenceUnit]]:
+                       settings: Settings, budget: AttemptBudget, *, dna_context=None) -> tuple[dict[str, Any], list[dict[str, Any]], list[EvidenceUnit]]:
     units = profile_evidence_units(payload)
     chunks = chunk_evidence(units, min(settings.ai_chunk_token_budget, max(100, (settings.ai_context_token_budget - 3500) // 5)))
     budget.fragments += len(chunks)
+    if dna_context is not None and len(chunks) == 1:
+        # The normal case keeps ONE global call, now including essence/evolution.
+        from app.modules.analytics.reader_dna import assess_evidence
+        input_value = {**chunks[0], 'evidence_assessment': assess_evidence(units), **dna_context}
+        request = _summary_request(DNA_SYSTEM, input_value, settings, set(evidence_index(units)),
+                                   dna_units=units, dna_context=dna_context)
+        envelope = {'system': request.system_instruction, 'user': request.user_content, 'schema': dict(request.response_schema)}
+        if len(canonical_json(envelope).encode('utf-8')) + 256 <= settings.ai_context_token_budget:
+            value = _invoke(db, provider, request, budget, settings)
+            return {'content': value}, [{'hash': chunks[0]['hash'], 'reused': False, 'index': 0, 'total': 1}], units
     summaries: list[dict[str, Any]] = []
     traces: list[dict[str, Any]] = []
     for chunk in chunks:
@@ -384,7 +425,23 @@ def _summarize_profile(db: Session, provider: AIProvider, job: dict[str, Any], p
     # Hierarchical reduction keeps the final prompt bounded. Each reduction is
     # also content-addressed and reusable.
     summary_target = max(100, (settings.ai_context_token_budget - 3500) // 8)
-    while estimate_tokens({"summaries": summaries}) > summary_target:
+    def synthesis_request(values):
+        from app.modules.analytics.reader_dna import assess_evidence
+        return _summary_request(DNA_SYSTEM, {'summaries': values, 'evidence_assessment': assess_evidence(units), **dna_context},
+                                settings, set(evidence_index(units)), dna_units=units, dna_context=dna_context)
+
+    def synthesis_fits(values):
+        if dna_context is None:
+            return True
+        request = synthesis_request(values)
+        envelope = {'system': request.system_instruction, 'user': request.user_content, 'schema': dict(request.response_schema)}
+        return len(canonical_json(envelope).encode('utf-8')) + 256 <= settings.ai_context_token_budget
+
+    reduction_rounds = 0
+    while estimate_tokens({"summaries": summaries}) > summary_target or not synthesis_fits(summaries):
+        reduction_rounds += 1
+        if reduction_rounds > 4:
+            raise AIProviderInvalidResponseError('Profile summaries cannot fit the complete synthesis envelope')
         groups: list[list[dict[str, Any]]] = []
         current: list[dict[str, Any]] = []
         for summary in summaries:
@@ -393,16 +450,17 @@ def _summarize_profile(db: Session, provider: AIProvider, job: dict[str, Any], p
             current.append(summary)
         if current:
             groups.append(current)
-        if len(groups) >= len(summaries):
+        if len(groups) >= len(summaries) and len(summaries) > 1:
             raise AIProviderInvalidResponseError("Profile summaries cannot fit the context budget")
         reduced: list[dict[str, Any]] = []
         for group in groups:
             budget.fragments += 1
-            value_hash = content_hash(group)
+            compression = 'Use concise Spanish. Merge equivalent claims; preserve all evidence_ids, the seven dimensions and contradictions. Aim for at most two concise sentences per dimension.'
+            value_hash = content_hash({'summaries': group, 'compression': compression})
             allowed = {evidence for summary in group for evidence in summary["evidence_ids"]}
             cached = _chunk_cache(db, job["owner_id"], value_hash, job["model"], f"{job['prompt_version']}:reduce-v1")
             if cached is None:
-                value = _invoke(db, provider, _summary_request(REDUCE_SYSTEM, {"summaries": group},
+                value = _invoke(db, provider, _summary_request(REDUCE_SYSTEM, {"summaries": group, 'compression': compression},
                                                            settings, allowed), budget, settings)
                 _save_chunk(db, job["owner_id"], value_hash, value, job["model"], f"{job['prompt_version']}:reduce-v1")
             else:
@@ -411,6 +469,18 @@ def _summarize_profile(db: Session, provider: AIProvider, job: dict[str, Any], p
                     raise ValueError("Cached reduction cites unsupported evidence")
             reduced.append(value)
         summaries = reduced
+    if dna_context is not None:
+        # Independent chunk summaries cannot provide a coherent whole-reader
+        # narrative. One final bounded synthesis is necessary for large profiles.
+        request = synthesis_request(summaries)
+        input_value = request.user_content
+        value_hash = content_hash(input_value)
+        prompt = f"{job['prompt_version']}:synthesis-v2"
+        cached = _chunk_cache(db, job['owner_id'], value_hash, job['model'], prompt)
+        value = request.validate(cached) if cached is not None else _invoke(db, provider, request, budget, settings)
+        if cached is None:
+            _save_chunk(db, job['owner_id'], value_hash, value, job['model'], prompt)
+        return {'content': value}, traces, units
     return {"summaries": summaries}, traces, units
 
 
@@ -592,9 +662,9 @@ def _rank_candidates(candidates, profile):
 
 
 def _ensure_dna(db, provider, job, profile, settings, budget):
-    from app.modules.analytics.reader_dna import dna_fingerprint, find_dna
+    from app.modules.analytics.reader_dna import dna_fingerprint, find_dna, previous_dna, evolution_context
     fingerprint = dna_fingerprint(profile['payload'])
-    key = f"dna:{job['owner_id']}:{fingerprint}:{job['model']}:{settings.reader_dna_prompt_version}"
+    key = f"dna:{job['owner_id']}"
     # Session lock survives commits made by the ledger and cache. Keep leases
     # alive while another worker builds the exact same DNA.
     while not db.execute(text('SELECT pg_try_advisory_lock(hashtextextended(:key,0))'), {'key':key}).scalar_one():
@@ -607,8 +677,12 @@ def _ensure_dna(db, provider, job, profile, settings, budget):
         if cached:
             return dict(cached)
         dna_job = {**job, 'prompt_version': settings.reader_dna_prompt_version}
-        summary, traces, units = _summarize_profile(db, provider, dna_job, profile['payload'], settings, budget)
-        content = _merge_profile_summaries(summary['summaries']).model_dump()
+        previous = previous_dna(db, job['owner_id'])
+        context = evolution_context(previous, profile_evidence_units(profile['payload']))
+        summary, traces, units = _summarize_profile(db, provider, dna_job, profile['payload'], settings, budget, dna_context=context)
+        content = summary['content']
+        if not _latest_profile_is(db, job['owner_id'], profile['id']):
+            raise ObsoleteJob('obsolete_profile')
         analysis_id = uuid.uuid4()
         target = f"profile:{profile['id']}:dna:{settings.reader_dna_prompt_version}"
         db.execute(text('''INSERT INTO ia.analyses
@@ -616,7 +690,7 @@ def _ensure_dna(db, provider, job, profile, settings, budget):
           VALUES (:id,:owner,:target,COALESCE((SELECT max(version)+1 FROM ia.analyses
             WHERE owner_id=:owner AND target=:target),1),:hash,CAST(:content AS jsonb),:model,:prompt,'gemini',:job)'''),
           {'id':analysis_id,'owner':job['owner_id'],'target':target,'hash':fingerprint,
-           'content':canonical_json({'profile':content,'trace':{'chunks':traces,'provider_request_ids':budget.request_ids}}),'model':job['model'],
+           'content':canonical_json({'profile':content,'trace':{'chunks':traces,'provider_request_ids':budget.request_ids,'provider_calls':budget.provider_calls}}),'model':job['model'],
            'prompt':settings.reader_dna_prompt_version,'job':job['id']})
         if profile['payload'].get('identity_version'):
             db.execute(text('UPDATE ia.analyses SET identity_version=:version WHERE id=:id'), {'version':profile['payload']['identity_version'],'id':analysis_id})
@@ -629,7 +703,7 @@ def _ensure_dna(db, provider, job, profile, settings, budget):
           RETURNING *'''),
           {'analysis':analysis_id,'owner':job['owner_id'],'profile':profile['id'],'hash':fingerprint,'model':job['model'],
            'prompt':settings.reader_dna_prompt_version,'content':canonical_json(content),
-           'trace':canonical_json({'chunks':traces,'provider_request_ids':budget.request_ids})}).mappings().one()
+           'trace':canonical_json({'chunks':traces,'provider_request_ids':budget.request_ids,'provider_calls':budget.provider_calls})}).mappings().one()
         db.commit()
         return dict(result)
     finally:
@@ -658,7 +732,7 @@ def _process_recommendation(db: Session, provider: AIProvider, job: dict[str, An
         raise PermanentJobError("no_verified_candidates")
     dna = _ensure_dna(db, provider, job, profile, settings, budget)
     units = profile_evidence_units(profile['payload'])
-    profile_input = {'summaries': [dna['content']]}
+    profile_input = {'summaries': [_merge_profile_summaries([dna['content']]).model_dump()]}
     traces = dna['trace'].get('chunks', [])
     allowed = set(evidence_index(units))
     # Rank locally and interleave authors before sending only semantic fields.
@@ -733,7 +807,7 @@ def _process_recommendation(db: Session, provider: AIProvider, job: dict[str, An
     if not all_ids.issubset(allowed):
         raise ValueError("Profile interpretation cites unsupported evidence")
     stored = {**result, "trace": {"profile_hash": profile["data_hash"], "chunks": traces,
-                                    "provider_request_ids": budget.request_ids}}
+                                    "provider_request_ids": budget.request_ids, "provider_calls": budget.provider_calls}}
     db.execute(text("""INSERT INTO ia.analyses
       (id,owner_id,target,version,data_hash,content,model,prompt_version,provider,job_id)
       VALUES (:id,:owner,:target,:version,:hash,CAST(:content AS jsonb),:model,:prompt,'gemini',:job)"""),
@@ -933,7 +1007,7 @@ def _process_individual(db: Session, provider: AIProvider, job: dict[str, Any],
         raise LeaseLost("lease_lost")
     analysis_id = uuid.uuid4()
     stored = {**result, "trace": {"context_hash": content_hash(payload),
-                                    "provider_request_ids": budget.request_ids}}
+                                    "provider_request_ids": budget.request_ids, "provider_calls": budget.provider_calls}}
     db.execute(text("""INSERT INTO ia.analyses
       (id,owner_id,target,version,data_hash,content,model,prompt_version,provider,job_id,reading_event_id)
       VALUES (:id,:owner,:target,COALESCE((SELECT max(version)+1 FROM ia.analyses
@@ -980,7 +1054,7 @@ def _finish_attempt(db: Session, job: dict[str, Any], budget: AttemptBudget, sta
 
 
 def _retry_attempt(db: Session, job: dict[str, Any], budget: AttemptBudget, started: float,
-                   settings: Settings, error_code: str, *, retry_after=None, quota_exhausted=False) -> None:
+                   settings: Settings, error_code: str, *, retry_after=None, quota_exhausted=False, error_provider='gemini', error_model=None) -> None:
     record_ai_usage(db, job_id=job["id"], attempt=job["attempts"], provider="gemini",
                     model=job["model"], usage=budget.usage,
                     duration_ms=max(0, int((time.monotonic() - started) * 1000)), final_status="failed",
@@ -999,10 +1073,10 @@ def _retry_attempt(db: Session, job: dict[str, Any], budget: AttemptBudget, star
     if error_code == 'provider_quota':
         cooldown_delay = max(retry_after or 0, 86400 if quota_exhausted else 900 if retry_after is None else 60)
         db.execute(text('''INSERT INTO ia.provider_cooldowns(provider,model,until_at,reason)
-          VALUES ('gemini',:model,now()+:delay*interval '1 second',:reason)
+          VALUES (:provider,:model,now()+:delay*interval '1 second',:reason)
           ON CONFLICT (provider,model) DO UPDATE SET until_at=GREATEST(
             ia.provider_cooldowns.until_at,EXCLUDED.until_at),reason=EXCLUDED.reason'''),
-          {'model':job['model'],'delay':cooldown_delay,
+          {'provider':error_provider,'model':error_model or job['model'],'delay':cooldown_delay,
            'reason':'quota_exhausted' if quota_exhausted else 'rate_limited'})
     db.execute(text("""UPDATE ia.jobs SET status=:status,error_code=:error,locked_at=NULL,
       not_before=now()+(:delay * interval '1 second'),updated_at=now()
@@ -1077,7 +1151,8 @@ def process_one(*, provider: AIProvider | None = None, settings: Settings | None
             db.rollback()
             if error.retryable:
                 _retry_attempt(db, job, budget, started, resolved, error.code,
-                               retry_after=error.retry_after, quota_exhausted=error.quota_exhausted)
+                               retry_after=error.retry_after, quota_exhausted=error.quota_exhausted,
+                               error_provider=getattr(error,'provider','gemini'), error_model=getattr(error,'model',None))
             else:
                 _finish_attempt(db, job, budget, started, resolved, status="failed", error_code=error.code)
         except TransientJobError as error:
@@ -1094,8 +1169,20 @@ def process_one(*, provider: AIProvider | None = None, settings: Settings | None
 
 
 async def worker_loop() -> None:
-    settings = get_settings()
     while True:
+        # A background worker outlives .env edits. Refresh between complete
+        # batches so new credentials are used without changing an in-flight call.
+        try:
+            get_settings.cache_clear()
+            settings = get_settings()
+        except ValueError:
+            LOGGER.error('Worker configuration invalid; waiting for a corrected configuration')
+            await asyncio.sleep(2)
+            continue
+        free_test_allowed = settings.gemini_free_test_mode and settings.app_env in {'development', 'test'}
+        if not settings.gemini_worker_enabled or not (settings.gemini_paid_service_confirmed or free_test_allowed):
+            await asyncio.sleep(settings.ai_worker_poll_seconds)
+            continue
         results = await asyncio.gather(*(
             asyncio.to_thread(process_one, settings=settings)
             for _ in range(settings.ai_max_concurrent_requests)

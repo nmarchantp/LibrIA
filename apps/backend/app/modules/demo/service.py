@@ -1,8 +1,10 @@
 """Demo actors and real catalog selection; bibliographic writes use the importer."""
 from dataclasses import dataclass
+import time
 import uuid
 
 from sqlalchemy import select, text
+from sqlalchemy.exc import DBAPIError
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
@@ -135,11 +137,26 @@ def mark_demo_result(path, result):
             entities.append(('event', result['event_id']))
     elif path.endswith('/comments') and result.get('comment'):
         entities.append(('comentarios_publicacion', result['comment']['id']))
-    with SessionLocal.begin() as db:
-        for kind, entity in entities:
-            db.execute(text('INSERT INTO app.procedencia_demo (entity_type,entity_id,dataset_version) '
-                            'VALUES (:kind,:id,:version) ON CONFLICT DO NOTHING'),
-                       {'kind': kind, 'id': uuid.UUID(str(entity)), 'version': 'showcase-v1'})
+    if not entities:
+        return
+    # The API action has already committed. Retry only this idempotent metadata
+    # transaction, never the HTTP action. related_dirty() can race with ETL
+    # refreshing dirty_catalog/dirty_readers in a different lock order.
+    markers = sorted((kind, uuid.UUID(str(entity))) for kind, entity in entities)
+    for attempt in range(3):
+        try:
+            with SessionLocal.begin() as db:
+                for kind, entity in markers:
+                    db.execute(text('INSERT INTO app.procedencia_demo (entity_type,entity_id,dataset_version) '
+                                    'VALUES (:kind,:id,:version) ON CONFLICT DO NOTHING'),
+                               {'kind': kind, 'id': entity, 'version': 'showcase-v1'})
+            return
+        except DBAPIError as error:
+            # begin() has rolled back and closed the failed session before the
+            # next attempt. Do not hide integrity, permission or schema errors.
+            if getattr(error.orig, 'sqlstate', None) not in {'40P01', '40001'} or attempt == 2:
+                raise
+            time.sleep(0.05 * (2 ** attempt))
 
 
 def prepare_catalog(admin_id, *, require_active=True, refresh=False):

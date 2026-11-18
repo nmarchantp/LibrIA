@@ -5,6 +5,8 @@ import { apiRequest } from '../api/client'
 import { useLibrary } from '../context/LibraryContext'
 import BookCover from './BookCover'
 import DnaProfileSections from './DnaProfileSections'
+import ReaderEssence from './ReaderEssence'
+import ReaderDnaEvolution from './ReaderDnaEvolution'
 import RatingStar from './RatingStar'
 import { presentBookCategories } from './bookCategories'
 import { formatAnalysisDate, sourceLabels } from './adaptiveAnalysisLabels'
@@ -195,17 +197,19 @@ function FeedbackCard({ working, submitting, information, setInformation, onFeed
 function GeminiProfile({ intro, data, analysis, content, working, failed, message, error, notice, onRefresh,
   submitting, information, setInformation, onFeedback, history, historyBusy, onLoadHistory }) {
   return <section className="reader-dna-view" aria-label="Perfil lector persistido">
-    <header className="dna-header"><div><span className="dna-kicker">Perfil nocturno</span><h2>ADN Lector &amp; Afinidades</h2><p>Interpretación Gemini vinculada al último perfil elegible del ETL.</p></div></header>
+    <header className="dna-header"><div><span className="dna-kicker">Tu recorrido lector</span><h2>ADN Lector &amp; Afinidades</h2><p>Una mirada a tus preferencias, basada en las experiencias de lectura que has compartido.</p></div></header>
     {intro}
     <StatusBar data={data} analysis={analysis} content={null} working={working} failed={failed} message={message} error={error} onRefresh={onRefresh} />
     {notice && <p className="dna-notice" role="status">{notice}</p>}
+    {working && <p className="dna-muted">Mientras se procesa la actualización, puedes consultar la última versión válida.</p>}
+    <ReaderEssence essence={content.reader_essence} />
+    <h3>Las dimensiones de tu ADN</h3>
     <DnaProfileSections content={content} />
-    <details className="dna-card"><summary>Evidencias y metadatos</summary><p>Modelo: {analysis.model}</p><p>Generado: {formatAnalysisDate(analysis.created_at)}</p>
-      <p>{content.evidence_ids.length} referencia(s) validadas; solo la titular puede consultar este resultado.</p></details>
+    <ReaderDnaEvolution content={content} currentId={data.dna_version_id} currentAnalysisId={analysis.id} history={history} busy={historyBusy} onLoad={onLoadHistory} />
+    <details className="dna-card"><summary>Evidencias y metadatos</summary><p>Modelo: {analysis.generation_models?.length ? analysis.generation_models.join(' · ') : analysis.model}</p>
+      {analysis.generation_providers?.length > 0 && <p>Proveedores: {analysis.generation_providers.join(' · ')}</p>}<p>Generado: {formatAnalysisDate(analysis.created_at)}</p>
+      <p>{(content.evidence_ids || []).length} referencia(s) validadas; solo tú puedes consultar este resultado.</p></details>
     <FeedbackCard working={working} submitting={submitting} information={information} setInformation={setInformation} onFeedback={onFeedback} />
-    <div className="dna-history"><button className="button secondary" disabled={historyBusy || working} onClick={() => onLoadHistory()}>{historyBusy ? 'Consultando versiones…' : 'Consultar historial de versiones'}</button>
-      {history && <ul>{history.map(item => <li key={item.id}><strong>Versión {item.version}</strong> · {formatAnalysisDate(item.created_at)}<p>{item.provider} · {item.model}</p></li>)}</ul>}
-    </div>
   </section>
 }
 

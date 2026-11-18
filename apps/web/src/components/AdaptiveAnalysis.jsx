@@ -5,16 +5,9 @@ import AiUsageBar from './AiUsageBar'
 import BookExperience from './BookExperience'
 import { shouldPollBookAnalysis } from './bookAnalysisState'
 import { useAuth } from '../context/AuthContext'
+import { analysisErrorMessage } from './analysisErrors'
 
 const headers = () => ({ Authorization: `Bearer ${localStorage.getItem('libria_token')}` })
-const errors = {
-  monthly_budget_exhausted: 'El presupuesto mensual de IA está agotado.',
-  provider_timeout: 'Gemini superó el tiempo de espera; el reintento automático permanece limitado.',
-  provider_authentication: 'La credencial del proveedor no es válida.',
-  provider_quota: 'La cuota del proveedor está temporalmente agotada.',
-  provider_invalid_response: 'Gemini devolvió una respuesta incompleta. Puedes volver a intentarlo.',
-  provider_error: 'Gemini rechazó la solicitud. Puedes volver a intentarlo.',
-}
 
 function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, active, children }) {
   const isBook = scope === 'book'
@@ -103,11 +96,11 @@ function PrivateAnalysis({ workId, scope, onWriteReview, evidenceRevision, activ
     : jobStatus === 'pending' ? scheduled
       ? `El análisis podrá comenzar en aproximadamente ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}. Esta espera te permite completar tu valoración, reseña y notas; si las editas, puede extenderse. Si ya terminaste, pulsa «Analizar ahora».`
       : 'Tu análisis está en cola y comenzará cuando haya disponibilidad. No necesitas volver a solicitarlo. Esta página se actualizará automáticamente.'
-    : jobStatus === 'processing' ? 'Gemini está preparando tu análisis. Puede tardar más de un minuto. Puedes salir y volver después; el resultado quedará guardado aquí.'
+    : jobStatus === 'processing' ? 'La IA está preparando tu análisis. Puede tardar más de un minuto. Puedes salir y volver después; el resultado quedará guardado aquí.'
     : analysis ? 'Tu análisis guardado está disponible.'
     : data?.status === 'waiting_for_etl' ? 'Tus datos aún no están preparados para la IA. Un administrador debe ejecutar la actualización de datos; después podrás solicitar tu análisis.'
     : data?.status === 'insufficient_data' ? 'Para preparar tu ADN lector, termina un libro y valóralo con al menos 4 estrellas. Después de la próxima actualización de datos podrás solicitar el análisis.' : ''
-  const statusError = error || (!isBook && failed ? errors[data?.job?.error_code] || 'No se pudo completar el análisis. Puedes volver a intentarlo.' : '')
+  const statusError = error || (!isBook && failed ? analysisErrorMessage(data?.job) : '')
   const shared = { data, analysis, working, failed, message, error: error || (working ? '' : statusError), notice,
     onRefresh: refresh, submitting, information, setInformation, onFeedback: sendFeedback,
     refreshDisabled: isBook ? loading : loading || jobStatus === 'processing' || (jobStatus === 'pending' && !scheduled),

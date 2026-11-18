@@ -84,15 +84,19 @@ class GeminiProvider:
                     config=types.GenerateContentConfig(**config_values),
                 )
         except errors.APIError as error:
-            raise self._map_api_error(error) from None
+            mapped = self._map_api_error(error)
+            status = getattr(error, 'code', None)
+            if isinstance(status, int):
+                mapped.finish_reason = f'HTTP_{status}'
+            raise mapped from None
         except (TimeoutError, httpx.TimeoutException):
             raise AIProviderTimeoutError("Gemini request timed out") from None
         except AIProviderError:
             raise
-        except Exception:
+        except Exception as error:
             # The SDK can surface transport implementations other than httpx.
             # Do not include its message: it may contain request details.
-            raise AIProviderServerError("Gemini request failed") from None
+            raise AIProviderServerError("Gemini request failed", finish_reason=f'transport:{type(error).__name__}') from None
 
         usage = self._usage(response)
         request_id = getattr(response, "response_id", None)
