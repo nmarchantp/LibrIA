@@ -101,6 +101,16 @@ class MockGemini:
                 "emotional_patterns": [], "interests_from_notes_and_theories": [],
                 "rating_patterns": [], "evidence_ids": evidence,
             }
+            if 'reader_essence' in properties:
+                assessment = payload['evidence_assessment']
+                if not evidence:
+                    evidence = list(dict.fromkeys(key for summary in payload.get('summaries', []) for key in summary['evidence_ids']))
+                    raw['evidence_ids'] = evidence
+                level = 'insufficient' if assessment['evidence_level'] == 'insufficient' else 'partial'
+                raw['reader_essence'] = {'archetype': None, 'summary': None if level == 'insufficient' else 'Tus reflexiones sugieren algunas tendencias preliminares que necesitan más experiencias para consolidarse.',
+                                         'traits': [], 'evidence_level': level, 'evidence_ids': evidence}
+                raw['evolution'] = {'reference_version_id': payload['reference_version_id'], 'has_meaningful_changes': False,
+                                    'summary': None, 'stable_patterns': [], 'emerging_interests': [], 'changing_preferences': []}
         content = request.validate(raw)
         return StructuredGenerationResult(
             content=content, provider="gemini", model=request.model or "mock-flash-lite",

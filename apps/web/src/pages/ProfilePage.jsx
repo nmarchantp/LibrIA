@@ -53,11 +53,11 @@ export default function ProfilePage() {
     case 'library':
       return <LibraryPage />
     case 'analysis':
-      return <InsightsPage active={active}><InitialLiteraryDNA /><button type="button" className="button text" onClick={() => window.dispatchEvent(new Event('libria:start-welcome-guide'))}>Conocer LibrIAverse: iniciar gu?a</button></InsightsPage>
+      return <InsightsPage active={active}><InitialLiteraryDNA sharing /><button type="button" className="button text" onClick={() => window.dispatchEvent(new Event('libria:start-welcome-guide'))}>Conocer LibrIAverse: iniciar gu?a</button></InsightsPage>
     case 'activity':
       return <ProfileActivity userId={user.id} />
     default:
-      return <><ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} /><InitialLiteraryDNA sharing /></>
+      return <><ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} /><InitialLiteraryDNA compact /></>
   }
   }
 

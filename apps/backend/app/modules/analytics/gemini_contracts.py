@@ -7,7 +7,7 @@ LibrIA accepts and deliberately avoid psychological or medical profiling.
 from __future__ import annotations
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class StrictModel(BaseModel):
@@ -34,6 +34,76 @@ class ProfileInterpretation(StrictModel):
 
 class ProfileChunkSummary(ProfileInterpretation):
     """Reusable interpretation of one complete, traceable context fragment."""
+
+
+class ReaderEssence(StrictModel):
+    archetype: str | None = Field(max_length=160)
+    summary: str | None = Field(max_length=3000)
+    traits: list[str] = Field(max_length=5)
+    evidence_level: Literal['insufficient', 'partial', 'sufficient']
+    evidence_ids: list[str] = Field(max_length=200)
+
+    @model_validator(mode='after')
+    def supported_narrative(self):
+        import re
+        if self.evidence_level == 'insufficient':
+            if self.archetype or self.summary or self.traits:
+                raise ValueError('Insufficient evidence cannot define a literary identity')
+            return self
+        if not self.summary or not self.evidence_ids:
+            raise ValueError('An interpretation requires a narrative and citations')
+        if not re.search(r'\b(tú|tu|tus|te|ti|pareces|buscas|valoras|disfrutas|tiendes)\b', self.summary, re.I):
+            raise ValueError('Reader essence must address the reader in second person')
+        if self.evidence_level == 'sufficient':
+            paragraphs = [part for part in re.split(r'\n\s*\n', self.summary.strip()) if part.strip()]
+            if not self.archetype or not 3 <= len(self.traits) <= 5 or not 120 <= len(self.summary.split()) <= 180 or not 2 <= len(paragraphs) <= 3:
+                raise ValueError('Complete essence requires an archetype, 3–5 traits and 120–180 words in 2–3 paragraphs')
+        elif self.archetype or self.traits:
+            raise ValueError('Preliminary tendencies must not assert a complete archetype or traits')
+        return self
+
+
+class DnaEvolutionClaim(StrictModel):
+    dimension: Literal['narrative_preferences', 'character_preferences', 'themes_and_conflicts',
+                       'emotional_patterns', 'rating_patterns', 'genres_and_styles',
+                       'interests_from_notes_and_theories']
+    text: str = Field(min_length=1, max_length=700)
+    evidence_ids: list[str] = Field(min_length=1, max_length=20)
+    reference_evidence_ids: list[str] = Field(min_length=1, max_length=20)
+
+
+class ReaderEvolution(StrictModel):
+    reference_version_id: str | None
+    has_meaningful_changes: bool
+    summary: str | None = Field(max_length=2000)
+    stable_patterns: list[DnaEvolutionClaim] = Field(max_length=12)
+    emerging_interests: list[DnaEvolutionClaim] = Field(max_length=12)
+    changing_preferences: list[DnaEvolutionClaim] = Field(max_length=12)
+
+
+class ReaderDnaInterpretation(ProfileInterpretation):
+    schema_version: Literal[2] = 2
+    reader_essence: ReaderEssence
+    evolution: ReaderEvolution
+
+
+def reader_dna_transport_json_schema():
+    """Keep Gemini's grammar small; enforce all size bounds in Pydantic locally.
+
+    Bounded nested arrays (changes × citations × categories) can exceed the
+    provider's structured-output grammar complexity even for a short payload.
+    """
+    def transport(value):
+        if isinstance(value, list):
+            return [transport(item) for item in value]
+        if isinstance(value, dict):
+            result = {key: transport(child) for key, child in value.items()
+                      if key not in {'minItems', 'maxItems', 'minLength', 'maxLength', 'title', 'default'}}
+            if 'const' in result:
+                result['enum'] = [result.pop('const')]
+            return result
+        return value
+    return transport(ReaderDnaInterpretation.model_json_schema())
 
 
 class RecommendationSelection(StrictModel):

@@ -39,12 +39,12 @@ TOKENS = """CASE WHEN state IN ('reserved','unknown','partial') THEN
 
 def monthly_snapshot(db, settings):
     legacy = Decimal(str(db.execute(text(f"""SELECT COALESCE(sum(estimated_cost_usd),0)
-      FROM ia.usage_metrics m WHERE provider='gemini'
+      FROM ia.usage_metrics m WHERE provider IN ('gemini','openai')
       AND created_at>=date_trunc('month',now()) AND {LEGACY}""")).scalar_one()))
     row = db.execute(text(f"""SELECT COALESCE(sum({LIABILITY}),0) committed,
       COALESCE(sum(measured_cost_usd) FILTER (WHERE state='measured'),0) measured,
       count(*) FILTER (WHERE state IN ('reserved','unknown','partial')) unresolved
-      FROM ia.call_ledger WHERE provider='gemini' AND
+      FROM ia.call_ledger WHERE provider IN ('gemini','openai') AND
         (created_at>=date_trunc('month',now()) OR state IN ('reserved','unknown','partial'))""")).mappings().one()
     committed = legacy + row['committed']
     return {'limit': Decimal(str(settings.ai_monthly_budget_usd)), 'spent': legacy + row['measured'],
@@ -66,21 +66,22 @@ def job_totals(db, job_id):
     return int(row['calls'] + old['calls']), int(row['tokens'] + old['tokens']), old['cost']
 
 
-def reserve_call(db, job, attempt, phase, estimated_input, output, settings):
+def reserve_call(db, job, attempt, phase, estimated_input, output, settings, *, provider='gemini', model=None):
     db.execute(text("SELECT pg_advisory_xact_lock(hashtext('gemini-monthly-budget'))"))
     current = db.execute(text('SELECT status,attempts,model FROM ia.jobs WHERE id=:job FOR UPDATE'),
                          {'job': job}).mappings().one()
     if current['status'] != 'processing' or current['attempts'] != attempt:
         db.rollback()
         raise BudgetExhausted('lease_lost')
+    call_model = model or current['model']
     cooldown = db.execute(text('''SELECT extract(epoch FROM until_at-now()) FROM ia.provider_cooldowns
-        WHERE provider='gemini' AND model=:model AND until_at>now()'''), {'model':current['model']}).scalar()
+        WHERE provider=:provider AND model=:model AND until_at>now()'''), {'provider':provider,'model':call_model}).scalar()
     if cooldown:
         from app.modules.analytics.providers.base import AIProviderQuotaError
         db.rollback()
         raise AIProviderQuotaError('Provider cooldown active', retry_after=float(cooldown))
     recent = db.execute(text("""SELECT count(*) FROM ia.call_ledger
-        WHERE provider='gemini' AND created_at>now()-interval '60 seconds'""")).scalar_one()
+        WHERE provider=:provider AND created_at>now()-interval '60 seconds'"""), {'provider':provider}).scalar_one()
     if recent >= settings.ai_requests_per_minute:
         db.rollback()
         raise LocalRateLimited('local_rpm_limit')
@@ -102,9 +103,10 @@ def reserve_call(db, job, attempt, phase, estimated_input, output, settings):
     call_id = uuid.uuid4()
     db.execute(text("""INSERT INTO ia.call_ledger
       (id,job_id,attempt,ordinal,provider,model,phase,state,reserved_tokens,reserved_cost_usd)
-      SELECT :id,id,:attempt,:ordinal,provider,model,:phase,'reserved',:tokens,:cost
+      SELECT :id,id,:attempt,:ordinal,:provider,:model,:phase,'reserved',:tokens,:cost
       FROM ia.jobs WHERE id=:job"""), {'id': call_id, 'job': job, 'attempt': attempt,
-       'ordinal': calls + 1, 'phase': phase, 'tokens': reservation, 'cost': cost})
+       'ordinal': calls + 1, 'phase': phase, 'tokens': reservation, 'cost': cost,
+       'provider':provider,'model':call_model})
     db.commit()
     return call_id
 
@@ -146,6 +148,11 @@ def reconcile_call(db, call_id, settings, *, usage, request_id, verification_ref
         raise ValueError('Verified usage, provider request id and audit reference required')
     db.execute(text("SELECT pg_advisory_xact_lock(hashtext('gemini-monthly-budget'))"))
     row = db.execute(text('SELECT * FROM ia.call_ledger WHERE id=:id FOR UPDATE'), {'id':call_id}).mappings().one()
+    if row['provider'] == 'openai':
+        settings = settings.model_copy(update={
+            'ai_input_cost_per_million_usd': settings.openai_input_cost_per_million_usd,
+            'ai_output_cost_per_million_usd': settings.openai_output_cost_per_million_usd,
+        })
     if row['state'] not in {'unknown','partial'}:
         raise ValueError('Only unresolved calls can be reconciled')
     if row['request_id'] and row['request_id'] != request_id:

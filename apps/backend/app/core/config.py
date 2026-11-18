@@ -62,11 +62,15 @@ class Settings(BaseSettings):
     ai_free_daily_token_pool: int = Field(default=0, ge=0)
     ai_provider: Literal["gemini"] = "gemini"
     gemini_api_key: SecretStr = SecretStr("")
+    # Legacy reconciliation rates only; no secondary provider is enabled.
+    openai_input_cost_per_million_usd: float = Field(default=0.75, gt=0)
+    openai_output_cost_per_million_usd: float = Field(default=4.50, gt=0)
     gemini_model: str = "gemini-3.5-flash-lite"
     ai_timeout_seconds: int = Field(default=180, ge=5, le=300)
     onboarding_ai_timeout_seconds: int = Field(default=45, ge=5, le=90)
     recommendation_prompt_version: str = "recommendations-v5-es"
-    reader_dna_prompt_version: str = "reader-dna-v1-es"
+    reader_dna_prompt_version: str = "reader-dna-v2.1-deep-second-history-es"
+    reader_dna_output_token_budget: int = Field(default=4096, ge=128, le=65536)
     reading_analysis_prompt_version: str = "reading-event-v3-es"
     reading_analysis_delay_minutes: int = Field(default=30, ge=0, le=1440)
     ai_max_concurrent_requests: int = Field(default=2, ge=1, le=16)
