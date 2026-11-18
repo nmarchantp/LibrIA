@@ -5,7 +5,7 @@ import './AiUsageBar.css'
 
 const number = value => new Intl.NumberFormat('es-CL').format(value)
 
-export default function AiUsageBar({ active: panelActive = true }) {
+export default function AiUsageBar({ active: panelActive = true, compact = false }) {
   const visible = useRef(panelActive)
   useEffect(() => { visible.current = panelActive }, [panelActive])
   const { user } = useAuth()
@@ -34,6 +34,15 @@ export default function AiUsageBar({ active: panelActive = true }) {
   }, [user])
   if (!user) return null
   const { data, error } = state
+  if (compact) {
+    const label = !data ? (error ? 'No se pudo consultar' : 'Consultando…')
+      : !data.configured ? 'Cuota diaria aún no configurada'
+        : `${number(data.remaining_tokens)} tokens disponibles · ${data.used_percent}% usado`
+    return <aside className="ai-usage is-compact" aria-label="Uso personal de IA gratuita">
+      <strong>Tu uso de IA gratuita:</strong><span className="ai-usage-pill" role="status">{label}</span>
+      {data?.configured && <progress max="100" value={data.used_percent} aria-label="Porcentaje de tu cuota diaria consumida" />}
+    </aside>
+  }
   return <aside className="ai-usage" aria-label="Uso personal de IA gratuita">
     <strong>Tu uso de IA gratuita</strong>
     {!data ? <p role="status">{error ? 'No se pudo consultar el consumo de IA.' : 'Consultando tu consumo…'}</p>

@@ -1,0 +1,38 @@
+/* Quick-look dialog for a recommended book; frame, backdrop and close button come from ProfileEditModal.css. */
+/* The dialog lives in a portal outside the page, so it redeclares the tints the shared buttons use. */
+.recommendation-preview { --preview-tint: color-mix(in srgb, var(--accent-text) 14%, transparent); --preview-line: color-mix(in srgb, var(--accent-text) 32%, transparent); --rec-tint: var(--preview-tint); --rec-tint-line: var(--preview-line); position: relative; width: min(760px, calc(100% - 32px)); max-width: 760px; }
+.recommendation-preview-close { position: absolute; top: 16px; right: 16px; z-index: 1; }
+.recommendation-preview-body { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 28px; min-height: 0; padding: 28px 28px 22px; overflow-y: auto; overscroll-behavior: contain; }
+.recommendation-preview-cover { align-self: start; position: sticky; top: 0; }
+.recommendation-preview-cover .book-cover { width: 190px; height: 285px; border-radius: 4px 12px 12px 4px; }
+.recommendation-preview-copy { display: grid; align-content: start; gap: 10px; min-width: 0; padding-right: 36px; }
+.recommendation-preview-copy h2 { margin: 0; color: var(--ink); font: 28px/1.2 'DM Serif Display', serif; overflow-wrap: anywhere; }
+.recommendation-preview-author { margin: 0; color: var(--muted); font-size: 14px; }
+.recommendation-preview-details { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 4px; }
+.recommendation-preview-details > span { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid var(--preview-line); border-radius: 999px; background: var(--preview-tint); color: var(--accent-text); font-size: 11px; font-weight: 700; }
+.recommendation-preview-rating svg { width: 12px; height: 12px; }
+.recommendation-preview-section { display: grid; gap: 8px; }
+.recommendation-preview-section h3 { display: flex; align-items: center; gap: 7px; margin: 6px 0 0; color: var(--ink); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.recommendation-preview-section h3 svg { width: 15px; height: 15px; color: var(--accent-text); }
+.recommendation-preview-synopsis { max-height: 220px; overflow-y: auto; padding-right: 6px; color: var(--ink); font-size: 14px; line-height: 1.75; white-space: pre-line; scrollbar-width: thin; }
+.recommendation-preview-synopsis p { margin: 0 0 10px; }
+.recommendation-preview-synopsis .is-empty { color: var(--muted); font-style: italic; }
+.recommendation-preview-synopsis:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 6px; }
+.recommendation-preview-section.is-reason p { margin: 0; padding: 12px 14px; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); color: var(--ink); font-size: 13px; line-height: 1.65; }
+.recommendation-preview-footer { display: flex; flex-shrink: 0; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 28px; border-top: 1px solid var(--line); }
+.recommendation-preview-footer .button { display: inline-flex; align-items: center; gap: 6px; }
+.recommendation-preview-footer .recommendation-want, .recommendation-preview-footer .recommendation-saved { padding: 10px 16px; font-size: 13px; }
+.recommendation-preview-footer .recommendation-error { flex-basis: 100%; margin: 0; color: var(--danger-text, #b3261e); font-size: 12px; text-align: right; }
+
+@media (max-width: 640px) {
+  .recommendation-preview-body { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 24px 18px 16px; }
+  .recommendation-preview-cover { position: static; justify-self: center; }
+  .recommendation-preview-cover .book-cover { width: 120px; height: 180px; padding: 12px 10px; }
+  .recommendation-preview-cover .cover-mark { font-size: 26px; }
+  .recommendation-preview-cover .cover-title { font-size: 11px; }
+  .recommendation-preview-copy { padding-right: 0; }
+  .recommendation-preview-copy h2 { font-size: 22px; }
+  .recommendation-preview-synopsis { max-height: none; overflow: visible; }
+  .recommendation-preview-footer { padding: 14px 18px; }
+  .recommendation-preview-footer > * { flex: 1 1 auto; justify-content: center; }
+}
