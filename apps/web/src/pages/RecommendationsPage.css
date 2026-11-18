@@ -1,0 +1,68 @@
+/* Tints derive from the text/accent color so they stay readable on every theme surface. */
+.recommendations-page { --rec-tint: color-mix(in srgb, var(--accent-text) 14%, transparent); --rec-tint-line: color-mix(in srgb, var(--accent-text) 32%, transparent); }
+.recommendations-kicker { display: inline-flex; align-items: center; gap: 6px; }
+.recommendations-kicker svg { width: 14px; height: 14px; }
+
+/* Status panel: usage on the left, actions on the right. */
+.recommendation-status { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px 24px; margin: 26px 0 22px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink); box-shadow: 0 4px 14px var(--shadow-color); }
+.recommendation-status-copy { display: grid; gap: 8px; min-width: 0; }
+.recommendation-status-copy > p { margin: 0; opacity: .78; font-size: 12px; line-height: 1.5; }
+.recommendation-status-copy > p strong { opacity: 1; }
+.recommendation-status-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.recommendation-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; transition: background .2s, border-color .2s; }
+.recommendation-chip svg { width: 14px; height: 14px; }
+.recommendation-chip:hover:not(:disabled) { border-color: var(--accent-text); }
+.recommendation-chip.is-strong { background: var(--rec-tint); border-color: var(--rec-tint-line); color: var(--accent-text); font-weight: 600; }
+.recommendation-chip:disabled { opacity: .6; cursor: default; }
+.recommendation-help { grid-column: 1 / -1; padding: 12px 16px; border-radius: 12px; background: color-mix(in srgb, currentColor 6%, transparent); color: inherit; opacity: .85; font-size: 12px; line-height: 1.6; }
+.recommendation-help p { margin: 0; }
+.recommendation-help p + p { margin-top: 6px; }
+
+/* Recommendations side by side, like the featured books row; it slides sideways when they do not fit. */
+.recommendation-list { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 250px); gap: 16px; margin-top: 26px; padding: 4px 2px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.recommendations-page .recommendation-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px 12px 10px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 4px 14px var(--shadow-color); scroll-snap-align: start; transition: transform .18s, box-shadow .18s; }
+.recommendations-page .recommendation-card:hover { transform: translateY(-3px); box-shadow: 0 12px 26px var(--shadow-color); }
+.recommendation-cover { position: relative; display: block; width: 100%; aspect-ratio: 2 / 3; overflow: hidden; padding: 0; border: 0; border-left: 5px solid var(--accent-text); border-radius: 6px 14px 14px 6px; background: none; cursor: pointer; }
+.recommendations-page .recommendation-card .book-cover { width: 100%; height: 100%; border-radius: 0; box-shadow: none; transition: transform .3s; }
+.recommendation-cover:hover .book-cover { transform: scale(1.03); }
+.recommendation-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / 45%), transparent 26%, transparent 70%, rgb(0 0 0 / 55%)); pointer-events: none; }
+.recommendation-badge { position: absolute; z-index: 1; display: inline-flex; align-items: center; gap: 3px; color: #fff; font-size: 10px; font-weight: 700; line-height: 1.4; }
+.recommendation-badge.is-genre { top: 8px; left: 8px; display: block; max-width: calc(100% - 64px); overflow: hidden; padding: 2px 7px; border-radius: 6px; background: rgb(0 0 0 / 55%); text-overflow: ellipsis; white-space: nowrap; }
+.recommendation-badge.is-rating { top: 8px; right: 8px; padding: 2px 6px; border-radius: 6px; background: rgb(0 0 0 / 55%); color: var(--rating, #f5c451); }
+.recommendation-badge.is-rating svg { width: 11px; height: 11px; }
+.recommendation-badge.is-pages { bottom: 8px; left: 10px; }
+.recommendation-badge.is-year { bottom: 8px; right: 10px; }
+.recommendation-copy { display: grid; gap: 2px; min-width: 0; }
+/* Titles always take two lines (clamped), so every reason box starts at the same height. */
+.recommendations-page .recommendation-card h2 { min-height: 2.6em; margin: 0; font: 16px/1.3 'DM Serif Display', serif; }
+.recommendation-title { display: -webkit-box; overflow: hidden; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.recommendation-title:hover { color: var(--accent-text); }
+.recommendation-title:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 2px; border-radius: 4px; }
+.recommendations-page .recommendation-card .recommendation-author { margin: 0; overflow: hidden; color: inherit; opacity: .7; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+/* Gemini's reason: a short preview that can be expanded. */
+.recommendation-reason-box { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); }
+/* Closed boxes are all the same size: four text lines plus the "Leer más" row, reserved even when it is not needed. */
+.recommendations-page .recommendation-card .recommendation-reason { display: -webkit-box; min-height: 6.2em; margin: 0; overflow: hidden; color: inherit; font-size: 12px; line-height: 1.55; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+.recommendations-page .recommendation-card .recommendation-reason.is-open { display: block; }
+.recommendation-more { justify-self: start; height: 16px; padding: 0; border: 0; background: none; color: var(--accent-text); font: inherit; font-size: 11px; font-weight: 700; line-height: 16px; cursor: pointer; }
+.recommendation-more-spacer { height: 16px; }
+.recommendation-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 9px; border-top: 1px solid var(--line); }
+.recommendation-want, .recommendation-saved { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 9px; font-size: 11px; font-weight: 600; }
+.recommendation-want { border: 1px solid var(--rec-tint-line); background: var(--rec-tint); color: var(--accent-text); font-family: inherit; cursor: pointer; }
+.recommendation-want:hover:not(:disabled) { border-color: var(--accent-text); }
+.recommendation-want:disabled { opacity: .6; cursor: default; }
+.recommendation-saved { color: var(--success-text, var(--accent-text)); background: var(--rec-tint); }
+.recommendation-want svg, .recommendation-saved svg { width: 13px; height: 13px; }
+.recommendation-link { display: inline-flex; align-items: center; gap: 2px; color: var(--accent-text); font-size: 11px; font-weight: 700; }
+.recommendation-link svg { width: 14px; height: 14px; transition: transform .18s; }
+.recommendation-link:hover svg { transform: translateX(2px); }
+.recommendations-page .recommendation-card .recommendation-error { flex-basis: 100%; margin: 0; color: var(--danger-text, #b3261e); font-size: 11px; }
+
+@media (max-width: 640px) {
+  .recommendation-status { grid-template-columns: 1fr; padding: 16px; }
+  .recommendation-status-actions { flex-direction: row; flex-wrap: wrap; }
+  .recommendation-list { grid-auto-columns: 78%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .recommendations-page .recommendation-card, .recommendations-page .recommendation-card .book-cover, .recommendation-link svg { transition: none; }
+}
