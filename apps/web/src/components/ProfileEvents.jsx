@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, CalendarDays, Check, Clock, LockKeyhole, MapPin, Megaphone, Pencil } from 'lucide-react'
+import { BookOpen, CalendarDays, Check, Clock, MapPin, Megaphone, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiRequest, apiAssetUrl, apiUrl } from '../api/client'
 import { useEventAttendance } from '../context/EventAttendanceContext'
@@ -32,10 +32,10 @@ function AgendaCard({ item, own, onEdit }) {
   </article>
 }
 
-export default function ProfileEvents({ profileId = 'me', active = true }) {
+export default function ProfileEvents({ profileId = 'me', active = true, preview = false, readOnly = false }) {
   const [period, setPeriod] = useState('upcoming'), [participation, setParticipation] = useState('all')
   const [data, setData] = useState(null), [error, setError] = useState(''), [loading, setLoading] = useState(true)
-  const [refresh, setRefresh] = useState(0), [offset, setOffset] = useState(0), [editing, setEditing] = useState(null), [saving, setSaving] = useState(false)
+  const [refresh, setRefresh] = useState(0), [offset, setOffset] = useState(0), [editing, setEditing] = useState(null)
   useEffect(() => {
     const update = () => { setOffset(0); setRefresh(value => value + 1) }
     const focus = () => { if (active) update() }
@@ -46,25 +46,18 @@ export default function ProfileEvents({ profileId = 'me', active = true }) {
   }, [active])
   useEffect(() => {
     const controller = new AbortController()
-    apiRequest(`/profiles/${profileId}/events?period=${period}&participation=${participation}&offset=${offset}`, { headers: headers(), signal: controller.signal })
+    apiRequest(`/profiles/${profileId}/events?preview=${preview}&period=${period}&participation=${participation}&offset=${offset}`, { headers: headers(), signal: controller.signal })
       .then(result => { setData(previous => offset ? { ...result, items: [...previous.items, ...result.items] } : result); setError('') })
       .catch(cause => { if (cause.name !== 'AbortError') { setError(cause.message); if (cause.status === 403) setData(null) } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [profileId, period, participation, offset, refresh])
+  }, [profileId, preview, period, participation, offset, refresh])
   const change = (setter, value) => { setter(value); setOffset(0); setLoading(true) }
-  const privacy = async event => {
-    const visibility = event.target.value
-    setSaving(true); setError('')
-    try { await apiRequest('/profiles/me/events/privacy', { method: 'PATCH', headers: headers(), body: JSON.stringify({ visibility }) }); setData(previous => ({ ...previous, visibility })) }
-    catch (cause) { setError(cause.message) }
-    finally { setSaving(false) }
-  }
   return <section className="personal-events" aria-labelledby="personal-events-title">
-    <div className="personal-events-heading"><div><h2 id="personal-events-title"><CalendarDays aria-hidden="true" />Mis eventos</h2><p>Los eventos en los que participaré y los que organizo.</p></div>{data?.is_owner && <label className="personal-events-privacy"><LockKeyhole size={17} aria-hidden="true" /><span>Privacidad:</span><select aria-label="Privacidad de mis eventos" value={data.visibility} disabled={saving} onChange={privacy}><option value="private">Solo yo</option><option value="contacts">Mis contactos</option><option value="public">Público</option></select></label>}</div>
+    <div className="personal-events-heading"><div><h2 id="personal-events-title"><CalendarDays aria-hidden="true" />Mis eventos</h2><p>Los eventos en los que participaré y los que organizo.</p></div></div>
     <div className="personal-events-filters"><div role="group" aria-label="Fecha de eventos">{[['upcoming', 'Próximos'], ['past', 'Pasados']].map(([value, label]) => <button type="button" key={value} aria-pressed={period === value} onClick={() => change(setPeriod, value)}>{label}{data ? ` (${data.counts[value]})` : ''}</button>)}</div>{data?.can_organize && <div role="group" aria-label="Participación">{[['all', 'Todos'], ['attending', 'Asistiré'], ['organizing', 'Organizo']].map(([value, label]) => <button type="button" key={value} aria-pressed={participation === value} onClick={() => change(setParticipation, value)}>{label}</button>)}</div>}</div>
     {error && <p role="alert">{error}</p>}{loading && <p role="status">Cargando eventos…</p>}
-    {!loading && data && <>{data.items.length ? <div className="personal-events-grid">{data.items.map(item => <AgendaCard key={item.id} item={item} own={data.is_owner} onEdit={setEditing} />)}</div> : <div className="personal-events-empty"><CalendarDays size={30} /><h3>{period === 'past' ? 'Todavía no tienes eventos anteriores.' : participation === 'organizing' ? 'Aún no has organizado eventos.' : 'Aún no tienes eventos en tu agenda.'}</h3><p>Explora los próximos encuentros literarios y descubre nuevas experiencias.</p><Link to="/events">Explorar eventos</Link></div>}{data.has_more && <button type="button" className="personal-events-more" onClick={() => change(setOffset, data.items.length)}>Cargar más eventos</button>}</>}
+    {!loading && data && <>{data.items.length ? <div className="personal-events-grid">{data.items.map(item => <AgendaCard key={item.id} item={item} own={data.is_owner && !readOnly} onEdit={setEditing} />)}</div> : <div className="personal-events-empty"><CalendarDays size={30} /><h3>{period === 'past' ? 'Todavía no tienes eventos anteriores.' : participation === 'organizing' ? 'Aún no has organizado eventos.' : 'Aún no tienes eventos en tu agenda.'}</h3><p>Explora los próximos encuentros literarios y descubre nuevas experiencias.</p><Link to="/events">Explorar eventos</Link></div>}{data.has_more && <button type="button" className="personal-events-more" onClick={() => change(setOffset, data.items.length)}>Cargar más eventos</button>}</>}
     {editing && <ContentManagementDialog target={{ item: editing, action: 'edit' }} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); window.dispatchEvent(new Event('libria-events-updated')) }} />}
   </section>
 }

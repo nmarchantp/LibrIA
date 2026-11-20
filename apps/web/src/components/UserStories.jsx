@@ -221,7 +221,7 @@ export function ProfileStoryAvatar({ user, publicView }) {
   const [composing, setComposing] = useState(false)
   const closeView = useCallback(() => setView(null), [])
   const group = data.items.find(item => publicView ? item.profile_id === user.id : item.is_owner)
-  const owner = !publicView || user.is_owner
+  const owner = !publicView
   return <><div className="profile-story-controls"><button className={`reader-profile-avatar profile-story-avatar ${group ? 'has-stories' : ''}`} aria-label={group ? `Ver historias de ${user.display_name}` : owner ? 'Publicar una historia' : `${user.display_name} no tiene historias activas`} disabled={!group && !owner} onClick={() => group ? setView({ groups: data.items, start: group.profile_id }) : setComposing(true)}><span className="story-avatar-photo"><Avatar person={user} /></span><StoryAura group={group} /></button>{owner && <button className="profile-story-add" aria-label="Agregar historia" onClick={() => setComposing(true)}><Plus size={16} /></button>}</div>
     {view && <StoryViewer groups={view.groups} start={view.start} onClose={closeView} />}
     {composing && <StoryComposer onClose={() => setComposing(false)} />}

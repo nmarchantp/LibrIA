@@ -18,7 +18,7 @@ function Artwork({ src, title, portrait = false }) {
   return src && !failed ? <img src={src} alt={title} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span className="literary-highlight-placeholder" aria-label={title}>{portrait ? <UserRound /> : <BookOpen />}<span>{portrait ? '' : title}</span></span>
 }
 
-export default function ProfileLiteraryHighlights({ crush, books = [], editable, onSave }) {
+export default function ProfileLiteraryHighlights({ crush, books = [], editable, onSave, kind }) {
   const [editing, setEditing] = useState(null)
   const [draft, setDraft] = useState(emptyCrush)
   const [selected, setSelected] = useState([])
@@ -75,15 +75,15 @@ export default function ProfileLiteraryHighlights({ crush, books = [], editable,
   }
   const pencil = (kind, title) => editable && <button className="reader-edit-button" type="button" aria-label={`Editar ${title}`} onClick={() => open(kind)}><Pencil size={14} /></button>
   return <>
-    <section className="reader-personal-card reader-literary-crush">
+    {kind !== 'essentials' && <section className="reader-personal-card reader-literary-crush">
       <CrushOrnament /><CrushOrnament bottom />
       <div className="reader-card-heading"><h2><Heart size={20} />Mi crush literario</h2>{pencil('crush', 'Mi crush literario')}</div>
       {crush ? <div className="literary-crush-content"><div className="literary-crush-portrait"><Artwork src={crush.image_url} title={crush.name} portrait /></div><div className="literary-crush-details"><h3>{crush.name}</h3>{crush.book && <p className="literary-crush-book">{crush.book}</p>}{crush.description && <><span className="literary-crush-divider" aria-hidden="true">✦</span><p className="literary-crush-description">{crush.description}</p></>}</div></div> : <p className="reader-module-empty">Ese personaje que se quedó contigo. Añade tu crush literario.</p>}
-    </section>
-    <section className="reader-personal-card reader-essential-books">
+    </section>}
+    {kind !== 'crush' && <section className="reader-personal-card reader-essential-books">
       <div className="reader-card-heading"><h2><BookOpen size={20} />Mis libros imprescindibles</h2>{pencil('books', 'Mis libros imprescindibles')}</div>
       {books.length ? <div className="literary-essential-shelf">{books.map(book => <Link key={book.id} to={`/books/${encodeURIComponent(book.id)}`} title={book.title}><Artwork src={book.image_url} title={book.title} /></Link>)}</div> : <p className="reader-module-empty">Elige hasta cuatro libros que siempre recomendarías.</p>}
-    </section>
+    </section>}
     <ProfileEditModal open={Boolean(editing) && editable} title={editing === 'crush' ? 'Mi crush literario' : 'Mis libros imprescindibles'} icon={editing === 'crush' ? <Heart /> : <BookOpen />} description={editing === 'crush' ? 'Busca un libro de LibrIA y elige tu personaje entre sus retratos disponibles.' : 'Busca y elige hasta cuatro libros, en el orden que quieras mostrarlos.'} dirty={initial !== JSON.stringify(editing === 'crush' ? draft : selected)} busy={busy} saveDisabled={editing === 'crush' && Boolean(draft.work_id || draft.name) && (!draft.character_id || characterLoading || Boolean(characterError) || !characters.some(item => item.id === draft.character_id))} onClose={() => setEditing(null)} onSubmit={save}>
       {editing === 'crush' ? <div className="literary-highlight-fields">
         <label htmlFor={`${id}-crush-book`}>Libro o saga<input id={`${id}-crush-book`} type="search" value={query} disabled={busy} placeholder="Busca en el catálogo de LibrIA" onChange={event => setQuery(event.target.value)} /></label>

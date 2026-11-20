@@ -1,0 +1,14 @@
+.profile-showcase { display:grid; gap:22px; margin-top:24px; min-width:0; }
+.profile-showcase-section { min-width:0; padding:24px; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
+.profile-showcase-section > h2 { margin:0 0 20px; color:var(--ink); font:28px/1.3 'DM Serif Display',serif; }
+.profile-showcase-books { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:22px; margin-top:22px; }
+.profile-showcase-books .book-cover { width:100%; height:auto; aspect-ratio:2 / 3; }
+.profile-showcase-books a { text-decoration:none; color:var(--ink); }
+.profile-showcase-books h3 { font-size:15px; margin:10px 0 6px; }
+.profile-showcase-books p,.profile-showcase-books span { color:var(--muted); font-size:12px; }
+.profile-showcase-activity { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.profile-showcase-activity article { min-width:0; padding:18px; border:1px solid var(--line); border-radius:12px; }
+.profile-showcase-activity a { display:block; margin-top:12px; }
+.profile-showcase-body { white-space:pre-wrap; overflow-wrap:anywhere; }
+#profile-sharing { scroll-margin-top:90px; margin:0 0 28px; }
+@media(max-width:660px) { .profile-showcase-activity { grid-template-columns:minmax(0,1fr); } .profile-showcase-section { padding:18px; } }

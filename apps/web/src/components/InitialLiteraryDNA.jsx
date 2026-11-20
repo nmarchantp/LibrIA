@@ -8,7 +8,7 @@ import { apiAssetUrl } from '../api/client'
 import { onboardingService } from '../services/onboardingService'
 import './RegistrationWizard.css'
 
-export default function InitialLiteraryDNA({ initial = null, sharing = false, motionEnabled, compact = false }) {
+export default function InitialLiteraryDNA({ initial = null, motionEnabled, compact = false }) {
   const { magicalBackground, magicalBackgroundMotion } = useTheme()
   const [state, setState] = useState(initial)
   const [error, setError] = useState('')
@@ -72,15 +72,6 @@ export default function InitialLiteraryDNA({ initial = null, sharing = false, mo
     } catch (error) { setError(error.message) }
     finally { setPending('') }
   }
-  const share = async event => {
-    const shared = event.target.checked
-    try {
-      await onboardingService.share(shared)
-      setState(current => ({ ...current, shared }))
-      window.dispatchEvent(new CustomEvent('libria:dna-sharing-changed', { detail: shared }))
-    }
-    catch (error) { setError(error.message) }
-  }
   return <><section className={compact ? 'reader-personal-card initial-literary-dna--compact' : 'initial-literary-dna'} aria-label={compact ? 'Primeras recomendaciones' : 'Mi ADN literario'}>
     <h2>{compact && <BookOpen size={19} aria-hidden="true" />}{compact ? 'Primeras recomendaciones' : 'Mi ADN literario'}</h2>
     {error && <p role="alert">{error}</p>}
@@ -123,11 +114,8 @@ export default function InitialLiteraryDNA({ initial = null, sharing = false, mo
         {state.generated_at && <small>Actualizado el {new Date(state.generated_at).toLocaleDateString('es-CL')}</small>}
       </details>
       <aside className="registration-dna-future"><strong>Tu ADN seguirá creciendo</strong><p>Más adelante podrás profundizar con IA en tu biblioteca completa y cada lectura.</p></aside>
-      {sharing && <label><input type="checkbox" checked={Boolean(state.shared)} onChange={share} />Compartir mis afinidades literarias en Sobre mí</label>}</>}
+      </>}
     </>}
   </section>
-    {compact && completed && state.shared && state.dna && <section className="reader-personal-card" aria-label="Mi ADN literario compartido">
-      <h2>Mi ADN literario</h2><h3>{state.dna.profile_name}</h3><p>{state.dna.profile_description}</p><p>{(state.dna.preferred_genres || []).join(' · ')}</p><p>{state.dna.explanation}</p><small>Basado en preferencias declaradas.</small>
-    </section>}
   </>
 }

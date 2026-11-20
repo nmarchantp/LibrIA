@@ -1,3 +1,5 @@
+import ProfilePrivacySettings from '../components/ProfilePrivacySettings'
+import ProfileShowcase from '../components/ProfileShowcase'
 import { BookOpen, BrainCircuit, CalendarDays, Library, Lightbulb, StickyNote, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
@@ -40,6 +42,15 @@ export default function ProfilePage() {
   const preferences = useLiteraryPreferences()
   const [editMode, setEditMode] = useState(false)
   const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('sharing') !== '1') return
+    setEditMode(true)
+    setParams(current => {
+      const next = new URLSearchParams(current)
+      next.delete('sharing')
+      return next
+    }, { replace: true })
+  }, [params, setParams])
   const requested = params.get('tab')
   const tab = ['about', 'activity', 'library', 'analysis', 'events'].includes(requested) ? requested : 'about'
   if (requested === 'account' || requested === 'personalization') {
@@ -53,11 +64,11 @@ export default function ProfilePage() {
     case 'library':
       return <LibraryPage />
     case 'analysis':
-      return <InsightsPage active={active}><InitialLiteraryDNA sharing /><button type="button" className="button text" onClick={() => window.dispatchEvent(new Event('libria:start-welcome-guide'))}>Conocer LibrIAverse: iniciar gu?a</button></InsightsPage>
+      return <InsightsPage active={active}><InitialLiteraryDNA /><button type="button" className="button text" onClick={() => window.dispatchEvent(new Event('libria:start-welcome-guide'))}>Conocer LibrIAverse: iniciar gu?a</button></InsightsPage>
     case 'activity':
       return <ProfileActivity userId={user.id} />
     default:
-      return <><ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} /><InitialLiteraryDNA compact /></>
+      return <><ProfileAboutSection key={user.id} editMode={editMode} onToggleEdit={() => setEditMode(value => !value)} editingControls={<div id="profile-sharing"><ProfilePrivacySettings preferences={preferences} showSections /></div>} biography={user.biography} preferences={preferences.data} loading={preferences.loading} error={preferences.error} onRetry={preferences.retry} onSave={preferences.save} /><ProfileShowcase active={active} profileId={preferences.data?.profile_id} sections={preferences.data?.public_sections || []} /></>
   }
   }
 

@@ -25,6 +25,12 @@
 }
 .reader-profile--panoramic .reader-profile-identity { display:grid; grid-template-columns:150px minmax(240px,max-content) minmax(0,1fr); justify-content:start; gap:20px; align-items:end; min-height:174px; padding:25px 0 16px; }
 .reader-profile--panoramic .reader-profile-name { align-self:start; }
+.social-main .profile-page.reader-profile.reader-profile--panoramic.reader-community-profile { grid-template-columns:minmax(0,1fr); }
+.reader-community-profile.reader-profile--panoramic .reader-profile-identity { grid-template-columns:150px minmax(0,1fr); }
+.reader-community-profile.reader-profile--panoramic .profile-social-actions { position:relative; margin:12px 0 0; }
+.reader-community-profile > .profile-preview-banner { position:relative; grid-column:1 / -1; margin-top:20px; }
+.reader-community-profile > .reader-profile-main { display:grid; gap:22px; }
+.reader-community-profile > .reader-profile-main > .profile-showcase { margin-top:0; }
 .reader-profile--panoramic .profile-story-controls { width:150px; flex-basis:150px; align-self:start; }
 .reader-profile--panoramic .profile-story-controls .profile-story-avatar { width:150px; height:150px; }
 .reader-profile--panoramic .reader-profile-title-row { display:block; }

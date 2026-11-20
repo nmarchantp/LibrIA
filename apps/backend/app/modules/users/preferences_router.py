@@ -1,6 +1,6 @@
 """Community-readable tastes, written only through the authenticated account."""
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import delete, select, update
@@ -44,7 +44,7 @@ def choices(db, user_id):
 
 def own_response(db, user):
     profile = personal_profile(db, user)
-    return {"literary_crush": (user.literary_highlights or {}).get('literary_crush'), "essential_books": (user.literary_highlights or {}).get('essential_books', []), "profile_visibility": user.profile_visibility, "public_sections": user.public_sections, "story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
+    return {"card_order": (user.literary_highlights or {}).get("card_order", []), "literary_crush": (user.literary_highlights or {}).get('literary_crush'), "essential_books": (user.literary_highlights or {}).get('essential_books', []), "profile_visibility": user.profile_visibility, "public_sections": user.public_sections, "story_illustration": user.story_illustration, "favorite_quotes": user.favorite_quotes, "profile_id": profile.id, "biography": user.biography, **choices(db, user.id)}
 
 
 @router.get("/preference-catalogs", response_model=PreferenceCatalogs)
@@ -114,11 +114,16 @@ def update_preferences(data: PreferencesUpdate, user: CurrentUser, db: SessionDB
             highlights['literary_crush'] = crush
         if 'essential_books' in supplied:
             highlights['essential_books'] = [item.model_dump() for item in data.essential_books]
-        if {'literary_crush', 'essential_books'} & supplied:
+        if 'card_order' in supplied:
+            highlights['card_order'] = data.card_order
+        if {'literary_crush', 'essential_books', 'card_order'} & supplied:
             owner.literary_highlights = highlights
         for field in ('profile_visibility', 'public_sections'):
             if field in supplied:
                 setattr(owner, field, getattr(data, field))
+        if 'public_sections' in supplied:
+            owner.events_visibility = 'public' if 'events' in data.public_sections else 'private'
+            owner.onboarding = {**(owner.onboarding or {}), 'shared': 'analyses' in data.public_sections}
         if "story_illustration" in supplied:
             owner.story_illustration = data.story_illustration
         if "favorite_quotes" in supplied:
@@ -203,7 +208,7 @@ def visual_preference(data: VisualPreference, user: CurrentUser, db: SessionDB):
 
 
 @router.get('/{profile_id}/literary-dna')
-def public_literary_dna(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response):
+def public_literary_dna(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response, preview: bool = False):
     from app.modules.users.profile_access import profile_access
     from app.modules.users.onboarding import read_progress
     response.headers['Cache-Control'] = 'private, no-store'
@@ -211,7 +216,11 @@ def public_literary_dna(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB,
     owner = db.get(User, profile.owner_user_id) if profile and profile.kind == 'personal' else None
     if not owner or owner.account_status != 'active' or owner.suspended_at or not profile_access(db, owner, user):
         raise HTTPException(404, 'Perfil no disponible')
-    if owner.id != user.id and not (owner.onboarding or {}).get('shared', False):
+    if preview and owner.id != user.id:
+        raise HTTPException(403, 'Vista previa disponible solo para tu perfil')
+    if preview and owner.profile_visibility != 'public':
+        return {'dna': None}
+    if (preview or owner.id != user.id) and not (owner.onboarding or {}).get('shared', False):
         return {'dna': None}
     state = read_progress(db, owner)
     # Public projection excludes answers, favorites, job state and recommendations.
@@ -220,8 +229,80 @@ def public_literary_dna(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB,
             'generated_at': state['generated_at']}
 
 
+@router.get('/{profile_id}/showcase/{section}')
+def profile_showcase(profile_id: uuid.UUID, section: Literal['library', 'activity', 'analyses'],
+                     user: CurrentUser, db: SessionDB, response: Response,
+                     preview: bool = False, offset: int = 0, limit: int = 24):
+    from app.modules.users.profile_access import profile_access
+    response.headers['Cache-Control'] = 'private, no-store'
+    profile = db.get(Profile, profile_id)
+    owner = db.get(User, profile.owner_user_id) if profile and profile.kind == 'personal' else None
+    if not owner or owner.account_status != 'active' or owner.suspended_at:
+        raise HTTPException(404, 'Perfil no disponible')
+    if preview and owner.id != user.id:
+        raise HTTPException(403, 'Vista previa disponible solo para tu perfil')
+    allowed = owner.profile_visibility == 'public' if preview else profile_access(db, owner, user)
+    if not allowed or section not in (owner.public_sections or []):
+        raise HTTPException(403, 'Esta sección no se comparte en Sobre mí')
+    if offset < 0 or not 1 <= limit <= 50:
+        raise HTTPException(422, 'Paginación no válida')
+    if section == 'library':
+        from app.modules.books.library_view import library_states
+        # Project display fields only: notebooks and reflections remain personal.
+        readings = library_states(db, owner.id)
+        items = []
+        for reading in readings[offset:offset + limit]:
+            volume = (reading.catalog_volume or {}).get('volumeInfo', {})
+            items.append({'id': str(reading.work_id), 'title': reading.book_title,
+                          'authors': volume.get('authors', []),
+                          'cover_url': (volume.get('imageLinks') or {}).get('thumbnail'),
+                          'status': reading.status, 'progress_percent': reading.progress_percent})
+        counts = {status: sum(reading.status == status for reading in readings)
+                  for status in ('pending', 'reading', 'finished', 'abandoned')}
+        return {'items': items, 'has_more': offset + limit < len(readings), 'total': len(readings), 'counts': counts}
+    if section == 'activity':
+        from app.modules.social.models import Post
+        from app.modules.social.activity_access import visible_posts
+        rows = db.scalars(select(Post).where(Post.user_id == owner.id, visible_posts(),
+            Post.publication_type.in_(['note', 'theory'])).order_by(Post.created_at.desc(), Post.id.desc())
+            .offset(offset).limit(limit + 1)).all()
+        return {'items': [{'id': str(row.id), 'title': row.title, 'body': row.body,
+                          'publication_type': row.publication_type, 'book_title': row.book_title}
+                         for row in rows[:limit]], 'has_more': len(rows) > limit}
+    from app.core.config import get_settings
+    from app.modules.analytics.reader_dna import read_current_dna
+    from app.modules.analytics.models import AIAnalysis
+    dna = read_current_dna(db, owner.id, get_settings())
+    analysis = db.get(AIAnalysis, dna['analysis_id']) if dna else None
+    content = ((analysis.content or {}).get('profile') or {}) if analysis else {}
+    keys = ('narrative_preferences', 'character_preferences',
+            'themes_and_conflicts', 'emotional_patterns', 'rating_patterns',
+            'genres_and_styles', 'interests_from_notes_and_theories',
+            'favorite_genres', 'favorite_tropes')
+    # Do not publish evidence, source notes, prompts, feedback or job metadata.
+    published = {key: [item for item in content[key] if isinstance(item, str)]
+                 for key in keys if isinstance(content.get(key), list)}
+    if isinstance(content.get('interpretation'), str):
+        published['interpretation'] = content['interpretation']
+    essence = content.get('reader_essence')
+    if isinstance(essence, dict):
+        published['reader_essence'] = {key: essence[key] for key in
+            ('archetype', 'summary', 'traits', 'evidence_level') if key in essence}
+    from app.modules.analytics.recommendation_sync import recommendation_state
+    state = recommendation_state(db, owner.id, enqueue=False)
+    recommendations = state.get('recommendations') or []
+    if isinstance(recommendations, dict):
+        recommendations = recommendations.get('recommendations') or []
+    if not recommendations:
+        from app.modules.users.onboarding import read_progress
+        recommendations = read_progress(db, owner).get('recommendations') or []
+    return {'profile': published, 'recommendations': [
+        {key: item[key] for key in ('work_id', 'title', 'authors', 'cover_url', 'explanation') if key in item}
+        for item in recommendations if isinstance(item, dict)]}
+
+
 @router.get("/{profile_id}", response_model=PublicProfile)
-def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response):
+def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, response: Response, preview: bool = False):
     from app.modules.users.profile_access import profile_access
     from app.modules.social.models import ProfileFollow
     response.headers['Cache-Control'] = 'private, no-store'
@@ -231,7 +312,9 @@ def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, r
     owner = db.get(User, profile.owner_user_id)
     if owner is None or owner.account_status != 'active' or owner.suspended_at:
         raise HTTPException(status_code=404, detail="Perfil personal no encontrado")
-    allowed = profile_access(db, owner, user)
+    if preview and owner.id != user.id:
+        raise HTTPException(403, 'Vista previa disponible solo para tu perfil')
+    allowed = owner.profile_visibility == 'public' if preview else profile_access(db, owner, user)
     sections = owner.public_sections if allowed else []
     visitor = db.scalar(select(Profile.id).where(Profile.owner_user_id == user.id, Profile.kind == 'personal'))
     values = choices(db, owner.id) if allowed else {}
@@ -239,6 +322,7 @@ def community_profile(profile_id: uuid.UUID, user: CurrentUser, db: SessionDB, r
             "profile_visibility": owner.profile_visibility, "can_view": allowed, "is_owner": owner.id == user.id,
             "following": db.get(ProfileFollow, (profile.id, user.id)) is not None,
             "follows_you": visitor is not None and db.get(ProfileFollow, (visitor, owner.id)) is not None,
+            "card_order": (owner.literary_highlights or {}).get("card_order", []) if allowed else [],
             "visible_sections": sections, "story_illustration": owner.story_illustration if 'biography' in sections else 'none',
             "biography": owner.biography if 'biography' in sections else None,
             "literary_crush": (owner.literary_highlights or {}).get('literary_crush') if 'biography' in sections else None,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Users, UserRoundPlus, UserRoundCheck, ShieldCheck, Share2, Compass, Copy, Search, Star, CalendarDays } from 'lucide-react'
+import { Eye, BookOpen, Users, UserRoundPlus, UserRoundCheck, ShieldCheck, Share2, Compass, Copy, Search, Star, CalendarDays } from 'lucide-react'
 import { apiRequest, apiAssetUrl } from '../api/client'
 import ProfileEditModal from './ProfileEditModal'
 import ProfileHeader from './ProfileHeader'
@@ -122,7 +122,7 @@ export default function ProfileSocialHub({ preferences, displayName, user, panor
     </div>
   const statistics=<div className="profile-community-header">
     {counters}
-    <div className="profile-community-actions" role="group" aria-label="Acciones del perfil"><button type="button" aria-haspopup="dialog" onClick={() => setModal('privacy')}><ShieldCheck size={16} />Editar privacidad</button><button type="button" aria-haspopup="dialog" disabled={!summary?.profile_id && !preferences.data?.profile_id} onClick={() => setModal('share')}><Share2 size={16} />Compartir perfil</button><button type="button" aria-haspopup="dialog" onClick={() => setModal('discover')}><Compass size={16} />Descubrir personas</button></div>
+    <div className="profile-community-actions" role="group" aria-label="Acciones del perfil">{(summary?.profile_id || preferences.data?.profile_id) && <Link className="profile-preview-link" title="Ver mi perfil como otros usuarios" aria-label="Ver mi perfil como otros usuarios" to={`/profiles/${summary?.profile_id || preferences.data?.profile_id}?preview=1`}><Eye size={16} aria-hidden="true" />Ver como otros</Link>}<Link className="profile-preview-link" to="/profile?tab=about&sharing=1#profile-sharing"><ShieldCheck size={16} />Qué muestro</Link><button type="button" aria-haspopup="dialog" disabled={!summary?.profile_id && !preferences.data?.profile_id} onClick={() => setModal('share')}><Share2 size={16} />Compartir perfil</button><button type="button" aria-haspopup="dialog" onClick={() => setModal('discover')}><Compass size={16} />Descubrir personas</button></div>
   </div>
   return <>
     <ProfileHeader user={user} statistics={statistics} panoramic={panoramic} />

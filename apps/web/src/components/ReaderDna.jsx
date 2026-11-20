@@ -208,7 +208,7 @@ function GeminiProfile({ intro, data, analysis, content, working, failed, messag
     <ReaderDnaEvolution content={content} currentId={data.dna_version_id} currentAnalysisId={analysis.id} history={history} busy={historyBusy} onLoad={onLoadHistory} />
     <details className="dna-card"><summary>Evidencias y metadatos</summary><p>Modelo: {analysis.generation_models?.length ? analysis.generation_models.join(' · ') : analysis.model}</p>
       {analysis.generation_providers?.length > 0 && <p>Proveedores: {analysis.generation_providers.join(' · ')}</p>}<p>Generado: {formatAnalysisDate(analysis.created_at)}</p>
-      <p>{(content.evidence_ids || []).length} referencia(s) validadas; solo tú puedes consultar este resultado.</p></details>
+      <p>{(content.evidence_ids || []).length} referencia(s) validadas. Las evidencias y los metadatos son personales.</p></details>
     <FeedbackCard working={working} submitting={submitting} information={information} setInformation={setInformation} onFeedback={onFeedback} />
   </section>
 }

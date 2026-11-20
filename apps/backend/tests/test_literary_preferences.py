@@ -17,6 +17,35 @@ from app.modules.users.preference_models import FavoriteGenre, FavoriteTrope, Ge
 
 
 class LiteraryPreferencesTest(unittest.TestCase):
+    def test_interests_save_publish_and_reorder(self):
+        from app.modules.users.preference_models import Interest
+        option = Interest(id=str(uuid.uuid4()), name=f'Interest {uuid.uuid4()}', group_name='Culture')
+        self.db.add(option); self.db.flush()
+        order = ['history', 'crush', 'essentials', 'genres', 'tropes', 'featured', 'statistics', 'recommendations', 'interests']
+        saved = self.save({'interest_ids': [option.id], 'public_sections': ['interests'], 'card_order': order})
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(self.mine()['interests'][0]['id'], option.id)
+        self.assertEqual(self.mine()['card_order'], order)
+        path = f"/api/profiles/{self.mine()['profile_id']}"
+        public = self.client.get(path, headers=self.auth(self.other)).json()
+        self.assertEqual(public['interests'][0]['name'], option.name)
+        self.save({'public_sections': []})
+        self.assertEqual(self.client.get(path, headers=self.auth(self.other)).json()['interests'], [])
+        self.assertEqual(self.mine()['interests'][0]['id'], option.id)
+
+    def test_card_order_persists_and_validates(self):
+        order = ['recommendations', 'statistics', 'history', 'genres']
+        response = self.save({'card_order': order})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(self.mine()['card_order'], order)
+        self.save({'biography': 'Historia'})
+        self.assertEqual(self.mine()['card_order'], order)
+        self.assertEqual(self.save({'card_order': ['history', 'history']}).status_code, 422)
+        self.assertEqual(self.save({'card_order': ['unknown']}).status_code, 422)
+        self.assertEqual(self.save({'card_order': None}).status_code, 422)
+        self.assertEqual(self.mine()['card_order'], order)
+
+
     def test_literary_highlights_save_validate_and_preserve_other_fields(self):
         from app.modules.books.models import Work, LiteraryCharacter
         work = Work(title='Obra de prueba')
@@ -166,7 +195,7 @@ class LiteraryPreferencesTest(unittest.TestCase):
         self.assertEqual(self.mine()["biography"], "Entre libros")
         public = self.client.get(f"/api/profiles/{mine['profile_id']}", headers=self.auth(self.other))
         self.assertEqual(public.status_code, 200, public.text)
-        self.assertEqual(set(public.json()), {"id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration", "profile_visibility", "visible_sections", "can_view", "is_owner", "following", "follows_you", "favorite_quotes", "literary_crush", "essential_books"})
+        self.assertEqual(set(public.json()), {"card_order", "id", "display_name", "avatar_url", "biography", "genres", "tropes", "intensities", "interests", "featured_category_id", "story_illustration", "profile_visibility", "visible_sections", "can_view", "is_owner", "following", "follows_you", "favorite_quotes", "literary_crush", "essential_books"})
         self.assertEqual(public.json()["genres"], mine["genres"])
         self.assertEqual(public.json()["tropes"], mine["tropes"])
         self.assertNotEqual(mine["profile_id"], self.owner["user"]["id"])

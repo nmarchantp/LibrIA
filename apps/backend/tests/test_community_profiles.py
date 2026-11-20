@@ -8,6 +8,83 @@ from tests import test_mural_feed as fixtures
 
 
 class CommunityProfilesTest(unittest.TestCase):
+    def test_showcase_opt_in_privacy_and_personal_data(self):
+        path = f'/api/profiles/{self.profiles[self.author.id].id}/showcase'
+        self.author.profile_visibility = 'public'
+        self.author.public_sections = []
+        self.reading.notebook = {'private': 'Private notebook text'}
+        self.db.flush()
+        for section in ('library', 'activity', 'analyses'):
+            self.assertEqual(self.client.get(f'{path}/{section}').status_code, 403)
+        self.as_user(self.author)
+        chosen = ['library', 'activity', 'events', 'analyses']
+        saved = self.client.patch('/api/profiles/me/literary-preferences', json={'public_sections': chosen})
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()['public_sections'], chosen)
+        self.assertEqual(self.author.events_visibility, 'public')
+        self.assertTrue(self.author.onboarding['shared'])
+        self.as_user(self.viewer)
+        library = self.client.get(f'{path}/library')
+        self.assertEqual(library.status_code, 200, library.text)
+        self.assertEqual(library.json()['items'][0]['title'], self.work.title)
+        self.assertNotIn('notebook', library.text)
+        self.assertNotIn('Private notebook text', library.text)
+        activity = self.client.get(f'{path}/activity?limit=1')
+        self.assertEqual(activity.status_code, 200, activity.text)
+        self.assertEqual(activity.json()['items'][0]['body'], self.post.body)
+        self.assertEqual(self.client.get(f'{path}/activity?offset=-1').status_code, 422)
+        self.assertEqual(self.client.get(f'{path}/analyses').status_code, 200)
+        from unittest.mock import patch
+        from app.modules.analytics.models import AIAnalysis
+        analysis = AIAnalysis(owner_id=self.author.id, target='showcase-test', version=1,
+            data_hash='test', model='test', prompt_version='test', content={'profile': {
+                'narrative_preferences': ['Narrative finding'], 'evidence_ids': ['secret-source'],
+                'reader_essence': {'summary': 'Reading summary', 'source_notes': 'Secret raw notes'}}})
+        self.db.add(analysis); self.db.flush()
+        with patch('app.modules.analytics.reader_dna.read_current_dna', return_value={'analysis_id': analysis.id}), \
+             patch('app.modules.analytics.recommendation_sync.recommendation_state', return_value={}):
+            published = self.client.get(f'{path}/analyses')
+        self.assertEqual(published.status_code, 200, published.text)
+        self.assertIn('Narrative finding', published.text)
+        self.assertIn('Reading summary', published.text)
+        self.assertNotIn('secret-source', published.text)
+        self.assertNotIn('Secret raw notes', published.text)
+        self.author.profile_visibility = 'private'
+        self.db.flush()
+        self.assertEqual(self.client.get(f'{path}/library').status_code, 403)
+        self.as_user(self.author)
+        self.assertEqual(self.client.get(f'{path}/library?preview=true').status_code, 403)
+        self.client.patch('/api/profiles/me/literary-preferences', json={'public_sections': []})
+        self.assertEqual(self.author.events_visibility, 'private')
+        self.assertFalse(self.author.onboarding['shared'])
+        # The private events tab remains available to its owner.
+        self.assertEqual(self.client.get(f'/api/profiles/{self.profiles[self.author.id].id}/events').status_code, 200)
+
+    def test_owner_preview_uses_visitor_privacy(self):
+        self.author.profile_visibility = 'private'
+        self.author.public_sections = ['biography']
+        self.author.biography = 'Private story'
+        self.db.flush()
+        self.as_user(self.author)
+        path = f'/api/profiles/{self.profiles[self.author.id].id}'
+        self.assertTrue(self.client.get(path).json()['can_view'])
+        data = self.client.get(path + '?preview=true').json()
+        self.assertFalse(data['can_view'])
+        self.assertIsNone(data['biography'])
+        self.assertEqual(data['visible_sections'], [])
+        self.author.profile_visibility = 'public'
+        self.db.flush()
+        data = self.client.get(path + '?preview=true').json()
+        self.assertTrue(data['can_view'])
+        self.assertEqual(data['biography'], 'Private story')
+        access = self.client.get(path + '/events/access?preview=true').json()
+        self.assertFalse(access['is_owner'])
+        self.author.onboarding = {**(self.author.onboarding or {}), 'shared': False}
+        self.db.flush()
+        self.assertIsNone(self.client.get(path + '/literary-dna?preview=true').json()['dna'])
+        self.as_user(self.viewer)
+        self.assertEqual(self.client.get(path + '?preview=true').status_code, 403)
+
     setUp = fixtures.MuralFeedTest.setUp
     tearDown = fixtures.MuralFeedTest.tearDown
     make_reading = fixtures.MuralFeedTest.make_reading
