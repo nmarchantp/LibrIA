@@ -1,11 +1,11 @@
 import { BookCheck, BookOpen, Library, Bookmark } from 'lucide-react'
 
-export default function ProfileReadingStats({ books = [], loading, loadError }) {
+export default function ProfileReadingStats({ books = [], counts, loading, loadError }) {
   const stats = [
-    { label: 'Libros', value: books.length, Icon: Library },
-    { label: 'Leyendo', value: books.filter(book => book.status === 'Leyendo').length, Icon: BookOpen },
-    { label: 'Terminados', value: books.filter(book => book.status === 'Terminado').length, Icon: BookCheck },
-    { label: 'Pendientes', value: books.filter(book => book.status === 'Pendiente').length, Icon: Bookmark },
+    { label: 'Libros', value: counts ? Object.values(counts).reduce((sum, count) => sum + count, 0) : books.length, Icon: Library },
+    { label: 'Leyendo', value: counts?.reading ?? books.filter(book => book.status === 'Leyendo').length, Icon: BookOpen },
+    { label: 'Terminados', value: counts?.finished ?? books.filter(book => book.status === 'Terminado').length, Icon: BookCheck },
+    { label: 'Pendientes', value: counts?.pending ?? books.filter(book => book.status === 'Pendiente').length, Icon: Bookmark },
   ]
   return <>
     <dl className="reader-profile-stats" aria-label="Estadísticas de tu biblioteca" aria-busy={loading}>

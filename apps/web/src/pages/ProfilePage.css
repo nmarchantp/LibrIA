@@ -91,3 +91,7 @@
 .post-person-name a:hover { text-decoration:underline; }
 .post-person-name a:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
 .person-avatar>a { display:flex; width:100%; height:100%; align-items:center; justify-content:center; color:inherit; text-decoration:none; }
+.profile-community-actions .profile-preview-link { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; min-height:32px; box-sizing:border-box; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink); font-size:12px; text-decoration:none; }
+.profile-preview-link:focus-visible { outline:2px solid var(--accent-text); outline-offset:3px; }
+.profile-preview-banner { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+.profile-preview-banner p { display:flex; align-items:center; gap:8px; margin:0; }

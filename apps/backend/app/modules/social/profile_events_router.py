@@ -19,7 +19,7 @@ DB = Annotated[Session, Depends(get_db)]
 Viewer = Annotated[User, Depends(get_current_user)]
 
 
-def subject(db, viewer, profile_id):
+def subject(db, viewer, profile_id, preview=False):
     profile = personal_profile(db, viewer) if profile_id == 'me' else db.get(Profile, uuid.UUID(profile_id))
     if not profile or profile.kind != 'personal':
         raise HTTPException(404, 'Perfil personal no encontrado')
@@ -30,14 +30,19 @@ def subject(db, viewer, profile_id):
     follows = owner.events_visibility == 'contacts' and db.get(ProfileFollow, (profile.id, viewer.id)) is not None
     from app.modules.users.profile_access import profile_access
     allowed = profile_access(db, owner, viewer) and (own or owner.events_visibility == 'public' or follows)
+    if preview:
+        if not own:
+            raise HTTPException(403, 'Vista previa disponible solo para tu perfil')
+        allowed = owner.profile_visibility == 'public' and owner.events_visibility == 'public'
+        own = False
     return profile, owner, own, bool(allowed)
 
 
 @router.get('/{profile_id}/events/access')
-def access(profile_id: str, db: DB, user: Viewer, response: Response):
+def access(profile_id: str, db: DB, user: Viewer, response: Response, preview: bool = False):
     response.headers['Cache-Control'] = 'no-store'
     try:
-        _, _, own, allowed = subject(db, user, profile_id)
+        _, _, own, allowed = subject(db, user, profile_id, preview)
     except ValueError:
         raise HTTPException(404, 'Perfil no encontrado')
     # No counts, attendance identities or privacy preference for visitors.
@@ -58,12 +63,12 @@ def privacy(data: PrivacyInput, db: DB, user: Viewer):
 
 @router.get('/{profile_id}/events')
 def agenda(profile_id: str, db: DB, user: Viewer, response: Response,
-           period: Literal['upcoming', 'past'] = 'upcoming',
+           preview: bool = False, period: Literal['upcoming', 'past'] = 'upcoming',
            participation: Literal['all', 'attending', 'organizing'] = 'all',
            offset: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50)):
     response.headers['Cache-Control'] = 'no-store'
     try:
-        profile, owner, own, allowed = subject(db, user, profile_id)
+        profile, owner, own, allowed = subject(db, user, profile_id, preview)
     except ValueError:
         raise HTTPException(404, 'Perfil no encontrado')
     if not allowed:

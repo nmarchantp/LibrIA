@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { profileService } from '../services/profileService'
 
-export default function useLiteraryPreferences(profileId) {
+export default function useLiteraryPreferences(profileId, preview = false) {
   const { user } = useAuth()
-  const identity = `${user.id}:${profileId || 'me'}`
+  const identity = `${user.id}:${profileId || 'me'}:${preview}`
   const currentIdentity = useRef(identity)
   currentIdentity.current = identity
   const [result, setResult] = useState({ identity, data: null, loading: true, error: '' })
@@ -12,11 +12,11 @@ export default function useLiteraryPreferences(profileId) {
   useEffect(() => {
     let active = true
     setResult({ identity, data: null, loading: true, error: '' })
-    const request = profileId ? profileService.community(profileId) : profileService.mine()
+    const request = profileId ? profileService.community(profileId, preview) : profileService.mine()
     request.then(data => { if (active) setResult({ identity, data, loading: false, error: '' }) })
       .catch(cause => { if (active) setResult({ identity, data: null, loading: false, error: cause.status === 404 ? 'Perfil no encontrado.' : 'No se pudo cargar el perfil. Intenta nuevamente.' }) })
     return () => { active = false }
-  }, [identity, profileId, attempt])
+  }, [identity, profileId, preview, attempt])
   const save = useCallback(async fields => {
     if (profileId) throw new Error('La vista comunitaria es de solo lectura.')
     const data = await profileService.save(fields)

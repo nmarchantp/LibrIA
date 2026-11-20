@@ -1,4 +1,18 @@
 /* This composition belongs only to Sobre mí. */
+.reader-about-section .reader-about-grid.reader-about-grid--sortable { grid-template-areas:none; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.reader-sortable-card { position:relative; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.reader-sortable-card.is-wide { grid-column:1 / -1; }
+.reader-sortable-card > .reader-personal-card { flex:1; box-sizing:border-box; min-width:0; width:100%; margin:0; }
+.reader-sortable-card.is-reorderable { padding-top:36px; outline:1px dashed var(--line); outline-offset:5px; border-radius:18px; }
+.reader-card-drag-handle { position:absolute; top:0; left:8px; display:flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:8px; padding:4px 8px; color:var(--ink); background:var(--surface); cursor:grab; touch-action:none; font:inherit; font-size:12px; }
+.reader-card-drag-handle:active { cursor:grabbing; }
+.reader-card-drag-handle:focus-visible { outline:2px solid var(--accent-text); outline-offset:2px; }
+.reader-sortable-card.is-dragging { opacity:.6; }
+.reader-sortable-card.is-drop-target { outline:3px solid var(--accent-text); outline-offset:4px; border-radius:18px; }
+.reader-reorder-help { color:var(--muted); font-size:13px; margin:0 0 22px; }
+@container reader-about (max-width:660px) {
+  .reader-about-section .reader-about-grid.reader-about-grid--sortable { grid-template-columns:minmax(0,1fr); }
+}
 .reader-about-section { container:reader-about / inline-size; padding-top:30px; }
 .reader-about-intro { display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
 .reader-about-intro>svg { flex:0 0 32px; width:32px; height:48px; color:var(--accent-text); opacity:.6; }
@@ -24,7 +38,13 @@
 .reader-about-grid>.reader-favorite-genres { grid-area:genres; }
 .reader-about-grid>.reader-tastes { grid-area:tropes; }
 .reader-about-section .reader-about-grid>.reader-reading-tastes { grid-area:featured; }
-.reader-about-grid>.reader-most-read { grid-area:statistics; }
+.reader-about-recommendations { grid-area:statistics; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; align-items:stretch; min-width:0; }
+.reader-about-recommendations > .reader-personal-card { min-width:0; }
+.reader-about-recommendations > .initial-literary-dna--compact { width:100%; margin:0; }
+.reader-about-recommendations > .reader-personal-card:nth-child(n+3) { grid-column:1 / -1; }
+@container reader-about (max-width:660px) {
+  .reader-about-recommendations { grid-template-columns:minmax(0,1fr); gap:18px; }
+}
 .reader-about-section.is-public .reader-about-grid { grid-template-areas:"history history" "crush essentials" "genres tropes" "featured featured"; }
 .reader-about-section .reader-personal-card { position:relative; isolation:isolate; padding:26px; border:1px solid color-mix(in srgb,var(--line) 58%,var(--surface)); border-radius:22px; background:linear-gradient(140deg,var(--surface),color-mix(in srgb,var(--surface) 97%,var(--secondary))); box-shadow:0 5px 22px color-mix(in srgb,var(--shadow-color) 45%,transparent); }
 .reader-about-section .reader-card-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; margin-bottom:18px; }

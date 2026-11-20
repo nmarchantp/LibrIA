@@ -4,8 +4,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, StrictInt, field_validator
 
+ProfileCard = Literal['history', 'crush', 'essentials', 'genres', 'tropes', 'featured', 'statistics', 'recommendations', 'interests']
 StoryIllustration = Literal["flowers", "books", "cat", "none"]
-ProfileSection = Literal['biography', 'genres', 'tropes', 'intensities', 'interests', 'favorite_quotes']
+ProfileSection = Literal['biography', 'genres', 'tropes', 'intensities', 'interests', 'favorite_quotes', 'library', 'activity', 'events', 'analyses']
 
 Identifier = Annotated[str, StringConstraints(min_length=1, max_length=64)]
 
@@ -77,6 +78,7 @@ class CharacterChoice(BaseModel):
 
 
 class LiteraryPreferences(BaseModel):
+    card_order: list[ProfileCard] = Field(default_factory=list, max_length=9)
     literary_crush: 'LiteraryCrush | None' = None
     essential_books: list['EssentialBook'] = Field(default_factory=list)
     profile_visibility: Literal['public', 'private'] = 'public'
@@ -93,6 +95,7 @@ class LiteraryPreferences(BaseModel):
 
 
 class PublicProfile(BaseModel):
+    card_order: list[ProfileCard] = Field(default_factory=list, max_length=9)
     literary_crush: 'LiteraryCrush | None' = None
     essential_books: list['EssentialBook'] = Field(default_factory=list)
     profile_visibility: Literal['public', 'private'] = 'public'
@@ -138,10 +141,11 @@ class ReadingGenreStatistics(BaseModel):
 
 
 class PreferencesUpdate(BaseModel):
+    card_order: list[ProfileCard] = Field(default_factory=list, max_length=9)
     literary_crush: CharacterChoice | None = None
     essential_books: list[EssentialBook] = Field(default_factory=list, max_length=4)
     profile_visibility: Literal['public', 'private'] = 'public'
-    public_sections: list[ProfileSection] = Field(default_factory=list, max_length=6)
+    public_sections: list[ProfileSection] = Field(default_factory=list, max_length=10)
     story_illustration: StoryIllustration = "flowers"
     model_config = ConfigDict(extra="forbid")
     favorite_quotes: list[FavoriteQuote | Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]] = Field(default_factory=list, max_length=4)
@@ -151,6 +155,13 @@ class PreferencesUpdate(BaseModel):
     intensities: list[IntensitySelection] | None = Field(default=None, max_length=5)
     interest_ids: list[Identifier] | None = None
     featured_category_id: Identifier | None = None
+
+    @field_validator('card_order')
+    @classmethod
+    def unique_cards(cls, value):
+        if len(value) != len(set(value)):
+            raise ValueError('Las cards no pueden repetirse')
+        return value
 
     @field_validator('essential_books')
     @classmethod
