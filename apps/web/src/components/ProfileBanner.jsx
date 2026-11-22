@@ -49,20 +49,22 @@ export default function ProfileBanner({ panoramic = false }) {
     const top = cover.closest('.reader-profile-top')
     const feather = top?.querySelector('.reader-profile-name-feather')
     const name = top?.querySelector('.reader-profile-name')
+    const counters = top?.querySelector('.profile-community-counters')
+    const followers = counters?.querySelectorAll('.profile-community-counter')[1]
     const message = document.querySelector('.social-topbar a[href="/messages"]')
     const update = () => {
       const bounds = cover.getBoundingClientRect()
       if (!bounds.width) return
       const scale = cover.clientWidth / bounds.width
-      const marker = feather?.getBoundingClientRect() || name?.getBoundingClientRect()
-      const left = Math.max(0, Math.min(cover.clientWidth, marker ? (marker.right - bounds.left) * scale : cover.clientWidth * .3))
+      const marker = followers?.getBoundingClientRect() || feather?.getBoundingClientRect() || name?.getBoundingClientRect()
+      const left = Math.max(0, Math.min(cover.clientWidth, marker ? (marker.left - bounds.left) * scale : cover.clientWidth * .36))
       const right = Math.max(left, Math.min(cover.clientWidth, message ? (message.getBoundingClientRect().left - bounds.left) * scale : cover.clientWidth * .88))
       cover.style.setProperty('--profile-fade-left', `${left}px`)
       cover.style.setProperty('--profile-fade-right', `${right}px`)
       cover.style.setProperty('--profile-cover-width', `${cover.clientWidth}px`)
     }
     const observer = new ResizeObserver(update)
-    for (const element of [cover, top, feather, message, name]) if (element) observer.observe(element)
+    for (const element of [cover, top, feather, followers, counters, message, name]) if (element) observer.observe(element)
     window.addEventListener('resize', update)
     update()
     return () => { observer.disconnect(); window.removeEventListener('resize', update) }
